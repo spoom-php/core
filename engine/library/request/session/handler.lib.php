@@ -1,6 +1,6 @@
 <?php namespace Engine\Request\Session;
 
-use Engine\Event\Event;
+use Engine\Extension\Extension;
 
 defined( '_PROTECT' ) or die( 'DENIED!' );
 
@@ -22,10 +22,8 @@ abstract class Handler {
    */
   public static function start( $new = false, array $options = array() ) {
 
-    $eobject = array( 'new'     => $new,
-                      'options' => array() );
-    $e       = new Event( 'engine.session.start.before', $eobject );
-
+    $extension = new Extension('.engine');
+    $e = $extension->trigger( 'session.start', array( 'new' => $new, 'options' => array() ) );
     if( !$e->prevented ) {
 
       // restart the session if necessary
@@ -36,12 +34,12 @@ abstract class Handler {
 
       // if session dont start, terminate the application
       if( !session_start() ) {
-        new Event( 'engine.session.start.failed', $eobject );
+        $extension->trigger( 'session.start.fail', array( 'new' => $new, 'options' => array() ) );
 
         return false;
       }
 
-      new Event( 'engine.session.start.after', $eobject );
+      $extension->trigger( 'session.start.after', array( 'new' => $new, 'options' => array() ) );
     }
 
     return true;
@@ -55,7 +53,8 @@ abstract class Handler {
    */
   public static function destroy() {
 
-    $e = new Event( 'engine.session.destroy.before' );
+    $extension = new Extension('.engine');
+    $e = $extension->trigger( 'session.destroy' );
     if( !$e->prevented ) {
 
       // unset and reinitialise session variable
@@ -71,7 +70,7 @@ abstract class Handler {
       // destroy the session and restart it ( if needed )
       $result = @session_destroy();
 
-      new Event( 'engine.session.destroy.after' );
+      $extension->trigger( 'session.destroy.after' );
 
       return $result;
     }
@@ -103,7 +102,9 @@ abstract class Handler {
    * @return string
    */
   private static function generate() {
-    $e       = new Event( 'engine.session.generate' );
+
+    $extension = new Extension('.engine');
+    $e = $extension->trigger( 'session.generate' );
     $results = $e->getResultList();
 
     return !$e->prevented && !count( $results ) ? md5( uniqid( rand(), true ) ) : $results[ 0 ];

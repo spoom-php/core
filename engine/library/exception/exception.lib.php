@@ -102,7 +102,7 @@ class Exception extends \Exception {
         'id'        => $this->id,
         'code'      => $this->getCode(),
         'message'   => $this->getMessage(),
-        'extension' => $this->_extension ? null : $this->_extension->id,
+        'extension' => $this->_extension ? $this->_extension->id : null,
         'data'      => $this->_data
     );
   }
@@ -129,7 +129,7 @@ class Exception extends \Exception {
    */
   private function build( $message, $code ) {
 
-    if( $this->_extension && $code != self::EXCEPTION_UNKNOWN ) $message = $this->_extension->text( 'exception:' . $code, $this->_data );
+    if( $this->_extension && $code != self::EXCEPTION_UNKNOWN ) $message = $this->_extension->text( 'exception:#' . $code, $this->_data );
     else if( !is_string( $message ) ) $message = ( $this->_extension ? $this->_extension->id : '' ) . '#' . $code;
     else $message = String::insert( $message, $this->_data );
 

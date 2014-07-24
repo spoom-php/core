@@ -27,6 +27,9 @@ defined( '_PROTECT' ) or die( 'DENIED!' );
  */
 class Extension extends Library {
 
+  const EXCEPTION_INVALID = 1;
+  const EXCEPTION_MISSING = 2;
+
   const REGEXP_PACKAGE_NAME   = '[a-z]\\w+';
   const REGEXP_EXTENSION_NAME = '[a-z]\\w+';
 
@@ -92,16 +95,17 @@ class Extension extends Library {
 
     // define directory
     $directory = ExtensionHelper::directory( $this->_id );
-    $this->_directory = ExceptionHelper::thrower( $directory );
+    if( !$directory ) throw new Exception( '.engine', self::EXCEPTION_MISSING, array( $extension ) );
+    $this->_directory = $directory;
 
     // create and configure configuration object
     $this->_configuration = new Configuration( $this );
     $this->_localization  = new Localization( $this );
 
     // check manifest and save package and name
-    $this->_package = $this->_configuration->gets( 'manifest:package' );
+    $this->_package = $this->_configuration->gets( 'manifest:package', null );
     $this->_name    = $this->_configuration->gets( 'manifest:name' );
-    if( "{$this->_package}.{$this->_name}" != $this->_id ) throw new Exception( 'Invalid manifest data for {0}', array( $this->_id ) );
+    if( $this->_name != '.engine' && "{$this->_package}.{$this->_name}" != $this->_id ) throw new Exception( '.engine', self::EXCEPTION_INVALID, array( $this->_id ) );
   }
 
   /**
@@ -196,19 +200,32 @@ class Extension extends Library {
    *
    * @param string $class_name - String with dot separated namespace ( exclude Package\Name\ ) or an array of this strings ( return the first exist )
    *
-   * @return string|Exception
+   * @return string|false
    */
   public function library( $class_name ) {
     if( !is_array( $class_name ) ) $class_name = array( $class_name );
 
-    $base = $this->_package . '\\' . $this->_name . '\\';
+    $base = ( isset( $this->_package ) ? ( $this->_package . '\\' ) : '' ) . $this->_name . '\\';
     foreach( $class_name as $name ) {
       $class = $base . str_replace( '.', '\\', $name );
 
       if( class_exists( $class, true ) ) return $class;
     }
 
-    return new Exception( 'Extension libraries doesn\'t exist!', array( 'classes' => implode( ', ', $class_name ) ) );
+    return false;
+  }
+
+  /**
+   * Triggers an event of the extension and return the event object for the result
+   *
+   * @param string $event the dot separated event name
+   * @param array $arguments arguments passed to the event handlers
+   *
+   * @return Event
+   */
+  public function trigger( $event, $arguments = array() ) {
+    $event = new Event( $this, $event, $arguments );
+    return $event->execute();
   }
 
   /**
@@ -219,10 +236,10 @@ class Extension extends Library {
    *
    * @return mixed
    */
-  public function &instance( $class_name, $param = null ) {
+  public function instance( $class_name, $param = null ) {
     $class = $this->library( $class_name );
 
-    if( ExceptionHelper::isException( $class ) ) return $class;
+    if( !$class ) return false;
 
     $instance = isset( $param ) ? new $class( $param ) : new $class();
 

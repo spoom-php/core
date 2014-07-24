@@ -1,8 +1,8 @@
 <?php namespace Engine;
 
-use Engine\Event\Event;
 use Engine\Exception\Collector;
 use Engine\Exception\Exception;
+use Engine\Extension\Extension;
 use Engine\Request\Session\Handler as SessionHandler;
 
 defined( '_PROTECT' ) or die( 'DENIED!' );
@@ -28,12 +28,9 @@ abstract class Page {
   private static $exceptions = null;
 
   public static function initialise( $render = true ) {
-    if( self::$initialise ) throw new Exception();
+    if( self::$initialise ) return;
     self::$initialise = true;
-    ob_start();
-
-    // FIXME remove line
-    \Engine\Event\Helper::reload();
+    if( _REPORTING == 1 ) ob_start();
 
     // attribute initialization
     self::$exceptions = new Collector();
@@ -42,7 +39,8 @@ abstract class Page {
     SessionHandler::start();
 
     // Call initialise event
-    new Event( 'engine.initialise' );
+    $extension = new Extension( '.engine' );
+    $extension->trigger( 'initialise' );
 
     if( $render ) self::render();
   }
@@ -53,12 +51,14 @@ abstract class Page {
   public static function render() {
 
     // call display event to let extensions render the content
-    $e       = new Event( 'engine.render' );
+    $extension = new Extension( '.engine' );
+    $e       = $extension->trigger( 'render' );
     $content = $e->getResultList();
 
     // clean output buffer and call display end event ( the render )
-    new Event( 'engine.finish', array( 'content' => $content,
-                                       'buffer'  => ob_get_clean() ) );
+    $buffer = _REPORTING == 1 ? ob_get_clean() : null;
+    $extension->trigger( 'finish', array( 'content' => $content,
+                                          'buffer'  => $buffer ) );
   }
 
   /**

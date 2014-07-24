@@ -94,4 +94,23 @@ abstract class Enumerable {
 
     return $arr;
   }
+
+  /**
+   * Converts JSON string into object or array like the normal json_encode but this one may do
+   * some pre/post process operation on the string/object in the future
+   *
+   * @param string $json
+   * @param bool $assoc
+   * @param int $depth
+   * @param int $options
+   *
+   * @return mixed
+   */
+  public static function fromJson( $json, $assoc = false, $depth = 512, $options = 0 ) {
+    if( version_compare(phpversion(), '5.4.0', '>=')) $json = json_decode($json, $assoc, $depth, $options);
+    elseif( version_compare(phpversion(), '5.3.0', '>=')) $json = json_decode($json, $assoc, $depth);
+    else $json = json_decode($json, $assoc);
+
+    return $json;
+  }
 }

@@ -44,7 +44,7 @@ class Library {
 
           $this->_extension = false;
           $class = explode( '\\', strtolower( get_class( $this ) ), 3 );
-          if( $class[ 0 ] !== 'engine' ) $this->_extension = $class[ 0 ] . '.' . $class[ 1 ];
+          $this->_extension = $class[ 0 ] == 'engine' ? 'engine' : ( $class[ 0 ] . '.' . $class[ 1 ] );
         }
 
         return $this->_extension;
@@ -56,7 +56,7 @@ class Library {
 
           $class          = explode( '\\', strtolower( get_class( $this ) ), 3 );
           $tmp = array();
-          if( $class[ 0 ] === 'engine' ) $tmp[] = $class[1];
+          if( $class[ 0 ] == 'engine' ) $tmp[] = $class[1];
           if( isset( $class[2] ) ) $tmp[] = str_replace( '\\', '.', $class[2] );
 
           $this->_library = implode( '.', $tmp );

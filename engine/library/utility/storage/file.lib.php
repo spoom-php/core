@@ -303,7 +303,7 @@ class File extends Simple {
     $return = null;
 
     if( is_string( $content ) ) {
-      $return = json_decode( $content, !$this->prefer_object );
+      $return = Enumerable::fromJson( $content, !$this->prefer_object );
       if( $return ) $return = (array) $return;
     } else $return = Enumerable::toJson( $content, true );
 

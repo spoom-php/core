@@ -49,6 +49,7 @@ abstract class Helper {
    * @return boolean
    */
   public static function validate( $extension ) {
+    if( $extension == '.engine' ) return true;
 
     if( preg_match( '/^(' . Extension::REGEXP_PACKAGE_NAME . '\\.' . Extension::REGEXP_EXTENSION_NAME . ')$/', $extension ) ) {
       $extension = explode( '.', $extension );
@@ -66,14 +67,14 @@ abstract class Helper {
    *
    * @param string $extension
    *
-   * @return string|Exception
+   * @return string|false
    */
   public static function directory( $extension ) {
 
     // check existance
-    if( !self::validate( $extension ) ) return new Exception( "Extension not exists! {0}", array( $extension ) );
+    if( !self::validate( $extension ) ) return false;
 
     // return the directory
-    return _PATH_EXTENSION . str_replace( '.', '/', $extension ) . '/';
+    return $extension == '.engine' ? 'engine/' : ( _PATH_EXTENSION . str_replace( '.', '/', $extension ) . '/' );
   }
 }

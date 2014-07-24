@@ -19,7 +19,7 @@ final class Localization extends FileStorage {
    *
    * @var string
    */
-  private static $_localization = _SITE_LOCALIZATION;
+  private static $_localization = null;
 
   /**
    * Extension data source
@@ -55,10 +55,10 @@ final class Localization extends FileStorage {
    *
    * @param Extension $e
    */
-  function __construct( Extension &$e ) {
+  function __construct( Extension $e ) {
     parent::__construct( false, array( 'json', 'ini', 'xml' ) );
 
-    $this->_extension     = & $e;
+    $this->_extension     = $e;
     $this->namespace      = 'default';
     $this->base_directory = $this->_extension->dir( '', true ) . Extension::DIRECTORY_LOCALIZATION . '/';
 
@@ -115,10 +115,10 @@ final class Localization extends FileStorage {
    * @return mixed
    */
   protected function file( $namespace ) {
-    $global = $this->find( self::$_localization );
+    $global = $this->find( self::getLocalization() );
 
     if( $global ) {
-      $this->active_localization = self::$_localization;
+      $this->active_localization = self::getLocalization();
       $this->_directory             = $global;
     }
     else if( $this->default_directory ) {
@@ -154,6 +154,11 @@ final class Localization extends FileStorage {
    * @return string
    */
   public static function getLocalization() {
+    if( !isset( self::$_localization ) ) {
+      $extension = new Extension('.engine');
+      self::$_localization = $extension->option('manifest:localization');
+    }
+
     return self::$_localization;
   }
 

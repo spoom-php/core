@@ -1,12 +1,6 @@
 <?php defined( '_PROTECT' ) or die( 'DENIED!' );
-
-/**
- * Check php version for a nicer message then the namespace caused syntax error
- */
-if( version_compare( PHP_VERSION, '5.3.0' ) < 0 ) die('This framework needs at least PHP 5.3 to run.');
-
-/**
- * Engine version number. The versioning system ( this will applied to all extension ):
+/*
+ * The versioning system ( this will applied to all extension included the engine ):
  *
  *      <major>.<minor>.<fix>.<build>
  *
@@ -17,7 +11,11 @@ if( version_compare( PHP_VERSION, '5.3.0' ) < 0 ) die('This framework needs at l
  *
  * Zero major is a version, which is still under development. The minor version doesn't have to be compatible backwards in that case.
  */
-define( '_VERSION', '0.1.0' );
+
+/**
+ * Check php version for a nicer message then the namespace caused syntax error
+ */
+if( version_compare( PHP_VERSION, '5.3.0' ) < 0 ) die( 'This framework needs at least PHP 5.3 to run.' );
 
 /*
  * State variable that define how site react to exceptions and other type of missbehaviors. It can be:
@@ -26,12 +24,7 @@ define( '_VERSION', '0.1.0' );
  *
  *  ...more state coming when neccessary
  */
-define( '_SITE_STATE', 0 );
-/**
- * Default site localization.
- * It can be changed runtime with \Engine\Extension\Localization::setLocalization() static method.
- */
-define( '_SITE_LOCALIZATION', 'en' );
+define( '_REPORTING', 0 );
 
 /**
  * Detect secure http protocol
@@ -58,10 +51,6 @@ define( '_URL_BASE', _URL_ROOT . ( strlen( _URL_PATH ) != '/' ? _URL_PATH : '' )
  */
 define( '_PATH', dirname( __FILE__ ) . '/' );
 /**
- * Engine directory without the _PATH
- */
-define( '_PATH_ENGINE', 'engine/' );
-/**
  * Extension directory without the _PATH
  */
 define( '_PATH_EXTENSION', 'extension/' );
@@ -85,7 +74,7 @@ function __webengine_loader( $class_name ) {
   if( count( $pieces ) > 2 || $pieces[ 0 ] === 'engine' ) {
 
     // load class file
-    if( $pieces[ 0 ] === 'engine' ) $file = \_PATH . \_PATH_ENGINE . implode( '/', array_splice( $pieces, 1 ) ) . '.lib' . '.php';
+    if( $pieces[ 0 ] === 'engine' ) $file = \_PATH . 'engine/library/' . implode( '/', array_splice( $pieces, 1 ) ) . '.lib' . '.php';
     else $file = \_PATH . \_PATH_EXTENSION . $pieces[ 0 ] . '/' . $pieces[ 1 ] . '/' . 'library' . '/' . implode( '/', array_splice( $pieces, 2 ) ) . '.lib' . '.php';
 
     // load the class file

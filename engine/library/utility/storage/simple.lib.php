@@ -60,7 +60,7 @@ class Simple extends Library {
    * Build object instead of array when non exist
    * @var bool
    */
-  private $_prefer_object = false;
+  private $_prefer_object = true;
 
   /**
    * Set default or given values
