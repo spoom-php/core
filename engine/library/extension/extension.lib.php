@@ -1,7 +1,6 @@
 <?php namespace Engine\Extension;
 
 use Engine\Exception\Exception;
-use Engine\Exception\Helper as ExceptionHelper;
 use Engine\Extension\Helper as ExtensionHelper;
 use Engine\Utility\File;
 use Engine\Utility\Library;

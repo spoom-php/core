@@ -44,7 +44,7 @@ class Library {
 
           $this->_extension = false;
           $class = explode( '\\', strtolower( get_class( $this ) ), 3 );
-          $this->_extension = $class[ 0 ] == 'engine' ? 'engine' : ( $class[ 0 ] . '.' . $class[ 1 ] );
+          $this->_extension = $class[ 0 ] == 'engine' ? '.engine' : ( $class[ 0 ] . '.' . $class[ 1 ] );
         }
 
         return $this->_extension;
