@@ -14,6 +14,7 @@ defined( '_PROTECT' ) or die( 'DENIED!' );
  * @property bool   prevented
  * @property bool   stopped
  * @property string event
+ * @property string base
  * @property array  arguments
  */
 class Event extends Collector {
@@ -38,6 +39,13 @@ class Event extends Collector {
    * @var string
    */
   private $_event = null;
+
+  /**
+   * Event "namespace"
+   *
+   * @var null|string
+   */
+  private $_base = null;
 
   /**
    * The extension that triggered the event
@@ -73,6 +81,7 @@ class Event extends Collector {
     // set default params
     $this->_extension = $extension;
     $this->_event = $event_name;
+    $this->_base = trim( $this->extension->id, '.' ); // the trim is for the '.engine' extension id
     $this->_arguments = $arguments;
   }
 
@@ -85,6 +94,8 @@ class Event extends Collector {
    */
   public function __get( $index ) {
     $index = '_' . $index;
+
+    if( $index == '_event' ) return $this->_base . '.' . $this->_event;
     if( isset( $this->{$index} ) ) return $this->{$index};
 
     return null;
@@ -152,7 +163,7 @@ class Event extends Collector {
     // Call attached listeners
     foreach( $this->listeners as &$listener ) {
 
-      $listener->result = $listener->instance->execute( $this->_event, $this, $listener->data );
+      $listener->result = $listener->instance->execute( $this->event, $this, $listener->data );
       if( $this->_stopped ) break;
     }
 
@@ -177,7 +188,7 @@ class Event extends Collector {
     $this->listeners = array();
     $extension = new Extension( '.engine' );
 
-    $namespace = 'event-' . str_replace( '.', '-', trim( $this->extension->id, '.' ) ); // the trim is for the '.engine' extension id
+    $namespace = 'event-' . str_replace( '.', '-', $this->_base );
     $index = str_replace( '.', '-', $this->_event );
     $tmp = $extension->configuration->geta( $namespace . ':' . $index );
 

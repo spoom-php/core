@@ -162,8 +162,9 @@ class Simple extends Library {
     $result = $this->search( $index, true );
 
     // set the value
-    if( $result->key ) $value = & $result->container[ $result->key ];
-    else $value = & $result->container;
+    if( !$result->key ) $value = & $result->container;
+    else if( is_array( $result->container ) ) $value = & $result->container[ $result->key ];
+    else $value = & $result->container->{$result->key};
 
     // create extendable value if not exist
     if( !isset( $value ) ) $value = $this->prefer_object ? new \stdClass() : array();
@@ -214,8 +215,9 @@ class Simple extends Library {
       if( $result->exist ) {
 
         // find the value
-        if( $result->key ) $value = & $result->container[ $result->key ];
-        else $value = & $result->container;
+        if( !$result->key ) $value = & $result->container;
+        else if( is_array( $result->container ) ) $value = & $result->container[ $result->key ];
+        else $value = & $result->container->{$result->key};
 
         // check the value type
         if( is_array( $value ) || is_object( $value ) ) {
@@ -245,9 +247,11 @@ class Simple extends Library {
     $index  = $this->parse( $index );
     $result = $this->search( $index );
 
-    if( $result->exist && $result->key ) unset( $result->container[ $result->key ] );
-    else if( $result->exist ) {
-      $result->container = array();
+    if( $result->exist ) {
+
+      if( !$result->key ) $result->container = array();
+      else if( is_array( $result->container ) ) unset( $result->container[ $result->key ] );
+      else unset( $result->container->{$result->key} );
 
       // clear the cache or the cache index
       if( $this->_caching != self::CACHE_NONE ) $this->cache_source = array();
@@ -283,7 +287,9 @@ class Simple extends Library {
     $result = $this->search( $index );
     $return = $if_null;
 
-    if( $result->exist ) $return = $result->key ? $result->container[ $result->key ] : $result->container;
+    if( $result->exist ) {
+      $return = $result->key ? ( is_array( $result->container ) ? $result->container[ $result->key ] : $result->container->{$result->key} ) : $result->container;
+    }
 
     return $return;
   }
@@ -363,7 +369,9 @@ class Simple extends Library {
 
     // don't set the source attribute directly
     if( $index && $result->key ) {
-      $target = & $result->container[ $result->key ];
+      if( is_array( $result->container ) ) $target = & $result->container[ $result->key ];
+      else $target = & $result->container->{$result->key};
+
       $target = $value;
 
       // clear the cache index

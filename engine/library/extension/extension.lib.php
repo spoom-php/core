@@ -238,7 +238,7 @@ class Extension extends Library {
   public function instance( $class_name, $param = null ) {
     $class = $this->library( $class_name );
 
-    if( !$class ) return false;
+    if( !$class ) return null;
 
     $instance = isset( $param ) ? new $class( $param ) : new $class();
 
