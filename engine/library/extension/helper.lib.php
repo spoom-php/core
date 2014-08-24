@@ -1,7 +1,5 @@
 <?php namespace Engine\Extension;
 
-use Engine\Exception\Exception;
-
 defined( '_PROTECT' ) or die( 'DENIED!' );
 
 /**

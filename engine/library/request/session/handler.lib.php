@@ -12,6 +12,12 @@ defined( '_PROTECT' ) or die( 'DENIED!' );
  */
 abstract class Handler {
 
+  const EVENT_START = 'session.start';
+  const EVENT_START_AFTER = 'session.start.after';
+  const EVENT_DESTROY = 'session.destroy';
+  const EVENT_DESTROY_AFTER = 'session.destroy.after';
+  const EVENT_GENERATE = 'session.generate';
+
   /**
    * Start or resume the session
    *
@@ -23,7 +29,7 @@ abstract class Handler {
   public static function start( $new = false, array $options = array() ) {
 
     $extension = new Extension('.engine');
-    $e = $extension->trigger( 'session.start', array( 'new' => $new, 'options' => array() ) );
+    $e = $extension->trigger( self::EVENT_START, array( 'new' => $new, 'options' => array() ) );
     if( !$e->prevented ) {
 
       // restart the session if necessary
@@ -34,12 +40,12 @@ abstract class Handler {
 
       // if session dont start, terminate the application
       if( !session_start() ) {
-        $extension->trigger( 'session.start.fail', array( 'new' => $new, 'options' => array() ) );
+        $extension->trigger( self::EVENT_START_AFTER, array( 'result' => false, 'new' => $new, 'options' => array() ) );
 
         return false;
       }
 
-      $extension->trigger( 'session.start.after', array( 'new' => $new, 'options' => array() ) );
+      $extension->trigger( self::EVENT_START_AFTER, array( 'result' => true, 'new' => $new, 'options' => array() ) );
     }
 
     return true;
@@ -54,7 +60,7 @@ abstract class Handler {
   public static function destroy() {
 
     $extension = new Extension('.engine');
-    $e = $extension->trigger( 'session.destroy' );
+    $e = $extension->trigger( self::EVENT_DESTROY );
     if( !$e->prevented ) {
 
       // unset and reinitialise session variable
@@ -70,7 +76,7 @@ abstract class Handler {
       // destroy the session and restart it ( if needed )
       $result = @session_destroy();
 
-      $extension->trigger( 'session.destroy.after' );
+      $extension->trigger( self::EVENT_DESTROY_AFTER );
 
       return $result;
     }
@@ -104,7 +110,7 @@ abstract class Handler {
   private static function generate() {
 
     $extension = new Extension('.engine');
-    $e = $extension->trigger( 'session.generate' );
+    $e = $extension->trigger( self::EVENT_GENERATE );
     $results = $e->getResultList();
 
     return !$e->prevented && !count( $results ) ? md5( uniqid( rand(), true ) ) : $results[ 0 ];

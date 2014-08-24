@@ -30,6 +30,11 @@ class Storage extends Simple {
 
   /**
    * @todo implement setcookie with an event ( secure the cookie, or else )
+   *
+   * @param string      $index
+   * @param mixed       $value
+   * @param int|null    $expire
+   * @param string|null $url
    */
   public function setc( $index, $value, $expire = null, $url = null ) {
     setcookie( $index, $value, $expire, $url );

@@ -1,7 +1,6 @@
 <?php namespace Engine\Extension;
 
 use Engine\Exception\Collector;
-use Engine\Exception\Helper as ExceptionHelper;
 use Engine\Extension\Helper as ExtensionHelper;
 
 defined( '_PROTECT' ) or die( 'DENIED!' );

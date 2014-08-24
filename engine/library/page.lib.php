@@ -1,7 +1,6 @@
 <?php namespace Engine;
 
 use Engine\Exception\Collector;
-use Engine\Exception\Exception;
 use Engine\Extension\Extension;
 use Engine\Request\Session\Handler as SessionHandler;
 
@@ -12,6 +11,10 @@ defined( '_PROTECT' ) or die( 'DENIED!' );
  * @package Engine
  */
 abstract class Page {
+
+  const EVENT_INITIALISE = 'initialise';
+  const EVENT_RENDER = 'render';
+  const EVENT_FINISH = 'finish';
 
   /**
    * Prevent doube rendering
@@ -40,7 +43,7 @@ abstract class Page {
 
     // Call initialise event
     $extension = new Extension( '.engine' );
-    $extension->trigger( 'initialise' );
+    $extension->trigger( self::EVENT_INITIALISE );
 
     if( $render ) self::render();
   }
@@ -52,13 +55,13 @@ abstract class Page {
 
     // call display event to let extensions render the content
     $extension = new Extension( '.engine' );
-    $e       = $extension->trigger( 'render' );
+    $e       = $extension->trigger( self::EVENT_RENDER );
     $content = $e->getResultList();
 
     // clean output buffer and call display end event ( the render )
     $buffer = _REPORTING == 1 ? ob_get_clean() : null;
-    $extension->trigger( 'finish', array( 'content' => $content,
-                                          'buffer'  => $buffer ) );
+    $extension->trigger( self::EVENT_FINISH, array( 'content' => $content,
+                                                    'buffer'  => $buffer ) );
   }
 
   /**

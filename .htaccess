@@ -11,7 +11,7 @@ php_value post_max_size 30M
 <IfModule mod_rewrite.c>
 
   RewriteEngine on
-  #RewriteBase /
+# RewriteBase /
 
   RewriteCond %{REQUEST_FILENAME} !-f
   RewriteCond %{REQUEST_FILENAME} !-d
