@@ -70,20 +70,27 @@ function __webengine_loader( $class_name ) {
   // explode by namespace separator
   $pieces = explode( '\\', strtolower( $class_name ) );
 
-  // check the pieces count, if less then 2 it's not an extension ( except the engine )
-  if( count( $pieces ) > 2 || $pieces[ 0 ] === 'engine' ) {
+  // check the first piece for engine specific directory choose
+  if( $pieces[0] == 'engine' ) $file = \_PATH . 'engine/library/' . implode( '/', array_splice( $pieces, 1 ) ) . '.lib.php';
+  else {
 
-    // load class file
-    if( $pieces[ 0 ] === 'engine' ) $file = \_PATH . 'engine/library/' . implode( '/', array_splice( $pieces, 1 ) ) . '.lib' . '.php';
-    else $file = \_PATH . \_PATH_EXTENSION . $pieces[ 0 ] . '/' . $pieces[ 1 ] . '/' . 'library' . '/' . implode( '/', array_splice( $pieces, 2 ) ) . '.lib' . '.php';
+    // find the extension directory from the class namespace
+    $file = \_PATH . \_PATH_EXTENSION;
+    for( $i = 0; $i < 2 && $i < count( $pieces ); ++$i ) {
+      $file .= $pieces[$i] . '/';
 
-    // load the class file
-    if( is_file( $file ) ) require $file;
-
-    // re-check existance
-    if( !class_exists( $class_name, false ) ) {
-      // TODO throw exception, or somethin'..
+      // check if this path is an extension: check existance of manifest file with any file extension
+      if( count( glob( $file . 'configuration/manifest.*' ) ) ) break;
     }
+
+    // finalize the class file path with the reamining pieces
+    $file .= 'library/' . implode( '/', array_splice( $pieces, $i+1 ) ) . '.lib.php';
   }
+
+  // load the class file
+  if( is_file( $file ) ) require $file;
+
+  // re-check existance
+  if( !class_exists( $class_name, false ) ) die("Required '{$class_name}' class is missing!");
 }
 spl_autoload_register( '__webengine_loader' );

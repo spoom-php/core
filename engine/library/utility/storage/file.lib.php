@@ -22,6 +22,13 @@ class File extends Simple {
   private static $files = array();
 
   /**
+   * Meta properties for files
+   *
+   * @var array
+   */
+  private static $meta = array();
+
+  /**
    * Allowed extensions for files
    *
    * @var array
@@ -55,7 +62,7 @@ class File extends Simple {
    * @param string $directory
    * @param mixed $allow
    */
-  public function __construct( $directory, $allow = array( 'php', 'ini', 'json' ) ) {
+  public function __construct( $directory, $allow = array( 'php', 'ini', 'json', 'xml' ) ) {
     parent::__construct();
 
     $this->_directory = rtrim( $directory, '\\/' ) . '/';
@@ -115,7 +122,7 @@ class File extends Simple {
     if( !$this->exist( $namespace . ':' ) ) {
 
       if( $filename && is_writeable( $filename ) ) {
-        unset( self::$files[ $filename ] );
+        unset( self::$files[ $index ] );
         return @unlink( $filename );
       }
 
@@ -135,7 +142,7 @@ class File extends Simple {
 
       if( ( is_file( $filename ) || @touch( $filename ) ) && is_writeable( $filename ) && method_exists( $this, $method ) ) {
 
-        $result = $this->{$method}( $content );
+        $result = $this->{$method}( $content, $namespace, self::$meta[ $index ] );
         if( trim( $result ) != '' ) return @file_put_contents( $filename, $result );
       }
     }
@@ -156,10 +163,7 @@ class File extends Simple {
 
     $filename = $this->file( $namespace );
     $index = $this->_directory . $namespace;
-    if( !$filename ) {
-      self::$files[ $index ] = array();
-      $this->addr( self::$files[ $index ], $namespace );
-    }
+    if( !$filename ) self::$files[ $index ] = self::$meta[ $index ] = array();
     else if( is_file( $filename ) && is_readable( $filename ) ) {
 
       // if not exist load to the cache
@@ -167,19 +171,19 @@ class File extends Simple {
 
         $extension = pathinfo( $filename, PATHINFO_EXTENSION );
         $method = 'convert' . ucfirst( strtolower( $extension ) );
-        self::$files[ $index ] = array();
+        self::$files[ $index ] = self::$meta[ $index ] = array();
 
         if( method_exists( $this, $method ) ) {
           $content = @file_get_contents( $filename );
-          $result = $this->{$method}( $content );
+          $result = $this->{$method}( $content, $namespace, self::$meta[ $index ] );
 
           self::$files[ $index ] = (array) $result;
         }
       }
-
-      // set storage namespace to point this container
-      $this->addr( self::$files[ $index ], $namespace );
     }
+
+    // set storage namespace to point this container
+    $this->addr( self::$files[ $index ], $namespace );
 
     return $this;
   }
@@ -238,10 +242,12 @@ class File extends Simple {
    * note: Can't serialize resources!
    *
    * @param mixed $content
+   * @param string $namespace
+   * @param array $meta
    *
    * @return mixed
    */
-  protected function convertPhp( $content ) {
+  protected function convertPhp( $content, $namespace, array &$meta ) {
     if( is_string( $content ) ) return unserialize( preg_replace( '/^(<\\?php\\s*\\/\\*{)/i', '', preg_replace( '/(}\\s*\\*\\/)$/i', '', $content ) ) );
     else return '<?php /*{' . serialize( $content ) . '}*/';
 
@@ -254,10 +260,12 @@ class File extends Simple {
    * sections ( can't convert it back easily so don't bother with it anyway ).
    *
    * @param mixed $content
+   * @param string $namespace
+   * @param array $meta
    *
    * @return mixed
    */
-  protected function convertIni( $content ) {
+  protected function convertIni( $content, $namespace, array &$meta ) {
 
     // read from the ini string
     $result = array();
@@ -296,25 +304,42 @@ class File extends Simple {
    * Maybe in the next releases. This is the default and prefered configuration type.
    *
    * @param mixed $content
+   * @param string $namespace
+   * @param array $meta
    *
    * @return mixed
    */
-  protected function convertJson( $content ) {
+  protected function convertJson( $content, $namespace, array &$meta ) {
     $return = null;
 
-    if( is_string( $content ) ) {
+    if( !is_string( $content ) ) $return = Enumerable::toJson( $content, true );
+    else {
+
       $return = Enumerable::fromJson( $content, !$this->prefer_object );
       if( $return ) $return = (array) $return;
-    } else $return = Enumerable::toJson( $content, true );
+    }
 
     return $return;
   }
 
   /**
    * @param mixed $content
+   * @param string $namespace
+   * @param array $meta
    *
-   * @todo write the parser
    * @return mixed
    */
-  protected function convertXml( $content ) {}
+  protected function convertXml( $content, $namespace, array &$meta ) {
+
+    if( !is_string( $content ) ) return Enumerable::toXml( $content, isset( $meta['attribute'] ) ? $meta['attribute'] : array(), $namespace, isset( $meta['version'] ) ? $meta['version'] : '1.0', isset( $meta['encoding'] ) ? $meta['encoding'] : 'UTF-8' )->asXml();
+    else {
+
+      $meta[ 'attribute' ] = array();
+      $meta[ 'version' ] = null;
+      $meta[ 'encoding' ] = null;
+      $object = Enumerable::fromXml( $content, $meta[ 'attribute' ], $meta[ 'version' ], $meta[ 'encoding' ] );
+
+      return $object;
+    }
+  }
 }
