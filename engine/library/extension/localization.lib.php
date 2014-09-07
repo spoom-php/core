@@ -1,6 +1,6 @@
 <?php namespace Engine\Extension;
 
-use Engine\Utility\Storage\File as FileStorage;
+use Engine\Storage\File as FileStorage;
 use Engine\Utility\String;
 
 defined( '_PROTECT' ) or die( 'DENIED!' );

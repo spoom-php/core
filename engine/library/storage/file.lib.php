@@ -1,4 +1,4 @@
-<?php namespace Engine\Utility\Storage;
+<?php namespace Engine\Storage;
 
 use Engine\Utility\Enumerable;
 
@@ -6,7 +6,7 @@ defined( '_PROTECT' ) or die( 'DENIED!' );
 
 /**
  * Class File
- * @package Engine\Utility\Storage
+ * @package Engine\Storage
  *
  * @property string directory
  * @property string default

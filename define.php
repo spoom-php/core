@@ -13,9 +13,9 @@
  */
 
 /**
- * Check php version for a nicer message then the namespace caused syntax error
+ * Check php version to avoid syntax and other ugly error messages
  */
-if( version_compare( PHP_VERSION, '5.3.0' ) < 0 ) die( 'This framework needs at least PHP 5.3 to run.' );
+if( version_compare( PHP_VERSION, '5.4.0' ) < 0 ) die( 'This framework needs at least PHP 5.4 to run.' );
 
 /*
  * State variable that define how site react to exceptions and other type of missbehaviors. It can be:

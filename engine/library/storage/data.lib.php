@@ -1,10 +1,10 @@
-<?php namespace Engine\Utility\Storage;
+<?php namespace Engine\Storage;
 
 defined( '_PROTECT' ) or die( 'DENIED!' );
 
 /**
  * Class Data
- * @package Engine\Utility\Storage
+ * @package Engine\Storage
  */
 class Data extends Simple {
 

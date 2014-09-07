@@ -1,4 +1,4 @@
-<?php namespace Engine\Utility\Storage;
+<?php namespace Engine\Storage;
 
 use Engine\Utility\Library;
 
@@ -6,7 +6,7 @@ defined( '_PROTECT' ) or die( 'DENIED!' );
 
 /**
  * Class Simple
- * @package Engine\Utility\Storage
+ * @package Engine\Storage
  *
  * @property string   namespace      default namespace
  * @property bool     caching        enable or disable cache

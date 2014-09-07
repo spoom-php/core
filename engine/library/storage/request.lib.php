@@ -1,6 +1,4 @@
-<?php namespace Engine\Request;
-
-use Engine\Utility\Storage\Simple;
+<?php namespace Engine\Storage;
 
 defined( '_PROTECT' ) or die( 'DENIED!' );
 
@@ -10,7 +8,7 @@ defined( '_PROTECT' ) or die( 'DENIED!' );
  * Class Request
  * @package Engine\Storage
  */
-class Storage extends Simple {
+class Request extends Simple {
 
   /**
    * @param string $namespace
