@@ -69,7 +69,7 @@ class Event extends Collector {
    *
    * @var array
    */
-  private $_arguments = array();
+  private $_argument = array();
 
   /**
    * Store the result array after the execution in a
@@ -90,7 +90,7 @@ class Event extends Collector {
     $this->_extension = $extension;
     $this->_event = $event_name;
     $this->_base = trim( $this->extension->id, '.' ); // the trim is for the '.engine' extension id
-    $this->_arguments = $arguments;
+    $this->_argument = $arguments;
   }
 
   /**
