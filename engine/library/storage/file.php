@@ -65,7 +65,7 @@ class File extends Simple {
   public function __construct( $directory, $allow = array( 'php', 'ini', 'json', 'xml' ) ) {
     parent::__construct();
 
-    $this->_directory = rtrim( $directory, '\\/' ) . '/';
+    $this->_directory = $directory ? rtrim( $directory, '\\/' ) . '/' : null;
     $this->_allow = is_array( $allow ) ? $allow : array( @(string) $allow );
   }
 
@@ -84,7 +84,7 @@ class File extends Simple {
    * Dynamic setter for privates
    *
    * @param string $index
-   * @param mixed  $value
+   * @param mixed $value
    */
   public function __set( $index, $value ) {
     switch( $index ) {
@@ -242,12 +242,10 @@ class File extends Simple {
    * note: Can't serialize resources!
    *
    * @param mixed $content
-   * @param string $namespace
-   * @param array $meta
    *
    * @return mixed
    */
-  protected function convertPhp( $content, $namespace, array &$meta ) {
+  protected function convertPhp( $content ) {
     if( is_string( $content ) ) return unserialize( preg_replace( '/^(<\\?php\\s*\\/\\*{)/i', '', preg_replace( '/(}\\s*\\*\\/)$/i', '', $content ) ) );
     else return '<?php /*{' . serialize( $content ) . '}*/';
 
@@ -260,12 +258,10 @@ class File extends Simple {
    * sections ( can't convert it back easily so don't bother with it anyway ).
    *
    * @param mixed $content
-   * @param string $namespace
-   * @param array $meta
    *
    * @return mixed
    */
-  protected function convertIni( $content, $namespace, array &$meta ) {
+  protected function convertIni( $content ) {
 
     // read from the ini string
     $result = array();
@@ -274,9 +270,9 @@ class File extends Simple {
       $ini = parse_ini_string( $content, false );
       if( is_array( $ini ) ) foreach( $ini as $key => $value ) {
         $keys = explode( '.', $key );
-        $arr = & $result;
+        $arr = &$result;
 
-        while( $key = array_shift( $keys ) ) $arr = & $arr[ $key ];
+        while( $key = array_shift( $keys ) ) $arr = &$arr[ $key ];
         $arr = $value;
       }
 
@@ -304,12 +300,10 @@ class File extends Simple {
    * Maybe in the next releases. This is the default and prefered configuration type.
    *
    * @param mixed $content
-   * @param string $namespace
-   * @param array $meta
    *
    * @return mixed
    */
-  protected function convertJson( $content, $namespace, array &$meta ) {
+  protected function convertJson( $content ) {
     $return = null;
 
     if( !is_string( $content ) ) $return = Enumerable::toJson( $content, true );
@@ -331,7 +325,7 @@ class File extends Simple {
    */
   protected function convertXml( $content, $namespace, array &$meta ) {
 
-    if( !is_string( $content ) ) return Enumerable::toXml( $content, isset( $meta['attribute'] ) ? $meta['attribute'] : array(), $namespace, isset( $meta['version'] ) ? $meta['version'] : '1.0', isset( $meta['encoding'] ) ? $meta['encoding'] : 'UTF-8' )->asXml();
+    if( !is_string( $content ) ) return Enumerable::toXml( $content, isset( $meta[ 'attribute' ] ) ? $meta[ 'attribute' ] : array(), $namespace, isset( $meta[ 'version' ] ) ? $meta[ 'version' ] : '1.0', isset( $meta[ 'encoding' ] ) ? $meta[ 'encoding' ] : 'UTF-8' )->asXml();
     else {
 
       $meta[ 'attribute' ] = array();

@@ -15,7 +15,7 @@
 /**
  * Check php version to avoid syntax and other ugly error messages
  */
-if( version_compare( PHP_VERSION, '5.4.0' ) < 0 ) die( 'This framework needs at least PHP 5.4 to run.' );
+if( version_compare( PHP_VERSION, '5.4.0' ) < 0 ) die( 'You need at least PHP 5.4, but you only have ' . PHP_VERSION . '.' );
 
 /*
  * State variable that define how site react to exceptions and other type of missbehaviors. It can be:
@@ -46,7 +46,7 @@ define( '_URL_ROOT', 'http' . ( _URL_HTTPS ? 's' : '' ) . '://' . $_SERVER[ 'SER
 define( '_URL_BASE', _URL_ROOT . ( strlen( _URL_PATH ) != '/' ? _URL_PATH : '' ) );
 
 /**
- * Directory root of the site.
+ * Directory root of the framework.
  * Can be used to include files in php without worry the correct include path
  */
 define( '_PATH', dirname( __FILE__ ) . '/' );
@@ -65,32 +65,41 @@ define( '_PATH_TMP', 'tmp/' );
  *
  * @param string $class_name
  */
-function __webengine_loader( $class_name ) {
+spl_autoload_register( function ( $class_name ) {
 
   // explode by namespace separator
-  $pieces = explode( '\\', strtolower( $class_name ) );
+  $pieces = explode( '\\', $class_name );
 
-  // check the first piece for engine specific directory choose
-  if( $pieces[0] == 'engine' ) $file = \_PATH . 'engine/library/' . implode( '/', array_splice( $pieces, 1 ) ) . '.lib.php';
+  // find extension directory from the namespaces
+  $directory = 'engine/library/';
+  if( strtolower( $pieces[ 0 ] ) == 'engine' ) $pieces = array_splice( $pieces, 1 );
   else {
 
     // find the extension directory from the class namespace
-    $file = \_PATH . \_PATH_EXTENSION;
+    $directory = \_PATH_EXTENSION;
     for( $i = 0; $i < 2 && $i < count( $pieces ); ++$i ) {
-      $file .= $pieces[$i] . '/';
+      $directory .= ( $i > 0 ? '-' : '' ) . strtolower( $pieces[ $i ] );
 
       // check if this path is an extension: check existance of manifest file with any file extension
-      if( count( glob( $file . 'configuration/manifest.*' ) ) ) break;
+      if( count( glob( \_PATH . $directory . '/configuration/manifest.*' ) ) ) break;
     }
 
     // finalize the class file path with the reamining pieces
-    $file .= 'library/' . implode( '/', array_splice( $pieces, $i+1 ) ) . '.lib.php';
+    $directory .= '/library/';
+    $pieces = array_splice( $pieces, $i + 1 );
   }
 
-  // load the class file
-  if( is_file( $file ) ) require $file;
+  // load the class file with the standard (.php) and legacy (.lib.php) mode
+  $file = \_PATH . $directory . strtolower( implode( '/', $pieces ) );
+  if( is_file( $file . '.php' ) ) include $file . '.php';
+  else if( is_file( $file . '.lib.php' ) ) include $file . '.lib.php';  // TODO remove this legacy mode in the next version
+  else {
+
+    // check for non-standard capital letter files (there is no need for legacy check, cause this files probably 3th part libs)
+    $file = \_PATH . $directory . implode( '/', $pieces );
+    if( is_file( $file . '.php' ) ) include $file . '.php';
+  }
 
   // re-check existance
-  if( !class_exists( $class_name, false ) ) die("Required '{$class_name}' class is missing!");
-}
-spl_autoload_register( '__webengine_loader' );
+  if( !class_exists( $class_name, false ) ) die( "Required class ({$class_name}) is missing." );
+} ) or die( 'Can\'t register the autoload function.' );

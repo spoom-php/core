@@ -29,11 +29,11 @@ class Extension extends Library {
   const EXCEPTION_INVALID = 1;
   const EXCEPTION_MISSING = 2;
 
-  const REGEXP_PACKAGE_NAME   = '[a-z]\\w+';
+  const REGEXP_PACKAGE_NAME = '([a-z]\\w+)?';
   const REGEXP_EXTENSION_NAME = '[a-z]\\w+';
 
-  const DIRECTORY_LOCALIZATION  = 'localization';
-  const DIRECTORY_CONFIGURATION = 'configuration';
+  const DIRECTORY_LOCALIZATION = 'localization/';
+  const DIRECTORY_CONFIGURATION = 'configuration/';
 
   /**
    * Store extension id. It's the package and the
@@ -99,11 +99,11 @@ class Extension extends Library {
 
     // create and configure configuration object
     $this->_configuration = new Configuration( $this );
-    $this->_localization  = new Localization( $this );
+    $this->_localization = new Localization( $this );
 
     // check manifest and save package and name
     $this->_package = $this->_configuration->gets( 'manifest:package', null );
-    $this->_name    = $this->_configuration->gets( 'manifest:name' );
+    $this->_name = $this->_configuration->gets( 'manifest:name' );
     if( $this->_name != '.engine' && "{$this->_package}.{$this->_name}" != $this->_id ) throw new Exception( '.engine', self::EXCEPTION_INVALID, array( $this->_id ) );
   }
 
@@ -132,7 +132,7 @@ class Extension extends Library {
    * Get language string from the extension language object.
    * It's a proxy for Localization::getf() method
    *
-   * @param string       $index
+   * @param string $index
    * @param array|string $insertion
    *
    * @return string
@@ -146,7 +146,7 @@ class Extension extends Library {
    * It's a proxy for Configuration::get() method
    *
    * @param string $index
-   * @param mixed  $if_null
+   * @param mixed $if_null
    *
    * @return mixed
    */
@@ -158,7 +158,7 @@ class Extension extends Library {
    * Return a directory path from the extension root directory
    *
    * @param string $route - dot separated route from extension root ( use backslash for dot in the route )
-   * @param bool   $fpath - add _PATH constant or another ( or nothing )
+   * @param bool $fpath - add _PATH constant or another ( or nothing )
    *
    * @return string
    */
@@ -173,9 +173,9 @@ class Extension extends Library {
   /**
    * Return a file ( or file list ) from the extension root directory
    *
-   * @param string  $file_name - The file name ( use | and | for regexp file filter or * for dir list
-   * @param string  $route     - dot separated route from extension root ( use backslash for dot in the route )
-   * @param boolean $fpath     - add _PATH constant or another ( or nothing )
+   * @param string $file_name - The file name ( use | and | for regexp file filter or * for dir list
+   * @param string $route - dot separated route from extension root ( use backslash for dot in the route )
+   * @param boolean $fpath - add _PATH constant or another ( or nothing )
    *
    * @return bool|string
    */
@@ -190,8 +190,7 @@ class Extension extends Library {
 
       return $files;
 
-    }
-    else return $route . $file_name;
+    } else return $route . $file_name;
   }
 
   /**
@@ -231,7 +230,7 @@ class Extension extends Library {
    * Get extension library class instance with given param.
    *
    * @param string|array $class_name String with dot separated namespace ( exclude Package\Name\ ) or an array of this strings ( return the first exist )
-   * @param mixed        $param      Array of params added to the contructor but NOT as a param list!
+   * @param mixed $param Array of params added to the contructor but NOT as a param list!
    *
    * @return mixed
    */

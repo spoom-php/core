@@ -11,7 +11,7 @@ class Data extends Simple {
   /**
    * @param string $data
    * @param string $namespace
-   * @param int    $caching
+   * @param int $caching
    */
   public function __construct( $data, $namespace = 'default', $caching = Simple::CACHE_SIMPLE ) {
     parent::__construct( $namespace, $caching );
@@ -21,8 +21,8 @@ class Data extends Simple {
   /**
    * Add a namespace to the source
    *
-   * @param mixed  $object_or_array - the object or array to add
-   * @param string $namespace       - the filled namespace
+   * @param mixed $object_or_array - the object or array to add
+   * @param string $namespace - the filled namespace
    *
    * @return $this
    */
@@ -33,8 +33,8 @@ class Data extends Simple {
   /**
    * Add a namespace to the source as reference
    *
-   * @param mixed  $object_or_array - the object or array to add
-   * @param string $namespace       - the filled namespace
+   * @param mixed $object_or_array - the object or array to add
+   * @param string $namespace - the filled namespace
    *
    * @return $this
    */

@@ -19,9 +19,9 @@ abstract class String {
    * Insert variables to the input from insertion array used the regexp
    * constant of class
    *
-   * @param string       $input     input string to insert
-   * @param array        $insertion the insertion variables
-   * @param Localization $language  optional language object for flags behavior
+   * @param string $input input string to insert
+   * @param array $insertion the insertion variables
+   * @param Localization $language optional language object for flags behavior
    *
    * @return array|string
    */
@@ -92,7 +92,7 @@ abstract class String {
   public static function toName( $name, $separator = '.' ) {
 
     // TODO escape only non words
-    $name   = preg_replace( '/\\' . $separator . '+/i', $separator, trim( $name, $separator ) );
+    $name = preg_replace( '/\\' . $separator . '+/i', $separator, trim( $name, $separator ) );
     $return = '';
 
     for( $i = 0, $length = strlen( $name ); $i < $length; ++$i ) {
@@ -113,8 +113,8 @@ abstract class String {
   public static function toLink( $text ) {
 
     $source = array( '/á/i', '/é/i', '/ű|ú|ü/i', '/ő|ó|ö/i', '/í/i', // accented characters
-      '/[\W]+/i', // special characters
-      '/[\s]+/' ); // whitespaces
+        '/[\W]+/i', // special characters
+        '/[\s]+/' ); // whitespaces
     $target = array( 'a', 'e', 'u', 'o', 'i', '-', '+' );
 
     // convert text

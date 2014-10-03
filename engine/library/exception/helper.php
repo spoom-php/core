@@ -38,8 +38,8 @@ abstract class Helper {
 
       // Declare usable variables
       $throw_alter = is_array( $objects ) ? $_ : null;
-      $objects     = is_array( $objects ) ? $objects : func_get_args();
-      $num         = count( $objects );
+      $objects = is_array( $objects ) ? $objects : func_get_args();
+      $num = count( $objects );
       if( $throw_alter == null ) $throw_alter = isset( $objects[ $num - 1 ] ) ? $objects[ $num - 1 ] : null;
 
       // iterate trought the given objects

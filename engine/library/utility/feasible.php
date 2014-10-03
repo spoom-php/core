@@ -14,7 +14,7 @@ class Feasible extends Extension {
    * Execute a function by name
    *
    * @param string $name
-   * @param mixed  $args
+   * @param mixed $args
    *
    * @return mixed
    */

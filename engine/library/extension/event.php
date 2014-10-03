@@ -14,7 +14,8 @@ defined( '_PROTECT' ) or die( 'DENIED!' );
  * @property bool   stopped
  * @property string event
  * @property string base
- * @property array  arguments
+ * @property array  argument
+ * @property array|null  result
  */
 class Event extends Collector {
 
@@ -69,6 +70,14 @@ class Event extends Collector {
    * @var array
    */
   private $_arguments = array();
+
+  /**
+   * Store the result array after the execution in a
+   * 'listener index => result data' structure
+   *
+   * @var array|null
+   */
+  private $_result = null;
 
   /**
    * @param Extension $extension
@@ -128,30 +137,6 @@ class Event extends Collector {
   }
 
   /**
-   * Get all ( or a specified ) result from the event
-   * in an associative array
-   *
-   * @param bool $name
-   *
-   * @return array|null
-   */
-  public function getResultList( $name = false ) {
-
-    // retrive all result
-    if( $name === false ) {
-
-      $tmp = array();
-      foreach( $this->listeners as $listener ) {
-        $tmp[ $listener->name ] = $listener->result;
-      }
-
-      return $tmp;
-    }
-
-    return isset( $this->listeners[ $name ] ) ? $this->listeners[ $name ]->result : null;
-  }
-
-  /**
    * Execute the event. Collect and call listeners and store results.
    *
    * @return self
@@ -160,9 +145,10 @@ class Event extends Collector {
     $this->load();
 
     // Call attached listeners
+    $this->_result = array();
     foreach( $this->listeners as &$listener ) {
 
-      $listener->result = $listener->instance->execute( $this->event, $this, $listener->data );
+      $this->_result[ $listener->name ] = $listener->instance->execute( $this->event, $this, $listener->data );
       if( $this->_stopped ) break;
     }
 
@@ -193,7 +179,7 @@ class Event extends Collector {
 
     // collect listeners if event exists and enabled
     foreach( $tmp as $listener ) if( isset( $listener->extension ) && isset( $listener->library ) ) {
-      $this->setListener( $listener );
+      $this->add( $listener );
     }
   }
 
@@ -203,7 +189,7 @@ class Event extends Collector {
    *
    * @param object $options
    */
-  private function setListener( $options ) {
+  private function add( $options ) {
     if( !isset( $options->enabled ) || !$options->enabled || !ExtensionHelper::validate( $options->extension ) ) return;
 
     $index = $options->extension . '.' . $options->library;
@@ -220,8 +206,7 @@ class Event extends Collector {
         'name' => $index,
         'extension' => $options->extension,
         'instance' => self::$cache[ $index ],
-        'data' => isset( $options->data ) ? $options->data : null,
-        'result' => null
+        'data' => isset( $options->data ) ? $options->data : null
     );
   }
 }

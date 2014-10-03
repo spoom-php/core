@@ -12,7 +12,7 @@ class Request extends Simple {
 
   /**
    * @param string $namespace
-   * @param int    $caching
+   * @param int $caching
    */
   public function __construct( $namespace = 'request', $caching = Simple::CACHE_SIMPLE ) {
     parent::__construct( $namespace, $caching );
@@ -29,9 +29,9 @@ class Request extends Simple {
   /**
    * @todo implement setcookie with an event ( secure the cookie, or else )
    *
-   * @param string      $index
-   * @param mixed       $value
-   * @param int|null    $expire
+   * @param string $index
+   * @param mixed $value
+   * @param int|null $expire
    * @param string|null $url
    */
   public function setc( $index, $value, $expire = null, $url = null ) {

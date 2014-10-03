@@ -9,8 +9,7 @@ defined( '_PROTECT' ) or die( 'DENIED!' );
 
 /**
  * Extend simple PHP \Exception with the power of code base text
- * with language and insertion support. See detailed documentation
- * for more information about usage.
+ * with language and insertion support.
  *
  * Class Exception
  * @package Engine\Exception
@@ -41,9 +40,9 @@ class Exception extends \Exception {
    * or a simple string message
    *
    * @param string|Extension|Localization|null $extension
-   * @param int                                $code
-   * @param array                              $data
-   * @param \Exception                         $previous
+   * @param int $code
+   * @param array $data
+   * @param \Exception $previous
    */
   public function __construct( $extension = null, $code = self::EXCEPTION_UNKNOWN, array $data = array(), \Exception $previous = null ) {
     $message = null;
@@ -99,11 +98,11 @@ class Exception extends \Exception {
    */
   public function toArray() {
     return array(
-        'id'        => $this->id,
-        'code'      => $this->getCode(),
-        'message'   => $this->getMessage(),
+        'id' => $this->id,
+        'code' => $this->getCode(),
+        'message' => $this->getMessage(),
         'extension' => $this->_extension ? $this->_extension->id : null,
-        'data'      => $this->_data
+        'data' => $this->_data
     );
   }
 
@@ -122,7 +121,7 @@ class Exception extends \Exception {
    * source. If extension defined is then use extension->text() method to find message with exception:code
    * index
    *
-   * @param int         $code
+   * @param int $code
    * @param string|null $message
    *
    * @return string

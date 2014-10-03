@@ -22,13 +22,13 @@ final class Configuration extends FileStorage {
   /**
    * Set defaults and init the FileStorage
    *
-   * @param Extension $e
+   * @param Extension $extension
    */
-  function __construct( Extension &$e ) {
-    parent::__construct( $e->dir( '', true ) . Extension::DIRECTORY_CONFIGURATION . '/' );
+  function __construct( Extension $extension ) {
+    parent::__construct( $extension->dir( '', true ) . Extension::DIRECTORY_CONFIGURATION );
 
-    $this->_extension = & $e;
-    $this->namespace  = 'default';
+    $this->_extension = $extension;
+    $this->namespace = 'default';
   }
 
   /**

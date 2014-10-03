@@ -20,7 +20,7 @@ abstract class Page {
    *
    * @var Collector
    */
-  private static $exceptions = null;
+  private static $collector = null;
 
   /**
    * Execute the page method in the right order (start -> run -> stop). This is the proper (and complete)
@@ -34,7 +34,7 @@ abstract class Page {
     try {
       $content = self::run();
     } catch( \Exception $e ) {
-      self::$exceptions->add( $e );
+      self::$collector->addException( $e );
       $content = [ ];
     }
 
@@ -49,7 +49,7 @@ abstract class Page {
   public static function start() {
 
     // attribute initialization
-    self::$exceptions = new Collector();
+    self::$collector = new Collector();
 
     // Call initialise event
     $extension = new Extension( '.engine' );
@@ -66,13 +66,13 @@ abstract class Page {
 
     // call display event to let extensions render the content
     $event = $extension->trigger( self::EVENT_RUN );
-    return $event->getResultList();
+    return $event->result;
   }
   /**
    * Trigger the page stop event with the given arguments. In this method the page should be rendered to
    * the output, based on the content (and maybe the buffer)
    *
-   * @param array       $content the page content array
+   * @param array $content the page content array
    * @param string|null $buffer additional but propably trash information
    */
   public static function stop( array $content = array(), $buffer = null ) {
@@ -80,7 +80,7 @@ abstract class Page {
 
     // clean output buffer and call display end event ( the render )
     $extension->trigger( self::EVENT_STOP, array( 'content' => $content,
-                                                  'buffer'  => $buffer ) );
+        'buffer' => $buffer ) );
 
     exit();
   }
@@ -89,11 +89,11 @@ abstract class Page {
    * Redirect to an url with header or javascript redirect
    *
    * @param mixed $url The new url. It will be converted to string
-   * @param int   $code HTTP Redirect type respsonse code. This number added to 300 to make 30x status code
-   * @param bool  $stop Call the page stop() method ot not
+   * @param int $code HTTP Redirect type respsonse code. This number added to 300 to make 30x status code
+   * @param bool $stop Call the page stop() method ot not
    */
   public static function redirect( $url, $code = 3, $stop = false ) {
-    $url = trim( $url, ' /' );
+    $url = ltrim( trim( $url, ' ' ), '/' );
 
     // add url base if the url doesn't contains protocol
     if( !preg_match( '#^[a-z]+\://#i', $url ) ) $url = _URL_BASE . $url;
@@ -117,6 +117,6 @@ abstract class Page {
    * @return Collector
    */
   public static function getCollector() {
-    return self::$exceptions;
+    return self::$collector;
   }
 }

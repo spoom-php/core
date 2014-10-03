@@ -12,9 +12,9 @@ abstract class File {
    * Get file list from a directory. It can filter the files
    * based on a regexp.
    *
-   * @param string      $directory the directory to search
-   * @param bool        $fullpath  if true the directory path prepended to files
-   * @param null|string $regexp    filter files by regexp
+   * @param string $directory the directory to search
+   * @param bool $fullpath if true the directory path prepended to files
+   * @param null|string $regexp filter files by regexp
    *
    * @return array the array of files
    */
@@ -23,7 +23,7 @@ abstract class File {
     // check
     if( !is_dir( $directory ) ) return array();
 
-    $files            = array();
+    $files = array();
     $directory_stream = opendir( $directory );
 
     while( $f = readdir( $directory_stream ) ) {
@@ -49,11 +49,11 @@ abstract class File {
     else if( is_dir( $path ) ) {
 
       $objects = scandir( $path );
-      foreach ($objects as $object) if ($object != '.' && $object != '..' )  {
+      foreach( $objects as $object ) if( $object != '.' && $object != '..' ) {
         File::remove( $path . '/' . $object );
       }
 
-      reset($objects);
+      reset( $objects );
       return rmdir( $path );
     }
 

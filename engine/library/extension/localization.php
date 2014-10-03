@@ -53,17 +53,17 @@ final class Localization extends FileStorage {
   /**
    * Set defaults
    *
-   * @param Extension $e
+   * @param Extension $extension
    */
-  function __construct( Extension $e ) {
-    parent::__construct( false, array( 'json', 'ini', 'xml' ) );
+  function __construct( Extension $extension ) {
+    parent::__construct( null, array( 'json', 'ini', 'xml' ) );
 
-    $this->_extension     = $e;
-    $this->namespace      = 'default';
-    $this->base_directory = $this->_extension->dir( '', true ) . Extension::DIRECTORY_LOCALIZATION . '/';
+    $this->_extension = $extension;
+    $this->namespace = 'default';
+    $this->base_directory = $this->_extension->dir( '', true ) . Extension::DIRECTORY_LOCALIZATION;
 
     // define default localizations
-    $this->default_directory = $this->find( $e->option( 'manifest:localization' ) );
+    $this->default_directory = $this->find( $extension->option( 'manifest:localization' ) );
   }
 
   /**
@@ -119,15 +119,13 @@ final class Localization extends FileStorage {
 
     if( $global ) {
       $this->active_localization = self::getLocalization();
-      $this->_directory             = $global;
-    }
-    else if( $this->default_directory ) {
+      $this->_directory = $global;
+    } else if( $this->default_directory ) {
       $this->active_localization = $this->_extension->option( 'manifest:localization' );
-      $this->_directory             = $this->default_directory;
-    }
-    else {
+      $this->_directory = $this->default_directory;
+    } else {
       $this->active_localization = false;
-      $this->_directory             = false;
+      $this->_directory = false;
     }
 
     return parent::file( $namespace );
@@ -137,7 +135,7 @@ final class Localization extends FileStorage {
    * Same as the gets method, but insert data to string with fString::insert()
    *
    * @param string $index
-   * @param array  $insertion
+   * @param array $insertion
    *
    * @return null|string
    */
@@ -155,8 +153,8 @@ final class Localization extends FileStorage {
    */
   public static function getLocalization() {
     if( !isset( self::$_localization ) ) {
-      $extension = new Extension('.engine');
-      self::$_localization = $extension->option('manifest:localization');
+      $extension = new Extension( '.engine' );
+      self::$_localization = $extension->option( 'manifest:localization' );
     }
 
     return self::$_localization;

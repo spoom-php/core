@@ -54,10 +54,10 @@ class Library {
 
         if( $this->_library === null ) {
 
-          $class          = explode( '\\', strtolower( get_class( $this ) ), 3 );
+          $class = explode( '\\', strtolower( get_class( $this ) ), 3 );
           $tmp = array();
-          if( $class[ 0 ] == 'engine' ) $tmp[] = $class[1];
-          if( isset( $class[2] ) ) $tmp[] = str_replace( '\\', '.', $class[2] );
+          if( $class[ 0 ] == 'engine' ) $tmp[ ] = $class[ 1 ];
+          if( isset( $class[ 2 ] ) ) $tmp[ ] = str_replace( '\\', '.', $class[ 2 ] );
 
           $this->_library = implode( '.', $tmp );
         }

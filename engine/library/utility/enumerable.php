@@ -12,9 +12,9 @@ abstract class Enumerable {
    * Encode array or object to string ( json )
    *
    * @param object|array $object
-   * @param bool         $human_readable
-   * @param int          $indent_spaces
-   * @param string       $linebreak
+   * @param bool $human_readable
+   * @param int $indent_spaces
+   * @param string $linebreak
    *
    * @return string
    */
@@ -72,9 +72,9 @@ abstract class Enumerable {
    * some pre/post process operation on the string/object in the future
    *
    * @param string $json
-   * @param bool   $assoc
-   * @param int    $depth
-   * @param int    $options
+   * @param bool $assoc
+   * @param int $depth
+   * @param int $options
    *
    * @return mixed
    */
@@ -98,7 +98,7 @@ abstract class Enumerable {
    * note2: if any content equals to 'NULL', 'TRUE' or 'FALSE' will be converted to the proper type
    *
    * @param string $xml The xml string to convert
-   * @param array  $attribute Optional array for attribute indexes
+   * @param array $attribute Optional array for attribute indexes
    * @param string $version The xml version number
    * @param string $encoding The xml encoding
    *
@@ -122,7 +122,7 @@ abstract class Enumerable {
       $key = $next[ 2 ];
 
       // handle "recursion" end, and set simple data to the container
-      if( !is_object( $element ) || !( $element instanceof \SimpleXMLElement ) || ( !count( $element->children() ) && !count( $element->attributes() ) ) ) switch( (string) $element ) {
+      if( !is_object( $element ) || !( $element instanceof \SimpleXMLElement ) || ( !$element->children()->count() && !$element->attributes()->count() ) ) switch( (string) $element ) {
         case 'NULL':
           $container = null;
           continue;
@@ -183,8 +183,8 @@ abstract class Enumerable {
    *
    * note: true, false or null type will be converted to 'TRUE', 'FALSE' or 'NULL' strings
    *
-   * @param mixed  $enumerable The object, array or string
-   * @param array  $attribute Dot separated routes of attributes
+   * @param mixed $enumerable The object, array or string
+   * @param array $attribute Dot separated routes of attributes
    * @param string $root_name The root element name in the xml
    * @param string $version Xml version number
    * @param string $encoding Xml encoding
@@ -237,7 +237,7 @@ abstract class Enumerable {
    * Check for the input is a real numeric array
    *
    * @param mixed $data
-   * @param bool  $ordered it will check the index ordering, not just the type
+   * @param bool $ordered it will check the index ordering, not just the type
    *
    * @return bool true, if the $data was a real array with numeric indexes
    */
