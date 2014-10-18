@@ -180,17 +180,17 @@ class Extension extends Library {
    * @return bool|string
    */
   public function file( $file_name, $route = '', $fpath = false ) {
-    $route = $this->dir( $route, $fpath );
 
     // file list
+    $directory = $this->dir( $route, $fpath );
     if( $file_name == '*' || $file_name{0} == '|' ) {
-      $files = File::getList( $route, false, $file_name == '*' ? false : preg_replace( '/(^\\||\\|$)/', '/', $file_name ) );
 
-      foreach( $files as &$f ) $f = $route . $f;
+      $files = File::getList( $this->dir( $route, true ), false, $file_name == '*' ? false : preg_replace( '/(^\\||\\|$)/', '/', $file_name ) );
+      foreach( $files as &$f ) $f = $directory . $f;
 
       return $files;
 
-    } else return $route . $file_name;
+    } else return $directory . $file_name;
   }
 
   /**

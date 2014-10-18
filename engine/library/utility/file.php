@@ -16,6 +16,8 @@ abstract class File {
    * @param bool $fullpath if true the directory path prepended to files
    * @param null|string $regexp filter files by regexp
    *
+   * @todo use glob instead of regexp
+   *
    * @return array the array of files
    */
   public static function getList( $directory, $fullpath = false, $regexp = null ) {
@@ -25,11 +27,8 @@ abstract class File {
 
     $files = array();
     $directory_stream = opendir( $directory );
-
     while( $f = readdir( $directory_stream ) ) {
-
-      if( is_dir( $directory . $f ) || $f == '.' || $f == '..' || ( is_string( $regexp ) && preg_match( $regexp, $f ) ) ) continue;
-
+      if( is_dir( $directory . $f ) || $f == '.' || $f == '..' || ( is_string( $regexp ) && !preg_match( $regexp, $f ) ) ) continue;
       $files[ ] = $fullpath ? $directory . $f : $f;
     }
 
