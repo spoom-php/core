@@ -9,7 +9,8 @@
  * fix: Bugfixes, as well as smaller changes.
  * build: Text or configuration modification.
  *
- * Zero major is a version, which is still under development. The minor version doesn't have to be compatible backwards in that case.
+ * Zero major is a version, which is still under development. The minor version doesn't have to
+ * be compatible backwards in that case. Details: http://semver.org/
  */
 
 /**

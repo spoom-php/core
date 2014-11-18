@@ -39,7 +39,9 @@ abstract class Page {
     }
 
     $buffer = _REPORTING == 1 ? ob_get_clean() : null;
-    self::stop( $content, $buffer );
+    echo self::stop( $content, $buffer );
+
+    exit();
   }
 
   /**
@@ -48,11 +50,28 @@ abstract class Page {
    */
   public static function start() {
 
+    // setup error reporting based on _REPORTING flag
+    switch( _REPORTING ) {
+      case 0:
+
+        error_reporting( E_ALL );
+        ini_set( 'display_errors', 1 );
+        break;
+      default:
+
+        error_reporting( ~E_ALL );
+        ini_set( 'display_errors', 0 );
+    }
+
+    // setup localization options
+    $extension = new Extension( '.engine' );
+    setlocale( LC_ALL, $extension->option( 'default:locale' ) );
+    date_default_timezone_set( $extension->option( 'default:timezone' ) );
+
     // attribute initialization
     self::$collector = new Collector();
 
     // Call initialise event
-    $extension = new Extension( '.engine' );
     $extension->trigger( self::EVENT_START );
   }
   /**
@@ -73,16 +92,19 @@ abstract class Page {
    * the output, based on the content (and maybe the buffer)
    *
    * @param array $content the page content array
-   * @param string|null $buffer additional but propably trash information
+   * @param string|null $buffer additional but probably trash or error information
+   *
+   * @return string the page result
    */
   public static function stop( array $content = array(), $buffer = null ) {
+    ob_start();
+
+    // call display end event ( the render )
     $extension = new Extension( '.engine' );
-
-    // clean output buffer and call display end event ( the render )
     $extension->trigger( self::EVENT_STOP, array( 'content' => $content,
-        'buffer' => $buffer ) );
+      'buffer' => $buffer ) );
 
-    exit();
+    return ob_get_clean();
   }
 
   /**
