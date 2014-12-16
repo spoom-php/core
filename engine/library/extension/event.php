@@ -148,7 +148,7 @@ class Event extends Collector {
     $this->_result = array();
     foreach( $this->listeners as &$listener ) {
 
-      $this->_result[ $listener->name ] = $listener->instance->execute( $this->event, $this, $listener->data );
+      $this->_result[ $listener->name ] = $listener->instance->execute( $this->event, array( $this, $listener->data ) );
       if( $this->_stopped ) break;
     }
 

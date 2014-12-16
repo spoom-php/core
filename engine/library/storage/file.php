@@ -63,7 +63,7 @@ class File extends Simple {
    * @param mixed $allow
    */
   public function __construct( $directory, $allow = array( 'php', 'ini', 'json', 'xml' ) ) {
-    parent::__construct();
+    parent::__construct( 'default', self::CACHE_NONE );
 
     $this->_directory = $directory ? rtrim( $directory, '\\/' ) . '/' : null;
     $this->_allow = is_array( $allow ) ? $allow : array( @(string) $allow );

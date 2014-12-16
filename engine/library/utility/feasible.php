@@ -14,7 +14,7 @@ class Feasible extends Extension {
    * Execute a function by name
    *
    * @param string $name
-   * @param mixed $args
+   * @param mixed $args argument(s) passed to the method based on the type. Array: array of arguments; null: no argument; else: the first argument
    *
    * @return mixed
    */
@@ -31,7 +31,7 @@ class Feasible extends Extension {
         if( $reflectionMethod->isProtected() ) $reflectionMethod->setAccessible( true );
 
         // execute the function
-        return $reflectionMethod->invoke( $this, $args );
+        return $reflectionMethod->invokeArgs( $this, is_array( $args ) ? $args : ( $args === null ? array() : array( $args ) ) );
       }
     }
 
