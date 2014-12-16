@@ -101,6 +101,4 @@ spl_autoload_register( function ( $class_name ) {
     if( is_file( $file . '.php' ) ) include $file . '.php';
   }
 
-  // re-check existance
-  if( !class_exists( $class_name, false ) ) die( "Required class ({$class_name}) is missing." );
 } ) or die( 'Can\'t register the autoload function.' );
