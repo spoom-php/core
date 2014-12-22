@@ -9,62 +9,18 @@ defined( '_PROTECT' ) or die( 'DENIED!' );
 abstract class Enumerable {
 
   /**
-   * Encode array or object to string ( json )
+   * Encode array or object to string ( json ). This is now just a proxy but maybe some improvement will be
+   * added in future versions
+   *
+   * TODO remove boolean options in a next main version
    *
    * @param object|array $object
-   * @param bool $human_readable
-   * @param int $indent_spaces
-   * @param string $linebreak
+   * @param int|boolean $options JSON_* constant flags. The flag will be JSON_PRETTY_PRINT if it's TRUE for compatibility reason
    *
-   * @return string
+   * @return string|boolean The JSON string or false on failure
    */
-  public static function toJson( $object, $human_readable = false, $indent_spaces = 4, $linebreak = "\n" ) {
-
-    // JSON-é alakítás, még minified alakban
-    $minified_json = json_encode( $object );
-
-    if( !$human_readable ) return $minified_json;
-
-    // JSON "szépítés" előkészítése
-    $dept = 0;
-    $tab = str_repeat( ' ', $indent_spaces );
-    $pieces = preg_split( '/(?<!\\\\)\"/', $minified_json );
-    $length = count( $pieces );
-
-    // Végigmegyünk minden második szétválasztott darabon
-    for( $i = 0; $i < $length; $i += 2 ) {
-
-      $str = $pieces[ $i ];
-      $p = '';
-      $len = strlen( $str );
-
-      // A darbokon végigmegyünk, és szerkesztünk :D
-      for( $j = 0; $j < $len; $j++ ) {
-
-        switch( $str[ $j ] ) {
-          case '{':
-          case '[':
-            $p .= $str[ $j ] . $linebreak . str_repeat( $tab, ++$dept );
-            break;
-          case ',':
-            $p .= $str[ $j ] . $linebreak . str_repeat( $tab, $dept );
-            break;
-          case ':':
-            $p .= $str[ $j ] . ' ';
-            break;
-          case '}':
-          case ']':
-            $p .= $linebreak . str_repeat( $tab, --$dept ) . $str[ $j ];
-            break;
-          default:
-            $p .= $str[ $j ];
-        }
-      }
-
-      $pieces[ $i ] = $p;
-    }
-
-    return implode( '"', $pieces );
+  public static function toJson( $object, $options = 0 ) {
+    return json_encode( $object, $options === true ? JSON_PRETTY_PRINT : $options );
   }
 
   /**

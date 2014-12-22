@@ -306,7 +306,7 @@ class File extends Simple {
   protected function convertJson( $content ) {
     $return = null;
 
-    if( !is_string( $content ) ) $return = Enumerable::toJson( $content, true );
+    if( !is_string( $content ) ) $return = Enumerable::toJson( $content, JSON_PRETTY_PRINT );
     else {
 
       $return = Enumerable::fromJson( $content, !$this->prefer_object );
