@@ -40,9 +40,9 @@ class Exception extends \Exception {
    * or a simple string message
    *
    * @param string|Extension|Localization|null $extension
-   * @param int $code
-   * @param array $data
-   * @param \Exception $previous
+   * @param int                                $code
+   * @param array                              $data
+   * @param \Exception                         $previous
    */
   public function __construct( $extension = null, $code = self::EXCEPTION_UNKNOWN, array $data = array(), \Exception $previous = null ) {
     $message = null;
@@ -98,11 +98,11 @@ class Exception extends \Exception {
    */
   public function toArray() {
     return array(
-        'id' => $this->id,
-        'code' => $this->getCode(),
-        'message' => $this->getMessage(),
-        'extension' => $this->_extension ? $this->_extension->id : null,
-        'data' => $this->_data
+      'id'        => $this->id,
+      'code'      => $this->getCode(),
+      'message'   => $this->getMessage(),
+      'extension' => $this->_extension ? $this->_extension->id : null,
+      'data'      => $this->_data
     );
   }
 

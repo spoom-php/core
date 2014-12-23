@@ -18,7 +18,7 @@ abstract class Helper {
    */
   public static function validate( $extension ) {
     return preg_match( '/^(' . Extension::REGEXP_PACKAGE_NAME . '\\.' . Extension::REGEXP_EXTENSION_NAME . ')$/', $extension ) &&
-    count( glob( _PATH . self::directory( $extension, false ) . Extension::DIRECTORY_CONFIGURATION . 'manifest.*' ) );
+           count( glob( _PATH . self::directory( $extension, false ) . Extension::DIRECTORY_CONFIGURATION . 'manifest.*' ) );
   }
 
   /**

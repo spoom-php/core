@@ -12,9 +12,9 @@ abstract class File {
    * Get file list from a directory. It can filter the files
    * based on a regexp.
    *
-   * @param string $directory the directory to search
-   * @param bool $fullpath if true the directory path prepended to files
-   * @param null|string $regexp filter files by regexp
+   * @param string      $directory the directory to search
+   * @param bool        $fullpath  if true the directory path prepended to files
+   * @param null|string $regexp    filter files by regexp
    *
    * @todo use glob instead of regexp
    *

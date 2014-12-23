@@ -14,7 +14,8 @@ class Feasible extends Extension {
    * Execute a function by name
    *
    * @param string $name
-   * @param mixed $args argument(s) passed to the method based on the type. Array: array of arguments; null: no argument; else: the first argument
+   * @param mixed  $args argument(s) passed to the method based on the type. Array: array of arguments; null: no
+   *                     argument; else: the first argument
    *
    * @return mixed
    */

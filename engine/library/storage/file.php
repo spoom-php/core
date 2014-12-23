@@ -10,7 +10,7 @@ defined( '_PROTECT' ) or die( 'DENIED!' );
  *
  * @property string directory
  * @property string default
- * @property array allow
+ * @property array  allow
  */
 class File extends Simple {
 
@@ -60,7 +60,7 @@ class File extends Simple {
    * Set given directory to handle
    *
    * @param string $directory
-   * @param mixed $allow
+   * @param mixed  $allow
    */
   public function __construct( $directory, $allow = array( 'php', 'ini', 'json', 'xml' ) ) {
     parent::__construct( 'default', self::CACHE_NONE );
@@ -84,7 +84,7 @@ class File extends Simple {
    * Dynamic setter for privates
    *
    * @param string $index
-   * @param mixed $value
+   * @param mixed  $value
    */
   public function __set( $index, $value ) {
     switch( $index ) {
@@ -109,8 +109,8 @@ class File extends Simple {
    * Save modified namespace to file.
    *
    * @param string $namespace
-   * @param null $extension
-   * @param int $permission
+   * @param null   $extension
+   * @param int    $permission
    *
    * @return File
    */
@@ -170,12 +170,12 @@ class File extends Simple {
       if( !isset( self::$files[ $index ] ) ) {
 
         $extension = pathinfo( $filename, PATHINFO_EXTENSION );
-        $method = 'convert' . ucfirst( strtolower( $extension ) );
+        $method    = 'convert' . ucfirst( strtolower( $extension ) );
         self::$files[ $index ] = self::$meta[ $index ] = array();
 
         if( method_exists( $this, $method ) ) {
           $content = @file_get_contents( $filename );
-          $result = $this->{$method}( $content, $namespace, self::$meta[ $index ] );
+          $result  = $this->{$method}( $content, $namespace, self::$meta[ $index ] );
 
           self::$files[ $index ] = (array) $result;
         }
@@ -202,7 +202,7 @@ class File extends Simple {
 
       $filename = $namespace;
       $directory = $this->_directory;
-      $path = $directory . $filename . '.';
+      $path     = $directory . $filename . '.';
 
       if( is_dir( $directory ) ) foreach( $this->_allow as $t ) {
         if( is_file( $path . $t ) && is_readable( $path . $t ) ) return $path . $t;
@@ -214,7 +214,7 @@ class File extends Simple {
 
   /**
    * @param \stdClass $index
-   * @param bool $build
+   * @param bool      $build
    *
    * @see Simple::search
    *
@@ -235,9 +235,9 @@ class File extends Simple {
   }
 
   /**
-   * Php is a typesecure storage type. What type comes to write out, it will came back as the same type. Other advantage is
-   * the data security: No one can see the contents from outside the server, even if the server missconfigured for other storage types.
-   * Major disadvantage of this file type is the human read/write ability.
+   * Php is a typesecure storage type. What type comes to write out, it will came back as the same type. Other
+   * advantage is the data security: No one can see the contents from outside the server, even if the server
+   * missconfigured for other storage types. Major disadvantage of this file type is the human read/write ability.
    *
    * note: Can't serialize resources!
    *
@@ -296,8 +296,8 @@ class File extends Simple {
   }
 
   /**
-   * Convert configuration multi array into json and back. Write out in human readable format, but don't support any comment type.
-   * Maybe in the next releases. This is the default and prefered configuration type.
+   * Convert configuration multi array into json and back. Write out in human readable format, but don't support any
+   * comment type. Maybe in the next releases. This is the default and prefered configuration type.
    *
    * @param mixed $content
    *
@@ -317,9 +317,9 @@ class File extends Simple {
   }
 
   /**
-   * @param mixed $content
+   * @param mixed  $content
    * @param string $namespace
-   * @param array $meta
+   * @param array  $meta
    *
    * @return mixed
    */

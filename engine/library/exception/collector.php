@@ -94,7 +94,7 @@ class Collector implements \Iterator, \Countable {
     if( !is_numeric( $offset ) ) return $storage;
 
     $return = array();
-    $count = count( $storage );
+    $count  = count( $storage );
 
     // list from zero to limit
     if( !is_numeric( $limit ) ) for( $i = 0; $i < $offset && $i < $count; ++$i ) $return[ ] = $storage[ $i ];
@@ -117,7 +117,7 @@ class Collector implements \Iterator, \Countable {
     if( $exception instanceof \Exception ) $exception = array( $exception );
     foreach( $exception as $e ) {
       $this->storage[ ] = $e;
-      $this->last = $e;
+      $this->last       = $e;
     }
 
     // keep chain

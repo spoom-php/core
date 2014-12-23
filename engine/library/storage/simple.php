@@ -15,7 +15,7 @@ defined( '_PROTECT' ) or die( 'DENIED!' );
  */
 class Simple extends Library {
 
-  const CACHE_NONE = 0;
+  const CACHE_NONE   = 0;
   const CACHE_SIMPLE = 1;
   const CACHE_REFERENCE = 2;
 
@@ -66,7 +66,7 @@ class Simple extends Library {
    * Set default or given values
    *
    * @param string $namespace
-   * @param int $caching
+   * @param int    $caching
    */
   public function __construct( $namespace = 'default', $caching = self::CACHE_SIMPLE ) {
     $this->namespace = $namespace;
@@ -88,7 +88,7 @@ class Simple extends Library {
    * Dynamic setter for privates
    *
    * @param string $index
-   * @param mixed $value
+   * @param mixed  $value
    */
   public function __set( $index, $value ) {
     switch( $index ) {
@@ -130,8 +130,8 @@ class Simple extends Library {
    * Convert one or more namespaces to one object or array.
    * In fact, it is a getter for the namespaces.
    *
-   * @param mixed $namespaces - The name ( or array of names ) of the namespace or false, if want all namespace
-   * @param bool $force_object - Return object instead of array
+   * @param mixed $namespaces   - The name ( or array of names ) of the namespace or false, if want all namespace
+   * @param bool  $force_object - Return object instead of array
    *
    * @return mixed
    */
@@ -152,8 +152,8 @@ class Simple extends Library {
    * will be added to the index.
    *
    * @param string $index
-   * @param mixed $data
-   * @param bool $recursive
+   * @param mixed  $data
+   * @param bool   $recursive
    *
    * @return $this
    */
@@ -198,7 +198,7 @@ class Simple extends Library {
    *
    *
    * @param callable $function
-   * @param string $index
+   * @param string   $index
    *
    * @return $this
    */
@@ -207,7 +207,7 @@ class Simple extends Library {
     // first check the function type
     if( is_callable( $function ) ) {
 
-      $index = $this->parse( $index );
+      $index        = $this->parse( $index );
       $result = $this->search( $index );
 
       // check result existance
@@ -276,8 +276,8 @@ class Simple extends Library {
    * Get indexed value from the storage, or
    * the second value if index not exist
    *
-   * @param string $index - The wanted index
-   * @param mixed $if_null - The returned value if index not found
+   * @param string $index   - The wanted index
+   * @param mixed  $if_null - The returned value if index not found
    *
    * @return mixed
    */
@@ -297,8 +297,8 @@ class Simple extends Library {
    * Get indexed (only string type) value from the stored namespaces, or
    * the second value if index not exist
    *
-   * @param string $index - The wanted index
-   * @param mixed $if_null - The returned value if index not found
+   * @param string $index   - The wanted index
+   * @param mixed  $if_null - The returned value if index not found
    *
    * @return string
    */
@@ -312,8 +312,8 @@ class Simple extends Library {
    * Get indexed (only numeric type) value from the stored namespaces, or
    * the second value if index not exist
    *
-   * @param string $index - The wanted index
-   * @param mixed $if_null - The returned value if index not found
+   * @param string $index   - The wanted index
+   * @param mixed  $if_null - The returned value if index not found
    *
    * @return number
    */
@@ -327,8 +327,8 @@ class Simple extends Library {
    * Get indexed (only array type) value from the stored namespaces, or
    * the second value if index not exist
    *
-   * @param string $index - The wanted index
-   * @param mixed $if_null - The returned value if index not found
+   * @param string $index   - The wanted index
+   * @param mixed  $if_null - The returned value if index not found
    *
    * @return array
    */
@@ -342,8 +342,8 @@ class Simple extends Library {
    * Get indexed (only object type) value from the stored namespaces, or
    * the second value if index not exist
    *
-   * @param string $index - The wanted index
-   * @param mixed $if_null - The returned value if index not found
+   * @param string $index   - The wanted index
+   * @param mixed  $if_null - The returned value if index not found
    *
    * @return object
    */
@@ -358,7 +358,7 @@ class Simple extends Library {
    * if it's not exist already
    *
    * @param string $index
-   * @param mixed $value
+   * @param mixed  $value
    *
    * @return $this
    */
@@ -383,8 +383,8 @@ class Simple extends Library {
   /**
    * Add a namespace to the source as reference
    *
-   * @param mixed $object_or_array - the object or array to add
-   * @param string $namespace - the namespace to set
+   * @param mixed  $object_or_array - the object or array to add
+   * @param string $namespace       - the namespace to set
    *
    * @return $this
    */
@@ -404,8 +404,8 @@ class Simple extends Library {
   /**
    * Add a namespace to the source
    *
-   * @param mixed $object_or_array - the object or array to add
-   * @param string $namespace - the namespace to set
+   * @param mixed  $object_or_array - the object or array to add
+   * @param string $namespace       - the namespace to set
    *
    * @return $this
    */
@@ -429,9 +429,9 @@ class Simple extends Library {
   protected function search( $index, $build = false ) {
 
     // preparing result object
-    $result = new \stdClass();
+    $result        = new \stdClass();
     $result->exist = false;
-    $result->key = null;
+    $result->key   = null;
     $result->container = null;
 
     // if not index return the whole source
@@ -447,7 +447,7 @@ class Simple extends Library {
     if( $this->_caching != self::CACHE_NONE && ( !$build || $this->_caching == self::CACHE_REFERENCE ) && isset( $this->cache_source[ $index->string ] ) ) {
       $result->exist = true;
       $result->container = &$this->cache_source[ $index->string ][ 'container' ];
-      $result->key = $this->cache_source[ $index->string ][ 'key' ];
+      $result->key   = $this->cache_source[ $index->string ][ 'key' ];
 
       return $result;
     }
@@ -512,7 +512,7 @@ class Simple extends Library {
       }
 
       // setup the result
-      $result->key = $key;
+      $result->key   = $key;
       $result->container = &$container;
       $result->exist = true;
 
@@ -521,16 +521,16 @@ class Simple extends Library {
         switch( $this->_caching ) {
           case self::CACHE_SIMPLE:
             $this->cache_source[ $index->string ] = array(
-                'container' => $result->container,
-                'key' => $result->key
+              'container' => $result->container,
+              'key'       => $result->key
             );
 
             break;
 
           case self::CACHE_REFERENCE:
             $this->cache_source[ $index->string ] = array(
-                'container' => &$result->container,
-                'key' => $result->key
+              'container' => &$result->container,
+              'key'       => $result->key
             );
 
             break;

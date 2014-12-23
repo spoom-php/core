@@ -9,12 +9,12 @@ defined( '_PROTECT' ) or die( 'DENIED!' );
  * Class Event
  * @package Engine\Extension
  *
- * @property Extension extension
- * @property bool   prevented
- * @property bool   stopped
- * @property string event
- * @property string base
- * @property array  argument
+ * @property Extension   extension
+ * @property bool        prevented
+ * @property bool        stopped
+ * @property string      event
+ * @property string      base
+ * @property array       argument
  * @property array|null  result
  */
 class Event extends Collector {
@@ -81,8 +81,8 @@ class Event extends Collector {
 
   /**
    * @param Extension $extension
-   * @param string $event_name
-   * @param array $arguments
+   * @param string    $event_name
+   * @param array     $arguments
    */
   public function __construct( Extension $extension, $event_name, $arguments = array() ) {
 
@@ -113,7 +113,7 @@ class Event extends Collector {
    * Setter for stopped or prevent attribute
    *
    * @param string $index
-   * @param mixed $value
+   * @param mixed  $value
    */
   public function __set( $index, $value ) {
 
@@ -203,10 +203,10 @@ class Event extends Collector {
     }
 
     $this->listeners[ $index ] = (object) array(
-        'name' => $index,
-        'extension' => $options->extension,
-        'instance' => self::$cache[ $index ],
-        'data' => isset( $options->data ) ? $options->data : null
+      'name'      => $index,
+      'extension' => $options->extension,
+      'instance'  => self::$cache[ $index ],
+      'data'      => isset( $options->data ) ? $options->data : null
     );
   }
 }

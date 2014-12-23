@@ -12,7 +12,7 @@ defined( '_PROTECT' ) or die( 'DENIED!' );
 abstract class Page {
 
   const EVENT_START = 'page.start';
-  const EVENT_RUN = 'page.run';
+  const EVENT_RUN  = 'page.run';
   const EVENT_STOP = 'page.stop';
 
   /**
@@ -91,8 +91,8 @@ abstract class Page {
    * Trigger the page stop event with the given arguments. In this method the page should be rendered to
    * the output, based on the content (and maybe the buffer)
    *
-   * @param array $content the page content array
-   * @param string|null $buffer additional but probably trash or error information
+   * @param array       $content the page content array
+   * @param string|null $buffer  additional but probably trash or error information
    *
    * @return string the page result
    */
@@ -102,7 +102,7 @@ abstract class Page {
     // call display end event ( the render )
     $extension = new Extension( '.engine' );
     $extension->trigger( self::EVENT_STOP, array( 'content' => $content,
-      'buffer' => $buffer ) );
+                                                  'buffer' => $buffer ) );
 
     return ob_get_clean();
   }
@@ -110,9 +110,9 @@ abstract class Page {
   /**
    * Redirect to an url with header or javascript redirect
    *
-   * @param mixed $url The new url. It will be converted to string
-   * @param int $code HTTP Redirect type respsonse code. This number added to 300 to make 30x status code
-   * @param bool $stop Call the page stop() method ot not
+   * @param mixed $url  The new url. It will be converted to string
+   * @param int   $code HTTP Redirect type respsonse code. This number added to 300 to make 30x status code
+   * @param bool  $stop Call the page stop() method ot not
    */
   public static function redirect( $url, $code = 3, $stop = false ) {
     $url = ltrim( trim( $url, ' ' ), '/' );

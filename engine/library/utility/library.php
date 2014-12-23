@@ -6,8 +6,10 @@ defined( '_PROTECT' ) or die( 'DENIED!' );
  * Class Dynamic
  * @package Engine\Utility
  *
- * @property string|bool extension extension of the class in dot separated style ( package.extension, lowercase ). It's ===false if Engine class
- * @property string      library dot separated list of namespaces and the class name relative to the extension ( lowercase )
+ * @property string|bool extension extension of the class in dot separated style ( package.extension, lowercase ). It's
+ *           ===false if Engine class
+ * @property string      library   dot separated list of namespaces and the class name relative to the extension (
+ *           lowercase )
  */
 class Library {
 

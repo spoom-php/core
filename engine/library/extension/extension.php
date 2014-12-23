@@ -146,7 +146,7 @@ class Extension extends Library {
    * It's a proxy for Configuration::get() method
    *
    * @param string $index
-   * @param mixed $if_null
+   * @param mixed  $if_null
    *
    * @return mixed
    */
@@ -173,9 +173,9 @@ class Extension extends Library {
   /**
    * Return a file ( or file list ) from the extension root directory
    *
-   * @param string $file_name - The file name ( use | and | for regexp file filter or * for dir list
-   * @param string $route - dot separated route from extension root ( use backslash for dot in the route )
-   * @param boolean $fpath - add _PATH constant or another ( or nothing )
+   * @param string  $file_name - The file name ( use | and | for regexp file filter or * for dir list
+   * @param string  $route     - dot separated route from extension root ( use backslash for dot in the route )
+   * @param boolean $fpath     - add _PATH constant or another ( or nothing )
    *
    * @return bool|string
    */
@@ -196,7 +196,8 @@ class Extension extends Library {
   /**
    * Get the first exist library name or return an Exception
    *
-   * @param string $class_name - String with dot separated namespace ( exclude Package\Name\ ) or an array of this strings ( return the first exist )
+   * @param string $class_name - String with dot separated namespace ( exclude Package\Name\ ) or an array of this
+   *                           strings ( return the first exist )
    *
    * @return string|false
    */
@@ -216,8 +217,8 @@ class Extension extends Library {
   /**
    * Triggers an event of the extension and return the event object for the result
    *
-   * @param string $event the dot separated event name
-   * @param array $arguments arguments passed to the event handlers
+   * @param string $event     the dot separated event name
+   * @param array  $arguments arguments passed to the event handlers
    *
    * @return Event
    */
@@ -229,8 +230,9 @@ class Extension extends Library {
   /**
    * Get extension library class instance with given param.
    *
-   * @param string|array $class_name String with dot separated namespace ( exclude Package\Name\ ) or an array of this strings ( return the first exist )
-   * @param mixed $param Array of params added to the contructor but NOT as a param list!
+   * @param string|array $class_name String with dot separated namespace ( exclude Package\Name\ ) or an array of this
+   *                                 strings ( return the first exist )
+   * @param mixed        $param      Array of params added to the contructor but NOT as a param list!
    *
    * @return mixed
    */

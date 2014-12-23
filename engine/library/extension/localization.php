@@ -59,7 +59,7 @@ final class Localization extends FileStorage {
     parent::__construct( null, array( 'json', 'ini', 'xml' ) );
 
     $this->_extension = $extension;
-    $this->namespace = 'default';
+    $this->namespace  = 'default';
     $this->base_directory = $this->_extension->dir( '', true ) . Extension::DIRECTORY_LOCALIZATION;
 
     // define default localizations
@@ -135,7 +135,7 @@ final class Localization extends FileStorage {
    * Same as the gets method, but insert data to string with fString::insert()
    *
    * @param string $index
-   * @param array $insertion
+   * @param array  $insertion
    *
    * @return null|string
    */

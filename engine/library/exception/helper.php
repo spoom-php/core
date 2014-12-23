@@ -17,7 +17,7 @@ abstract class Helper {
    * note: the last given object only used for false throw!
    *
    * @param mixed $objects
-   * @param null $_
+   * @param null  $_
    *
    * @return array
    * @throws \Exception
