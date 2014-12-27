@@ -9,8 +9,7 @@ defined( '_PROTECT' ) or die( 'DENIED!' );
 abstract class Helper {
 
   /**
-   * Check extension existance. In fact is't only check
-   * extension directory existance.
+   * Check extension existance. In fact is't only check extension directory existance
    *
    * @param string $extension
    *
@@ -22,9 +21,8 @@ abstract class Helper {
   }
 
   /**
-   * Return extension directory from given param ( extension id ). It will return
-   * false if params are invalid or the given extension
-   * doesn't exist otherwise the directory without _PATH.
+   * Return extension directory from given param ( extension id ). It will return  false if params are invalid or the
+   * given extension doesn't exist otherwise the directory without _PATH
    *
    * @param string $extension
    * @param boolean $validate

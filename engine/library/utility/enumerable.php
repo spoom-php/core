@@ -44,8 +44,6 @@ abstract class Enumerable {
   }
 
   /**
-   * @todo implement a prefer_object feature
-   *
    * Convert any kind of xml text to array. The attributes of the elements "converted" to simple properties, but
    * their dot separated route from the root element is saved in an optional array for the toXml() method
    *
@@ -54,6 +52,8 @@ abstract class Enumerable {
    *
    * note2: if any content equals to 'NULL', 'TRUE' or 'FALSE' will be converted to the proper type
    *
+   * TODO implement a prefer_object feature
+   * 
    * @param string $xml       The xml string to convert
    * @param array  $attribute Optional array for attribute indexes
    * @param string $version   The xml version number

@@ -3,19 +3,20 @@
 defined( '_PROTECT' ) or die( 'DENIED!' );
 
 /**
- * @todo    implement set and get cookie method or event, for cookie security implementations
- *
  * Class Request
+ *
+ * TODO implement set and get cookie method or event, for cookie security implementations
+ *
  * @package Engine\Storage
  */
-class Request extends Simple {
+class Request extends Advance {
 
   /**
    * @param string $namespace
    * @param int    $caching
    */
-  public function __construct( $namespace = 'request', $caching = Simple::CACHE_SIMPLE ) {
-    parent::__construct( $namespace, $caching );
+  public function __construct( $namespace = 'request', $caching = self::CACHE_NONE ) {
+    parent::__construct( $namespace, null, $caching );
 
     $this->separator = '>';
     $this->addr( $_REQUEST, 'request' );
@@ -27,7 +28,9 @@ class Request extends Simple {
   }
 
   /**
-   * @todo implement setcookie with an event ( secure the cookie, or else )
+   * Create, remove, update a cookie
+   *
+   * TODO implement setcookie with an event ( secure the cookie, or else )
    *
    * @param string   $index
    * @param mixed    $value

@@ -29,8 +29,8 @@ final class Localization extends FileStorage {
   private $_extension = null;
 
   /**
-   * Default language directory defined in
-   * default configuration file 'localization' entry ( only localization string defined )
+   * Default language directory defined in default configuration file 'localization' entry ( only localization string
+   * defined )
    *
    * @var string
    */
@@ -60,7 +60,7 @@ final class Localization extends FileStorage {
 
     $this->_extension = $extension;
     $this->namespace  = 'default';
-    $this->base_directory = $this->_extension->dir( '', true ) . Extension::DIRECTORY_LOCALIZATION;
+    $this->base_directory = $this->_extension->directory( '', true ) . Extension::DIRECTORY_LOCALIZATION;
 
     // define default localizations
     $this->default_directory = $this->find( $extension->option( 'manifest:localization' ) );
@@ -77,7 +77,7 @@ final class Localization extends FileStorage {
     else if( $index === 'localization' ) {
 
       // call to reload active localization
-      $this->file( '' );
+      $this->path( '' );
 
       return $this->active_localization;
     }
@@ -114,7 +114,7 @@ final class Localization extends FileStorage {
    *
    * @return mixed
    */
-  protected function file( $namespace ) {
+  protected function path( $namespace ) {
     $global = $this->find( self::getLocalization() );
 
     if( $global ) {
@@ -128,7 +128,7 @@ final class Localization extends FileStorage {
       $this->_directory = false;
     }
 
-    return parent::file( $namespace );
+    return parent::path( $namespace );
   }
 
   /**
@@ -166,6 +166,7 @@ final class Localization extends FileStorage {
    * @param string $new_localization
    */
   public static function setLocalization( $new_localization ) {
+    
     $new_localization = trim( strtolower( $new_localization ) );
     if( preg_match( '/[a-z]/', $new_localization ) > 0 ) {
       self::$_localization = $new_localization;

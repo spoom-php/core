@@ -3,7 +3,7 @@
 defined( '_PROTECT' ) or die( 'DENIED!' );
 
 /**
- * This class can collect \Exception-s and return the exceptions.
+ * This class can collect \Exception-s and return the exceptions
  *
  * Class Collector
  * @package Engine\Exception

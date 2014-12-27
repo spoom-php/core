@@ -16,8 +16,7 @@ abstract class String {
   const REGEXP_INSERT_REPLACE = '\{([A-z0-9_.-]+)(?:&([\w]))?\}';
 
   /**
-   * Insert variables to the input from insertion array used the regexp
-   * constant of class
+   * Insert variables to the input from insertion array used the regexp constant of class
    *
    * @param string       $input     input string to insert
    * @param array        $insertion the insertion variables
@@ -81,8 +80,7 @@ abstract class String {
   }
 
   /**
-   * Create camelCase version of the input string along
-   * the separator
+   * Create camelCase version of the input string along the separator
    *
    * @param string $name
    * @param string $separator
@@ -113,15 +111,15 @@ abstract class String {
   public static function toLink( $text ) {
 
     $source = array( '/á/i', '/é/i', '/ű|ú|ü/i', '/ő|ó|ö/i', '/í/i', // accented characters
-                     '/[\W]+/i', // special characters
-                     '/[\s]+/' ); // whitespaces
+                     '/[\W]+/i',                                     // special characters
+                     '/[\s]+/' );                                    // whitespaces
     $target = array( 'a', 'e', 'u', 'o', 'i', '-', '+' );
 
     // convert text
     $text = mb_convert_case( $text, MB_CASE_LOWER, 'UTF-8' ); // lowercase
-    $text = preg_replace( $source, $target, $text ); // change the chars
-    $text = preg_replace( '/[+\-]+/i', '-', $text ); // clean special chars next to each other
-    $text = trim( $text, ' -+' ); // trim special chars the beginning or end of the string
+    $text   = preg_replace( $source, $target, $text );          // change the chars
+    $text   = preg_replace( '/[+\-]+/i', '-', $text );          // clean special chars next to each other
+    $text   = trim( $text, ' -+' );                             // trim special chars the beginning or end of the string
 
     return $text;
   }

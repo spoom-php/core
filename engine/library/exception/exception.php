@@ -8,8 +8,7 @@ use Engine\Utility\String;
 defined( '_PROTECT' ) or die( 'DENIED!' );
 
 /**
- * Extend simple PHP \Exception with the power of code base text
- * with language and insertion support.
+ * Extend simple PHP \Exception with the power of code base text with language and insertion support
  *
  * Class Exception
  * @package Engine\Exception
@@ -36,8 +35,7 @@ class Exception extends \Exception {
   private $_extension = null;
 
   /**
-   * Initialise the custom Exception object, with extension and code specified message
-   * or a simple string message
+   * Initialise the custom Exception object, with extension and code specified message or a simple string message
    *
    * @param string|Extension|Localization|null $extension
    * @param int                                $code

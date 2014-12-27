@@ -25,7 +25,7 @@ final class Configuration extends FileStorage {
    * @param Extension $extension
    */
   function __construct( Extension $extension ) {
-    parent::__construct( $extension->dir( '', true ) . Extension::DIRECTORY_CONFIGURATION );
+    parent::__construct( $extension->directory( '', true ) . Extension::DIRECTORY_CONFIGURATION );
 
     $this->_extension = $extension;
     $this->namespace = 'default';

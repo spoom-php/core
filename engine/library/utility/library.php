@@ -3,7 +3,7 @@
 defined( '_PROTECT' ) or die( 'DENIED!' );
 
 /**
- * Class Dynamic
+ * Class Library
  * @package Engine\Utility
  *
  * @property string|bool extension extension of the class in dot separated style ( package.extension, lowercase ). It's
@@ -21,8 +21,7 @@ class Library {
   private $_extension = null;
 
   /**
-   * The class library. Dot separated relative namespace from extension
-   * base or engine directory.
+   * The class library. Dot separated relative namespace from extension base or engine directory
    *
    * @var string
    */
@@ -84,8 +83,7 @@ class Library {
   }
 
   /**
-   * toString overwrite of Object class. It's the extension and the library
-   * separated by an ':'
+   * toString overwrite of Object class. It's the extension and the library separated by an ':'
    *
    * @return string
    */

@@ -24,11 +24,10 @@ class Feasible extends Extension {
     // check execution name validity
     if( is_string( $name ) && strlen( $name ) > 0 && $this->prepare( $name ) !== false ) {
 
-      $f = $this->getFunction( $name );
-
       // check function validity
-      if( is_callable( array( $this, $f ) ) ) {
-        $reflectionMethod = new \ReflectionMethod( $this, $f );
+      $method = $this->getFunction( $name );
+      if( is_callable( array( $this, $method ) ) ) {
+        $reflectionMethod = new \ReflectionMethod( $this, $method );
         if( $reflectionMethod->isProtected() ) $reflectionMethod->setAccessible( true );
 
         // execute the function
@@ -40,8 +39,7 @@ class Feasible extends Extension {
   }
 
   /**
-   * Do some preparation before the execution. It's maybe extended
-   * in child class.
+   * Do some preparation before the execution. It's maybe extended in child class
    *
    * @param string $name
    *

@@ -1,5 +1,6 @@
 <?php namespace Engine\Storage;
 
+use Engine\Extension\Extension;
 use Engine\Utility\Enumerable;
 
 defined( '_PROTECT' ) or die( 'DENIED!' );
@@ -12,7 +13,26 @@ defined( '_PROTECT' ) or die( 'DENIED!' );
  * @property string default
  * @property array  allow
  */
-class File extends Simple {
+class File extends Advance {
+
+  /**
+   * Event called for (un)serialize the data to/from the file. Five arguments passed:
+   *  - content [mixed]: The content to convert
+   *  - type [int]: CONVERT_* constant
+   *  - format [string]: The source data format (ini, json, xml..)
+   *  - namespace [string]: The namespace for the data
+   *  - &meta [array]: Store custom meta for a file (namespace) on unserialize to be able to serialize back again
+   */
+  const EVENT_CONVERT = 'storage.file.convert';
+
+  /**
+   * Convert any type of data to string for store in file
+   */
+  const CONVERT_SERIALIZE = 0;
+  /**
+   * Convert string data to any type (mostly enumerable)
+   */
+  const CONVERT_UNSERIALIZE = 1;
 
   /**
    * Global storage for file contents ( parsed )
@@ -63,23 +83,31 @@ class File extends Simple {
    * @param mixed  $allow
    */
   public function __construct( $directory, $allow = array( 'php', 'ini', 'json', 'xml' ) ) {
-    parent::__construct( 'default', self::CACHE_NONE );
+    parent::__construct( 'default', null, self::CACHE_NONE );
 
     $this->_directory = $directory ? rtrim( $directory, '\\/' ) . '/' : null;
     $this->_allow = is_array( $allow ) ? $allow : array( @(string) $allow );
   }
 
   /**
-   * @param $index
+   * @param string $index
    *
    * @return mixed
    */
   public function __get( $index ) {
-    $i = '_' . $index;
-    if( property_exists( $this, $i ) ) return $this->{$i};
+
+    $iindex = '_' . $index;
+    if( property_exists( $this, $iindex ) ) return $this->{$iindex};
     else return parent::__get( $index );
   }
-
+  /**
+   * @param string $index
+   *
+   * @return bool
+   */
+  public function __isset( $index ) {
+    return property_exists( $this, '_' . $index ) || parent::__isset( $index );
+  }
   /**
    * Dynamic setter for privates
    *
@@ -97,15 +125,6 @@ class File extends Simple {
   }
 
   /**
-   * @param string $index
-   *
-   * @return bool
-   */
-  public function __isset( $index ) {
-    return property_exists( $this, '_' . $index ) || parent::__isset( $index );
-  }
-
-  /**
    * Save modified namespace to file.
    *
    * @param string $namespace
@@ -115,8 +134,8 @@ class File extends Simple {
    * @return File
    */
   public function save( $namespace, $extension = null, $permission = 0777 ) {
-    $filename = $this->file( $namespace );
-    $index = $this->_directory . $namespace;
+    $filename = $this->path( $namespace );
+    $index    = $this->_directory . $namespace;
 
     // if namespace not exists then try to remove the file to
     if( !$this->exist( $namespace . ':' ) ) {
@@ -137,19 +156,14 @@ class File extends Simple {
         else $filename = $this->_directory . $namespace . '.' . $extension;
       }
 
-      $content = self::$files[ $index ];
-      $method = 'convert' . ucfirst( strtolower( $extension ) );
-
-      if( ( is_file( $filename ) || @touch( $filename ) ) && is_writeable( $filename ) && method_exists( $this, $method ) ) {
-
-        $result = $this->{$method}( $content, $namespace, self::$meta[ $index ] );
-        if( trim( $result ) != '' ) return @file_put_contents( $filename, $result );
+      $result = $this->process( self::$files[ $index ], self::CONVERT_SERIALIZE, $extension, $namespace, self::$meta[ $index ] );
+      if( ( is_file( $filename ) || @touch( $filename ) ) && is_writeable( $filename ) ) {
+        return @file_put_contents( $filename, $result );
       }
     }
 
     return false;
   }
-
   /**
    * Load namespace ( file content ) to global storage and
    * set local storage namespace reference. Only load file
@@ -161,25 +175,13 @@ class File extends Simple {
    */
   protected function load( $namespace ) {
 
-    $filename = $this->file( $namespace );
-    $index = $this->_directory . $namespace;
+    $filename = $this->path( $namespace );
+    $index    = $this->_directory . $namespace;
     if( !$filename ) self::$files[ $index ] = self::$meta[ $index ] = array();
-    else if( is_file( $filename ) && is_readable( $filename ) ) {
+    else if( is_file( $filename ) && is_readable( $filename ) && !isset( self::$files[ $index ] ) ) {
 
-      // if not exist load to the cache
-      if( !isset( self::$files[ $index ] ) ) {
-
-        $extension = pathinfo( $filename, PATHINFO_EXTENSION );
-        $method    = 'convert' . ucfirst( strtolower( $extension ) );
-        self::$files[ $index ] = self::$meta[ $index ] = array();
-
-        if( method_exists( $this, $method ) ) {
-          $content = @file_get_contents( $filename );
-          $result  = $this->{$method}( $content, $namespace, self::$meta[ $index ] );
-
-          self::$files[ $index ] = (array) $result;
-        }
-      }
+      self::$files[ $index ] = self::$meta[ $index ] = array();
+      self::$files[ $index ] = $this->process( @file_get_contents( $filename ), self::CONVERT_UNSERIALIZE, pathinfo( $filename, PATHINFO_EXTENSION ), $namespace, self::$meta[ $index ] );
     }
 
     // set storage namespace to point this container
@@ -196,7 +198,7 @@ class File extends Simple {
    *
    * @return mixed
    */
-  protected function file( $namespace ) {
+  protected function path( $namespace ) {
 
     if( $this->_directory ) {
 
@@ -211,12 +213,11 @@ class File extends Simple {
 
     return false;
   }
-
   /**
    * @param \stdClass $index
    * @param bool      $build
    *
-   * @see Simple::search
+   * @see Advance::search
    *
    * @return object
    */
@@ -241,31 +242,32 @@ class File extends Simple {
    *
    * note: Can't serialize resources!
    *
-   * @param mixed $content
+   * @param mixed $content Content to convert
+   * @param int   $type    CONVERT_* constant
    *
    * @return mixed
    */
-  protected function convertPhp( $content ) {
-    if( is_string( $content ) ) return unserialize( preg_replace( '/^(<\\?php\\s*\\/\\*{)/i', '', preg_replace( '/(}\\s*\\*\\/)$/i', '', $content ) ) );
+  protected function convertPhp( $content, $type ) {
+    if( $type == self::CONVERT_UNSERIALIZE ) return unserialize( preg_replace( '/^(<\\?php\\s*\\/\\*{)/i', '', preg_replace( '/(}\\s*\\*\\/)$/i', '', $content ) ) );
     else return '<?php /*{' . serialize( $content ) . '}*/';
 
   }
-
   /**
    * A really old school file type for configuration, but it works ( in some cases ). It's only for some compatibility,
    * new configuration files should not be stored in this type.
    * However, multi array structure converted ( and parsed back ) into dot separated keys and no support for
    * sections ( can't convert it back easily so don't bother with it anyway ).
    *
-   * @param mixed $content
+   * @param mixed $content Content to convert
+   * @param int   $type    CONVERT_* constant
    *
    * @return mixed
    */
-  protected function convertIni( $content ) {
+  protected function convertIni( $content, $type ) {
 
     // read from the ini string
     $result = array();
-    if( is_string( $content ) ) {
+    if( $type == self::CONVERT_UNSERIALIZE ) {
 
       $ini = parse_ini_string( $content, false );
       if( is_array( $ini ) ) foreach( $ini as $key => $value ) {
@@ -294,38 +296,43 @@ class File extends Simple {
 
     return $result;
   }
-
   /**
    * Convert configuration multi array into json and back. Write out in human readable format, but don't support any
    * comment type. Maybe in the next releases. This is the default and prefered configuration type.
    *
-   * @param mixed $content
+   * @param mixed $content Content to convert
+   * @param int   $type    CONVERT_* constant
    *
    * @return mixed
    */
-  protected function convertJson( $content ) {
+  protected function convertJson( $content, $type ) {
     $return = null;
 
-    if( !is_string( $content ) ) $return = Enumerable::toJson( $content, JSON_PRETTY_PRINT );
+    if( $type == self::CONVERT_SERIALIZE ) $return = Enumerable::toJson( $content, JSON_PRETTY_PRINT );
     else {
 
-      $return = Enumerable::fromJson( $content, !$this->prefer_object );
+      $return = Enumerable::fromJson( $content, !$this->prefer );
       if( $return ) $return = (array) $return;
     }
 
     return $return;
   }
-
   /**
-   * @param mixed  $content
-   * @param string $namespace
-   * @param array  $meta
+   * XML converter based on the Enumberable class xml related methods
+   *
+   * @see \Engine\Utility\Enumerable::toXml()
+   * @see \Engine\Utility\Enumerable::fromXml()
+   *
+   * @param mixed  $content   Content to convert
+   * @param int    $type      CONVERT_* constant
+   * @param string $namespace The content source or target namespace
+   * @param array  $meta      Custom meta storage that allow proper serialization (back) of the xml properties
    *
    * @return mixed
    */
-  protected function convertXml( $content, $namespace, array &$meta ) {
+  protected function convertXml( $content, $type, $namespace, array &$meta ) {
 
-    if( !is_string( $content ) ) return Enumerable::toXml( $content, isset( $meta[ 'attribute' ] ) ? $meta[ 'attribute' ] : array(), $namespace, isset( $meta[ 'version' ] ) ? $meta[ 'version' ] : '1.0', isset( $meta[ 'encoding' ] ) ? $meta[ 'encoding' ] : 'UTF-8' )->asXml();
+    if( $type == self::CONVERT_SERIALIZE ) return Enumerable::toXml( $content, isset( $meta[ 'attribute' ] ) ? $meta[ 'attribute' ] : array(), $namespace, isset( $meta[ 'version' ] ) ? $meta[ 'version' ] : '1.0', isset( $meta[ 'encoding' ] ) ? $meta[ 'encoding' ] : 'UTF-8' )->asXml();
     else {
 
       $meta[ 'attribute' ] = array();
@@ -334,6 +341,41 @@ class File extends Simple {
       $object = Enumerable::fromXml( $content, $meta[ 'attribute' ], $meta[ 'version' ], $meta[ 'encoding' ] );
 
       return $object;
+    }
+  }
+
+  /**
+   * Process content for store or to handle in code. This will trigger the converter event or call a built-in converter
+   * to do the work
+   *
+   * @param mixed  $content   Content to convert
+   * @param int    $type      CONVERT_* constant
+   * @param string $format    The source data type (json, xml, ini..)
+   * @param string $namespace The content source or target namespace
+   * @param array  $meta      Custom meta storage that allow the seralization and unserialization process to pass data
+   *                          each other
+   *
+   * @return mixed
+   */
+  private function process( $content, $type, $format, $namespace, &$meta ) {
+
+    $method = 'convert' . ucfirst( strtolower( $format ) );
+    if( method_exists( $this, $method ) ) return $this->{$method}( $content, $type, $namespace, $meta );
+    else {
+
+      $extension = new Extension( 'engine' );
+      $event     = $extension->trigger(
+        self::EVENT_CONVERT, array(
+          'content'   => $content,
+          'type'      => $type,
+          'format'    => $format,
+          'namespace' => $namespace,
+          'meta'      => &$meta
+        )
+      );
+
+      if( count( $event->result ) ) return $event->result[ 0 ];
+      else return $type == self::CONVERT_SERIALIZE ? '' : array();
     }
   }
 }
