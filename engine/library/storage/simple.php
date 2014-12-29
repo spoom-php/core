@@ -8,7 +8,7 @@ defined( '_PROTECT' ) or die( 'DENIED!' );
  * Class Simple
  * @package Engine\Storage
  *
- * @property bool     prefer      auto construct with object, instead of array
+ * @property bool     prefer         auto construct with object, instead of array
  * @property string   separator      index separator
  */
 class Simple extends Library {

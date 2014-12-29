@@ -53,7 +53,7 @@ abstract class Enumerable {
    * note2: if any content equals to 'NULL', 'TRUE' or 'FALSE' will be converted to the proper type
    *
    * TODO implement a prefer_object feature
-   * 
+   *
    * @param string $xml       The xml string to convert
    * @param array  $attribute Optional array for attribute indexes
    * @param string $version   The xml version number

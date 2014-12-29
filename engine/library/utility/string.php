@@ -117,9 +117,9 @@ abstract class String {
 
     // convert text
     $text = mb_convert_case( $text, MB_CASE_LOWER, 'UTF-8' ); // lowercase
-    $text   = preg_replace( $source, $target, $text );          // change the chars
-    $text   = preg_replace( '/[+\-]+/i', '-', $text );          // clean special chars next to each other
-    $text   = trim( $text, ' -+' );                             // trim special chars the beginning or end of the string
+    $text = preg_replace( $source, $target, $text );          // change the chars
+    $text = preg_replace( '/[+\-]+/i', '-', $text );          // clean special chars next to each other
+    $text = trim( $text, ' -+' );                             // trim special chars the beginning or end of the string
 
     return $text;
   }
