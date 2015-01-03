@@ -237,7 +237,7 @@ class Extension extends Library {
     return false;
   }
   /**
-   * Get extension library class instance with given param
+   * Get extension library class instance with given param.
    *
    * @param string|array $class_name String with dot separated namespace ( exclude Package\Name\ ) or an array of this
    *                                 strings ( return the first exist )
@@ -266,7 +266,7 @@ class Extension extends Library {
    */
   public function trigger( $event, $arguments = array() ) {
 
-    $event = new Event( $this, $event, $arguments );
+    $event = new Event( $this->id, $event, $arguments );
     return $event->execute();
   }
 }

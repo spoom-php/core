@@ -48,9 +48,9 @@ class Event extends Collector {
   private $_base = null;
 
   /**
-   * The extension that triggered the event
+   * The extension id that trigger the event
    *
-   * @var Extension|null
+   * @var string|null
    */
   private $_extension = null;
 
@@ -80,16 +80,16 @@ class Event extends Collector {
   private $_result = null;
 
   /**
-   * @param Extension $extension
+   * @param string $extension
    * @param string    $event_name
    * @param array     $arguments
    */
-  public function __construct( Extension $extension, $event_name, $arguments = array() ) {
+  public function __construct( $extension, $event_name, $arguments = array() ) {
 
     // set default params
     $this->_extension = $extension;
     $this->_event = $event_name;
-    $this->_base = trim( $this->extension->id, '.' ); // the trim is for the '.engine' extension id
+    $this->_base = trim( $this->extension, '.' ); // the trim is for the '.engine' extension id
     $this->_argument = $arguments;
   }
 
