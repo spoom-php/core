@@ -20,8 +20,8 @@ if( version_compare( PHP_VERSION, '5.4.0' ) < 0 ) die( 'You need at least PHP 5.
 
 /*
  * State variable that define how site react to exceptions and other type of missbehaviors. It can be:
- *  0: Development state, every little notice and exception shown
- *  1: Production state, no exception shown try to ignore or solve them
+ *  0: Production state, no exception shown try to ignore or solve them
+ *  1: Development state, every little notice and exception shown
  *
  *  ...more state coming when neccessary
  */

@@ -28,7 +28,7 @@ abstract class Page {
    * the start and argument passing between run and stop methods
    */
   public static function execute() {
-    if( _REPORTING == 1 ) ob_start();
+    if( !_REPORTING ) ob_start();
     self::start();
 
     try {
@@ -38,7 +38,7 @@ abstract class Page {
       $content = [ ];
     }
 
-    $buffer = _REPORTING == 1 ? ob_get_clean() : null;
+    $buffer = !_REPORTING ? ob_get_clean() : null;
     echo self::stop( $content, $buffer );
 
     exit();
@@ -54,13 +54,13 @@ abstract class Page {
     switch( _REPORTING ) {
       case 0:
 
-        error_reporting( E_ALL );
-        ini_set( 'display_errors', 1 );
+        error_reporting( ~E_ALL );
+        ini_set( 'display_errors', 0 );
         break;
       default:
 
-        error_reporting( ~E_ALL );
-        ini_set( 'display_errors', 0 );
+        error_reporting( E_ALL );
+        ini_set( 'display_errors', 1 );
     }
 
     // setup localization options
