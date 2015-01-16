@@ -35,7 +35,7 @@ define( '_URL_HTTPS', isset( $_SERVER[ 'HTTPS' ] ) && $_SERVER[ 'HTTPS' ] != 'of
  * The path part of the url.
  * This will be the relative path to the index.php ( or an another entry point of the site, tha include this file )
  */
-define( '_URL_PATH', trim( dirname( $_SERVER[ 'SCRIPT_NAME' ] ), '/' ) . '/' );
+define( '_URL_PATH', rtrim( dirname( $_SERVER[ 'SCRIPT_NAME' ] ), '\\/ ' ) . '/' );
 /**
  * The root url with protocol, host and port definition ( if neccessary )
  */
@@ -44,13 +44,13 @@ define( '_URL_ROOT', 'http' . ( _URL_HTTPS ? 's' : '' ) . '://' . $_SERVER[ 'SER
  * The root url with the url path.
  * This is the "real" url with all neccessary parameter
  */
-define( '_URL_BASE', _URL_ROOT . ( strlen( _URL_PATH ) != '/' ? _URL_PATH : '' ) );
+define( '_URL_BASE', _URL_ROOT . ( _URL_PATH != '/' ? _URL_PATH : '' ) );
 
 /**
  * Directory root of the framework.
  * Can be used to include files in php without worry the correct include path
  */
-define( '_PATH', dirname( __FILE__ ) . '/' );
+define( '_PATH', rtrim( dirname( __FILE__ ), '\\/' ) . '/' );
 /**
  * Extension directory without the _PATH
  */
