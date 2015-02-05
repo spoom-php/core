@@ -51,4 +51,21 @@ fix: This is one change description that was a fix
 update: This is an other change description that was an update
 
 # Documentation
-...
+
+
+## Exceptions
+The `Exception\*` classes used for throwing or collecting `Exception` objects. There are three predefined exception:
+
+ - `Exception\Common`: Public errors. This MAY displayed to users
+ - `Exception\Runtime`: Fixable errors with coding. This is for the developers
+ - `Exception\System`: Unfixable errors, but can handled in code (maybe) 
+ 
+Every `Exception` has an `extension`, `code`, `data`, `previous` exception and a `type`. Some of them inherited from the
+`\Exception` PHP class. The `extension` is for text localization and with the `code` property defines the exception id
+(`extension`#`code` string). The `data` is some extra data for the exception and this will be inserted to the
+localization string. The `type` is the exception "danger level", and can be:
+
+ - notice
+ - warning 
+ - error
+ - critical
