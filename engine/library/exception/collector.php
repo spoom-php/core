@@ -5,6 +5,7 @@ defined( '_PROTECT' ) or die( 'DENIED!' );
 /**
  * This class can collect \Exception-s and return the exceptions
  *
+ * TODO upgrade
  * @package Engine\Exception
  */
 class Collector implements \Iterator, \Countable {
@@ -56,7 +57,7 @@ class Collector implements \Iterator, \Countable {
   public function hasException( $filter = null ) {
 
     if( $filter > 0 ) {
-      foreach( $this->storage as $e ) if( $e instanceof Exception && $e->getCode() == $filter ) return true;
+      foreach( $this->storage as $e ) if( $e instanceof Common && $e->getCode() == $filter ) return true;
 
       return false;
     } else return isset( $this->last );
@@ -84,7 +85,7 @@ class Collector implements \Iterator, \Countable {
    * @param number $offset
    * @param number $limit
    *
-   * @return Exception[]
+   * @return Common[]
    */
   public function getExceptionList( $offset = null, $limit = null ) {
     $storage = &$this->storage;

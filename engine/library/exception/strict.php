@@ -7,5 +7,5 @@ defined( '_PROTECT' ) or die( 'DENIED!' );
  *
  * @package Engine\Exception
  */
-class Strict extends Exception {
+class Strict extends Common {
 }

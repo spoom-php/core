@@ -1,5 +1,7 @@
 <?php namespace Engine\Exception;
 
+use Engine\Extension\Extension;
+
 defined( '_PROTECT' ) or die( 'DENIED!' );
 
 /**
@@ -9,6 +11,57 @@ defined( '_PROTECT' ) or die( 'DENIED!' );
 abstract class Helper {
 
   /**
+   * Id for unknown exception
+   */
+  const EXCEPTION_ERROR_UNKNOWN = 'engine#0E';
+  /**
+   * Id for wrap the native \Exception instances
+   */
+  const EXCEPTION_ERROR_WRAPPER = 'engine#1E';
+  /**
+   * Exception when the extension id is not like ::REGEXP_ID
+   */
+  const EXCEPTION_NOTICE_INVALID_ID = 'engine#3N';
+
+  /**
+   * Exception id format
+   */
+  const REGEXP_ID = '^([a-z\\-]+)#([0-9]+)([NWEC])$';
+
+  /**
+   * Exception id parser to information object
+   *
+   * @param string $id ::REGEXP_ID formatted string
+   *
+   * @return object { extension: string, code: int, type: char }
+   * @throws Runtime ::EXCEPTION_INVALID_ID if the format is wrong
+   */
+  public static function parse( $id ) {
+
+    // validate the id
+    $matches = [ ];
+    if( preg_match( self::REGEXP_ID, $id, $matches ) === false ) throw new Runtime( self::EXCEPTION_NOTICE_INVALID_ID, [ 'id' => $id ] );
+    else return (object) [
+      'extension' => $matches[ 1 ],
+      'code'      => (int) $matches[ 2 ],
+      'type'      => $matches[ 3 ],
+    ];
+  }
+
+  /**
+   * TODO documentation
+   *
+   * @param Extension $extension
+   * @param string    $code
+   * @param array     $data
+   *
+   * @return string
+   */
+  public static function build( Extension $extension, $code, array $data = [ ] ) {
+    return $extension->text( 'exception:#' . $code, $data );
+  }
+
+  /**
    * Intelligent throwing method. It throws from given objects which is an \Exception
    * object or Collector with at least one \Exception. If one of the given object is === false
    * and the last object is an \Exception object or Collector with at least one \Exception
@@ -16,7 +69,9 @@ abstract class Helper {
    *
    * note: the last given object only used for false throw!
    *
-   * @param mixed $objects
+   * TODO upgrade
+   * 
+*@param mixed $objects
    * @param null  $_
    *
    * @return array
@@ -38,8 +93,8 @@ abstract class Helper {
 
       // Declare usable variables
       $throw_alter = is_array( $objects ) ? $_ : null;
-      $objects = is_array( $objects ) ? $objects : func_get_args();
-      $num = count( $objects );
+      $objects     = is_array( $objects ) ? $objects : func_get_args();
+      $num         = count( $objects );
       if( $throw_alter == null ) $throw_alter = isset( $objects[ $num - 1 ] ) ? $objects[ $num - 1 ] : null;
 
       // iterate trought the given objects
@@ -57,7 +112,9 @@ abstract class Helper {
   /**
    * Test the given object instance is \Exception or Collector and has \Exception
    *
-   * @param mixed $object
+   * TODO upgrade
+   * 
+*@param mixed $object
    *
    * @return boolean
    */
