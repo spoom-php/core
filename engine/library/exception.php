@@ -1,4 +1,4 @@
-<?php namespace Engine\Exception;
+<?php namespace Engine;
 
 use Engine\Extension\Extension;
 
@@ -7,16 +7,16 @@ defined( '_PROTECT' ) or die( 'DENIED!' );
 /**
  * Extend simple PHP \Exception with the power of code base text with language and insertion support
  *
- * @package    Engine\Exception
+ * @package Engine
  *
- * @property string     $id   The unique identifier. The format is '<extension>#<code><type>'
- * @property array      $data The data attached to the exception
- * @property Extension  $extension
- * @property string     $type The "danger level". This can only be a self::TYPE_* constants
- * @property string     $code The ->getCode() returns the numeric part of the code but this also includes the type
+ * @property array       data      The data attached to the exception
+ * @property Extension   extension The message source
+ * @property string      type      The "danger level". This can only be a self::TYPE_* constants
+ * @property string      code      The ->getCode() returns the numeric part of the code but this also includes the type
  *           postfix
+ * @property string      id        The unique identifier. The format is '<extension>#<code><type>'
  */
-abstract class Common extends \Exception implements \JsonSerializable {
+abstract class Exception extends \Exception implements \JsonSerializable {
 
   /**
    * Type for impactless exception
@@ -66,7 +66,7 @@ abstract class Common extends \Exception implements \JsonSerializable {
   public function __construct( $id, array $data = [ ], \Exception $previous = null ) {
 
     // parse id to "properties"
-    $tmp              = Helper::parse( $id );
+    $tmp = Exception\Helper::parse( $id );
     $this->_extension = new Extension( $tmp->extension );
     $this->_type      = $tmp->type;
 
@@ -74,7 +74,7 @@ abstract class Common extends \Exception implements \JsonSerializable {
     $this->_data = $data;
 
     // init the parent object with custom data
-    parent::__construct( Helper::build( $this->_extension, $tmp->code . $this->_type, $this->_data ), $tmp->code, $previous );
+    parent::__construct( Exception\Helper::build( $this->_extension, $tmp->code . $this->_type, $this->_data ), $tmp->code, $previous );
   }
 
   /**

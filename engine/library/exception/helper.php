@@ -1,5 +1,6 @@
 <?php namespace Engine\Exception;
 
+use Engine\Exception;
 use Engine\Extension\Extension;
 
 defined( '_PROTECT' ) or die( 'DENIED!' );
@@ -17,7 +18,7 @@ abstract class Helper {
   /**
    * Id for wrap the native \Exception instances
    */
-  const EXCEPTION_ERROR_WRAPPER = 'engine#1E';
+  const EXCEPTION_ERROR_WRAP = 'engine#1E';
   /**
    * Exception when the extension id is not like ::REGEXP_ID
    */
@@ -34,13 +35,13 @@ abstract class Helper {
    * @param string $id ::REGEXP_ID formatted string
    *
    * @return object { extension: string, code: int, type: char }
-   * @throws Runtime ::EXCEPTION_INVALID_ID if the format is wrong
+   * @throws Strict ::EXCEPTION_INVALID_ID when the ID format is wrong
    */
   public static function parse( $id ) {
 
     // validate the id
     $matches = [ ];
-    if( preg_match( self::REGEXP_ID, $id, $matches ) === false ) throw new Runtime( self::EXCEPTION_NOTICE_INVALID_ID, [ 'id' => $id ] );
+    if( preg_match( self::REGEXP_ID, $id, $matches ) === false ) throw new Strict( self::EXCEPTION_NOTICE_INVALID_ID, [ 'id' => $id ] );
     else return (object) [
       'extension' => $matches[ 1 ],
       'code'      => (int) $matches[ 2 ],
@@ -49,16 +50,30 @@ abstract class Helper {
   }
 
   /**
-   * TODO documentation
+   * Build the exception message
    *
-   * @param Extension $extension
-   * @param string    $code
-   * @param array     $data
+   * @param Extension $extension The exception message source
+   * @param string    $code      The exception code (with the type postix)
+   * @param array     $data      The insertion data to the message
    *
    * @return string
    */
   public static function build( Extension $extension, $code, array $data = [ ] ) {
     return $extension->text( 'exception:#' . $code, $data );
+  }
+
+  /**
+   * Warp native \Exceptions with ::EXCEPTION_ERROR_WRAP id. This will leave \Engine\Exception classes untouched
+   *
+   * @param \Exception $exception
+   *
+   * @return Runtime
+   */
+  public static function wrap( \Exception $exception ) {
+    return $exception instanceof Exception ? $exception : new Runtime( self::EXCEPTION_ERROR_WRAP, [
+      'message' => $exception->getMessage(),
+      'code'    => $exception->getCode()
+    ], $exception );
   }
 
   /**
@@ -69,9 +84,7 @@ abstract class Helper {
    *
    * note: the last given object only used for false throw!
    *
-   * TODO upgrade
-   * 
-*@param mixed $objects
+   * @param mixed $objects
    * @param null  $_
    *
    * @return array
@@ -82,16 +95,15 @@ abstract class Helper {
     if( func_num_args() == 1 ) {
 
       // check if the object is throwable
-      if( self::isException( $objects ) ) {
+      if( self::is( $objects ) ) {
 
         // if it's an eCollector throw the first exception
         if( $objects instanceof Collector ) throw $objects->getException();
-        else if( $objects instanceof \Exception ) throw $objects;
+        else if( $objects instanceof \Exception ) throw self::wrap( $objects );
       }
 
     } else {
 
-      // Declare usable variables
       $throw_alter = is_array( $objects ) ? $_ : null;
       $objects     = is_array( $objects ) ? $objects : func_get_args();
       $num         = count( $objects );
@@ -112,13 +124,11 @@ abstract class Helper {
   /**
    * Test the given object instance is \Exception or Collector and has \Exception
    *
-   * TODO upgrade
-   * 
-*@param mixed $object
+   * @param mixed $object
    *
    * @return boolean
    */
-  public static function isException( $object ) {
+  public static function is( $object ) {
     return $object instanceof \Exception || ( $object instanceof Collector && $object->hasException() );
   }
 }

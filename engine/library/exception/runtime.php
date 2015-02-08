@@ -1,5 +1,7 @@
 <?php namespace Engine\Exception;
 
+use Engine\Exception;
+
 defined( '_PROTECT' ) or die( 'DENIED!' );
 
 /**
@@ -8,5 +10,5 @@ defined( '_PROTECT' ) or die( 'DENIED!' );
  *
  * @package Engine\Exception
  */
-class Runtime extends Common {
+class Runtime extends Exception {
 }
