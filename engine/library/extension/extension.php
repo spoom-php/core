@@ -1,6 +1,6 @@
 <?php namespace Engine\Extension;
 
-use Engine\Exception\Exception;
+use Engine\Exception;
 use Engine\Extension\Helper as ExtensionHelper;
 use Engine\Utility\File;
 use Engine\Utility\Library;
@@ -31,12 +31,12 @@ class Extension extends Library {
    * missmatch in the manifest and the extension path. One data will be passed:
    *  - 0 [string]: Extension id
    */
-  const EXCEPTION_INVALID = 1;
+  const EXCEPTION_NOTICE_INVALID_ID = 'engine#4N';
   /**
    * Exception code for missing extension directory. One data will be passed:
    *  - 0 [string]: Extension id
    */
-  const EXCEPTION_MISSING = 2;
+  const EXCEPTION_CRITICAL_MISSING_EXTENSION = 'engine#5C';
 
   /**
    * Extension package validation regexp
@@ -110,14 +110,15 @@ class Extension extends Library {
    *
    * @param string|null $extension The extension package and name separated by a dot
    *
-   * @throws \Exception
+   * @throws Exception\Strict On invalid extension name
+   * @throws Exception\System On missing extension
    */
   public function __construct( $extension = null ) {
     $this->_id = isset( $extension ) ? strtolower( $extension ) : $this->extension;
 
     // define directory
     $directory = ExtensionHelper::directory( $this->_id );
-    if( !$directory ) throw new Exception( '.engine', self::EXCEPTION_MISSING, array( $extension ) );
+    if( !$directory ) throw new Exception\System( self::EXCEPTION_CRITICAL_MISSING_EXTENSION, array( $extension ) );
     else {
 
       $this->_directory = $directory;
@@ -130,7 +131,7 @@ class Extension extends Library {
       $this->_package = $this->_configuration->gets( 'manifest:package', null );
       $this->_name    = $this->_configuration->gets( 'manifest:name' );
       if( $this->_name != '.engine' && "{$this->_package}.{$this->_name}" != $this->_id ) {
-        throw new Exception( '.engine', self::EXCEPTION_INVALID, array( $this->_id ) );
+        throw new Exception\Strict( self::EXCEPTION_NOTICE_INVALID_ID, array( $this->_id ) );
       }
     }
   }
