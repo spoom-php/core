@@ -56,8 +56,8 @@ update: This is an other change description that was an update
 ## Exceptions
 The `Exception\*` classes used for throwing or collecting `Exception` objects. There are three predefined exception:
 
- - `Exception\Common`: Public errors. This MAY displayed to users
- - `Exception\Runtime`: Fixable errors with coding. This is for the developers
+ - `Exception\Runtime`: Public errors. This MAY displayed to users
+ - `Exception\Strict`: Fixable errors with coding. This is for the developers
  - `Exception\System`: Unfixable errors, but can handled in code (maybe) 
  
 Every `Exception` has an `extension`, `code`, `data`, `previous` exception and a `type`. Some of them inherited from the
