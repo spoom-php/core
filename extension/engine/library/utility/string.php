@@ -111,8 +111,8 @@ abstract class String {
   public static function toLink( $text ) {
 
     $source = array( '/á/i', '/é/i', '/ű|ú|ü/i', '/ő|ó|ö/i', '/í/i', // accented characters
-                     '/[\W]+/i',                                     // special characters
-                     '/[\s]+/' );                                    // whitespaces
+      '/[\W]+/i',                                     // special characters
+      '/[\s]+/' );                                    // whitespaces
     $target = array( 'a', 'e', 'u', 'o', 'i', '-', '+' );
 
     // convert text

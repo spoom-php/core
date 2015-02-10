@@ -12,7 +12,7 @@ defined( '_PROTECT' ) or die( 'DENIED!' );
  *
  * @package Engine
  *
- * @property string              id
+ * @property string                        id
  *
  * @property Extension\Configuration       configuration
  * @property Extension\Localization        localization

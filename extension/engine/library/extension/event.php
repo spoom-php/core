@@ -81,8 +81,8 @@ class Event extends Exception\Collector {
 
   /**
    * @param string $extension
-   * @param string    $event_name
-   * @param array     $arguments
+   * @param string $event_name
+   * @param array  $arguments
    */
   public function __construct( $extension, $event_name, $arguments = array() ) {
 
@@ -172,7 +172,7 @@ class Event extends Exception\Collector {
   private function load() {
     $this->listeners = array();
     $extension = new Extension( 'engine' );
-    
+
     // collect listeners if event exists and enabled
     $tmp = $extension->configuration->geta( $this->event );
     foreach( $tmp as $listener ) if( isset( $listener->extension ) && isset( $listener->library ) ) {

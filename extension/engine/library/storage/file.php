@@ -366,12 +366,12 @@ class File extends Advance {
       $extension = new Extension( 'engine' );
       $event     = $extension->trigger(
         self::EVENT_CONVERT, array(
-                             'content'   => $content,
-                             'type'      => $type,
-                             'format'    => $format,
-                             'namespace' => $namespace,
-                             'meta'      => &$meta
-                           )
+          'content'   => $content,
+          'type'      => $type,
+          'format'    => $format,
+          'namespace' => $namespace,
+          'meta'      => &$meta
+        )
       );
 
       if( count( $event->result ) ) return $event->result[ 0 ];
