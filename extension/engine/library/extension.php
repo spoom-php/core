@@ -91,12 +91,12 @@ class Extension extends Library {
   public function __construct( $id = null ) {
 
     $this->_id = isset( $id ) ? strtolower( $id ) : $this->extension;
-    if( !Extension\Helper::validate( $this->_id ) ) throw new Exception\Strict( self::EXCEPTION_NOTICE_INVALID_ID, array( $this->_id ) );
+    if( !Extension\Helper::validate( $this->_id ) ) throw new Exception\Strict( self::EXCEPTION_NOTICE_INVALID_ID, [ 'id' => $this->_id ] );
     else {
 
       // define directory
       $directory = Extension\Helper::directory( $this->_id );
-      if( !$directory ) throw new Exception\System( self::EXCEPTION_CRITICAL_MISSING_EXTENSION, array( $this->_id ) );
+      if( !$directory ) throw new Exception\System( self::EXCEPTION_CRITICAL_MISSING_EXTENSION, [ 'id' => $this->_id ] );
       else {
 
         $this->_directory = $directory;
@@ -111,7 +111,7 @@ class Extension extends Library {
         $feature = $this->_configuration->gets( 'manifest:feature' );
 
         if( Extension\Helper::build( $package, $name, $feature ) != $this->_id ) {
-          throw new Exception\Strict( self::EXCEPTION_CRITICAL_INVALID_MANIFEST, array( $this->_id ) );
+          throw new Exception\Strict( self::EXCEPTION_CRITICAL_INVALID_MANIFEST, [ 'id' => $this->_id ] );
         }
       }
     }
