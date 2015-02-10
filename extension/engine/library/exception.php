@@ -1,6 +1,6 @@
 <?php namespace Engine;
 
-use Engine\Extension\Extension;
+use Engine\Extension;
 
 defined( '_PROTECT' ) or die( 'DENIED!' );
 

@@ -1,2 +1,2 @@
-# do not track any extension file
 /extension/
+!/extension/engine/

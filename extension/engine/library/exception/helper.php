@@ -1,7 +1,7 @@
 <?php namespace Engine\Exception;
 
 use Engine\Exception;
-use Engine\Extension\Extension;
+use Engine\Extension;
 
 defined( '_PROTECT' ) or die( 'DENIED!' );
 
@@ -27,7 +27,7 @@ abstract class Helper {
   /**
    * Exception id format
    */
-  const REGEXP_ID = '^([a-z\\-]+)#([0-9]+)([NWEC])$';
+  const REGEXP_ID = '/^([a-z\\-]+)#([0-9]+)([NWEC])$/';
 
   /**
    * Exception id parser to information object

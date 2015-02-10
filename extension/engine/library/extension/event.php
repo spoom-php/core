@@ -1,7 +1,7 @@
 <?php namespace Engine\Extension;
 
-use Engine\Exception\Collector;
-use Engine\Extension\Helper as ExtensionHelper;
+use Engine\Extension;
+use Engine\Exception;
 
 defined( '_PROTECT' ) or die( 'DENIED!' );
 
@@ -17,7 +17,7 @@ defined( '_PROTECT' ) or die( 'DENIED!' );
  * @property array       argument
  * @property array|null  result
  */
-class Event extends Collector {
+class Event extends Exception\Collector {
 
   /**
    * Array of the instanced listeners. All listener only instanced once!
@@ -81,15 +81,15 @@ class Event extends Collector {
 
   /**
    * @param string $extension
-   * @param string    $event_name
-   * @param array     $arguments
+   * @param string $event_name
+   * @param array  $arguments
    */
   public function __construct( $extension, $event_name, $arguments = array() ) {
 
     // set default params
     $this->_extension = $extension;
     $this->_event = $event_name;
-    $this->_base = trim( $this->extension, '.' ); // the trim is for the '.engine' extension id
+    $this->_base = $this->extension;
     $this->_argument = $arguments;
   }
 
@@ -103,7 +103,7 @@ class Event extends Collector {
   public function __get( $index ) {
     $index = '_' . $index;
 
-    if( $index == '_event' ) return $this->_base . '.' . $this->_event;
+    if( $index == '_event' ) return $this->_base . ':' . $this->_event;
     if( isset( $this->{$index} ) ) return $this->{$index};
 
     return null;
@@ -171,13 +171,10 @@ class Event extends Collector {
    */
   private function load() {
     $this->listeners = array();
-    $extension = new Extension( '.engine' );
-
-    $namespace = 'event-' . str_replace( '.', '-', $this->_base );
-    $index = str_replace( '.', '-', $this->_event );
-    $tmp = $extension->configuration->geta( $namespace . ':' . $index );
+    $extension = new Extension( 'engine' );
 
     // collect listeners if event exists and enabled
+    $tmp = $extension->configuration->geta( $this->event );
     foreach( $tmp as $listener ) if( isset( $listener->extension ) && isset( $listener->library ) ) {
       $this->add( $listener );
     }
@@ -190,9 +187,9 @@ class Event extends Collector {
    * @param object $options
    */
   private function add( $options ) {
-    if( !isset( $options->enabled ) || !$options->enabled || !ExtensionHelper::validate( $options->extension ) ) return;
+    if( !isset( $options->enabled ) || !$options->enabled || !Extension\Helper::exist( $options->extension, true ) ) return;
 
-    $index = $options->extension . '.' . $options->library;
+    $index = $options->extension . ':' . $options->library;
     if( !isset( self::$cache[ $index ] ) ) {
 
       $extension = new Extension( $options->extension );

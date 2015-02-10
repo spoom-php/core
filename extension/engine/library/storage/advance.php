@@ -262,7 +262,7 @@ class Advance extends Simple {
     else {
 
       $result = new \StdClass();
-      $tmp    = explode( ':', trim( $index, ' :' . $this->separator ), 2 );
+      $tmp    = explode( ':', trim( $index, ' ' . $this->separator ), 2 );
 
       // build the result
       $result->key       = array_pop( $tmp );

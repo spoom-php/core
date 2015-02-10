@@ -323,7 +323,7 @@ class Simple extends Library {
             else return $result;
           }
 
-          $container = &$result->container[ $key ];
+          $result->container = &$result->container[ $key ];
 
         } else if( is_object( $result->container ) ) {   // handle like an object
 
@@ -332,7 +332,7 @@ class Simple extends Library {
             else return $result;
           }
 
-          $container = &$result->container->{$key};
+          $result->container = &$result->container->{$key};
         }
       }
     }
@@ -340,7 +340,7 @@ class Simple extends Library {
     // select key if container exist
     if( isset( $result->container ) && ( is_array( $result->container ) || is_object( $result->container ) ) ) {
 
-      $key = $result->token[ $count - 1 ];
+      $key = $index->token[ $count - 1 ];
       if( is_array( $result->container ) ) {
         if( !isset( $result->container[ $key ] ) ) {
           if( $build ) $result->container[ $key ] = null;
@@ -355,7 +355,6 @@ class Simple extends Library {
 
       // setup the result
       $result->key   = $key;
-      $result->container = &$container;
       $result->exist = true;
     }
 

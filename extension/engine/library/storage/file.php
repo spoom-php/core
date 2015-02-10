@@ -1,6 +1,6 @@
 <?php namespace Engine\Storage;
 
-use Engine\Extension\Extension;
+use Engine\Extension;
 use Engine\Utility\Enumerable;
 
 defined( '_PROTECT' ) or die( 'DENIED!' );
@@ -366,12 +366,12 @@ class File extends Advance {
       $extension = new Extension( 'engine' );
       $event     = $extension->trigger(
         self::EVENT_CONVERT, array(
-                             'content'   => $content,
-                             'type'      => $type,
-                             'format'    => $format,
-                             'namespace' => $namespace,
-                             'meta'      => &$meta
-                           )
+          'content'   => $content,
+          'type'      => $type,
+          'format'    => $format,
+          'namespace' => $namespace,
+          'meta'      => &$meta
+        )
       );
 
       if( count( $event->result ) ) return $event->result[ 0 ];

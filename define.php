@@ -71,34 +71,32 @@ spl_autoload_register( function ( $class_name ) {
   // explode by namespace separator
   $pieces = explode( '\\', $class_name );
 
-  // find extension directory from the namespaces
-  $directory = 'engine/library/';
-  if( strtolower( $pieces[ 0 ] ) == 'engine' ) $pieces = array_splice( $pieces, 1 );
-  else {
+  // find the extension from the class namespace
+  $extension = null;
+  for( $i = 0, $count = count( $pieces ); $i < 3 && $i < $count; ) {
 
-    // find the extension directory from the class namespace
-    $directory = \_PATH_EXTENSION;
-    for( $i = 0; $i < 2 && $i < count( $pieces ); ++$i ) {
-      $directory .= ( $i > 0 ? '-' : '' ) . strtolower( $pieces[ $i ] );
+    // check if this path is an extension: check existance of manifest file with any file extension
+    $tmp = $extension . ( $i > 0 ? '-' : '' ) . strtolower( $pieces[ $i ] );
+    if( !count( glob( \_PATH . \_PATH_EXTENSION . $tmp . '/configuration/manifest.*' ) ) ) break;
+    else {
 
-      // check if this path is an extension: check existance of manifest file with any file extension
-      if( count( glob( \_PATH . $directory . '/configuration/manifest.*' ) ) ) break;
+      ++$i;
+      $extension = $tmp;
     }
-
-    // finalize the class file path with the reamining pieces
-    $directory .= '/library/';
-    $pieces = array_splice( $pieces, $i + 1 );
   }
 
-  // load the class file with the standard (.php) and legacy (.lib.php) mode
+  // finalize the class file path with the reamining pieces
+  $directory = \_PATH_EXTENSION . $extension . '/library/';
+  $pieces = array_splice( $pieces, $i );
+
+  // load the class file with the standard (.php) format
   $file = \_PATH . $directory . strtolower( implode( '/', $pieces ) );
-  if( is_file( $file . '.php' ) ) include $file . '.php';
-  else if( is_file( $file . '.lib.php' ) ) include $file . '.lib.php';  // TODO remove this legacy mode in the next version
+  if( is_file( $file . '.php' ) ) include( $file . '.php' );
   else {
 
     // check for non-standard capital letter files (there is no need for legacy check, cause this files probably 3th part libs)
     $file = \_PATH . $directory . implode( '/', $pieces );
-    if( is_file( $file . '.php' ) ) include $file . '.php';
+    if( is_file( $file . '.php' ) ) include( $file . '.php' );
   }
 
 } ) or die( 'Can\'t register the autoload function.' );

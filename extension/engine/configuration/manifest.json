@@ -1,5 +1,5 @@
 {
-  "name": "engine",
+  "package": "engine",
   "version": "0.4.4",
   "localization": "en",
   "author": {
