@@ -287,7 +287,7 @@ class File extends Advance {
         foreach( range( 0, $iterator->getDepth() ) as $depth ) $keys[ ] = $iterator->getSubIterator( $depth )->key();
 
         $print = is_bool( $value ) ? ( $value ? 'true' : 'false' ) : $value;
-        $quote = is_numeric( $value ) || is_bool( $value ) ? '' : ( !strpos( $value, '"' ) ? '"' : "'" );
+        $quote = is_numeric( $value ) || is_bool( $value ) ? '' : ( !mb_strpos( $value, '"' ) ? '"' : "'" );
         $result[ ] = join( '.', $keys ) . "={$quote}{$print}{$quote}";
       }
 
@@ -359,7 +359,7 @@ class File extends Advance {
    */
   private function process( $content, $type, $format, $namespace, &$meta ) {
 
-    $method = 'convert' . ucfirst( strtolower( $format ) );
+    $method = 'convert' . ucfirst( mb_strtolower( $format ) );
     if( method_exists( $this, $method ) ) return $this->{$method}( $content, $type, $namespace, $meta );
     else {
 

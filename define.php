@@ -76,7 +76,7 @@ spl_autoload_register( function ( $class_name ) {
   for( $i = 0, $count = count( $pieces ); $i < 3 && $i < $count; ) {
 
     // check if this path is an extension: check existance of manifest file with any file extension
-    $tmp = $extension . ( $i > 0 ? '-' : '' ) . strtolower( $pieces[ $i ] );
+    $tmp = $extension . ( $i > 0 ? '-' : '' ) . mb_strtolower( $pieces[ $i ] );
     if( !count( glob( \_PATH . \_PATH_EXTENSION . $tmp . '/configuration/manifest.*' ) ) ) break;
     else {
 
@@ -90,7 +90,7 @@ spl_autoload_register( function ( $class_name ) {
   $pieces = array_splice( $pieces, $i );
 
   // load the class file with the standard (.php) format
-  $file = \_PATH . $directory . strtolower( implode( '/', $pieces ) );
+  $file = \_PATH . $directory . mb_strtolower( implode( '/', $pieces ) );
   if( is_file( $file . '.php' ) ) include( $file . '.php' );
   else {
 

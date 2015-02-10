@@ -43,7 +43,7 @@ class Library {
       case '_extension':
         if( $this->_extension === null ) {
 
-          $class            = explode( '\\', strtolower( get_class( $this ) ) );
+          $class = explode( '\\', mb_strtolower( get_class( $this ) ) );
           $this->_extension = Extension\Helper::search( $class );
         }
 
@@ -54,7 +54,7 @@ class Library {
 
         if( $this->_library === null ) {
 
-          $class            = explode( '\\', strtolower( get_class( $this ) ) );
+          $class = explode( '\\', mb_strtolower( get_class( $this ) ) );
           $this->_extension = Extension\Helper::search( $class );
           $this->_library   = implode( '.', $class );
         }

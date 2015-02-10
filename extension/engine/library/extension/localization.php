@@ -168,7 +168,7 @@ final class Localization extends FileStorage {
    */
   public static function setLocalization( $new_localization ) {
 
-    $new_localization = trim( strtolower( $new_localization ) );
+    $new_localization = trim( mb_strtolower( $new_localization ) );
     if( preg_match( '/[a-z]/', $new_localization ) > 0 ) {
       self::$_localization = $new_localization;
     }

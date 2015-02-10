@@ -40,7 +40,7 @@ abstract class String {
         $insert = isset( $insertion[ $value[ 1 ] ] ) && is_string( $insertion[ $value[ 1 ] ] ) ? $insertion[ $value[ 1 ] ] : $value[ 1 ];
 
         if( isset( $value[ 2 ] ) ) {
-          switch( strtolower( $value[ 2 ] ) ) {
+          switch( mb_strtolower( $value[ 2 ] ) ) {
             // insert from language file
             case 'l':
               if( !isset( $language ) ) break;
@@ -93,8 +93,8 @@ abstract class String {
     $name = preg_replace( '/\\' . $separator . '+/i', $separator, trim( $name, $separator ) );
     $return = '';
 
-    for( $i = 0, $length = strlen( $name ); $i < $length; ++$i ) {
-      if( $name{$i} === $separator ) $return .= strtoupper( $name{++$i} );
+    for( $i = 0, $length = mb_strlen( $name ); $i < $length; ++$i ) {
+      if( $name{$i} === $separator ) $return .= mb_strtoupper( $name{++$i} );
       else $return .= $name{$i};
     }
 

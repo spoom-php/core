@@ -1,4 +1,5 @@
 {
   "locale": "english",
-  "timezone": "Europe/Budapest"
+  "timezone": "Europe/Budapest",
+  "encoding": "utf8"
 }

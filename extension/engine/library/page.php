@@ -65,8 +65,14 @@ abstract class Page {
 
     // setup localization options
     $extension = new Extension( 'engine' );
-    setlocale( LC_ALL, $extension->option( 'default:locale' ) );
-    date_default_timezone_set( $extension->option( 'default:timezone' ) );
+    setlocale( LC_ALL, $extension->option( 'default:locale', null ) );
+
+    // setup encoding
+    mb_internal_encoding( $extension->option( 'default:encoding', 'utf8' ) );
+    mb_http_output( $extension->option( 'default:encoding', 'utf8' ) );
+
+    // setup timezones
+    date_default_timezone_set( $extension->option( 'default:timezone', 'UTC' ) );
 
     // attribute initialization
     self::$collector = new Collector();

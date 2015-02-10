@@ -22,7 +22,7 @@ class Feasible extends Extension {
   public function execute( $name, $args = null ) {
 
     // check execution name validity
-    if( is_string( $name ) && strlen( $name ) > 0 && $this->prepare( $name ) !== false ) {
+    if( is_string( $name ) && mb_strlen( $name ) > 0 && $this->prepare( $name ) !== false ) {
 
       // check function validity
       $method = $this->getFunction( $name );
