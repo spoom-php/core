@@ -1,7 +1,5 @@
-<?php namespace Engine\Extension;
+<?php namespace Engine;
 
-use Engine\Exception;
-use Engine\Extension\Helper as ExtensionHelper;
 use Engine\Utility\File;
 use Engine\Utility\Library;
 
@@ -12,17 +10,12 @@ defined( '_PROTECT' ) or die( 'DENIED!' );
  * stuffs eg: object creation, file getter, configuration and localization
  * managment and other
  *
- * Class Extension
- * @package Engine\Extension
+ * @package Engine
  *
  * @property string              id
- * @property string              package
- * @property string              name
- * @property string|bool         extension
- * @property string              library
  *
- * @property Configuration       configuration
- * @property Localization        localization
+ * @property Extension\Configuration       configuration
+ * @property Extension\Localization        localization
  */
 class Extension extends Library {
 
@@ -31,7 +24,7 @@ class Extension extends Library {
    * missmatch in the manifest and the extension path. One data will be passed:
    *  - 0 [string]: Extension id
    */
-  const EXCEPTION_NOTICE_INVALID_ID = 'engine#4N';
+  const EXCEPTION_CRITICAL_INVALID_MANIFEST = 'engine#4C';
   /**
    * Exception code for missing extension directory. One data will be passed:
    *  - 0 [string]: Extension id
@@ -39,13 +32,9 @@ class Extension extends Library {
   const EXCEPTION_CRITICAL_MISSING_EXTENSION = 'engine#5C';
 
   /**
-   * Extension package validation regexp
+   * Exception code for invalid extension id
    */
-  const REGEXP_PACKAGE_NAME = '([a-z]\\w+)?';
-  /**
-   * Extension name validation regexp
-   */
-  const REGEXP_EXTENSION_NAME = '[a-z]\\w+';
+  const EXCEPTION_NOTICE_INVALID_ID = 'engine#6N';
 
   /**
    * Default directory for localization files
@@ -60,25 +49,11 @@ class Extension extends Library {
 
   /**
    * Store extension id. It's the package and the
-   * name separated by a dot
+   * name separated by a dash
    *
    * @var string
    */
   private $_id;
-
-  /**
-   * Store extension package
-   *
-   * @var string
-   */
-  private $_package;
-
-  /**
-   * Store extension name
-   *
-   * @var string
-   */
-  private $_name;
 
   /**
    * Extension directory from root without _PATH
@@ -90,14 +65,14 @@ class Extension extends Library {
   /**
    * Handle configuration files for the extension
    *
-   * @var Configuration
+   * @var Extension\Configuration
    */
   private $_configuration = null;
 
   /**
    * Handle localization files for the extension
    *
-   * @var Localization
+   * @var Extension\Localization
    */
   private $_localization = null;
 
@@ -108,30 +83,36 @@ class Extension extends Library {
    * Throws error if manifest configuration file contains
    * different package or name from the given extension
    *
-   * @param string|null $extension The extension package and name separated by a dot
+   * @param string|null $id The extension package and name separated by a dot
    *
-   * @throws Exception\Strict On invalid extension name
+   * @throws Exception\Strict On invalid extension id or invalid manifest data
    * @throws Exception\System On missing extension
    */
-  public function __construct( $extension = null ) {
-    $this->_id = isset( $extension ) ? strtolower( $extension ) : $this->extension;
+  public function __construct( $id = null ) {
 
-    // define directory
-    $directory = ExtensionHelper::directory( $this->_id );
-    if( !$directory ) throw new Exception\System( self::EXCEPTION_CRITICAL_MISSING_EXTENSION, array( $extension ) );
+    $this->_id = isset( $id ) ? strtolower( $id ) : $this->extension;
+    if( !Extension\Helper::validate( $this->_id ) ) throw new Exception\Strict( self::EXCEPTION_NOTICE_INVALID_ID, array( $this->_id ) );
     else {
 
-      $this->_directory = $directory;
+      // define directory
+      $directory = Extension\Helper::directory( $this->_id );
+      if( !$directory ) throw new Exception\System( self::EXCEPTION_CRITICAL_MISSING_EXTENSION, array( $this->_id ) );
+      else {
 
-      // create and configure configuration object
-      $this->_configuration = new Configuration( $this );
-      $this->_localization  = new Localization( $this );
+        $this->_directory = $directory;
 
-      // check manifest and save package and name
-      $this->_package = $this->_configuration->gets( 'manifest:package', null );
-      $this->_name    = $this->_configuration->gets( 'manifest:name' );
-      if( $this->_name != '.engine' && "{$this->_package}.{$this->_name}" != $this->_id ) {
-        throw new Exception\Strict( self::EXCEPTION_NOTICE_INVALID_ID, array( $this->_id ) );
+        // create and configure configuration object
+        $this->_configuration = new Extension\Configuration( $this );
+        $this->_localization  = new Extension\Localization( $this );
+
+        // check manifest and save package and name
+        $package = $this->_configuration->gets( 'manifest:package' );
+        $name    = $this->_configuration->gets( 'manifest:name' );
+        $feature = $this->_configuration->gets( 'manifest:feature' );
+
+        if( Extension\Helper::build( $package, $name, $feature ) != $this->_id ) {
+          throw new Exception\Strict( self::EXCEPTION_CRITICAL_INVALID_MANIFEST, array( $this->_id ) );
+        }
       }
     }
   }
@@ -228,7 +209,7 @@ class Extension extends Library {
   public function library( $class_name ) {
     if( !is_array( $class_name ) ) $class_name = array( $class_name );
 
-    $base = ( isset( $this->_package ) ? ( $this->_package . '\\' ) : '' ) . $this->_name . '\\';
+    $base = str_replace( '-', '\\', $this->id ) . '\\';
     foreach( $class_name as $name ) {
 
       $class = $base . str_replace( '.', '\\', $name );
@@ -263,11 +244,11 @@ class Extension extends Library {
    * @param string $event     The dot separated event name
    * @param array  $arguments Arguments passed to the event handlers
    *
-   * @return Event
+   * @return Extension\Event
    */
   public function trigger( $event, $arguments = array() ) {
 
-    $event = new Event( $this->id, $event, $arguments );
+    $event = new Extension\Event( $this->id, $event, $arguments );
     return $event->execute();
   }
 }

@@ -1,7 +1,7 @@
 <?php namespace Engine;
 
 use Engine\Exception\Collector;
-use Engine\Extension\Extension;
+use Engine\Extension;
 
 defined( '_PROTECT' ) or die( 'DENIED!' );
 
@@ -64,7 +64,7 @@ abstract class Page {
     }
 
     // setup localization options
-    $extension = new Extension( '.engine' );
+    $extension = new Extension( 'engine' );
     setlocale( LC_ALL, $extension->option( 'default:locale' ) );
     date_default_timezone_set( $extension->option( 'default:timezone' ) );
 
@@ -81,7 +81,7 @@ abstract class Page {
    * @return array|null The collected page contents
    */
   public static function run() {
-    $extension = new Extension( '.engine' );
+    $extension = new Extension( 'engine' );
 
     // call display event to let extensions render the content
     $event = $extension->trigger( self::EVENT_RUN );
@@ -100,7 +100,7 @@ abstract class Page {
     ob_start();
 
     // call display end event ( the render )
-    $extension = new Extension( '.engine' );
+    $extension = new Extension( 'engine' );
     $extension->trigger( self::EVENT_STOP, array( 'content' => $content,
                                                   'buffer' => $buffer ) );
 

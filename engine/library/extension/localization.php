@@ -1,5 +1,6 @@
 <?php namespace Engine\Extension;
 
+use Engine\Extension;
 use Engine\Storage\File as FileStorage;
 use Engine\Utility\String;
 
@@ -153,7 +154,7 @@ final class Localization extends FileStorage {
    */
   public static function getLocalization() {
     if( !isset( self::$_localization ) ) {
-      $extension = new Extension( '.engine' );
+      $extension = new Extension( 'engine' );
       self::$_localization = $extension->option( 'manifest:localization' );
     }
 

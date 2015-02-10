@@ -1,5 +1,6 @@
 <?php namespace Engine\Extension;
 
+use Engine\Extension;
 use Engine\Storage\File as FileStorage;
 
 defined( '_PROTECT' ) or die( 'DENIED!' );

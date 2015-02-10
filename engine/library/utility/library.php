@@ -1,15 +1,15 @@
 <?php namespace Engine\Utility;
 
+use Engine\Extension;
+
 defined( '_PROTECT' ) or die( 'DENIED!' );
 
 /**
  * Class Library
  * @package Engine\Utility
  *
- * @property string|bool extension extension of the class in dot separated style ( package.extension, lowercase ). It's
- *           ===false if Engine class
- * @property string      library   dot separated list of namespaces and the class name relative to the extension (
- *           lowercase )
+ * @property string|bool extension Extension id of the class
+ * @property string      library   Dot separated list of namespaces and the class name relative to the extension
  */
 class Library {
 
@@ -35,17 +35,16 @@ class Library {
    * @return string|null
    */
   public function __get( $index ) {
-    $index = '_' . $index;
 
+    $index = '_' . $index;
     switch( $index ) {
 
       // get the extension
       case '_extension':
         if( $this->_extension === null ) {
 
-          $this->_extension = false;
-          $class = explode( '\\', strtolower( get_class( $this ) ), 3 );
-          $this->_extension = $class[ 0 ] == 'engine' ? '.engine' : ( $class[ 0 ] . '.' . $class[ 1 ] );
+          $class            = explode( '\\', strtolower( get_class( $this ) ) );
+          $this->_extension = Extension\Helper::search( $class );
         }
 
         return $this->_extension;
@@ -55,12 +54,9 @@ class Library {
 
         if( $this->_library === null ) {
 
-          $class = explode( '\\', strtolower( get_class( $this ) ), 3 );
-          $tmp = array();
-          if( $class[ 0 ] == 'engine' ) $tmp[ ] = $class[ 1 ];
-          if( isset( $class[ 2 ] ) ) $tmp[ ] = str_replace( '\\', '.', $class[ 2 ] );
-
-          $this->_library = implode( '.', $tmp );
+          $class            = explode( '\\', strtolower( get_class( $this ) ) );
+          $this->_extension = Extension\Helper::search( $class );
+          $this->_library   = implode( '.', $class );
         }
 
         return $this->_library;
