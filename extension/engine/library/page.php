@@ -23,6 +23,11 @@ abstract class Page {
   private static $collector = null;
 
   /**
+   * @var string
+   */
+  private static $localization = null;
+
+  /**
    * Execute the page method in the right order (start -> run -> stop). This is the proper (and complete)
    * way to execute the engine. This method handle output buffering before the stop, exception handling after
    * the start and argument passing between run and stop methods
@@ -65,6 +70,7 @@ abstract class Page {
 
     // setup localization options
     $extension = new Extension( 'engine' );
+    self::$localization = $extension->option( 'manifest:localization', 'en' );
     setlocale( LC_ALL, $extension->option( 'default:locale', null ) );
 
     // setup encoding
@@ -146,5 +152,30 @@ abstract class Page {
    */
   public static function getCollector() {
     return self::$collector;
+  }
+
+  /**
+   * Get page localization string
+   *
+   * @return string
+   */
+  public static function getLocalization() {
+    if( !self::$localization ) {
+      
+      $extension          = new Extension( 'engine' );
+      self::$localization = $extension->option( 'manifest:localization', 'en' );
+    }
+
+    return self::$localization;
+  }
+  /**
+   * Set page localization
+   *
+   * @param string $new_localization
+   */
+  public static function setLocalization( $new_localization ) {
+
+    $new_localization = trim( mb_strtolower( $new_localization ) );
+    if( preg_match( '/[a-z]/', $new_localization ) > 0 ) self::$localization = $new_localization;
   }
 }

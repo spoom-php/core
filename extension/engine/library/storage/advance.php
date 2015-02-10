@@ -9,7 +9,7 @@ defined( '_PROTECT' ) or die( 'DENIED!' );
  * @property string   namespace      default namespace
  * @property bool     caching        enable or disable cache
  */
-class Advance extends Simple {
+class Advance extends Data {
 
   const CACHE_NONE      = 0;
   const CACHE_SIMPLE    = 1;

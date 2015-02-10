@@ -1,6 +1,7 @@
 <?php namespace Engine\Extension;
 
 use Engine\Extension;
+use Engine\Page;
 use Engine\Storage\File as FileStorage;
 use Engine\Utility\String;
 
@@ -13,14 +14,7 @@ defined( '_PROTECT' ) or die( 'DENIED!' );
  * @property Extension extension
  * @property string    localization
  */
-final class Localization extends FileStorage {
-
-  /**
-   * Store actual localization string
-   *
-   * @var string
-   */
-  private static $_localization = null;
+class Localization extends FileStorage {
 
   /**
    * Extension data source
@@ -49,7 +43,7 @@ final class Localization extends FileStorage {
    *
    * @var string
    */
-  private $active_localization;
+  private $_localization;
 
   /**
    * Set defaults
@@ -74,13 +68,13 @@ final class Localization extends FileStorage {
    */
   public function __get( $index ) {
 
-    if( $index === 'extension' ) return $this->_extension;
-    else if( $index === 'localization' ) {
+    if( $index == 'extension' ) return $this->_extension;
+    else if( $index == 'localization' ) {
 
       // call to reload active localization
       $this->path( '' );
 
-      return $this->active_localization;
+      return $this->_localization;
     }
 
     return parent::__get( $index );
@@ -116,16 +110,18 @@ final class Localization extends FileStorage {
    * @return mixed
    */
   protected function path( $namespace ) {
-    $global = $this->find( self::getLocalization() );
+
+    $localization = Page::getLocalization();
+    $global       = $this->find( $localization );
 
     if( $global ) {
-      $this->active_localization = self::getLocalization();
+      $this->_localization = $localization;
       $this->_directory = $global;
     } else if( $this->default_directory ) {
-      $this->active_localization = $this->_extension->option( 'manifest:localization' );
+      $this->_localization = $this->_extension->option( 'manifest:localization' );
       $this->_directory = $this->default_directory;
     } else {
-      $this->active_localization = false;
+      $this->_localization = false;
       $this->_directory = false;
     }
 
@@ -137,40 +133,13 @@ final class Localization extends FileStorage {
    *
    * @param string $index
    * @param array  $insertion
+   * @param string $if_null
    *
    * @return null|string
    */
-  public function getf( $index, $insertion ) {
+  public function getf( $index, $insertion, $if_null = '' ) {
 
-    $value = $this->gets( $index );
-
-    return $value == null ? null : String::insert( $value, is_array( $insertion ) ? $insertion : array( $insertion ), $this );
-  }
-
-  /**
-   * Get active localization string
-   *
-   * @return string
-   */
-  public static function getLocalization() {
-    if( !isset( self::$_localization ) ) {
-      $extension = new Extension( 'engine' );
-      self::$_localization = $extension->option( 'manifest:localization' );
-    }
-
-    return self::$_localization;
-  }
-
-  /**
-   * Set active localization
-   *
-   * @param string $new_localization
-   */
-  public static function setLocalization( $new_localization ) {
-
-    $new_localization = trim( mb_strtolower( $new_localization ) );
-    if( preg_match( '/[a-z]/', $new_localization ) > 0 ) {
-      self::$_localization = $new_localization;
-    }
+    $value = $this->gets( $index, $if_null );
+    return String::insert( $value, is_array( $insertion ) ? $insertion : array( $insertion ), $this );
   }
 }

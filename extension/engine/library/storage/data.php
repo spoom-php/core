@@ -5,13 +5,13 @@ use Engine\Utility\Library;
 defined( '_PROTECT' ) or die( 'DENIED!' );
 
 /**
- * Class Simple
+ * Class Data
  * @package Engine\Storage
  *
  * @property bool     prefer         auto construct with object, instead of array
  * @property string   separator      index separator
  */
-class Simple extends Library {
+class Data extends Library {
 
   /**
    * Cache for indexes
@@ -255,7 +255,7 @@ class Simple extends Library {
   public function getn( $index, $if_null = 0 ) {
     $value = $this->get( $index, $if_null );
 
-    return is_numeric( $value ) ? (string) $value : $if_null;
+    return is_numeric( $value ) ? ( $value == (int)$value ? (int) $value : (float) $value ) : $if_null;
   }
   /**
    * Get indexed (only array type) value from the stored namespaces, or
