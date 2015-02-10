@@ -87,7 +87,7 @@ spl_autoload_register( function ( $class_name ) {
 
   // finalize the class file path with the reamining pieces
   $directory = \_PATH_EXTENSION . $extension . '/library/';
-  $pieces    = array_splice( $pieces, $i + 1 );
+  $pieces = array_splice( $pieces, $i );
 
   // load the class file with the standard (.php) format
   $file = \_PATH . $directory . strtolower( implode( '/', $pieces ) );

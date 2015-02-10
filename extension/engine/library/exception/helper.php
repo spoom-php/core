@@ -27,7 +27,7 @@ abstract class Helper {
   /**
    * Exception id format
    */
-  const REGEXP_ID = '^([a-z\\-]+)#([0-9]+)([NWEC])$';
+  const REGEXP_ID = '/^([a-z\\-]+)#([0-9]+)([NWEC])$/';
 
   /**
    * Exception id parser to information object
