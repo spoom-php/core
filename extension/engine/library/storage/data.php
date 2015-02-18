@@ -10,6 +10,15 @@ defined( '_PROTECT' ) or die( 'DENIED!' );
  *
  * @property bool     prefer         auto construct with object, instead of array
  * @property string   separator      index separator
+ *
+ * @method string|mixed gets( string $index, mixed $default = '' ) @depricated use getString or '!string' index postfix
+ *         instead
+ * @method number|mixed getn( string $index, mixed $default = 0 ) @depricated use getNumber or '!number' index postfix
+ *         instead
+ * @method array|mixed geta( string $index, mixed $default = [ ] ) @depricated use getArray or '!array' index postfix
+ *         instead
+ * @method object|mixed geto( string $index, mixed $default = null ) @depricated use getObject or '!object' index
+ *         postfix instead
  */
 class Data extends Library {
 
@@ -18,20 +27,18 @@ class Data extends Library {
    *
    * @var array
    */
-  private $cache = array();
-
+  private $cache = [ ];
   /**
    * Data storage for namespaces
    * @var array
    */
-  protected $source = array();
+  protected $source = [ ];
 
   /**
    * Index token separator
    * @var string
    */
   private $_separator = '.';
-
   /**
    * Build object instead of array when non exist
    * @var bool
@@ -73,12 +80,34 @@ class Data extends Library {
         $this->_separator = $value{0};
 
         // clear the caches
-        $this->cache = array();
+        $this->cache = [ ];
         break;
       case 'prefer':
         $this->_prefer = $value == true;
         break;
     }
+  }
+  /**
+   * @param string $method
+   * @param array  $args
+   *
+   * @return mixed
+   */
+  public function __call( $method, $args ) {
+
+    $tmp = mb_strpos( $method, 'get' ) === 0 ? str_replace( 'get', '', $method ) : null;
+    switch( $tmp ) {
+      case 's':
+        return $this->getString( $args[ 0 ], count( $args ) > 1 ? $args[ 1 ] : '' );
+      case 'n':
+        return $this->getNumber( $args[ 0 ], count( $args ) > 1 ? $args[ 1 ] : 0 );
+      case 'a':
+        return $this->getArray( $args[ 0 ], count( $args ) > 1 ? $args[ 1 ] : [ ] );
+      case 'o':
+        return $this->getObject( $args[ 0 ], count( $args ) > 1 ? $args[ 1 ] : null );
+    }
+
+    throw new \BadMethodCallException();
   }
 
   /**
@@ -125,7 +154,7 @@ class Data extends Library {
     else $value = &$result->container->{$result->key};
 
     // create extendable value if not exist
-    if( !isset( $value ) ) $value = $this->prefer ? new \stdClass() : array();
+    if( !isset( $value ) ) $value = $this->prefer ? new \stdClass() : [ ];
 
     // extend arrays or objects with array or object
     if( ( is_array( $value ) || is_object( $value ) ) && ( is_array( $data ) || is_object( $data ) ) ) {
@@ -154,7 +183,7 @@ class Data extends Library {
     $result = $this->search( $this->index( $index ) );
     if( $result->exist ) {
 
-      if( !$result->key ) $result->container = array();
+      if( !$result->key ) $result->container = [ ];
       else if( is_array( $result->container ) ) unset( $result->container[ $result->key ] );
       else unset( $result->container->{$result->key} );
     }
@@ -215,75 +244,112 @@ class Data extends Library {
   }
 
   /**
-   * Get indexed value from the storage, or
-   * the second value if index not exist
+   * Get indexed value from the storage, or the second parameter if index not exist
    *
-   * @param string $index   - The wanted index
-   * @param mixed  $if_null - The returned value if index not found
+   * @param string $index   The index in the storage
+   * @param mixed  $default The returned value if index not found
    *
    * @return mixed
    */
-  public function get( $index, $if_null = null ) {
+  public function get( $index, $default = null ) {
 
-    $result = $this->search( $this->index( $index ) );
-    if( $result->exist ) return $result->key ? ( is_array( $result->container ) ? $result->container[ $result->key ] : $result->container->{$result->key} ) : $result->container;
-    else return $if_null;
+    $index = $this->index( $index );
+    return $this->process( $index, $default, func_num_args() > 1 );
   }
   /**
-   * Get indexed (only string type) value from the stored namespaces, or
-   * the second value if index not exist
+   * Get indexed (only string type) value from the storage, or the second parameter if index not exist or not string
    *
-   * @param string $index   - The wanted index
-   * @param mixed  $if_null - The returned value if index not found
+   * @param string $index   The index in the storage
+   * @param mixed  $default The returned value if index not found
    *
-   * @return string
+   * @return string|mixed
    */
-  public function gets( $index, $if_null = '' ) {
-    $value = $this->get( $index, $if_null );
+  public function getString( $index, $default = '' ) {
 
-    return is_string( $value ) ? (string) $value : $if_null;
+    $index       = $this->index( $index );
+    $index->type = 'string';
+
+    return $this->process( $index, $default );
   }
   /**
-   * Get indexed (only numeric type) value from the stored namespaces, or
-   * the second value if index not exist
+   * Get indexed (only number type) value from the storage, or the second parameter if index not exist, not int or
+   * float
    *
-   * @param string $index   - The wanted index
-   * @param mixed  $if_null - The returned value if index not found
+   * @param string $index   The index in the storage
+   * @param mixed  $default The returned value if index not found
    *
-   * @return number
+   * @return number|mixed
    */
-  public function getn( $index, $if_null = 0 ) {
-    $value = $this->get( $index, $if_null );
+  public function getNumber( $index, $default = 0 ) {
 
-    return is_numeric( $value ) ? ( $value == (int)$value ? (int) $value : (float) $value ) : $if_null;
+    $index       = $this->index( $index );
+    $index->type = 'number';
+
+    return $this->process( $index, $default );
   }
   /**
-   * Get indexed (only array type) value from the stored namespaces, or
-   * the second value if index not exist
+   * Get indexed (only array type) value from the storage, or the second parameter if index not exist or not
+   * enumerable. Object will be typecasted to array
    *
-   * @param string $index   - The wanted index
-   * @param mixed  $if_null - The returned value if index not found
+   * @param string $index   The index in the storage
+   * @param mixed  $default The returned value if index not found
    *
-   * @return array
+   * @return array|mixed
    */
-  public function geta( $index, $if_null = array() ) {
-    $value = $this->get( $index, $if_null );
+  public function getArray( $index, $default = [ ] ) {
 
-    return is_array( $value ) || is_object( $value ) ? (array) $value : $if_null;
+    $index       = $this->index( $index );
+    $index->type = 'array';
+
+    return $this->process( $index, $default );
   }
   /**
-   * Get indexed (only object type) value from the stored namespaces, or
-   * the second value if index not exist
+   * Get indexed (only object type) value from the storage, or the second parameter if index not exist or not
+   * enumerable. Arrays will be typecasted to object
    *
-   * @param string $index   - The wanted index
-   * @param mixed  $if_null - The returned value if index not found
+   * @param string $index   The index in the storage
+   * @param mixed  $default The returned value if index not found
    *
-   * @return object
+   * @return object|mixed
    */
-  public function geto( $index, $if_null = null ) {
-    $value = $this->get( $index, $if_null );
+  public function getObject( $index, $default = null ) {
 
-    return is_object( $value ) || is_array( $value ) ? (object) $value : $if_null;
+    $index       = $this->index( $index );
+    $index->type = 'object';
+
+    return $this->process( $index, $default );
+  }
+  /**
+   * Get indexed (only boolean type) value from the storage, or the second parameter if index not exist, not boolean
+   * or not 1/0 value
+   *
+   * @param string $index   The index in the storage
+   * @param mixed  $default The returned value if index not found
+   *
+   * @return bool|mixed
+   */
+  public function getBoolean( $index, $default = false ) {
+
+    $index       = $this->index( $index );
+    $index->type = 'boolean';
+
+    return $this->process( $index, $default );
+  }
+  /**
+   * Get indexed (only callable type) value from the storage, or the second parameter if index not exist or not
+   * callable
+   *
+   * @param string $index   The index in the storage
+   * @param mixed  $default The returned value if index not found
+   *
+   * @return callable|mixed
+   */
+  public function getCallable( $index, $default = null ) {
+
+    $index       = $this->index( $index );
+    $index->type = 'callable';
+
+    return $this->process( $index, $default );
   }
 
   /**
@@ -310,7 +376,7 @@ class Data extends Library {
         // check actual container
         if( !is_array( $result->container ) && !is_object( $result->container ) ) {
 
-          if( $build ) $result->container = $this->_prefer ? new \stdClass() : array();
+          if( $build ) $result->container = $this->_prefer ? new \stdClass() : [ ];
           else return $result;
         }
 
@@ -319,7 +385,7 @@ class Data extends Library {
         if( is_array( $result->container ) ) { // handle like an array
 
           if( !isset( $result->container[ $key ] ) ) {
-            if( $build ) $result->container[ $key ] = $this->_prefer ? new \stdClass() : array();
+            if( $build ) $result->container[ $key ] = $this->_prefer ? new \stdClass() : [ ];
             else return $result;
           }
 
@@ -328,7 +394,7 @@ class Data extends Library {
         } else if( is_object( $result->container ) ) {   // handle like an object
 
           if( !isset( $result->container->{$key} ) ) {
-            if( $build ) $result->container->{$key} = $this->_prefer ? new \stdClass() : array();
+            if( $build ) $result->container->{$key} = $this->_prefer ? new \stdClass() : [ ];
             else return $result;
           }
 
@@ -383,15 +449,82 @@ class Data extends Library {
    */
   protected function parse( $index ) {
 
-    $result = (object) array( 'id' => '', 'key' => '', 'token' => array() );
+    // maki.lajos!string
+    $result = (object) array( 'id' => '', 'key' => '', 'token' => [ ], 'type' => null );
     if( !is_string( $index ) ) return null;
     else {
 
-      // build the result
-      $result->key   = $result->id = trim( $index, $this->separator );
-      $result->token = $result->key == '' ? array() : explode( $this->separator, $result->key );
+      // normalize the index to id
+      $tmp        = trim( $index, $this->separator . '!' );
+      $result->id = $tmp;
+
+      // define and parse key, type
+      $tmp          = explode( '!', $tmp );
+      $result->key  = $tmp[ 0 ];
+      $result->type = empty( $tmp[ 1 ] ) ? null : $tmp[ 1 ];
+
+      // explode key into tokens
+      $result->token = empty( $result->key ) ? [ ] : explode( $this->separator, $result->key );
 
       return $result;
     }
+  }
+
+  /**
+   * Process the storage getter result. This will convert the result to the right type
+   *
+   * @param object    $index       The result of index() method
+   * @param mixed     $default     The default value if no right type cast or existance
+   * @param   boolean $use_default Flag for
+   *
+   * @return mixed
+   */
+  private function process( $index, $default, $use_default = true ) {
+
+    // define the default result
+    $tmp = $this->search( $index );
+    if( $tmp->exist ) $result = $tmp->key ? ( is_array( $tmp->container ) ? $tmp->container[ $tmp->key ] : $tmp->container->{$tmp->key} ) : $tmp->container;
+    else $result = $default;
+
+    // switch result based on the type
+    switch( $index->type ) {
+      // force string type
+      case 'string':
+
+        $result = $tmp->exist && is_string( $result ) ? (string) $result : ( $use_default ? $default : '' );
+        break;
+
+      // force numeric type
+      case 'number':
+
+        $result = $tmp->exist && is_numeric( $result ) ? ( $result == (int) $result ? (int) $result : (float) $result ) : ( $use_default ? $default : 0 );
+        break;
+
+      // force array type
+      case 'array':
+
+        $result = $tmp->exist && ( is_array( $result ) || is_object( $result ) ) ? (array) $result : ( $use_default ? $default : [ ] );
+        break;
+
+      // force object type
+      case 'object':
+
+        $result = $tmp->exist && ( is_object( $result ) || is_array( $result ) ) ? (object) $result : ( $use_default ? $default : null );
+        break;
+
+      // force boolean type
+      case 'boolean':
+
+        $result = $tmp->exist && ( is_bool( $result ) || in_array( $result, [ 1, 0, '1', '0' ], true ) ) ? (bool) $result : ( $use_default ? $default : false );
+        break;
+
+      // force callable type
+      case 'callable':
+
+        $result = $tmp->exist && is_callable( $result ) ? $result : ( $use_default ? $default : null );
+        break;
+    }
+
+    return $result;
   }
 }

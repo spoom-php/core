@@ -261,17 +261,14 @@ class Advance extends Data {
     if( !is_string( $index ) ) return false;
     else {
 
-      $result = new \StdClass();
       $tmp    = explode( ':', trim( $index, ' ' . $this->separator ), 2 );
-
-      // build the result
-      $result->key       = array_pop( $tmp );
+      $result = parent::parse( array_pop( $tmp ) );
+      
+      // define the namespace and add it to the token list for the search
       $result->namespace = array_pop( $tmp ) ?: $this->namespace;
-      $result->id        = $result->namespace . ':' . $result->key;
-
-      $result->token = $result->key == '' ? array() : explode( $this->separator, $result->key );
       array_unshift( $result->token, $result->namespace );
 
+      $result->id        = $result->namespace . ':' . $result->key;
       return $result;
     }
   }

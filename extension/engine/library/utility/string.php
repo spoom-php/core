@@ -1,6 +1,6 @@
 <?php namespace Engine\Utility;
 
-use Engine\Extension\Localization;
+use Engine\Storage\Data;
 
 defined( '_PROTECT' ) or die( 'DENIED!' );
 
@@ -13,56 +13,50 @@ abstract class String {
   /**
    * Regexp for string insertion
    */
-  const REGEXP_INSERT_REPLACE = '\{([A-z0-9_.-]+)(?:&([\w]))?\}';
+  const REGEXP_INSERT_REPLACE = '/\{([a-z0-9_.-]+)\}/i';
+
+  /**
+   *  Leave the pattern itself when no data exist for it
+   */
+  const TYPE_INSERT_LEAVE = 0;
+  /**
+   * Change the pattern to empty string when no data exist for it
+   */
+  const TYPE_INSERT_EMPTY = 1;
 
   /**
    * Insert variables to the input from insertion array used the regexp constant of class
    *
-   * @param string       $input     input string to insert
-   * @param array        $insertion the insertion variables
-   * @param Localization $language  optional language object for flags behavior
+   * @param string     $text      input string to insert
+   * @param array|Data $insertion the insertion variables
+   * @param int        $type
    *
    * @return array|string
    */
-  public static function insert( $input, array $insertion, Localization $language = null ) {
+  public static function insert( $text, $insertion, $type = self::TYPE_INSERT_EMPTY ) {
+    
+    // every insertion converted to data
+    if( !($insertion instanceof Data) ) $insertion = new Data( $insertion );
+    
+    // find patterns iterate trough the matches
+    preg_match_all( self::REGEXP_INSERT_REPLACE, $text, $matches, PREG_SET_ORDER );
+    foreach( $matches as $value ) {
 
-    // define input type for the return
-    $is_array = is_array( $input );
-    if( !$is_array ) $input = array( $input );
-
-    // iterate input
-    foreach( $input as $i => $text ) {
-      preg_match_all( '/' . self::REGEXP_INSERT_REPLACE . '/i', $text, $matches, PREG_SET_ORDER );
-
-      // iterate trough the matches
-      foreach( $matches as $value ) {
-
-        $insert = isset( $insertion[ $value[ 1 ] ] ) && is_string( $insertion[ $value[ 1 ] ] ) ? $insertion[ $value[ 1 ] ] : $value[ 1 ];
-
-        if( isset( $value[ 2 ] ) ) {
-          switch( mb_strtolower( $value[ 2 ] ) ) {
-            // insert from language file
-            case 'l':
-              if( !isset( $language ) ) break;
-              $insert = $language->gets( $insert );
-              break;
-            // let the work for the javascript
-            case 'j':
-              continue;
-
-            // simple change
-            default :
-              break;
-          }
-        }
-
-        $text = str_replace( $value[ 0 ], $insert, $text );
+      // define the default value
+      switch( $type ) {
+        case self::TYPE_INSERT_EMPTY:
+          $ifnull = '';
+          break;
+        case self::TYPE_INSERT_LEAVE:
+        default:
+          $ifnull = $value[0];
       }
-
-      $input[ $i ] = $text;
+      
+      // replace the pattern
+      $text = str_replace( $value[ 0 ], $insertion->getString( $value[ 1 ], $ifnull ), $text );
     }
 
-    return $is_array ? $input : $input[ 0 ];
+    return $text;
   }
 
   /**

@@ -13,7 +13,6 @@ defined( '_PROTECT' ) or die( 'DENIED!' );
  * @package Engine
  *
  * @property string                        id
- *
  * @property Extension\Configuration       configuration
  * @property Extension\Localization        localization
  */
@@ -106,9 +105,9 @@ class Extension extends Library {
         $this->_localization  = new Extension\Localization( $this );
 
         // check manifest and save package and name
-        $package = $this->_configuration->gets( 'manifest:package' );
-        $name    = $this->_configuration->gets( 'manifest:name' );
-        $feature = $this->_configuration->gets( 'manifest:feature' );
+        $package = $this->_configuration->getString( 'manifest:package' );
+        $name    = $this->_configuration->getString( 'manifest:name' );
+        $feature = $this->_configuration->getString( 'manifest:feature' );
 
         if( Extension\Helper::build( $package, $name, $feature ) != $this->_id ) {
           throw new Exception\Strict( self::EXCEPTION_CRITICAL_INVALID_MANIFEST, [ 'id' => $this->_id ] );
@@ -138,26 +137,27 @@ class Extension extends Library {
   }
 
   /**
-   * Get language string from the extension language object. It's a proxy for Localization::getf() method
+   * Get language string from the extension language object. It's a proxy for Localization::getPattern() method
    *
-   * @param string $index
+   * @param string       $index
    * @param array|string $insertion
+   * @param string       $default
    *
    * @return string
    */
-  public function text( $index, $insertion = null ) {
-    return $this->_localization->getf( $index, $insertion );
+  public function text( $index, $insertion = null, $default = '' ) {
+    return $this->_localization->getPattern( $index, $insertion, $default );
   }
   /**
    * Get configuration variable from extension configuration object. It's a proxy for Configuration::get() method
    *
    * @param string $index
-   * @param mixed  $if_null
+   * @param mixed  $default
    *
    * @return mixed
    */
-  public function option( $index, $if_null = null ) {
-    return $this->_configuration->get( $index, $if_null );
+  public function option( $index, $default = null ) {
+    return $this->_configuration->get( $index, $default );
   }
 
   /**

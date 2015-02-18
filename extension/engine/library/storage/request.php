@@ -37,7 +37,7 @@ class Request extends Advance {
    * @param int|null $expire
    * @param string|null $url
    */
-  public function setc( $index, $value, $expire = null, $url = null ) {
+  public function setCookie( $index, $value, $expire = null, $url = null ) {
     setcookie( $index, $value, $expire, $url );
   }
 }

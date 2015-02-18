@@ -129,17 +129,17 @@ class Localization extends FileStorage {
   }
 
   /**
-   * Same as the gets method, but insert data to string with fString::insert()
+   * Same as the getString method, but insert data to string with String::insert()
    *
    * @param string $index
    * @param array  $insertion
-   * @param string $if_null
+   * @param string $default
    *
    * @return null|string
    */
-  public function getf( $index, $insertion, $if_null = '' ) {
+  public function getPattern( $index, $insertion, $default = '' ) {
 
-    $value = $this->gets( $index, $if_null );
-    return String::insert( $value, is_array( $insertion ) ? $insertion : array( $insertion ), $this );
+    $value = $this->getString( $index, $default );
+    return String::insert( $value, is_array( $insertion ) ? $insertion : array( $insertion ) );
   }
 }
