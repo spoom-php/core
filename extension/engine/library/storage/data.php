@@ -1,6 +1,6 @@
 <?php namespace Engine\Storage;
 
-use Engine\Utility\Library;
+use Engine\Helper\Library;
 
 defined( '_PROTECT' ) or die( 'DENIED!' );
 

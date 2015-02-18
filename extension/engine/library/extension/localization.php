@@ -3,7 +3,7 @@
 use Engine\Extension;
 use Engine\Page;
 use Engine\Storage\File as FileStorage;
-use Engine\Utility\String;
+use Engine\Helper\String;
 
 defined( '_PROTECT' ) or die( 'DENIED!' );
 

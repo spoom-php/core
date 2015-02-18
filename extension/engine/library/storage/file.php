@@ -1,7 +1,7 @@
 <?php namespace Engine\Storage;
 
 use Engine\Extension;
-use Engine\Utility\Enumerable;
+use Engine\Helper\Enumerable;
 
 defined( '_PROTECT' ) or die( 'DENIED!' );
 

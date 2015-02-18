@@ -1,4 +1,4 @@
-<?php namespace Engine\Utility;
+<?php namespace Engine\Helper;
 
 use Engine\Storage\Data;
 

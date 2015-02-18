@@ -1,7 +1,7 @@
 <?php namespace Engine;
 
-use Engine\Utility\File;
-use Engine\Utility\Library;
+use Engine\Helper\File;
+use Engine\Helper\Library;
 
 defined( '_PROTECT' ) or die( 'DENIED!' );
 
