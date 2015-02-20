@@ -88,15 +88,30 @@ spl_autoload_register( function ( $class_name ) {
   // finalize the class file path with the reamining pieces
   $directory = \_PATH_EXTENSION . $extension . '/library/';
   $pieces = array_splice( $pieces, $i );
+  $class = array_pop( $pieces );
 
-  // load the class file with the standard (.php) format
-  $file = \_PATH . $directory . mb_strtolower( implode( '/', $pieces ) );
-  if( is_file( $file . '.php' ) ) include( $file . '.php' );
-  else {
+  // support for camelCase nested classes
+  $matches = [ ];
+  preg_match_all( '/((?:^|[A-Z])[a-z]+)/', $class, $matches );
+  do {
 
-    // check for non-standard capital letter files (there is no need for legacy check, cause this files probably 3th part libs)
-    $file = \_PATH . $directory . implode( '/', $pieces );
+    // prepare the next path
+    $tmp = implode( '/', $pieces ) . '/' . implode( '', $matches[ 0 ] );
+
+    // load the class file with the standard lowercase format
+    $file = \_PATH . $directory . mb_strtolower( $tmp );
     if( is_file( $file . '.php' ) ) include( $file . '.php' );
-  }
+    else {
+
+      // check for non-standard, capital letter files (this files probably 3th part libs)
+      $file = \_PATH . $directory . $tmp;
+      if( is_file( $file . '.php' ) ) include( $file . '.php' );
+      else continue;  // skip the break statement if we don't find the file
+    }
+
+    // in here we find a matching filename and included it, so the work is done for now
+    break;
+
+  } while( array_pop( $matches[ 0 ] ) );
 
 } ) or die( 'Can\'t register the autoload function.' );
