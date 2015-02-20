@@ -6,7 +6,7 @@ defined( '_PROTECT' ) or die( 'DENIED!' );
 
 /**
  * Class Feasible
- * @package Engine\Utility
+ * @package Engine\Helper
  */
 class Feasible extends Extension {
 

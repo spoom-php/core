@@ -1,17 +1,4 @@
 <?php defined( '_PROTECT' ) or die( 'DENIED!' );
-/*
- * The versioning system ( this will applied to all extension included the engine ):
- *
- *      <major>.<minor>.<fix>.<build>
- *
- * major: Massive changes of the system. Backwards compatibility isn't necessary!
- * minor: New features, as well as bigger changes (that stay compatible in the major version) in the system.
- * fix: Bugfixes, as well as smaller changes.
- * build: Text or configuration modification.
- *
- * Zero major is a version, which is still under development. The minor version doesn't have to
- * be compatible backwards in that case. Details: http://semver.org/
- */
 
 /**
  * Check php version to avoid syntax and other ugly error messages

@@ -4,7 +4,7 @@ defined( '_PROTECT' ) or die( 'DENIED!' );
 
 /**
  * Class File
- * @package Engine\Utility
+ * @package Engine\Helper
  */
 abstract class File {
 

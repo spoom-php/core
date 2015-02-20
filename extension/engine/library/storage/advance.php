@@ -272,4 +272,13 @@ class Advance extends Data {
       return $result;
     }
   }
+
+  /**
+   * JSON convert support with namespaces
+   *
+   * @return mixed|object
+   */
+  function jsonSerialize() {
+    return $this->convert();
+  }
 }

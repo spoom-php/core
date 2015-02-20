@@ -320,8 +320,8 @@ class File extends Advance {
   /**
    * XML converter based on the Enumberable class xml related methods
    *
-   * @see \Engine\Utility\Enumerable::toXml()
-   * @see \Engine\Utility\Enumerable::fromXml()
+   * @see \Engine\Helper\Enumerable::toXml()
+   * @see \Engine\Helper\Enumerable::fromXml()
    *
    * @param mixed  $content   Content to convert
    * @param int    $type      CONVERT_* constant

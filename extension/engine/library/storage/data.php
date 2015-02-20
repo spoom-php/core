@@ -11,16 +11,12 @@ defined( '_PROTECT' ) or die( 'DENIED!' );
  * @property bool     prefer         auto construct with object, instead of array
  * @property string   separator      index separator
  *
- * @method string|mixed gets( string $index, mixed $default = '' ) @depricated use getString or '!string' index postfix
- *         instead
- * @method number|mixed getn( string $index, mixed $default = 0 ) @depricated use getNumber or '!number' index postfix
- *         instead
- * @method array|mixed geta( string $index, mixed $default = [ ] ) @depricated use getArray or '!array' index postfix
- *         instead
- * @method object|mixed geto( string $index, mixed $default = null ) @depricated use getObject or '!object' index
- *         postfix instead
+ * @method string|mixed gets( string $index, mixed $default = '' ) Depricated, use getString or '!string' index
+ * @method number|mixed getn( string $index, mixed $default = 0 ) Depricated, use getNumber or '!number' index
+ * @method array|mixed geta( string $index, mixed $default = [ ] ) Depricated, use getArray or '!array' index
+ * @method object|mixed geto( string $index, mixed $default = null ) Depricated, use getObject or '!object' index
  */
-class Data extends Library {
+class Data extends Library implements \JsonSerializable {
 
   /**
    * Cache for indexes
@@ -526,5 +522,14 @@ class Data extends Library {
     }
 
     return $result;
+  }
+
+  /**
+   * JSON convert support
+   *
+   * @return mixed|object
+   */
+  function jsonSerialize() {
+    return $this->geto( '' );
   }
 }

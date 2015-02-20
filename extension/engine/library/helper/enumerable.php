@@ -4,7 +4,7 @@ defined( '_PROTECT' ) or die( 'DENIED!' );
 
 /**
  * Class Enumerable
- * @package Engine\Utility
+ * @package Engine\Helper
  */
 abstract class Enumerable {
 

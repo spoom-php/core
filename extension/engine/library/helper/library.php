@@ -6,7 +6,7 @@ defined( '_PROTECT' ) or die( 'DENIED!' );
 
 /**
  * Class Library
- * @package Engine\Utility
+ * @package Engine\Helper
  *
  * @property string|bool extension Extension id of the class
  * @property string      library   Dot separated list of namespaces and the class name relative to the extension

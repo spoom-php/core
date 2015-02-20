@@ -6,7 +6,7 @@ defined( '_PROTECT' ) or die( 'DENIED!' );
 
 /**
  * Class String
- * @package Engine\Utility
+ * @package Engine\Helper
  */
 abstract class String {
 
