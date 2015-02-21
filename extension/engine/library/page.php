@@ -2,6 +2,7 @@
 
 use Engine\Exception\Collector;
 use Engine\Extension;
+use Engine\Helper\Log;
 
 defined( '_PROTECT' ) or die( 'DENIED!' );
 
@@ -18,7 +19,7 @@ abstract class Page {
   /**
    * Runs in the Page::run() method, and this method returns this event result. No argument
    */
-  const EVENT_RUN  = 'page.run';
+  const EVENT_RUN = 'page.run';
   /**
    * Runs in the Page::stop() method after enable output buffering. Arguments:
    *  - content [string]: The content to render
@@ -32,6 +33,13 @@ abstract class Page {
    * @var Collector
    */
   private static $collector = null;
+
+  /**
+   * Default logger
+   *
+   * @var Log
+   */
+  private static $log = null;
 
   /**
    * @var string
@@ -114,6 +122,7 @@ abstract class Page {
 
     // attribute initialization
     self::$collector = new Collector();
+    self::$log = new Log( 'page' );
 
     // Call initialise event
     $extension->trigger( self::EVENT_START );
@@ -187,6 +196,14 @@ abstract class Page {
   public static function getCollector() {
     return self::$collector;
   }
+  /**
+   * Getter for log
+   *
+   * @return Log
+   */
+  public static function getLog() {
+    return self::$log;
+  }
 
   /**
    * Get page localization string
@@ -195,7 +212,7 @@ abstract class Page {
    */
   public static function getLocalization() {
     if( !self::$localization ) {
-      
+
       $extension          = new Extension( 'engine' );
       self::$localization = $extension->option( 'manifest:localization', 'en' );
     }
