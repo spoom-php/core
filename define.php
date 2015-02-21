@@ -6,13 +6,31 @@
 if( version_compare( PHP_VERSION, '5.4.0' ) < 0 ) die( 'You need at least PHP 5.4, but you only have ' . PHP_VERSION . '.' );
 
 /*
- * State variable that define how site react to exceptions and other type of missbehaviors. It can be:
- *  0: Production state, no exception shown try to ignore or solve them
- *  1: Development state, every little notice and exception shown
- *
- *  ...more state coming when neccessary
+ * State variable that define how site react to exceptions and other type of missbehaviors and what type of errors
+ * displayed by PHP. It can be:
+ *  
+ *  0: Disable all reporting
+ *  1: Enable reporting from 'critical' level (PHP: E_COMPILE_ERROR | E_PARSE)
+ *  2: Enable reporting from 'error' level (PHP: E_ERROR | E_CORE_ERROR | E_USER_ERROR | E_RECOVERABLE_ERROR)
+ *  3: Enable reporting from 'warning' level (PHP: E_WARNING | E_COMPILE_WARNING | E_CORE_WARNING | E_USER_WARNING)
+ *  4: Enable reporting from 'notice' level (PHP: E_NOTICE | E_USER_NOTICE)
+ *  5: Enable reporting from 'info' level (PHP: E_STRICT | E_DEPRECATED | E_USER_DEPRECATED)
+ *  6: Enable all reporting (PHP: E_ALL)
  */
-define( '_REPORTING', 0 );
+define( '_REPORTING', 6 );
+
+/*
+ * State variable that define how site handle log messages. It can be:
+ *  
+ *  0: Disable all log
+ *  1: Enable logs from 'critical' level
+ *  2: Enable logs from 'error' level
+ *  3: Enable logs from 'warning' level
+ *  4: Enable logs from 'notice' level
+ *  5: Enable logs from 'info' level
+ *  6: Enable all log level
+ */
+define( '_LOGGING', 6 );
 
 /**
  * Detect secure http protocol

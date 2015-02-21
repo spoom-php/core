@@ -487,7 +487,9 @@ class Data extends Library implements \JsonSerializable {
       // force string type
       case 'string':
 
-        $result = $tmp->exist && is_string( $result ) ? (string) $result : ( $use_default ? $default : '' );
+        if( $tmp->exist && ( is_string( $result ) || is_numeric( $result ) || is_null( $result ) ) ) $result = (string) $result;
+        else $result = ( $use_default ? $default : '' );
+
         break;
 
       // force numeric type

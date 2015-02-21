@@ -4,5 +4,6 @@
   "#3N": "Invalid exception id: {id}",
   "#4C": "Invalid manifest for extension '{id}'",
   "#5C": "Missing extension: {id}",
-  "#6N": "Invalid extension id: {id}"
+  "#6N": "Invalid extension id: {id}",
+  "#7N": "Invalid log type: {type}"
 }

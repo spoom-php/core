@@ -2,6 +2,7 @@
 
 use Engine\Exception\Collector;
 use Engine\Extension;
+use Engine\Helper\Log;
 
 defined( '_PROTECT' ) or die( 'DENIED!' );
 
@@ -11,8 +12,19 @@ defined( '_PROTECT' ) or die( 'DENIED!' );
  */
 abstract class Page {
 
+  /**
+   * Runs right before the Page::start() method finished. No argument
+   */
   const EVENT_START = 'page.start';
-  const EVENT_RUN  = 'page.run';
+  /**
+   * Runs in the Page::run() method, and this method returns this event result. No argument
+   */
+  const EVENT_RUN = 'page.run';
+  /**
+   * Runs in the Page::stop() method after enable output buffering. Arguments:
+   *  - content [string]: The content to render
+   *  - buffer [string]: Some output "trash" or empty
+   */
   const EVENT_STOP = 'page.stop';
 
   /**
@@ -21,6 +33,13 @@ abstract class Page {
    * @var Collector
    */
   private static $collector = null;
+
+  /**
+   * Default logger
+   *
+   * @var Log
+   */
+  private static $log = null;
 
   /**
    * @var string
@@ -56,16 +75,37 @@ abstract class Page {
   public static function start() {
 
     // setup error reporting based on _REPORTING flag
+    $reporting = 0;
     switch( _REPORTING ) {
       case 0:
 
-        error_reporting( ~E_ALL );
+        error_reporting( -1 );
         ini_set( 'display_errors', 0 );
+
         break;
+
+      /** @noinspection PhpMissingBreakStatementInspection */
+      case 6:
+        $reporting = E_ALL;
+      /** @noinspection PhpMissingBreakStatementInspection */
+      case 5:
+        $reporting |= E_STRICT | E_DEPRECATED | E_USER_DEPRECATED;
+      /** @noinspection PhpMissingBreakStatementInspection */
+      case 4:
+        $reporting |= E_NOTICE | E_USER_NOTICE;
+      /** @noinspection PhpMissingBreakStatementInspection */
+      case 3:
+        $reporting |= E_WARNING | E_COMPILE_WARNING | E_CORE_WARNING | E_USER_WARNING;
+      /** @noinspection PhpMissingBreakStatementInspection */
+      case 2:
+        $reporting |= E_ERROR | E_CORE_ERROR | E_USER_ERROR | E_RECOVERABLE_ERROR;
+      /** @noinspection PhpMissingBreakStatementInspection */
+      case 1:
+        $reporting |= E_COMPILE_ERROR | E_PARSE;
       default:
 
-        error_reporting( E_ALL );
         ini_set( 'display_errors', 1 );
+        error_reporting( $reporting );
     }
 
     // setup localization options
@@ -82,6 +122,7 @@ abstract class Page {
 
     // attribute initialization
     self::$collector = new Collector();
+    self::$log = new Log( 'page' );
 
     // Call initialise event
     $extension->trigger( self::EVENT_START );
@@ -113,8 +154,10 @@ abstract class Page {
 
     // call display end event ( the render )
     $extension = new Extension( 'engine' );
-    $extension->trigger( self::EVENT_STOP, array( 'content' => $content,
-                                                  'buffer' => $buffer ) );
+    $extension->trigger( self::EVENT_STOP, [
+      'content' => $content,
+      'buffer'  => $buffer
+    ] );
 
     return ob_get_clean();
   }
@@ -153,6 +196,14 @@ abstract class Page {
   public static function getCollector() {
     return self::$collector;
   }
+  /**
+   * Getter for log
+   *
+   * @return Log
+   */
+  public static function getLog() {
+    return self::$log;
+  }
 
   /**
    * Get page localization string
@@ -161,7 +212,7 @@ abstract class Page {
    */
   public static function getLocalization() {
     if( !self::$localization ) {
-      
+
       $extension          = new Extension( 'engine' );
       self::$localization = $extension->option( 'manifest:localization', 'en' );
     }

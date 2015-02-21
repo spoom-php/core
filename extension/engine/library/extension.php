@@ -21,12 +21,12 @@ class Extension extends Library {
   /**
    * Exception code for invalid manifest data. This mostly indicates the extension package and name
    * missmatch in the manifest and the extension path. One data will be passed:
-   *  - 0 [string]: Extension id
+   *  - id [string]: Extension id
    */
   const EXCEPTION_CRITICAL_INVALID_MANIFEST = 'engine#4C';
   /**
    * Exception code for missing extension directory. One data will be passed:
-   *  - 0 [string]: Extension id
+   *  - id [string]: Extension id
    */
   const EXCEPTION_CRITICAL_MISSING_EXTENSION = 'engine#5C';
 

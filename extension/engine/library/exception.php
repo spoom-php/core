@@ -1,6 +1,8 @@
 <?php namespace Engine;
 
 use Engine\Extension;
+use Engine\Helper\Log;
+use Engine\Storage\Data;
 
 defined( '_PROTECT' ) or die( 'DENIED!' );
 
@@ -12,8 +14,6 @@ defined( '_PROTECT' ) or die( 'DENIED!' );
  * @property array       data      The data attached to the exception
  * @property Extension   extension The message source
  * @property string      type      The "danger level". This can only be a self::TYPE_* constants
- * @property string      code      The ->getCode() returns the numeric part of the code but this also includes the type
- *           postfix
  * @property string      id        The unique identifier. The format is '<extension>#<code><type>'
  */
 abstract class Exception extends \Exception implements \JsonSerializable {
@@ -86,9 +86,7 @@ abstract class Exception extends \Exception implements \JsonSerializable {
 
     switch( $index ) {
       case 'id':
-        return ( $this->_extension ? $this->_extension->id : '' ) . '#' . $this->code;
-      case 'code':
-        return $this->getCode() . $this->_type;
+        return ( $this->_extension ? $this->_extension->id : '' ) . '#' . $this->getCode() . $this->_type;
       default:
 
         $iindex = '_' . $index;
@@ -112,6 +110,47 @@ abstract class Exception extends \Exception implements \JsonSerializable {
    */
   public function __toString() {
     return $this->id . ': ' . $this->getMessage();
+  }
+
+  /**
+   * Log the exception
+   *
+   * @param array    $data     Additional data to the log
+   * @param Log|null $instance The logger instance use to create the log. If null, the Page::getLog() used
+   *
+   * @return $this
+   * @throws Exception\Strict
+   */
+  public function log( $data = [ ], Log $instance = null ) {
+
+    $instance = $instance ?: Page::getLog();
+    if( $instance ) {
+
+      // extend data
+      $data = $data instanceof Data ? $data->geta( '' ) : (array) $data;
+
+      // define the log type
+      $type = Log::TYPE_DEBUG;
+      switch( $this->type ) {
+        case self::TYPE_CRITICAL:
+          $type = Log::TYPE_CRITICAL;
+          break;
+        case self::TYPE_ERROR:
+          $type = Log::TYPE_ERROR;
+          break;
+        case self::TYPE_WARNING:
+          $type = Log::TYPE_WARNING;
+          break;
+        case self::TYPE_NOTICE:
+          $type = Log::TYPE_NOTICE;
+          break;
+      }
+
+      // create a new log entry
+      $instance->create( $this->message, $this->data + $data, $this->id, $type );
+    }
+
+    return $this;
   }
 
   /**
