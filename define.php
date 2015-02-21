@@ -14,6 +14,19 @@ if( version_compare( PHP_VERSION, '5.4.0' ) < 0 ) die( 'You need at least PHP 5.
  */
 define( '_REPORTING', 0 );
 
+/*
+ * State variable that define how site handle log messages. It can be:
+ *  
+ *  0: Disable all log
+ *  1: Enable logs from 'critical' level
+ *  2: Enable logs from 'error' level
+ *  3: Enable logs from 'warning' level
+ *  4: Enable logs from 'notice' level
+ *  5: Enable logs from 'info' level
+ *  6: Enable all log level
+ */
+define( '_LOGGING', 6 );
+
 /**
  * Detect secure http protocol
  */
