@@ -9,9 +9,9 @@ defined( '_PROTECT' ) or die( 'DENIED!' );
  * Class File
  * @package Engine\Storage
  *
- * @property string directory
- * @property string default
- * @property array  allow
+ * @property string $directory The directory base for the storage
+ * @property string $default   The default extension for saving files
+ * @property array  $allow     The allowed file extension to handle as namespace
  */
 class File extends Advance {
 
@@ -39,14 +39,14 @@ class File extends Advance {
    *
    * @var array
    */
-  private static $files = array();
+  private static $files = [ ];
 
   /**
    * Meta properties for files
    *
    * @var array
    */
-  private static $meta = array();
+  private static $meta = [ ];
 
   /**
    * Allowed extensions for files
@@ -74,7 +74,7 @@ class File extends Advance {
    *
    * @var array
    */
-  private $loaded = array();
+  private $loaded = [ ];
 
   /**
    * Set given directory to handle
@@ -82,11 +82,11 @@ class File extends Advance {
    * @param string $directory
    * @param mixed  $allow
    */
-  public function __construct( $directory, $allow = array( 'php', 'ini', 'json', 'xml' ) ) {
+  public function __construct( $directory, $allow = [ 'php', 'ini', 'json', 'xml' ] ) {
     parent::__construct( 'default', null, self::CACHE_NONE );
 
     $this->_directory = $directory ? rtrim( $directory, '\\/' ) . '/' : null;
-    $this->_allow = is_array( $allow ) ? $allow : array( @(string) $allow );
+    $this->_allow = is_array( $allow ) ? $allow : [ @(string) $allow ];
   }
 
   /**
@@ -177,10 +177,10 @@ class File extends Advance {
 
     $filename = $this->path( $namespace );
     $index    = $this->_directory . $namespace;
-    if( !$filename ) self::$files[ $index ] = self::$meta[ $index ] = array();
+    if( !$filename ) self::$files[ $index ] = self::$meta[ $index ] = [ ];
     else if( is_file( $filename ) && is_readable( $filename ) && !isset( self::$files[ $index ] ) ) {
 
-      self::$files[ $index ] = self::$meta[ $index ] = array();
+      self::$files[ $index ] = self::$meta[ $index ] = [ ];
       self::$files[ $index ] = $this->process( @file_get_contents( $filename ), self::CONVERT_UNSERIALIZE, pathinfo( $filename, PATHINFO_EXTENSION ), $namespace, self::$meta[ $index ] );
     }
 
@@ -266,7 +266,7 @@ class File extends Advance {
   protected function convertIni( $content, $type ) {
 
     // read from the ini string
-    $result = array();
+    $result  = [ ];
     if( $type == self::CONVERT_UNSERIALIZE ) {
 
       $ini = parse_ini_string( $content, false );
@@ -283,7 +283,7 @@ class File extends Advance {
 
       $iterator = new \RecursiveIteratorIterator( new \RecursiveArrayIterator( $content ) );
       foreach( $iterator as $value ) {
-        $keys = array();
+        $keys = [ ];
         foreach( range( 0, $iterator->getDepth() ) as $depth ) $keys[ ] = $iterator->getSubIterator( $depth )->key();
 
         $print = is_bool( $value ) ? ( $value ? 'true' : 'false' ) : $value;
@@ -332,13 +332,13 @@ class File extends Advance {
    */
   protected function convertXml( $content, $type, $namespace, array &$meta ) {
 
-    if( $type == self::CONVERT_SERIALIZE ) return Enumerable::toXml( $content, isset( $meta[ 'attribute' ] ) ? $meta[ 'attribute' ] : array(), $namespace, isset( $meta[ 'version' ] ) ? $meta[ 'version' ] : '1.0', isset( $meta[ 'encoding' ] ) ? $meta[ 'encoding' ] : 'UTF-8' )->asXml();
+    if( $type == self::CONVERT_SERIALIZE ) return Enumerable::toXml( $content, isset( $meta[ 'attribute' ] ) ? $meta[ 'attribute' ] : [ ], $namespace, isset( $meta[ 'version' ] ) ? $meta[ 'version' ] : '1.0', isset( $meta[ 'encoding' ] ) ? $meta[ 'encoding' ] : 'UTF-8' )->asXml();
     else {
 
-      $meta[ 'attribute' ] = array();
-      $meta[ 'version' ] = null;
-      $meta[ 'encoding' ] = null;
-      $object = Enumerable::fromXml( $content, $meta[ 'attribute' ], $meta[ 'version' ], $meta[ 'encoding' ] );
+      $meta[ 'attribute' ] = [ ];
+      $meta[ 'version' ]   = null;
+      $meta[ 'encoding' ]  = null;
+      $object              = Enumerable::fromXml( $content, $meta[ 'attribute' ], $meta[ 'version' ], $meta[ 'encoding' ] );
 
       return $object;
     }
@@ -365,17 +365,17 @@ class File extends Advance {
 
       $extension = new Extension( 'engine' );
       $event     = $extension->trigger(
-        self::EVENT_CONVERT, array(
+        self::EVENT_CONVERT, [
           'content'   => $content,
           'type'      => $type,
           'format'    => $format,
           'namespace' => $namespace,
           'meta'      => &$meta
-        )
+        ]
       );
 
       if( count( $event->result ) ) return $event->result[ 0 ];
-      else return $type == self::CONVERT_SERIALIZE ? '' : array();
+      else return $type == self::CONVERT_SERIALIZE ? '' : [ ];
     }
   }
 }

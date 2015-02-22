@@ -34,10 +34,10 @@ abstract class String {
    * @return array|string
    */
   public static function insert( $text, $insertion, $type = self::TYPE_INSERT_EMPTY ) {
-    
+
     // every insertion converted to data
-    if( !($insertion instanceof Data) ) $insertion = new Data( $insertion );
-    
+    if( !( $insertion instanceof Data ) ) $insertion = new Data( $insertion );
+
     // find patterns iterate trough the matches
     preg_match_all( self::REGEXP_INSERT_REPLACE, $text, $matches, PREG_SET_ORDER );
     foreach( $matches as $value ) {
@@ -49,9 +49,9 @@ abstract class String {
           break;
         case self::TYPE_INSERT_LEAVE:
         default:
-          $ifnull = $value[0];
+        $ifnull = $value[ 0 ];
       }
-      
+
       // replace the pattern
       $text = str_replace( $value[ 0 ], $insertion->getString( $value[ 1 ], $ifnull ), $text );
     }
@@ -104,10 +104,12 @@ abstract class String {
    */
   public static function toLink( $text ) {
 
-    $source = array( '/á/i', '/é/i', '/ű|ú|ü/i', '/ő|ó|ö/i', '/í/i', // accented characters
+    $source = [
+      '/á/i', '/é/i', '/ű|ú|ü/i', '/ő|ó|ö/i', '/í/i', // accented characters
       '/[\W]+/i',                                     // special characters
-      '/[\s]+/' );                                    // whitespaces
-    $target = array( 'a', 'e', 'u', 'o', 'i', '-', '+' );
+      '/[\s]+/'                                       // whitespaces
+    ];
+    $target = [ 'a', 'e', 'u', 'o', 'i', '-', '+' ];
 
     // convert text
     $text = mb_convert_case( $text, MB_CASE_LOWER, 'UTF-8' ); // lowercase

@@ -61,7 +61,7 @@ abstract class Enumerable {
    *
    * @return array
    */
-  public static function fromXml( $xml, array &$attribute = array(), &$version = '1.0', &$encoding = 'UTF-8' ) {
+  public static function fromXml( $xml, array &$attribute = [ ], &$version = '1.0', &$encoding = 'UTF-8' ) {
 
     // collect encoding and version from xml data
     $dom = new \DOMDocument();
@@ -70,13 +70,13 @@ abstract class Enumerable {
     $encoding = $dom->xmlEncoding;
 
     // create root element and start the parsing
-    $root            = simplexml_load_string( $xml );
-    $object          = array();
-    $elements = array( array( &$object, $root, '' ) );
+    $root      = simplexml_load_string( $xml );
+    $object    = [ ];
+    $elements  = [ [ &$object, $root, '' ] ];
     while( $next = array_shift( $elements ) ) {
       $container = &$next[ 0 ];
-      $element       = $next[ 1 ];
-      $key           = $next[ 2 ];
+      $element = $next[ 1 ];
+      $key     = $next[ 2 ];
 
       // handle "recursion" end, and set simple data to the container
       if( !is_object( $element ) || !( $element instanceof \SimpleXMLElement ) || ( !$element->children()->count() && !$element->attributes()->count() ) ) switch( (string) $element ) {
@@ -96,15 +96,15 @@ abstract class Enumerable {
 
       // handle item attributes
       foreach( $element->attributes() as $index => $value ) {
-        $container[ $index ] = array();
-        $elements[ ] = array( &$container[ $index ], $value, $key . '.' . $index );
+        $container[ $index ] = [ ];
+        $elements[ ]         = [ &$container[ $index ], $value, $key . '.' . $index ];
 
         // save to meta for proper write back
         $attribute[ ] = $key . '.' . $index;
       }
 
       // collect children names and values (it's for find the arrays before add to the queue)
-      $tmp = array();
+      $tmp = [ ];
       foreach( $element->children() as $value ) {
 
         /** @var \SimpleXMLElement $value */
@@ -112,7 +112,7 @@ abstract class Enumerable {
         if( !isset( $tmp[ $index ] ) ) $tmp[ $index ] = $value;
         else {
 
-          if( !is_array( $tmp[ $index ] ) ) $tmp[ $index ] = array( $tmp[ $index ] );
+          if( !is_array( $tmp[ $index ] ) ) $tmp[ $index ] = [ $tmp[ $index ] ];
           $tmp[ $index ][ ] = $value;
         }
       }
@@ -121,12 +121,12 @@ abstract class Enumerable {
       foreach( $tmp as $index => $value ) {
         $container[ $index ] = null;
 
-        if( !is_array( $value ) ) $elements[ ] = array( &$container[ $index ], $value, $key . '.' . $index );
+        if( !is_array( $value ) ) $elements[ ] = [ &$container[ $index ], $value, $key . '.' . $index ];
         else {
 
           // handle arrays
-          $container[ $index ] = array();
-          foreach( $value as $i => $v ) $elements[ ] = array( &$container[ $index ][ $i ], $v, $key . '.' . $index . '.' . $i );
+          $container[ $index ] = [ ];
+          foreach( $value as $i => $v ) $elements[ ] = [ &$container[ $index ][ $i ], $v, $key . '.' . $index . '.' . $i ];
         }
       }
     }
@@ -148,14 +148,14 @@ abstract class Enumerable {
    *
    * @return \SimpleXMLElement
    */
-  public static function toXml( $enumerable, array $attribute = array(), $root_name = 'xml', $version = '1.0', $encoding = 'UTF-8' ) {
+  public static function toXml( $enumerable, array $attribute = [ ], $root_name = 'xml', $version = '1.0', $encoding = 'UTF-8' ) {
 
     // create dom and the root element
     $dom = new \DOMDocument( $version, $encoding );
     $dom->appendChild( $root = $dom->createElement( $root_name ) );
 
     // walk trought the enumerable and build the xml
-    $objects = array( (object) array( 'element' => &$root, 'data' => $enumerable, 'name' => $root_name, 'key' => '' ) );
+    $objects = [ (object) [ 'element' => &$root, 'data' => $enumerable, 'name' => $root_name, 'key' => '' ] ];
     while( $object = array_shift( $objects ) ) {
       /** @var \DOMElement $element */
       $element = $object->element;
@@ -175,13 +175,13 @@ abstract class Enumerable {
       } else foreach( $object->data as $index => $value ) {
 
         // handle attributes, arrays and properties (in this order)
-        if( in_array( $object->key . '.' . $index, $attribute ) ) $objects[ ] = (object) array( 'element' => $element, 'data' => $value, 'name' => $index, 'key' => $object->key . '.' . $index );
-        else if( self::isArray( $value, false ) ) $objects[ ] = (object) array( 'element' => $element, 'data' => $value, 'name' => $index, 'key' => $object->key . '.' . $index );
+        if( in_array( $object->key . '.' . $index, $attribute ) ) $objects[ ] = (object) [ 'element' => $element, 'data' => $value, 'name' => $index, 'key' => $object->key . '.' . $index ];
+        else if( self::isArray( $value, false ) ) $objects[ ] = (object) [ 'element' => $element, 'data' => $value, 'name' => $index, 'key' => $object->key . '.' . $index ];
         else {
           $child = $dom->createElement( is_numeric( $index ) ? $object->name : $index );
 
           $element->appendChild( $child );
-          $objects[ ] = (object) array( 'element' => $child, 'data' => $value, 'name' => $child->tagName, 'key' => $object->key . '.' . $index );
+          $objects[ ] = (object) [ 'element' => $child, 'data' => $value, 'name' => $child->tagName, 'key' => $object->key . '.' . $index ];
         }
       }
     }
@@ -221,7 +221,7 @@ abstract class Enumerable {
     $arr = null;
 
     if( is_array( $array ) ) {
-      $arr = array();
+      $arr = [ ];
 
       foreach( $array as $k => $e ) {
         $arr[ $k ] = is_object( $e ) || is_array( $e ) ? self::copy( $e ) : $e;

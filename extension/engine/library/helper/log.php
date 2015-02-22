@@ -13,7 +13,7 @@ defined( '_PROTECT' ) or die( 'DENIED!' );
  * @property string namespace The default namespace for log entries
  * @property string name      The instance identifier
  */
-class Log {
+class Log extends Library {
 
   /**
    * Exception throwed when an invalid type of log try to be created. Data:
@@ -138,10 +138,10 @@ class Log {
     $this->_namespace = empty( $namespace ) ? (string) $this->extension : $namespace;
 
     // define the default log file
-    if( is_dir( _PATH . _PATH_TMP ) || mkdir( _PATH . _PATH_TMP, 0777, true ) ) {
+    if( is_dir( _PATH_BASE . _PATH_TMP ) || mkdir( _PATH_BASE . _PATH_TMP, 0777, true ) ) {
 
       $date        = date( 'Ymd' );
-      $this->_file = _PATH . _PATH_TMP . "{$name}-{$date}.log";
+      $this->_file = _PATH_BASE . _PATH_TMP . "{$name}-{$date}.log";
     }
   }
 
@@ -204,7 +204,7 @@ class Log {
         ] ), FILE_APPEND );
       }
 
-      return !$event->hasException();
+      return !$event->collector->contains();
     }
   }
 

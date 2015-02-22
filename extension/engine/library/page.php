@@ -58,7 +58,7 @@ abstract class Page {
     try {
       $content = self::run();
     } catch( \Exception $e ) {
-      self::$collector->addException( $e );
+      self::$collector->add( $e );
       $content = [ ];
     }
 
@@ -109,7 +109,7 @@ abstract class Page {
     }
 
     // setup localization options
-    $extension = new Extension( 'engine' );
+    $extension          = new Extension( 'engine' );
     self::$localization = $extension->option( 'manifest:localization', 'en' );
     setlocale( LC_ALL, $extension->option( 'default:locale', null ) );
 
@@ -122,7 +122,7 @@ abstract class Page {
 
     // attribute initialization
     self::$collector = new Collector();
-    self::$log = new Log( 'page' );
+    self::$log       = new Log( 'page' );
 
     // Call initialise event
     $extension->trigger( self::EVENT_START );
@@ -149,7 +149,7 @@ abstract class Page {
    *
    * @return string the page result
    */
-  public static function stop( array $content = array(), $buffer = null ) {
+  public static function stop( array $content = [ ], $buffer = null ) {
     ob_start();
 
     // call display end event ( the render )

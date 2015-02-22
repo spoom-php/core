@@ -1,6 +1,7 @@
 <?php namespace Engine;
 
 use Engine\Extension;
+use Engine\Helper\LibraryInterface;
 use Engine\Helper\Log;
 use Engine\Storage\Data;
 
@@ -11,12 +12,12 @@ defined( '_PROTECT' ) or die( 'DENIED!' );
  *
  * @package Engine
  *
- * @property array       data      The data attached to the exception
- * @property Extension   extension The message source
- * @property string      type      The "danger level". This can only be a self::TYPE_* constants
- * @property string      id        The unique identifier. The format is '<extension>#<code><type>'
+ * @property array       $data      The data attached to the exception
+ * @property Extension   $extension The message source
+ * @property string      $type      The "danger level". This can only be a self::TYPE_* constants
+ * @property string      $id        The unique identifier. The format is '<extension>#<code><type>'
  */
-abstract class Exception extends \Exception implements \JsonSerializable {
+abstract class Exception extends \Exception implements \JsonSerializable, LibraryInterface {
 
   /**
    * Type for impactless exception
@@ -66,7 +67,7 @@ abstract class Exception extends \Exception implements \JsonSerializable {
   public function __construct( $id, array $data = [ ], \Exception $previous = null ) {
 
     // parse id to "properties"
-    $tmp = Exception\Helper::parse( $id );
+    $tmp              = Exception\Helper::parse( $id );
     $this->_extension = new Extension( $tmp->extension );
     $this->_type      = $tmp->type;
 
@@ -159,13 +160,13 @@ abstract class Exception extends \Exception implements \JsonSerializable {
    * @return array
    */
   public function toArray() {
-    return array(
+    return [
       'id'        => $this->id,
       'code'      => $this->code,
       'message'   => $this->getMessage(),
       'extension' => $this->_extension ? $this->_extension->id : null,
       'data'      => $this->_data
-    );
+    ];
   }
 
   /**

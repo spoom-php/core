@@ -5,27 +5,11 @@ use Engine\Extension;
 defined( '_PROTECT' ) or die( 'DENIED!' );
 
 /**
- * Class Library
+ * This should be the base class for every library in the framework or at least needs to implement the LibraryInterface
+ * 
  * @package Engine\Helper
- *
- * @property string|bool extension Extension id of the class
- * @property string      library   Dot separated list of namespaces and the class name relative to the extension
  */
-class Library {
-
-  /**
-   * Extension of the class or false if its engine class
-   *
-   * @var string
-   */
-  private $_extension = null;
-
-  /**
-   * The class library. Dot separated relative namespace from extension base or engine directory
-   *
-   * @var string
-   */
-  private $_library = null;
+class Library implements LibraryInterface {
 
   /**
    * Getter for _ prefixed attributes
@@ -37,36 +21,9 @@ class Library {
   public function __get( $index ) {
 
     $index = '_' . $index;
-    switch( $index ) {
-
-      // get the extension
-      case '_extension':
-        if( $this->_extension === null ) {
-
-          $class = explode( '\\', mb_strtolower( get_class( $this ) ) );
-          $this->_extension = Extension\Helper::search( $class );
-        }
-
-        return $this->_extension;
-
-      // get the library
-      case '_library':
-
-        if( $this->_library === null ) {
-
-          $class = explode( '\\', mb_strtolower( get_class( $this ) ) );
-          $this->_extension = Extension\Helper::search( $class );
-          $this->_library   = implode( '.', $class );
-        }
-
-        return $this->_library;
-      default:
-        if( isset( $this->{$index} ) ) return $this->{$index};
-    }
-
-    return null;
+    if( isset( $this->{$index} ) ) return $this->{$index};
+    else return null;
   }
-
   /**
    * Existance check of dynamic attributes
    *
@@ -84,6 +41,15 @@ class Library {
    * @return string
    */
   public function __toString() {
-    return "{$this->extension}:{$this->library}";
+
+    $class = explode( '\\', mb_strtolower( get_class( $this ) ) );
+    return Extension\Helper::search( $class ) . ':' . implode( '.', $class );
   }
+}
+
+/**
+ * Interface LibraryInterface
+ * @package Engine\Helper
+ */
+interface LibraryInterface {
 }

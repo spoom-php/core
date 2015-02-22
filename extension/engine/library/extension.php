@@ -12,9 +12,9 @@ defined( '_PROTECT' ) or die( 'DENIED!' );
  *
  * @package Engine
  *
- * @property string                        id
- * @property Extension\Configuration       configuration
- * @property Extension\Localization        localization
+ * @property string                        $id            Unique name
+ * @property Extension\Configuration       $configuration The configuration storage object
+ * @property Extension\Localization        $localization  The localization storage object
  */
 class Extension extends Library {
 
@@ -55,7 +55,7 @@ class Extension extends Library {
   private $_id;
 
   /**
-   * Extension directory from root without _PATH
+   * Extension directory from root without _PATH_BASE
    *
    * @var string
    */
@@ -89,7 +89,14 @@ class Extension extends Library {
    */
   public function __construct( $id = null ) {
 
-    $this->_id = isset( $id ) ? mb_strtolower( $id ) : $this->extension;
+    // define the id
+    if( !empty( $id ) ) $this->_id = $id;
+    else {
+
+      $class     = explode( '\\', mb_strtolower( get_class( $this ) ) );
+      $this->_id = Extension\Helper::search( $class );
+    }
+
     if( !Extension\Helper::validate( $this->_id ) ) throw new Exception\Strict( self::EXCEPTION_NOTICE_INVALID_ID, [ 'id' => $this->_id ] );
     else {
 
@@ -165,13 +172,13 @@ class Extension extends Library {
    * (it can be modified with the $root parameter)
    *
    * @param string      $path Path from extension root
-   * @param bool|string $root Add _PATH constant or another ( or nothing )
+   * @param bool|string $root Add _PATH_BASE constant or another ( or nothing )
    *
    * @return string
    */
   public function directory( $path = '', $root = false ) {
 
-    $base = $root === true ? _PATH : ( is_string( $root ) ? $root : '' );
+    $base = $root === true ? _PATH_BASE : ( is_string( $root ) ? $root : '' );
     return $base . rtrim( $this->_directory . ltrim( $path, '/' ), '/' ) . '/';
   }
   /**
@@ -180,7 +187,7 @@ class Extension extends Library {
    *
    * @param string  $file_name The file name ( use | and | for regexp file filter or * for directory listing )
    * @param string  $path      Path from the extension root
-   * @param boolean $root      Add _PATH constant or another prefix for the path ( or nothing )
+   * @param boolean $root Add _PATH_BASE constant or another prefix for the path ( or nothing )
    *
    * @return bool|string
    */
@@ -207,7 +214,7 @@ class Extension extends Library {
    * @return string|false
    */
   public function library( $class_name ) {
-    if( !is_array( $class_name ) ) $class_name = array( $class_name );
+    if( !is_array( $class_name ) ) $class_name = [ $class_name ];
 
     $base = str_replace( '-', '\\', $this->id ) . '\\';
     foreach( $class_name as $name ) {
@@ -246,7 +253,7 @@ class Extension extends Library {
    *
    * @return Extension\Event
    */
-  public function trigger( $event, $arguments = array() ) {
+  public function trigger( $event, $arguments = [ ] ) {
 
     $event = new Extension\Event( $this->id, $event, $arguments );
     return $event->execute();

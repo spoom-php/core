@@ -22,9 +22,9 @@ abstract class File {
   public static function getList( $directory, $fullpath = false, $regexp = null ) {
 
     // check
-    if( !is_dir( $directory ) ) return array();
+    if( !is_dir( $directory ) ) return [ ];
 
-    $files = array();
+    $files = [ ];
     $directory_stream = opendir( $directory );
     while( $f = readdir( $directory_stream ) ) {
       if( is_dir( $directory . $f ) || $f == '.' || $f == '..' || ( is_string( $regexp ) && !preg_match( $regexp, $f ) ) ) continue;

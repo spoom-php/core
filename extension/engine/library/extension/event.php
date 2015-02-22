@@ -1,7 +1,9 @@
 <?php namespace Engine\Extension;
 
-use Engine\Extension;
 use Engine\Exception;
+use Engine\Exception\Collector;
+use Engine\Extension;
+use Engine\Helper\Library;
 
 defined( '_PROTECT' ) or die( 'DENIED!' );
 
@@ -9,22 +11,22 @@ defined( '_PROTECT' ) or die( 'DENIED!' );
  * Class Event
  * @package Engine\Extension
  *
- * @property Extension   extension
- * @property bool        prevented
- * @property bool        stopped
- * @property string      event
- * @property string      base
- * @property array       argument
- * @property array|null  result
+ * @property bool        $prevented The default event action has been prevented or not
+ * @property bool        $stopped   Stopped next handler call or not
+ * @property string      $name      The event name
+ * @property string      $namespace The event namespace
+ * @property array       $argument  The arguments passed to the event call
+ * @property array|null  $result    The handler's results in an array indexed by the handler names
+ * @property Collector   $collector The exception collector
  */
-class Event extends Exception\Collector {
+class Event extends Library {
 
   /**
    * Array of the instanced listeners. All listener only instanced once!
    *
    * @var array
    */
-  private static $cache = array();
+  private static $cache = [ ];
 
   /**
    * Attached listeners storage
@@ -38,21 +40,14 @@ class Event extends Exception\Collector {
    *
    * @var string
    */
-  private $_event = null;
+  private $_name = null;
 
   /**
-   * Event "namespace"
-   *
-   * @var null|string
-   */
-  private $_base = null;
-
-  /**
-   * The extension id that trigger the event
+   * The event "namespace"
    *
    * @var string|null
    */
-  private $_extension = null;
+  private $_namespace = null;
 
   /**
    * @var bool
@@ -69,7 +64,7 @@ class Event extends Exception\Collector {
    *
    * @var array
    */
-  private $_argument = array();
+  private $_argument = [ ];
 
   /**
    * Store the result array after the execution in a
@@ -80,17 +75,24 @@ class Event extends Exception\Collector {
   private $_result = null;
 
   /**
-   * @param string $extension
-   * @param string $event_name
+   * Exception collector
+   *
+   * @var Collector
+   */
+  private $_collector = null;
+
+  /**
+   * @param string $namespace
+   * @param string $name
    * @param array  $arguments
    */
-  public function __construct( $extension, $event_name, $arguments = array() ) {
+  public function __construct( $namespace, $name, $arguments = [ ] ) {
 
     // set default params
-    $this->_extension = $extension;
-    $this->_event = $event_name;
-    $this->_base = $this->extension;
-    $this->_argument = $arguments;
+    $this->_namespace = $namespace;
+    $this->_name      = $name;
+    $this->_argument  = $arguments;
+    $this->_collector = new Collector();
   }
 
   /**
@@ -101,12 +103,9 @@ class Event extends Exception\Collector {
    * @return string|null
    */
   public function __get( $index ) {
+
     $index = '_' . $index;
-
-    if( $index == '_event' ) return $this->_base . ':' . $this->_event;
-    if( isset( $this->{$index} ) ) return $this->{$index};
-
-    return null;
+    return property_exists( $this, $index ) ? $this->{$index} : null;
   }
 
   /**
@@ -145,10 +144,10 @@ class Event extends Exception\Collector {
     $this->load();
 
     // Call attached listeners
-    $this->_result = array();
+    $this->_result = [ ];
     foreach( $this->listeners as &$listener ) {
 
-      $this->_result[ $listener->name ] = $listener->instance->execute( $this->event, array( $this, $listener->data ) );
+      $this->_result[ $listener->name ] = $listener->instance->execute( $this->_namespace . '.' . $this->_name, [ $this, $listener->data ] );
       if( $this->_stopped ) break;
     }
 
@@ -160,7 +159,7 @@ class Event extends Exception\Collector {
    * configuration file named 'event-<package.name>' in a {
    *    event: [
    *      {
-   *        extension: String (package.name),
+   *        extension: String (package-name),
    *        library: String (dot separated namespaces included),
    *        enabled: Boolean,
    *        data: Object
@@ -170,12 +169,12 @@ class Event extends Exception\Collector {
    *  } structure. The order in the event handlers array is the execution order when the event is triggers
    */
   private function load() {
-    $this->listeners = array();
-    $extension = new Extension( 'engine' );
+    $this->listeners = [ ];
+    $extension       = new Extension( 'engine' );
 
     // collect listeners if event exists and enabled
-    $tmp = $extension->configuration->geta( $this->event );
-    foreach( $tmp as $listener ) if( isset( $listener->extension ) && isset( $listener->library ) ) {
+    $tmp = $extension->configuration->geta( $this->_namespace . ':' . $this->_name );
+    foreach( $tmp as $listener ) if( !empty( $listener->extension ) && !empty( $listener->library ) ) {
       $this->add( $listener );
     }
   }
@@ -187,7 +186,7 @@ class Event extends Exception\Collector {
    * @param object $options
    */
   private function add( $options ) {
-    if( !isset( $options->enabled ) || !$options->enabled || !Extension\Helper::exist( $options->extension, true ) ) return;
+    if( empty( $options->enabled ) || !Extension\Helper::exist( $options->extension, true ) ) return;
 
     $index = $options->extension . ':' . $options->library;
     if( !isset( self::$cache[ $index ] ) ) {
@@ -195,15 +194,15 @@ class Event extends Exception\Collector {
       $extension = new Extension( $options->extension );
       $listener = $extension->instance( $options->library );
 
-      if( !$listener || !is_callable( array( $listener, 'execute' ) ) ) return;
+      if( !$listener || !is_callable( [ $listener, 'execute' ] ) ) return;
       self::$cache[ $index ] = $listener;
     }
 
-    $this->listeners[ $index ] = (object) array(
+    $this->listeners[ $index ] = (object) [
       'name'      => $index,
       'extension' => $options->extension,
       'instance'  => self::$cache[ $index ],
       'data'      => isset( $options->data ) ? $options->data : null
-    );
+    ];
   }
 }

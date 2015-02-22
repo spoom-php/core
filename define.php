@@ -44,7 +44,7 @@ define( '_URL_PATH', rtrim( dirname( $_SERVER[ 'SCRIPT_NAME' ] ), '\\/ ' ) . '/'
 /**
  * The root url with protocol, host and port definition ( if neccessary )
  */
-define( '_URL_ROOT', 'http' . ( _URL_HTTPS ? 's' : '' ) . '://' . $_SERVER[ 'SERVER_NAME' ] . ( !in_array( $_SERVER[ 'SERVER_PORT' ], array( 80 ) ) ? ':' . $_SERVER[ 'SERVER_PORT' ] : '' ) . '/' );
+define( '_URL_ROOT', 'http' . ( _URL_HTTPS ? 's' : '' ) . '://' . $_SERVER[ 'SERVER_NAME' ] . ( !in_array( $_SERVER[ 'SERVER_PORT' ], [ 80 ] ) ? ':' . $_SERVER[ 'SERVER_PORT' ] : '' ) . '/' );
 /**
  * The root url with the url path.
  * This is the "real" url with all neccessary parameter
@@ -52,16 +52,16 @@ define( '_URL_ROOT', 'http' . ( _URL_HTTPS ? 's' : '' ) . '://' . $_SERVER[ 'SER
 define( '_URL_BASE', _URL_ROOT . ( _URL_PATH != '/' ? _URL_PATH : '' ) );
 
 /**
- * Directory root of the framework.
+ * Directory base of the framework.
  * Can be used to include files in php without worry the correct include path
  */
-define( '_PATH', rtrim( dirname( __FILE__ ), '\\/' ) . '/' );
+define( '_PATH_BASE', rtrim( dirname( __FILE__ ), '\\/' ) . '/' );
 /**
- * Extension directory without the _PATH
+ * Extension directory without the _PATH_BASE
  */
 define( '_PATH_EXTENSION', 'extension/' );
 /**
- * Tmp directory without the _PATH
+ * Tmp directory without the _PATH_BASE
  */
 define( '_PATH_TMP', 'tmp/' );
 
@@ -82,7 +82,7 @@ spl_autoload_register( function ( $class_name ) {
 
     // check if this path is an extension: check existance of manifest file with any file extension
     $tmp = $extension . ( $i > 0 ? '-' : '' ) . mb_strtolower( $pieces[ $i ] );
-    if( !count( glob( \_PATH . \_PATH_EXTENSION . $tmp . '/configuration/manifest.*' ) ) ) break;
+    if( !count( glob( \_PATH_BASE . \_PATH_EXTENSION . $tmp . '/configuration/manifest.*' ) ) ) break;
     else {
 
       ++$i;
@@ -104,12 +104,12 @@ spl_autoload_register( function ( $class_name ) {
     $tmp = implode( '/', $pieces ) . '/' . implode( '', $matches[ 0 ] );
 
     // load the class file with the standard lowercase format
-    $file = \_PATH . $directory . mb_strtolower( $tmp );
+    $file = \_PATH_BASE . $directory . mb_strtolower( $tmp );
     if( is_file( $file . '.php' ) ) include( $file . '.php' );
     else {
 
       // check for non-standard, capital letter files (this files probably 3th part libs)
-      $file = \_PATH . $directory . $tmp;
+      $file = \_PATH_BASE . $directory . $tmp;
       if( is_file( $file . '.php' ) ) include( $file . '.php' );
       else continue;  // skip the break statement if we don't find the file
     }
