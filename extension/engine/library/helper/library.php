@@ -5,11 +5,11 @@ use Engine\Extension;
 defined( '_PROTECT' ) or die( 'DENIED!' );
 
 /**
- * This should be the base class for every library in the framework
+ * This should be the base class for every library in the framework or at least needs to implement the LibraryInterface
  * 
  * @package Engine\Helper
  */
-class Library {
+class Library implements LibraryInterface {
 
   /**
    * Getter for _ prefixed attributes
@@ -24,7 +24,6 @@ class Library {
     if( isset( $this->{$index} ) ) return $this->{$index};
     else return null;
   }
-
   /**
    * Existance check of dynamic attributes
    *
@@ -46,4 +45,11 @@ class Library {
     $class = explode( '\\', mb_strtolower( get_class( $this ) ) );
     return Extension\Helper::search( $class ) . ':' . implode( '.', $class );
   }
+}
+
+/**
+ * Interface LibraryInterface
+ * @package Engine\Helper
+ */
+interface LibraryInterface {
 }

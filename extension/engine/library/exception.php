@@ -1,6 +1,7 @@
 <?php namespace Engine;
 
 use Engine\Extension;
+use Engine\Helper\LibraryInterface;
 use Engine\Helper\Log;
 use Engine\Storage\Data;
 
@@ -16,7 +17,7 @@ defined( '_PROTECT' ) or die( 'DENIED!' );
  * @property string      $type      The "danger level". This can only be a self::TYPE_* constants
  * @property string      $id        The unique identifier. The format is '<extension>#<code><type>'
  */
-abstract class Exception extends \Exception implements \JsonSerializable {
+abstract class Exception extends \Exception implements \JsonSerializable, LibraryInterface {
 
   /**
    * Type for impactless exception

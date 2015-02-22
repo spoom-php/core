@@ -5,33 +5,33 @@ use Engine\Extension;
 defined( '_PROTECT' ) or die( 'DENIED!' );
 
 /**
- * Class Feasible
+ * Trait Feasible
  * @package Engine\Helper
  */
-class Feasible extends Extension {
+trait Feasible {
 
   /**
    * Execute a function by name
    *
    * @param string $name
-   * @param mixed  $args argument(s) passed to the method based on the type. Array: array of arguments; null: no
+   * @param mixed  $arguments argument(s) passed to the method based on the type. Array: array of arguments; null: no
    *                     argument; else: the first argument
    *
    * @return mixed
    */
-  public function execute( $name, $args = null ) {
+  protected function execute( $name, $arguments = null ) {
 
     // check execution name validity
     if( is_string( $name ) && mb_strlen( $name ) > 0 && $this->prepare( $name ) !== false ) {
 
       // check function validity
-      $method = $this->getFunction( $name );
+      $method = $this->method( $name );
       if( is_callable( [ $this, $method ] ) ) {
         $reflectionMethod = new \ReflectionMethod( $this, $method );
         if( $reflectionMethod->isProtected() ) $reflectionMethod->setAccessible( true );
 
         // execute the function
-        return $reflectionMethod->invokeArgs( $this, is_array( $args ) ? $args : ( $args === null ? [ ] : [ $args ] ) );
+        return $reflectionMethod->invokeArgs( $this, is_array( $arguments ) ? $arguments : ( $arguments === null ? [ ] : [ $arguments ] ) );
       }
     }
 
@@ -43,12 +43,11 @@ class Feasible extends Extension {
    *
    * @param string $name
    *
-   * @return bool
+   * @return string
    */
-  protected function prepare( &$name ) {
-    return true;
+  private function prepare( $name ) {
+    return $name;
   }
-
   /**
    * Get function name based on execution name
    *
@@ -56,7 +55,22 @@ class Feasible extends Extension {
    *
    * @return string
    */
-  protected function getFunction( $name ) {
+  private function method( $name ) {
     return String::toName( $name );
   }
+}
+
+/**
+ * Interface FeasibleInterface
+ * @package Engine\Helper
+ */
+interface FeasibleInterface {
+
+  /**
+   * @param string $name
+   * @param mixed $arguments
+   *
+   * @return mixed
+   */
+  function execute( $name, $arguments );
 }
