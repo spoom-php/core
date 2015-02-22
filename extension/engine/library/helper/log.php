@@ -13,7 +13,7 @@ defined( '_PROTECT' ) or die( 'DENIED!' );
  * @property string namespace The default namespace for log entries
  * @property string name      The instance identifier
  */
-class Log {
+class Log extends Library {
 
   /**
    * Exception throwed when an invalid type of log try to be created. Data:

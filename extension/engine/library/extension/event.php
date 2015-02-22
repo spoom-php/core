@@ -3,6 +3,7 @@
 use Engine\Exception;
 use Engine\Exception\Collector;
 use Engine\Extension;
+use Engine\Helper\Library;
 
 defined( '_PROTECT' ) or die( 'DENIED!' );
 
@@ -18,7 +19,7 @@ defined( '_PROTECT' ) or die( 'DENIED!' );
  * @property array|null  $result    The handler's results in an array indexed by the handler names
  * @property Collector   $collector The exception collector
  */
-class Event {
+class Event extends Library {
 
   /**
    * Array of the instanced listeners. All listener only instanced once!

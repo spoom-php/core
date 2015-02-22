@@ -11,7 +11,7 @@ defined( '_PROTECT' ) or die( 'DENIED!' );
  * Class Localization
  * @package Engine\Extension
  *
- * @property Extension $source
+ * @property Extension $extension
  * @property string    $localization
  */
 class Localization extends FileStorage {
@@ -21,7 +21,7 @@ class Localization extends FileStorage {
    *
    * @var Extension
    */
-  private $_source = null;
+  private $_extension = null;
 
   /**
    * Default language directory defined in default configuration file 'localization' entry ( only localization string
@@ -53,9 +53,9 @@ class Localization extends FileStorage {
   function __construct( Extension $source ) {
     parent::__construct( null, [ 'json', 'ini', 'xml' ] );
 
-    $this->_source        = $source;
+    $this->_extension     = $source;
     $this->namespace      = 'default';
-    $this->base_directory = $this->_source->directory( '', true ) . Extension::DIRECTORY_LOCALIZATION;
+    $this->base_directory = $this->_extension->directory( '', true ) . Extension::DIRECTORY_LOCALIZATION;
 
     // define default localizations
     $this->default_directory = $this->find( $source->option( 'manifest:localization' ) );
@@ -68,7 +68,7 @@ class Localization extends FileStorage {
    */
   public function __get( $index ) {
 
-    if( $index == 'source' ) return $this->_source;
+    if( $index == 'extension' ) return $this->_extension;
     else if( $index == 'localization' ) {
 
       // call to reload active localization
@@ -86,7 +86,7 @@ class Localization extends FileStorage {
    * @return bool
    */
   public function __isset( $index ) {
-    return $index == 'source' || $index == 'localization' || parent::__isset( $index );
+    return $index == 'extension' || $index == 'localization' || parent::__isset( $index );
   }
 
   /**
@@ -118,7 +118,7 @@ class Localization extends FileStorage {
       $this->_localization = $localization;
       $this->_directory = $global;
     } else if( $this->default_directory ) {
-      $this->_localization = $this->_source->option( 'manifest:localization' );
+      $this->_localization = $this->_extension->option( 'manifest:localization' );
       $this->_directory    = $this->default_directory;
     } else {
       $this->_localization = false;

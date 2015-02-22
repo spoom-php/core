@@ -89,7 +89,14 @@ class Extension extends Library {
    */
   public function __construct( $id = null ) {
 
-    $this->_id = isset( $id ) ? mb_strtolower( $id ) : $this->extension;
+    // define the id
+    if( !empty( $id ) ) $this->_id = $id;
+    else {
+
+      $class     = explode( '\\', mb_strtolower( get_class( $this ) ) );
+      $this->_id = Extension\Helper::search( $class );
+    }
+
     if( !Extension\Helper::validate( $this->_id ) ) throw new Exception\Strict( self::EXCEPTION_NOTICE_INVALID_ID, [ 'id' => $this->_id ] );
     else {
 

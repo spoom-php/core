@@ -1,6 +1,7 @@
 <?php namespace Engine\Exception;
 
 use Engine\Exception;
+use Engine\Helper\Library;
 
 defined( '_PROTECT' ) or die( 'DENIED!' );
 
@@ -9,7 +10,7 @@ defined( '_PROTECT' ) or die( 'DENIED!' );
  *
  * @package Engine\Exception
  */
-class Collector implements \Iterator, \Countable {
+class Collector extends Library implements \Iterator, \Countable {
 
   /**
    * The last saved \Exception
