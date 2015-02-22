@@ -10,10 +10,10 @@ defined( '_PROTECT' ) or die( 'DENIED!' );
 class Request extends Advance {
 
   /**
-   * @param string $namespace
-   * @param int    $caching
+   * @param string    $namespace
+   * @param int|mixed $caching
    */
-  public function __construct( $namespace = 'request', $caching = self::CACHE_NONE ) {
+  public function __construct( $namespace = 'request', $caching = Advance::CACHE_NONE ) {
     parent::__construct( $namespace, null, $caching );
 
     $this->addr( $_REQUEST, 'request' );
@@ -29,9 +29,9 @@ class Request extends Advance {
    *
    * TODO implement setcookie with an event ( secure the cookie, or else )
    *
-   * @param string   $index
-   * @param mixed    $value
-   * @param int|null $expire
+   * @param string      $index
+   * @param mixed       $value
+   * @param int|null    $expire
    * @param string|null $url
    */
   public function setCookie( $index, $value, $expire = null, $url = null ) {

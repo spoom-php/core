@@ -35,14 +35,14 @@ abstract class Helper {
    * @return bool
    */
   public static function exist( $id, $validate = false ) {
-    return ( !$validate || self::validate( $id ) ) && count( glob( _PATH . self::directory( $id, false ) . Extension::DIRECTORY_CONFIGURATION . 'manifest.*' ) );
+    return ( !$validate || self::validate( $id ) ) && count( glob( _PATH_BASE . self::directory( $id, false ) . Extension::DIRECTORY_CONFIGURATION . 'manifest.*' ) );
   }
 
   /**
    * Return extension directory from given param ( extension id ). It will return  false if params are invalid or the
-   * given extension doesn't exist otherwise the directory without _PATH
+   * given extension doesn't exist otherwise the directory without _PATH_BASE
    *
-   * @param string $id
+   * @param string  $id
    * @param boolean $validate
    *
    * @return string|bool

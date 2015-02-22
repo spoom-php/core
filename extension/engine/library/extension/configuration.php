@@ -9,7 +9,7 @@ defined( '_PROTECT' ) or die( 'DENIED!' );
  * Class Configuration
  * @package Engine\Extension
  *
- * @property Extension extension
+ * @property Extension $source
  */
 final class Configuration extends FileStorage {
 
@@ -18,17 +18,17 @@ final class Configuration extends FileStorage {
    *
    * @var Extension
    */
-  private $_extension = null;
+  private $_source = null;
 
   /**
    * Set defaults and init the FileStorage
    *
-   * @param Extension $extension
+   * @param Extension $source
    */
-  function __construct( Extension $extension ) {
-    parent::__construct( $extension->directory( '', true ) . Extension::DIRECTORY_CONFIGURATION );
+  function __construct( Extension $source ) {
+    parent::__construct( $source->directory( '', true ) . Extension::DIRECTORY_CONFIGURATION );
 
-    $this->_extension = $extension;
+    $this->_source   = $source;
     $this->namespace = 'default';
   }
 
@@ -41,7 +41,7 @@ final class Configuration extends FileStorage {
    */
   public function __get( $index ) {
 
-    if( $index === 'extension' ) return $this->_extension;
+    if( $index === 'source' ) return $this->_source;
     else return parent::__get( $index );
   }
 
@@ -51,6 +51,6 @@ final class Configuration extends FileStorage {
    * @return bool
    */
   public function __isset( $index ) {
-    return $index === 'extension' || parent::__isset( $index );
+    return $index === 'source' || parent::__isset( $index );
   }
 }

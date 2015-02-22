@@ -6,20 +6,29 @@ defined( '_PROTECT' ) or die( 'DENIED!' );
  * Class Advance
  * @package Engine\Storage
  *
- * @property string   namespace      default namespace
- * @property bool     caching        enable or disable cache
+ * @property string   $namespace      default namespace
+ * @property bool     $caching        enable or disable cache
  */
 class Advance extends Data {
 
-  const CACHE_NONE      = 0;
-  const CACHE_SIMPLE    = 1;
+  /**
+   * Disable caching
+   */
+  const CACHE_NONE = 0;
+  /**
+   * Cache only the actual value of the result
+   */
+  const CACHE_SIMPLE = 1;
+  /**
+   * Cache results by reference (might be buggy with arrays in arrays)
+   */
   const CACHE_REFERENCE = 2;
 
   /**
    * Cache data storage
    * @var array
    */
-  private $cache = array();
+  private $cache = [ ];
 
   /**
    * Cache state ( enabled or disabled )
@@ -82,12 +91,14 @@ class Advance extends Data {
         $this->_caching = (int) $value;
 
         // clear the source cache
-        $this->cache = array();
+        $this->cache = [ ];
         break;
+
+      /** @noinspection PhpMissingBreakStatementInspection */
       case 'separator':
 
         // clear the source cache
-        $this->cache = array();
+        $this->cache = [ ];
 
       // falltrough
       default:
@@ -107,9 +118,9 @@ class Advance extends Data {
   public function convert( $namespaces = false, $object = false ) {
     if( $namespaces === false ) return $object ? (object) $this->source : $this->source;
 
-    $namespaces = is_array( $namespaces ) ? $namespaces : array( $namespaces );
-    $result     = array();
-    foreach( $namespaces as $n ) $result[ $n ] = $this->exist( $n . ':' ) ? $this->source[ $n ] : array();
+    $namespaces = is_array( $namespaces ) ? $namespaces : [ $namespaces ];
+    $result     = [ ];
+    foreach( $namespaces as $n ) $result[ $n ] = $this->exist( $n . ':' ) ? $this->source[ $n ] : [ ];
 
     return $object ? (object) $result : $result;
   }
@@ -132,7 +143,7 @@ class Advance extends Data {
     // clear the cache or the cache index
     $index = $this->index( $index );
     if( $this->caching == self::CACHE_SIMPLE ) {
-      if( $recursive ) $this->cache = array();
+      if( $recursive ) $this->cache = [ ];
       else unset( $this->cache[ $index->id ] );
     }
 
@@ -168,7 +179,7 @@ class Advance extends Data {
     $tmp = parent::remove( $index );
 
     // clear the cache or the cache index
-    if( $this->caching != self::CACHE_NONE ) $this->cache = array();
+    if( $this->caching != self::CACHE_NONE ) $this->cache = [ ];
 
     return $tmp;
   }
@@ -187,7 +198,7 @@ class Advance extends Data {
       $this->source[ is_string( $namespace ) ? $namespace : $this->namespace ] = &$enumerable;
 
       // clear the cache or the cache index
-      if( $this->caching != self::CACHE_NONE ) $this->cache = array();
+      if( $this->caching != self::CACHE_NONE ) $this->cache = [ ];
     }
 
     return $this;
@@ -222,25 +233,25 @@ class Advance extends Data {
     // check the cache. Only load from cache if its getting ( not build ) or if the cache is referenced
     // because if it's build then the returned value may changed outside
     if( $this->caching != self::CACHE_NONE && ( !$build || $this->caching == self::CACHE_REFERENCE ) && isset( $this->cache[ $index->id ] ) ) {
-      return (object) array( 'exist' => true, 'container' => &$this->cache[ $index->id ][ 'container' ], 'key' => $this->cache[ $index->id ][ 'key' ] );
+      return (object) [ 'exist' => true, 'container' => &$this->cache[ $index->id ][ 'container' ], 'key' => $this->cache[ $index->id ][ 'key' ] ];
     }
 
     // delegate work to the parent, then save the result to the cache if enabled
     $result = parent::search( $index, $build );
     if( isset( $result->container ) && ( is_array( $result->container ) || is_object( $result->container ) ) && $this->caching != self::CACHE_NONE ) switch( $this->_caching ) {
       case self::CACHE_SIMPLE:
-        $this->cache[ $index->id ] = array(
+        $this->cache[ $index->id ] = [
           'container' => $result->container,
           'key'       => $result->key
-        );
+        ];
 
         break;
 
       case self::CACHE_REFERENCE:
-        $this->cache[ $index->id ] = array(
+        $this->cache[ $index->id ] = [
           'container' => &$result->container,
           'key'       => $result->key
-        );
+        ];
 
         break;
     }
@@ -263,12 +274,12 @@ class Advance extends Data {
 
       $tmp    = explode( ':', trim( $index, ' ' . $this->separator ), 2 );
       $result = parent::parse( array_pop( $tmp ) );
-      
+
       // define the namespace and add it to the token list for the search
       $result->namespace = array_pop( $tmp ) ?: $this->namespace;
       array_unshift( $result->token, $result->namespace );
 
-      $result->id        = $result->namespace . ':' . $result->key;
+      $result->id = $result->namespace . ':' . $result->key;
       return $result;
     }
   }

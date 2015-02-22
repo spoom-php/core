@@ -8,8 +8,8 @@ defined( '_PROTECT' ) or die( 'DENIED!' );
  * Class Data
  * @package Engine\Storage
  *
- * @property bool     prefer         auto construct with object, instead of array
- * @property string   separator      index separator
+ * @property bool     $prefer         auto construct with object, instead of array
+ * @property string   $separator      index separator
  *
  * @method string|mixed gets( string $index, mixed $default = '' ) Depricated, use getString or '!string' index
  * @method number|mixed getn( string $index, mixed $default = 0 ) Depricated, use getNumber or '!number' index
@@ -362,7 +362,7 @@ class Data extends Library implements \JsonSerializable {
   protected function search( $index, $build = false ) {
 
     // if not index return the whole source
-    $result = (object) array( 'exist' => true, 'key' => null, 'container' => &$this->source );
+    $result = (object) [ 'exist' => true, 'key' => null, 'container' => &$this->source ];
     if( !$index || !count( $index->token ) ) return $result;
     else {
 
@@ -446,7 +446,7 @@ class Data extends Library implements \JsonSerializable {
   protected function parse( $index ) {
 
     // maki.lajos!string
-    $result = (object) array( 'id' => '', 'key' => '', 'token' => [ ], 'type' => null );
+    $result = (object) [ 'id' => '', 'key' => '', 'token' => [ ], 'type' => null ];
     if( !is_string( $index ) ) return null;
     else {
 

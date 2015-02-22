@@ -98,7 +98,7 @@ abstract class Helper {
       if( self::is( $objects ) ) {
 
         // if it's an eCollector throw the first exception
-        if( $objects instanceof Collector ) throw $objects->getException();
+        if( $objects instanceof Collector ) throw $objects->get();
         else if( $objects instanceof \Exception ) throw self::wrap( $objects );
       }
 
@@ -129,6 +129,6 @@ abstract class Helper {
    * @return boolean
    */
   public static function is( $object ) {
-    return $object instanceof \Exception || ( $object instanceof Collector && $object->hasException() );
+    return $object instanceof \Exception || ( $object instanceof Collector && $object->contains() );
   }
 }

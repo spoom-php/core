@@ -26,12 +26,12 @@ class Feasible extends Extension {
 
       // check function validity
       $method = $this->getFunction( $name );
-      if( is_callable( array( $this, $method ) ) ) {
+      if( is_callable( [ $this, $method ] ) ) {
         $reflectionMethod = new \ReflectionMethod( $this, $method );
         if( $reflectionMethod->isProtected() ) $reflectionMethod->setAccessible( true );
 
         // execute the function
-        return $reflectionMethod->invokeArgs( $this, is_array( $args ) ? $args : ( $args === null ? array() : array( $args ) ) );
+        return $reflectionMethod->invokeArgs( $this, is_array( $args ) ? $args : ( $args === null ? [ ] : [ $args ] ) );
       }
     }
 

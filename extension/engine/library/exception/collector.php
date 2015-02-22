@@ -23,7 +23,7 @@ class Collector implements \Iterator, \Countable {
    *
    * @var array
    */
-  private $storage = array();
+  private $storage = [ ];
 
   /**
    * Cursor for the iterator implementation
@@ -39,7 +39,7 @@ class Collector implements \Iterator, \Countable {
    *
    * @return boolean true, if at least one \Exception is stored
    */
-  public function addException( $object ) {
+  public function add( $object ) {
 
     if( !Helper::is( $object ) ) return false;
     else {
@@ -55,10 +55,10 @@ class Collector implements \Iterator, \Countable {
    *
    * @return bool
    */
-  public function hasException( $filter = null ) {
+  public function contains( $filter = null ) {
 
     if( $filter > 0 ) {
-      foreach( $this->storage as $e ) if( $e instanceof Exception && $e->getCode() == $filter ) return true;
+      foreach( $this->storage as $e ) if( $e instanceof Exception && $e->id == $filter ) return true;
 
       return false;
     } else return isset( $this->last );
@@ -72,7 +72,7 @@ class Collector implements \Iterator, \Countable {
    *
    * @return \Exception
    */
-  public function getException( $index = null ) {
+  public function get( $index = null ) {
 
     // handle last getter
     if( $index === null ) return $this->last;
@@ -88,13 +88,13 @@ class Collector implements \Iterator, \Countable {
    *
    * @return Exception[]
    */
-  public function getExceptionList( $offset = null, $limit = null ) {
+  public function getList( $offset = null, $limit = null ) {
     $storage = &$this->storage;
 
     // if limit not set, return the whole array
     if( !is_numeric( $offset ) ) return $storage;
 
-    $return = array();
+    $return = [ ];
     $count  = count( $storage );
 
     // list from zero to limit
@@ -115,7 +115,7 @@ class Collector implements \Iterator, \Countable {
    */
   private function store( $exception ) {
 
-    if( $exception instanceof \Exception ) $exception = array( $exception );
+    if( $exception instanceof \Exception ) $exception = [ $exception ];
     foreach( $exception as $e ) {
       $this->storage[ ] = $e;
       $this->last       = $e;
@@ -132,7 +132,7 @@ class Collector implements \Iterator, \Countable {
    * @return mixed Can return any type.
    */
   public function current() {
-    return $this->getException( $this->cursor );
+    return $this->get( $this->cursor );
   }
   /**
    * Move forward to next element
@@ -160,7 +160,7 @@ class Collector implements \Iterator, \Countable {
    * Returns true on success or false on failure.
    */
   public function valid() {
-    return $this->getException( $this->cursor ) !== null;
+    return $this->get( $this->cursor ) !== null;
   }
   /**
    * Rewind the Iterator to the first element
@@ -178,6 +178,6 @@ class Collector implements \Iterator, \Countable {
    * @return int The custom count as an integer. The return value is cast to an integer.
    */
   public function count() {
-    return count( $this->getExceptionList() );
+    return count( $this->getList() );
   }
 }
