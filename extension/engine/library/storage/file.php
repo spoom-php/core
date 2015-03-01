@@ -239,9 +239,6 @@ class File extends Advance {
     if( !isset( $this->loaded[ $index->namespace ] ) ) {
       $this->load( $index->namespace );
 
-      // log: debug
-      Page::getLog()->debug( 'Loaded file storage namespace: {namespace}', [ 'namespace' => $index->namespace, 'index' => $index ], '\Engine\Storage\File' );
-
       // flag the namespace loaded
       $this->loaded[ $index->namespace ] = true;
     }
