@@ -223,6 +223,9 @@ class Extension extends Library {
       if( class_exists( $class, true ) ) return $class;
     }
 
+    // log: debug
+    Page::getLog()->debug('Missing (class) library: {classnames}', [ 'classnames' => implode( ',', $class_name ) ], '\Engine\Extension' );
+    
     return false;
   }
   /**
@@ -237,12 +240,16 @@ class Extension extends Library {
   public function instance( $class_name, $param = null ) {
 
     $class = $this->library( $class_name );
-    if( !$class ) return null;
-    else {
+    if( $class ) {
 
       $instance = isset( $param ) ? new $class( $param ) : new $class();
       return $instance;
     }
+    
+    // log: debug
+    Page::getLog()->debug('Missing (class) instance: {classname}', [ 'classname' => $class_name ], '\Engine\Extension' );
+    
+    return null;
   }
 
   /**

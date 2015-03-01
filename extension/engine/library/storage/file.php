@@ -2,6 +2,7 @@
 
 use Engine\Extension;
 use Engine\Helper\Enumerable;
+use Engine\Page;
 
 defined( '_PROTECT' ) or die( 'DENIED!' );
 
@@ -140,7 +141,8 @@ class File extends Advance {
     // if namespace not exists then try to remove the file to
     if( !$this->exist( $namespace . ':' ) ) {
 
-      if( $filename && is_writeable( $filename ) ) {
+      if( $filename && !is_writeable( $filename ) ) Page::getLog()->warning( 'Can\'t remove the \'{filename}\' file!', [ 'namespace' => $namespace, 'directory' => $index, 'filename' => $filename ], '\Engine\Storage\File' ); // log: warning
+      else if( $filename ) {
         unset( self::$files[ $index ] );
         return @unlink( $filename );
       }
@@ -152,13 +154,22 @@ class File extends Advance {
       else {
 
         $extension = in_array( $extension, $this->_allow ) ? $extension : $this->_default;
-        if( !is_dir( $this->_directory ) && @!mkdir( $this->_directory, $permission, true ) ) return false;
-        else $filename = $this->_directory . $namespace . '.' . $extension;
+        if( is_dir( $this->_directory ) || @mkdir( $this->_directory, $permission, true ) ) $filename = $this->_directory . $namespace . '.' . $extension;
+        else {
+
+          // log: warning
+          Page::getLog()->warning( 'The \'{filename}\' file directory not writeable!', [ 'namespace' => $namespace, 'directory' => $index, 'filename' => $filename ], '\Engine\Storage\File' );
+
+          return false;
+        }
       }
 
       $result = $this->process( self::$files[ $index ], self::CONVERT_SERIALIZE, $extension, $namespace, self::$meta[ $index ] );
-      if( ( is_file( $filename ) || @touch( $filename ) ) && is_writeable( $filename ) ) {
-        return @file_put_contents( $filename, $result );
+      if( ( is_file( $filename ) || @touch( $filename ) ) && is_writeable( $filename ) ) return @file_put_contents( $filename, $result ) > 0;
+      else {
+
+        // log: warning
+        Page::getLog()->warning( 'The \'{filename}\' file not writeable!', [ 'namespace' => $namespace, 'directory' => $index, 'filename' => $filename ], '\Engine\Storage\File' );
       }
     }
 
@@ -177,9 +188,10 @@ class File extends Advance {
 
     $filename = $this->path( $namespace );
     $index    = $this->_directory . $namespace;
-    if( !$filename ) self::$files[ $index ] = self::$meta[ $index ] = [ ];
-    else if( is_file( $filename ) && is_readable( $filename ) && !isset( self::$files[ $index ] ) ) {
-
+    if( !$filename || !is_file( $filename ) ) self::$files[ $index ] = self::$meta[ $index ] = [ ];
+    else if( !is_readable( $filename ) ) Page::getLog()->warning( 'The \'{filename}\' file not readable!', [ 'namespace' => $namespace, 'index' => $index, 'filename' => $filename ], '\Engine\Storage\File' ); // log: warning
+    else if( !isset( self::$files[ $index ] ) ) {
+      
       self::$files[ $index ] = self::$meta[ $index ] = [ ];
       self::$files[ $index ] = $this->process( @file_get_contents( $filename ), self::CONVERT_UNSERIALIZE, pathinfo( $filename, PATHINFO_EXTENSION ), $namespace, self::$meta[ $index ] );
     }
@@ -266,35 +278,8 @@ class File extends Advance {
   protected function convertIni( $content, $type ) {
 
     // read from the ini string
-    $result  = [ ];
-    if( $type == self::CONVERT_UNSERIALIZE ) {
-
-      $ini = parse_ini_string( $content, false );
-      if( is_array( $ini ) ) foreach( $ini as $key => $value ) {
-        $keys = explode( '.', $key );
-        $arr = &$result;
-
-        while( $key = array_shift( $keys ) ) $arr = &$arr[ $key ];
-        $arr = $value;
-      }
-
-      // write out ini file
-    } else {
-
-      $iterator = new \RecursiveIteratorIterator( new \RecursiveArrayIterator( $content ) );
-      foreach( $iterator as $value ) {
-        $keys = [ ];
-        foreach( range( 0, $iterator->getDepth() ) as $depth ) $keys[ ] = $iterator->getSubIterator( $depth )->key();
-
-        $print = is_bool( $value ) ? ( $value ? 'true' : 'false' ) : $value;
-        $quote = is_numeric( $value ) || is_bool( $value ) ? '' : ( !mb_strpos( $value, '"' ) ? '"' : "'" );
-        $result[ ] = join( '.', $keys ) . "={$quote}{$print}{$quote}";
-      }
-
-      $result = implode( "\n", $result );
-    }
-
-    return $result;
+    if( $type == self::CONVERT_UNSERIALIZE ) return Enumerable::fromIni( $content );
+    else return Enumerable::toIni( $content );
   }
   /**
    * Convert configuration multi array into json and back. Write out in human readable format, but don't support any
@@ -375,7 +360,15 @@ class File extends Advance {
       );
 
       if( count( $event->result ) ) return $event->result[ 0 ];
-      else return $type == self::CONVERT_SERIALIZE ? '' : [ ];
+      else {
+
+        // log: warning
+        Page::getLog()->warning( 'Missing converter for \'{format}\' type files', [
+          'format' => $format, 'type' => $type, 'namespace' => $namespace
+        ], '\Engine\Storage\File' );
+
+        return $type == self::CONVERT_SERIALIZE ? '' : [ ];
+      }
     }
   }
 }
