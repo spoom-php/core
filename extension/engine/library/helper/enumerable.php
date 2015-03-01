@@ -1,5 +1,7 @@
 <?php namespace Engine\Helper;
 
+use Engine\Page;
+
 defined( '_PROTECT' ) or die( 'DENIED!' );
 
 /**
@@ -21,7 +23,11 @@ abstract class Enumerable {
    * @return string|boolean The JSON string or false on failure
    */
   public static function toJson( $object, $options = 0 ) {
-    return json_encode( $object, $options === true ? JSON_PRETTY_PRINT : $options );
+
+    $result = json_encode( $object, $options === true ? JSON_PRETTY_PRINT : $options );
+    if( $result === false ) Page::getLog()->notice( 'Failed JSON encode', [ 'object' => $object ], '\Engine\Helper\Enumerable' ); // log: notice
+
+    return $result;
   }
 
   /**
@@ -39,6 +45,15 @@ abstract class Enumerable {
     if( version_compare( phpversion(), '5.4.0', '>=' ) ) $json = json_decode( $json, $assoc, $depth, $options );
     elseif( version_compare( phpversion(), '5.3.0', '>=' ) ) $json = json_decode( $json, $assoc, $depth );
     else $json = json_decode( $json, $assoc );
+
+    // log: notice
+    if( json_last_error() != JSON_ERROR_NONE ) Page::getLog()->notice( 'Failed JSON decode: #{error.code} {error.message}', [
+      'string' => $json,
+      'error'  => [
+        'message' => json_last_error_msg(),
+        'code'    => json_last_error()
+      ]
+    ], '\Engine\Helper\Enumerable' );
 
     return $json;
   }
@@ -64,69 +79,73 @@ abstract class Enumerable {
   public static function fromXml( $xml, array &$attribute = [ ], &$version = '1.0', &$encoding = 'UTF-8' ) {
 
     // collect encoding and version from xml data
-    $dom = new \DOMDocument();
-    $dom->load( $xml );
-    $version = $dom->xmlVersion;
-    $encoding = $dom->xmlEncoding;
+    $dom    = new \DOMDocument();
+    $object = [ ];
 
-    // create root element and start the parsing
-    $root      = simplexml_load_string( $xml );
-    $object    = [ ];
-    $elements  = [ [ &$object, $root, '' ] ];
-    while( $next = array_shift( $elements ) ) {
-      $container = &$next[ 0 ];
-      $element = $next[ 1 ];
-      $key     = $next[ 2 ];
+    if( !$dom->load( $xml ) ) Page::getLog()->notice( 'Failed XML decode', [ 'xml' => $xml ], '\Engine\Helper\Enumerable' ); // log: notice
+    else {
 
-      // handle "recursion" end, and set simple data to the container
-      if( !is_object( $element ) || !( $element instanceof \SimpleXMLElement ) || ( !$element->children()->count() && !$element->attributes()->count() ) ) switch( (string) $element ) {
-        case 'NULL':
-          $container = null;
-          continue;
-        case 'TRUE':
-          $container = true;
-          continue;
-        case 'FALSE':
-          $container = false;
-          continue;
-        default:
-          $container = (string) $element;
-          continue;
-      }
+      $version  = $dom->xmlVersion;
+      $encoding = $dom->xmlEncoding;
 
-      // handle item attributes
-      foreach( $element->attributes() as $index => $value ) {
-        $container[ $index ] = [ ];
-        $elements[ ]         = [ &$container[ $index ], $value, $key . '.' . $index ];
+      // create root element and start the parsing
+      $root     = simplexml_load_string( $xml );
+      $elements = [ [ &$object, $root, '' ] ];
+      while( $next = array_shift( $elements ) ) {
+        $container = &$next[ 0 ];
+        $element   = $next[ 1 ];
+        $key       = $next[ 2 ];
 
-        // save to meta for proper write back
-        $attribute[ ] = $key . '.' . $index;
-      }
-
-      // collect children names and values (it's for find the arrays before add to the queue)
-      $tmp = [ ];
-      foreach( $element->children() as $value ) {
-
-        /** @var \SimpleXMLElement $value */
-        $index = (string) $value->getName();
-        if( !isset( $tmp[ $index ] ) ) $tmp[ $index ] = $value;
-        else {
-
-          if( !is_array( $tmp[ $index ] ) ) $tmp[ $index ] = [ $tmp[ $index ] ];
-          $tmp[ $index ][ ] = $value;
+        // handle "recursion" end, and set simple data to the container
+        if( !is_object( $element ) || !( $element instanceof \SimpleXMLElement ) || ( !$element->children()->count() && !$element->attributes()->count() ) ) switch( (string) $element ) {
+          case 'NULL':
+            $container = null;
+            continue;
+          case 'TRUE':
+            $container = true;
+            continue;
+          case 'FALSE':
+            $container = false;
+            continue;
+          default:
+            $container = (string) $element;
+            continue;
         }
-      }
 
-      // walk trough all children data and add them to the queue
-      foreach( $tmp as $index => $value ) {
-        $container[ $index ] = null;
-
-        if( !is_array( $value ) ) $elements[ ] = [ &$container[ $index ], $value, $key . '.' . $index ];
-        else {
-
-          // handle arrays
+        // handle item attributes
+        foreach( $element->attributes() as $index => $value ) {
           $container[ $index ] = [ ];
-          foreach( $value as $i => $v ) $elements[ ] = [ &$container[ $index ][ $i ], $v, $key . '.' . $index . '.' . $i ];
+          $elements[ ]         = [ &$container[ $index ], $value, $key . '.' . $index ];
+
+          // save to meta for proper write back
+          $attribute[ ] = $key . '.' . $index;
+        }
+
+        // collect children names and values (it's for find the arrays before add to the queue)
+        $tmp = [ ];
+        foreach( $element->children() as $value ) {
+
+          /** @var \SimpleXMLElement $value */
+          $index = (string) $value->getName();
+          if( !isset( $tmp[ $index ] ) ) $tmp[ $index ] = $value;
+          else {
+
+            if( !is_array( $tmp[ $index ] ) ) $tmp[ $index ] = [ $tmp[ $index ] ];
+            $tmp[ $index ][ ] = $value;
+          }
+        }
+
+        // walk trough all children data and add them to the queue
+        foreach( $tmp as $index => $value ) {
+          $container[ $index ] = null;
+
+          if( !is_array( $value ) ) $elements[ ] = [ &$container[ $index ], $value, $key . '.' . $index ];
+          else {
+
+            // handle arrays
+            $container[ $index ] = [ ];
+            foreach( $value as $i => $v ) $elements[ ] = [ &$container[ $index ][ $i ], $v, $key . '.' . $index . '.' . $i ];
+          }
         }
       }
     }
@@ -188,6 +207,60 @@ abstract class Enumerable {
 
     // create xml from dom
     return simplexml_import_dom( $dom );
+  }
+
+  /**
+   * Convert enumerable (object or array) into ini formatted string
+   *
+   * @param object|array $enumerable The input enumerable
+   *
+   * @return string
+   */
+  public static function toIni( $enumerable ) {
+
+    $result   = [ ];
+    $iterator = new \RecursiveIteratorIterator( new \RecursiveArrayIterator( (array) $enumerable ) );
+    foreach( $iterator as $value ) {
+      $keys = [ ];
+      foreach( range( 0, $iterator->getDepth() ) as $depth ) $keys[ ] = $iterator->getSubIterator( $depth )->key();
+
+      $print     = is_bool( $value ) ? ( $value ? 'true' : 'false' ) : $value;
+      $quote     = is_numeric( $value ) || is_bool( $value ) ? '' : ( !mb_strpos( $value, '"' ) ? '"' : "'" );
+      $result[ ] = join( '.', $keys ) . "={$quote}{$print}{$quote}";
+    }
+
+    return implode( "\n", $result );
+  }
+  /**
+   * Convert INI formatted string into object
+   *
+   * @param string $content An ini formatted string
+   *
+   * @return object
+   */
+  public static function fromIni( $content ) {
+
+    $result = [ ];
+    $ini    = parse_ini_string( $content, false );
+    if( !is_array( $ini ) ) Page::getLog()->notice( 'Invalid INI file', [ 'content' => $content ], '\Engine\Helper\Enumerable' ); // log: notice
+    else foreach( $ini as $key => $value ) {
+
+      $keys = explode( '.', $key );
+      $tmp  = &$result;
+
+      while( $key = array_shift( $keys ) ) {
+
+        if( empty( $keys ) ) break;
+        else {
+
+          if( !isset( $tmp[ $key ] ) ) $tmp[ $key ] = [ ];
+          $tmp = &$tmp[ $key ];
+        }
+      }
+      $tmp = $value;
+    }
+
+    return (object) $result;
   }
 
   /**

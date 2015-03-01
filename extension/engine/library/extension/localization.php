@@ -117,12 +117,23 @@ class Localization extends FileStorage {
     if( $global ) {
       $this->_localization = $localization;
       $this->_directory = $global;
+
+      // log: debug
+      Page::getLog()->debug( 'Global \'{localization}\' localization selected', [ 'localization' => $this->_localization, 'directory' => $this->_directory ], '\Engine\Extension\Localization' );
+      
     } else if( $this->default_directory ) {
       $this->_localization = $this->_extension->option( 'manifest:localization' );
       $this->_directory    = $this->default_directory;
+
+      // log: debug
+      Page::getLog()->debug( 'Default \'{localization}\' localization selected', [ 'localization' => $this->_localization, 'directory' => $this->_directory ], '\Engine\Extension\Localization' );
+      
     } else {
       $this->_localization = false;
       $this->_directory = false;
+
+      // log: notice
+      Page::getLog()->notice( 'No localization selected', [ 'extension' => (string) $this->_extension, 'namespace' => $namespace ], '\Engine\Extension\Localization' );
     }
 
     return parent::path( $namespace );

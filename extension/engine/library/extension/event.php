@@ -4,6 +4,7 @@ use Engine\Exception;
 use Engine\Exception\Collector;
 use Engine\Extension;
 use Engine\Helper\Library;
+use Engine\Page;
 
 defined( '_PROTECT' ) or die( 'DENIED!' );
 
@@ -107,7 +108,6 @@ class Event extends Library {
     $index = '_' . $index;
     return property_exists( $this, $index ) ? $this->{$index} : null;
   }
-
   /**
    * Setter for stopped or prevent attribute
    *
@@ -125,7 +125,6 @@ class Event extends Library {
         break;
     }
   }
-
   /**
    * @param string $index
    *
@@ -147,7 +146,21 @@ class Event extends Library {
     $this->_result = [ ];
     foreach( $this->listeners as &$listener ) {
 
-      $this->_result[ $listener->name ] = $listener->instance->execute( $this->_namespace . '.' . $this->_name, [ $this, $listener->data ] );
+      try {
+
+        $this->_result[ $listener->name ] = $listener->instance->execute( $this->_namespace . '.' . $this->_name, [ $this, $listener->data ] );
+
+      } catch( Exception $e ) {
+
+        $this->_result[ $listener->name ] = null;
+        $this->_collector->add( $e );
+
+      } catch( \Exception $e ) {
+
+        $this->_result[ $listener->name ] = null;
+        $this->_collector->add( Exception\Helper::wrap( $e ) );
+      }
+      
       if( $this->_stopped ) break;
     }
 
@@ -173,12 +186,17 @@ class Event extends Library {
     $extension       = new Extension( 'engine' );
 
     // collect listeners if event exists and enabled
-    $tmp = $extension->configuration->geta( $this->_namespace . ':' . $this->_name );
-    foreach( $tmp as $listener ) if( !empty( $listener->extension ) && !empty( $listener->library ) ) {
-      $this->add( $listener );
+    $tmp = $extension->configuration->geta( 'event-' . $this->_namespace . ':' . $this->_name );
+    foreach( $tmp as $listener ) {
+
+      if( !empty( $listener->extension ) && !empty( $listener->library ) ) $this->add( $listener );
+      else {
+
+        // log: notice
+        Page::getLog()->notice( 'Invalid event handler for \'{namespace}:{name}\'. Missing library or extension', [ 'listener' => $listener, 'name' => $this->_name, 'namespace' => $this->_namespace ], '\Engine\Extension\Event' );
+      }
     }
   }
-
   /**
    * Set a listener instance to the event listeners array
    * based on the given params.
@@ -194,7 +212,14 @@ class Event extends Library {
       $extension = new Extension( $options->extension );
       $listener = $extension->instance( $options->library );
 
-      if( !$listener || !is_callable( [ $listener, 'execute' ] ) ) return;
+      if( !$listener || !is_callable( [ $listener, 'execute' ] ) ) {
+
+        // log: notice
+        Page::getLog()->notice( 'Invalid event handler for \'{namespace}:{name}\'. Missing execute() method', [ 'listener' => $listener, 'name' => $this->_name, 'namespace' => $this->_namespace ], '\Engine\Extension\Event' );
+
+        return;
+      }
+      
       self::$cache[ $index ] = $listener;
     }
 

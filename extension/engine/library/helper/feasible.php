@@ -1,6 +1,7 @@
 <?php namespace Engine\Helper;
 
 use Engine\Extension;
+use Engine\Page;
 
 defined( '_PROTECT' ) or die( 'DENIED!' );
 
@@ -15,7 +16,7 @@ trait Feasible {
    *
    * @param string $name
    * @param mixed  $arguments argument(s) passed to the method based on the type. Array: array of arguments; null: no
-   *                     argument; else: the first argument
+   *                          argument; else: the first argument
    *
    * @return mixed
    */
@@ -26,7 +27,9 @@ trait Feasible {
 
       // check function validity
       $method = $this->method( $name );
-      if( is_callable( [ $this, $method ] ) ) {
+      if( !is_callable( [ $this, $method ] ) ) Page::getLog()->warning( 'Missing \'{name}\' executeable', [ 'name' => $name, 'arguments' => $arguments, 'method' => $method ], '\Engine\Helper\Feasible' ); // log: warning
+      else {
+
         $reflectionMethod = new \ReflectionMethod( $this, $method );
         if( $reflectionMethod->isProtected() ) $reflectionMethod->setAccessible( true );
 
@@ -68,7 +71,7 @@ interface FeasibleInterface {
 
   /**
    * @param string $name
-   * @param mixed $arguments
+   * @param mixed  $arguments
    *
    * @return mixed
    */
