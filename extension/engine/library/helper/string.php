@@ -1,5 +1,7 @@
 <?php namespace Engine\Helper;
 
+use Engine\Exception\Strict;
+use Engine\Page;
 use Engine\Storage\Data;
 
 defined( '_PROTECT' ) or die( 'DENIED!' );
@@ -9,6 +11,8 @@ defined( '_PROTECT' ) or die( 'DENIED!' );
  * @package Engine\Helper
  */
 abstract class String {
+
+  const EXCEPTION_ERROR_HASH_INVALID_ALGORITHM = 'engine#8E';
 
   /**
    * Regexp for string insertion
@@ -57,6 +61,65 @@ abstract class String {
     }
 
     return $text;
+  }
+
+  /**
+   * Generate unique string from available sources and hash it for normalization. Use $secure = true parameter to ensure
+   * unpredicatable string is being generated (this is the default, but it's slower)
+   *
+   * @param int|null $length The length of the result. This will be the default length of the hashing method if NULL
+   * @param string   $prefix Custom prefix that helps the uniqueness
+   * @param bool     $secure Add unpredictable random values (from available sources) to the raw data or not
+   * @param string   $hash   The hashing method name
+   *
+   * @return string The unique string
+   * @throws Strict Throws ::EXCEPTION_ERROR_HASH_INVALID_ALGORITHM when the hashing algorithm is invalid
+   */
+  public static function unique( $length = null, $prefix = '', $secure = true, $hash = 'sha256' ) {
+
+    // add a basic random id with predictable random number prefix for more uniqueness
+    $raw = $prefix . uniqid( mt_rand(), true );
+
+    // add some unpredictable random strings for available sources
+    if( $secure ) {
+
+      // try ssl first
+      if( !function_exists( 'openssl_random_pseudo_bytes' ) ) Page::getLog()->warning( 'Cannot use OpenSSL random, `openssl_random_pseudo_bytes()` doesn\'t exists.', [ ], '\Engine\Helper\String' ); // log: warning
+      else {
+        $tmp = openssl_random_pseudo_bytes( 64, $strong );
+
+        // skip ssl since it wasn't using the strong algo
+        if( $strong === true ) $raw .= $tmp;
+        else Page::getLog()->notice( 'Generated OpenSSL random value is not strong, what next?', [ ], '\Engine\Helper\String' ); // log: notice
+      }
+
+      // try to read from the unix RNG
+      if( is_readable( '/dev/urandom' ) ) {
+        $tmp = fopen( '/dev/urandom', 'rb' );
+        $raw .= fread( $tmp, 64 );
+        fclose( $tmp );
+      }
+    }
+
+    // hash the generated string
+    $raw = self::hash( $raw, $hash );
+    return $length ? substr( $raw, 0, $length ) : $raw;
+  }
+
+  /**
+   * Generates hash with the basic PHP hash() function but handle the errors with exception
+   *
+   * @param string $raw       The input for the hash
+   * @param string $algorithm The hashing algorithm name
+   *
+   * @return string The hashed string
+   * @throws Strict Throws ::EXCEPTION_ERROR_HASH_INVALID_ALGORITHM when the hashing algorithm is invalid
+   */
+  public static function hash( $raw, $algorithm = 'sha256' ) {
+
+    $tmp = @hash( $algorithm, $raw );
+    if( !$tmp ) throw new Strict( self::EXCEPTION_ERROR_HASH_INVALID_ALGORITHM, [ 'algorithm' => $algorithm, 'available' => hash_algos() ] );
+    else return $tmp;
   }
 
   /**

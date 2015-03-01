@@ -69,8 +69,7 @@ abstract class Page {
   }
 
   /**
-   * Trigger page start event and initialise some basics for the Page. This should be called once and
-   * before the run
+   * Trigger page start event and initialise some basics for the Page. This should be called once and before the run
    */
   public static function start() {
 
@@ -119,10 +118,6 @@ abstract class Page {
 
     // setup timezones
     date_default_timezone_set( $extension->option( 'default:timezone', 'UTC' ) );
-
-    // attribute initialization
-    self::$collector = new Collector();
-    self::$log       = new Log( 'page' );
 
     // Call initialise event
     $extension->trigger( self::EVENT_START );
@@ -194,6 +189,7 @@ abstract class Page {
    * @return Collector
    */
   public static function getCollector() {
+    if( !self::$collector ) self::$collector = new Collector();
     return self::$collector;
   }
   /**
@@ -202,6 +198,7 @@ abstract class Page {
    * @return Log
    */
   public static function getLog() {
+    if( !self::$log ) self::$log = new Log( 'page' );
     return self::$log;
   }
 
