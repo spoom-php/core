@@ -110,15 +110,6 @@ class Extension extends Library {
         // create and configure configuration object
         $this->_configuration = new Extension\Configuration( $this );
         $this->_localization  = new Extension\Localization( $this );
-
-        // check manifest and save package and name
-        $package = $this->_configuration->getString( 'manifest:package' );
-        $name    = $this->_configuration->getString( 'manifest:name' );
-        $feature = $this->_configuration->getString( 'manifest:feature' );
-
-        if( Extension\Helper::build( $package, $name, $feature ) != $this->_id ) {
-          throw new Exception\Strict( self::EXCEPTION_CRITICAL_INVALID_MANIFEST, [ 'id' => $this->_id ] );
-        }
       }
     }
   }

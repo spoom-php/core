@@ -3,7 +3,7 @@
 use Engine\Extension;
 use Engine\Helper\String;
 use Engine\Page;
-use Engine\Storage\File as FileStorage;
+use Engine\Storage\Directory as DirectoryStorage;
 
 defined( '_PROTECT' ) or die( 'DENIED!' );
 
@@ -14,7 +14,7 @@ defined( '_PROTECT' ) or die( 'DENIED!' );
  * @property Extension $extension
  * @property string    $localization
  */
-class Localization extends FileStorage {
+class Localization extends DirectoryStorage {
 
   /**
    * Extension data source

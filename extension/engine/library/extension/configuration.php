@@ -1,7 +1,7 @@
 <?php namespace Engine\Extension;
 
 use Engine\Extension;
-use Engine\Storage\File as FileStorage;
+use Engine\Storage\Directory as DirectoryStorage;
 
 defined( '_PROTECT' ) or die( 'DENIED!' );
 
@@ -11,7 +11,7 @@ defined( '_PROTECT' ) or die( 'DENIED!' );
  *
  * @property Extension $extension
  */
-final class Configuration extends FileStorage {
+final class Configuration extends DirectoryStorage {
 
   /**
    * Extension data source

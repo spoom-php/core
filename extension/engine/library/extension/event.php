@@ -20,7 +20,7 @@ defined( '_PROTECT' ) or die( 'DENIED!' );
  * @property array|null  $result    The handler's results in an array indexed by the handler names
  * @property Collector   $collector The exception collector
  */
-class Event extends Library {
+class Event extends Library implements \Countable, \Iterator, \ArrayAccess {
 
   /**
    * Array of the instanced listeners. All listener only instanced once!
@@ -42,7 +42,6 @@ class Event extends Library {
    * @var string
    */
   private $_name = null;
-
   /**
    * The event "namespace"
    *
@@ -54,7 +53,6 @@ class Event extends Library {
    * @var bool
    */
   private $_stopped = false;
-
   /**
    * @var bool
    */
@@ -66,15 +64,13 @@ class Event extends Library {
    * @var array
    */
   private $_argument = [ ];
-
   /**
    * Store the result array after the execution in a
    * 'listener index => result data' structure
    *
    * @var array|null
    */
-  private $_result = null;
-
+  private $_result = [ ];
   /**
    * Exception collector
    *
@@ -229,5 +225,68 @@ class Event extends Library {
       'instance'  => self::$cache[ $index ],
       'data'      => isset( $options->data ) ? $options->data : null
     ];
+  }
+
+  /**
+   * @inheritdoc
+   */
+  public function current() {
+    return current( $this->_result );
+  }
+  /**
+   * @inheritdoc
+   */
+  public function next() {
+    next( $this->_result );
+  }
+  /**
+   * @inheritdoc
+   */
+  public function key() {
+    next( $this->_result );
+  }
+  /**
+   * @inheritdoc
+   */
+  public function valid() {
+    return key( $this->_result ) !== null;
+  }
+  /**
+   * @inheritdoc
+   */
+  public function rewind() {
+    reset( $this->_result );
+  }
+
+  /**
+   * @inheritdoc
+   */
+  public function offsetExists( $offset ) {
+    return array_key_exists( $offset, $this->_result );
+  }
+  /**
+   * @inheritdoc
+   */
+  public function offsetGet( $offset ) {
+    return $this->offsetExists( $offset ) ? $this->_result[ $offset ] : null;
+  }
+  /**
+   * @inheritdoc
+   */
+  public function offsetSet( $offset, $value ) {
+    $this->_result[ $offset ] = $value;
+  }
+  /**
+   * @inheritdoc
+   */
+  public function offsetUnset( $offset ) {
+    unset( $this->_result[ $offset ] );
+  }
+
+  /**
+   * @inheritdoc
+   */
+  public function count() {
+    return count( $this->_result );
   }
 }

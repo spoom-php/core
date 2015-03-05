@@ -7,14 +7,14 @@ use Engine\Page;
 defined( '_PROTECT' ) or die( 'DENIED!' );
 
 /**
- * Class File
+ * Class Directory
  * @package Engine\Storage
  *
  * @property string $directory The directory base for the storage
  * @property string $default   The default extension for saving files
  * @property array  $allow     The allowed file extension to handle as namespace
  */
-class File extends Advance {
+class Directory extends Advance {
 
   /**
    * Event called for (un)serialize the data to/from the file. Five arguments passed:
@@ -24,7 +24,7 @@ class File extends Advance {
    *  - namespace [string]: The namespace for the data
    *  - &meta [array]: Store custom meta for a file (namespace) on unserialize to be able to serialize back again
    */
-  const EVENT_CONVERT = 'storage.file.convert';
+  const EVENT_CONVERT = 'storage.directory.convert';
 
   /**
    * Convert any type of data to string for store in file
@@ -126,13 +126,13 @@ class File extends Advance {
   }
 
   /**
-   * Save modified namespace to file.
+   * Save modified namespace to file
    *
    * @param string $namespace
    * @param null   $extension
    * @param int    $permission
    *
-   * @return File
+   * @return Directory
    */
   public function save( $namespace, $extension = null, $permission = 0777 ) {
     $filename = $this->path( $namespace );
@@ -182,7 +182,7 @@ class File extends Advance {
    *
    * @param string $namespace
    *
-   * @return File
+   * @return Directory
    */
   protected function load( $namespace ) {
 

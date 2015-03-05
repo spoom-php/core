@@ -16,7 +16,7 @@ defined( '_PROTECT' ) or die( 'DENIED!' );
  * @method array|mixed geta( string $index, mixed $default = [ ] ) Depricated, use getArray or '!array' index
  * @method object|mixed geto( string $index, mixed $default = null ) Depricated, use getObject or '!object' index
  */
-class Data extends Library implements \JsonSerializable {
+class Data extends Library implements \JsonSerializable, \ArrayAccess {
 
   /**
    * Cache for indexes
@@ -174,7 +174,7 @@ class Data extends Library implements \JsonSerializable {
    *
    * @return $this
    */
-  public function remove( $index ) {
+  public function clear( $index ) {
 
     $result = $this->search( $this->index( $index ) );
     if( $result->exist ) {
@@ -533,5 +533,30 @@ class Data extends Library implements \JsonSerializable {
    */
   function jsonSerialize() {
     return $this->geto( '' );
+  }
+  
+  /**
+   * @inheritdoc
+   */
+  public function offsetExists( $offset ) {
+    return $this->exist( $offset );
+  }
+  /**
+   * @inheritdoc
+   */
+  public function offsetGet( $offset ) {
+    return $this->get( $offset );
+  }
+  /**
+   * @inheritdoc
+   */
+  public function offsetSet( $offset, $value ) {
+    $this->set( $offset, $value );
+  }
+  /**
+   * @inheritdoc
+   */
+  public function offsetUnset( $offset ) {
+    $this->clear( $offset );
   }
 }

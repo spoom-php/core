@@ -175,8 +175,8 @@ class Advance extends Data {
    *
    * @return $this
    */
-  public function remove( $index ) {
-    $tmp = parent::remove( $index );
+  public function clear( $index ) {
+    $tmp = parent::clear( $index );
 
     // clear the cache or the cache index
     if( $this->caching != self::CACHE_NONE ) $this->cache = [ ];
