@@ -3,13 +3,13 @@
 defined( '_PROTECT' ) or die( 'DENIED!' );
 
 /**
- * Class Advance
+ * Class Multi
  * @package Engine\Storage
  *
  * @property string   $namespace      default namespace
  * @property bool     $caching        enable or disable cache
  */
-class Advance extends Data {
+class Multi extends Single {
 
   /**
    * Disable caching
@@ -223,7 +223,7 @@ class Advance extends Data {
    * like object. If the index was false, the key will be null. Otherwise the key always
    * set.
    *
-   * @param \stdClass $index - the Advance::index method result
+   * @param \stdClass $index - the Multi::index method result
    * @param bool      $build - build structure if not exist
    *
    * @return object

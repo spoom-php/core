@@ -5,7 +5,7 @@ use Engine\Helper\Library;
 defined( '_PROTECT' ) or die( 'DENIED!' );
 
 /**
- * Class Data
+ * Class Single
  * @package Engine\Storage
  *
  * @property bool     $prefer         auto construct with object, instead of array
@@ -16,7 +16,7 @@ defined( '_PROTECT' ) or die( 'DENIED!' );
  * @method array|mixed geta( string $index, mixed $default = [ ] ) Depricated, use getArray or '!array' index
  * @method object|mixed geto( string $index, mixed $default = null ) Depricated, use getObject or '!object' index
  */
-class Data extends Library implements \JsonSerializable, \ArrayAccess {
+class Single extends Library implements \JsonSerializable, \ArrayAccess {
 
   /**
    * Cache for indexes
@@ -534,7 +534,7 @@ class Data extends Library implements \JsonSerializable, \ArrayAccess {
   function jsonSerialize() {
     return $this->geto( '' );
   }
-  
+
   /**
    * @inheritdoc
    */

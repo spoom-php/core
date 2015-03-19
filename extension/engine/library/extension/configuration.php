@@ -44,7 +44,6 @@ final class Configuration extends DirectoryStorage {
     if( $index === 'extension' ) return $this->_extension;
     else return parent::__get( $index );
   }
-
   /**
    * @param string $index
    *

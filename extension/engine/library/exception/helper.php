@@ -59,7 +59,7 @@ abstract class Helper {
    * @return string
    */
   public static function build( Extension $extension, $code, array $data = [ ] ) {
-    return $extension->text( 'exception:#' . $code, $data );
+    return $extension->text( 'engine-exception:#' . $code, $data );
   }
 
   /**

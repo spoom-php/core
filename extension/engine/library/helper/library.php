@@ -6,7 +6,7 @@ defined( '_PROTECT' ) or die( 'DENIED!' );
 
 /**
  * This should be the base class for every library in the framework or at least needs to implement the LibraryInterface
- * 
+ *
  * @package Engine\Helper
  */
 class Library implements LibraryInterface {
@@ -34,7 +34,6 @@ class Library implements LibraryInterface {
   public function __isset( $index ) {
     return property_exists( $this, '_' . $index );
   }
-
   /**
    * toString overwrite of Object class. It's the extension and the library separated by an ':'
    *

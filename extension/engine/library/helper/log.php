@@ -2,7 +2,7 @@
 
 use Engine\Exception\Strict;
 use Engine\Extension;
-use Engine\Storage\Data;
+use Engine\Storage\Single;
 
 defined( '_PROTECT' ) or die( 'DENIED!' );
 
@@ -28,7 +28,7 @@ class Log extends Library {
    *  - type [int]: The log entry type (level)
    *  - description [string]: The message with the inserted data
    *  - &message [string]: The raw message
-   *  - &data [Data]: The raw data
+   *  - &data [Single]: The raw data
    */
   const EVENT_CREATE = 'log.create';
 
@@ -166,10 +166,10 @@ class Log extends Library {
   }
 
   /**
-   * @param string            $message   The log message pattern
-   * @param array|object|Data $data      The pattern insertion or additional data
-   * @param string            $namespace The namespace for the log entry
-   * @param int               $type      The log level
+   * @param string              $message   The log message pattern
+   * @param array|object|Single $data      The pattern insertion or additional data
+   * @param string              $namespace The namespace for the log entry
+   * @param int                 $type      The log level
    *
    * @return bool
    * @throws Strict ::EXCEPTION_NOTICE_INVALID_TYPE on invalid type
@@ -182,7 +182,7 @@ class Log extends Library {
     else {
 
       // define local variables and trigger event for external loggers
-      $data        = $data instanceof Data ? $data : new Data( $data );
+      $data = $data instanceof Single ? $data : new Single( $data );
       $namespace   = empty( $namespace ) ? $this->_namespace : $namespace;
       $description = String::insert( $message, $data, String::TYPE_INSERT_LEAVE );
       $event       = $this->extension->trigger( self::EVENT_CREATE, [
@@ -209,9 +209,9 @@ class Log extends Library {
   }
 
   /**
-   * @param string            $message   The log message pattern
-   * @param array|object|Data $data      The pattern insertion or additional data
-   * @param string            $namespace The namespace for the log entry
+   * @param string              $message   The log message pattern
+   * @param array|object|Single $data      The pattern insertion or additional data
+   * @param string              $namespace The namespace for the log entry
    *
    * @return bool
    */
@@ -219,9 +219,9 @@ class Log extends Library {
     return $this->create( $message, $data, $namespace, self::TYPE_DEBUG );
   }
   /**
-   * @param string            $message   The log message pattern
-   * @param array|object|Data $data      The pattern insertion or additional data
-   * @param string            $namespace The namespace for the log entry
+   * @param string              $message   The log message pattern
+   * @param array|object|Single $data      The pattern insertion or additional data
+   * @param string              $namespace The namespace for the log entry
    *
    * @return bool
    */
@@ -229,9 +229,9 @@ class Log extends Library {
     return $this->create( $message, $data, $namespace, self::TYPE_INFO );
   }
   /**
-   * @param string            $message   The log message pattern
-   * @param array|object|Data $data      The pattern insertion or additional data
-   * @param string            $namespace The namespace for the log entry
+   * @param string              $message   The log message pattern
+   * @param array|object|Single $data      The pattern insertion or additional data
+   * @param string              $namespace The namespace for the log entry
    *
    * @return bool
    */
@@ -239,9 +239,9 @@ class Log extends Library {
     return $this->create( $message, $data, $namespace, self::TYPE_NOTICE );
   }
   /**
-   * @param string            $message   The log message pattern
-   * @param array|object|Data $data      The pattern insertion or additional data
-   * @param string            $namespace The namespace for the log entry
+   * @param string              $message   The log message pattern
+   * @param array|object|Single $data      The pattern insertion or additional data
+   * @param string              $namespace The namespace for the log entry
    *
    * @return bool
    */
@@ -249,9 +249,9 @@ class Log extends Library {
     return $this->create( $message, $data, $namespace, self::TYPE_WARNING );
   }
   /**
-   * @param string            $message   The log message pattern
-   * @param array|object|Data $data      The pattern insertion or additional data
-   * @param string            $namespace The namespace for the log entry
+   * @param string              $message   The log message pattern
+   * @param array|object|Single $data      The pattern insertion or additional data
+   * @param string              $namespace The namespace for the log entry
    *
    * @return bool
    */
@@ -259,9 +259,9 @@ class Log extends Library {
     return $this->create( $message, $data, $namespace, self::TYPE_ERROR );
   }
   /**
-   * @param string            $message   The log message pattern
-   * @param array|object|Data $data      The pattern insertion or additional data
-   * @param string            $namespace The namespace for the log entry
+   * @param string              $message   The log message pattern
+   * @param array|object|Single $data      The pattern insertion or additional data
+   * @param string              $namespace The namespace for the log entry
    *
    * @return bool
    */

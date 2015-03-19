@@ -3,7 +3,7 @@
 use Engine\Extension;
 use Engine\Helper\LibraryInterface;
 use Engine\Helper\Log;
-use Engine\Storage\Data;
+use Engine\Storage\Single;
 
 defined( '_PROTECT' ) or die( 'DENIED!' );
 
@@ -96,7 +96,6 @@ abstract class Exception extends \Exception implements \JsonSerializable, Librar
 
     return null;
   }
-
   /**
    * @param string $index
    *
@@ -105,7 +104,6 @@ abstract class Exception extends \Exception implements \JsonSerializable, Librar
   public function __isset( $index ) {
     return property_exists( $this, '_' . $index ) || in_array( $index, [ 'id', 'code' ] );
   }
-
   /**
    * @return string
    */
@@ -128,7 +126,7 @@ abstract class Exception extends \Exception implements \JsonSerializable, Librar
     if( $instance ) {
 
       // extend data
-      $data = $data instanceof Data ? $data->geta( '' ) : (array) $data;
+      $data = $data instanceof Single ? $data->geta( '' ) : (array) $data;
 
       // define the log type
       $type = Log::TYPE_DEBUG;
@@ -168,7 +166,6 @@ abstract class Exception extends \Exception implements \JsonSerializable, Librar
       'data'      => $this->_data
     ];
   }
-
   /**
    * Like toArray() just object
    *

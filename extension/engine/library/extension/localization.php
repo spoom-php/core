@@ -30,7 +30,6 @@ class Localization extends DirectoryStorage {
    * @var string
    */
   private $default_directory;
-
   /**
    * Extension defined base directory for languages
    *
@@ -79,7 +78,6 @@ class Localization extends DirectoryStorage {
 
     return parent::__get( $index );
   }
-
   /**
    * @param string $index
    *
@@ -103,7 +101,6 @@ class Localization extends DirectoryStorage {
 
     return false;
   }
-
   /**
    * @param string $namespace
    *
@@ -120,14 +117,14 @@ class Localization extends DirectoryStorage {
 
       // log: debug
       Page::getLog()->debug( 'Global \'{localization}\' localization selected', [ 'localization' => $this->_localization, 'directory' => $this->_directory ], '\Engine\Extension\Localization' );
-      
+
     } else if( $this->default_directory ) {
       $this->_localization = $this->_extension->option( 'manifest:localization' );
       $this->_directory    = $this->default_directory;
 
       // log: debug
       Page::getLog()->debug( 'Default \'{localization}\' localization selected', [ 'localization' => $this->_localization, 'directory' => $this->_directory ], '\Engine\Extension\Localization' );
-      
+
     } else {
       $this->_localization = false;
       $this->_directory = false;

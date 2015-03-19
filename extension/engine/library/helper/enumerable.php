@@ -14,22 +14,18 @@ abstract class Enumerable {
    * Encode array or object to string ( json ). This is now just a proxy but maybe some improvement will be
    * added in future versions
    *
-   * TODO remove boolean options in a next main version
-   *
    * @param object|array $object
-   * @param int|boolean  $options JSON_* constant flags. The flag will be JSON_PRETTY_PRINT if it's TRUE for
-   *                              compatibility reason
+   * @param int          $options JSON_* constant flags
    *
    * @return string|boolean The JSON string or false on failure
    */
   public static function toJson( $object, $options = 0 ) {
 
-    $result = json_encode( $object, $options === true ? JSON_PRETTY_PRINT : $options );
+    $result = json_encode( $object, $options );
     if( $result === false ) Page::getLog()->notice( 'Failed JSON encode', [ 'object' => $object ], '\Engine\Helper\Enumerable' ); // log: notice
 
     return $result;
   }
-
   /**
    * Converts JSON string into object or array like the normal json_encode but this one may do
    * some pre/post process operation on the string/object in the future
@@ -152,7 +148,6 @@ abstract class Enumerable {
 
     return $object;
   }
-
   /**
    * Parse objects, arrays or strings into an xml object. You can pass an array that contains dot separated routes
    * of attribute type properties in the object.

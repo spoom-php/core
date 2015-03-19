@@ -14,7 +14,7 @@ defined( '_PROTECT' ) or die( 'DENIED!' );
  * @property string $default   The default extension for saving files
  * @property array  $allow     The allowed file extension to handle as namespace
  */
-class Directory extends Advance {
+class Directory extends Multi {
 
   /**
    * Event called for (un)serialize the data to/from the file. Five arguments passed:
@@ -41,7 +41,6 @@ class Directory extends Advance {
    * @var array
    */
   private static $files = [ ];
-
   /**
    * Meta properties for files
    *
@@ -50,12 +49,18 @@ class Directory extends Advance {
   private static $meta = [ ];
 
   /**
+   * "Cache" for already loaded namespaces
+   *
+   * @var array
+   */
+  private $loaded = [ ];
+
+  /**
    * Allowed extensions for files
    *
    * @var array
    */
   protected $_allow;
-
   /**
    * Default extension when saving
    *
@@ -69,13 +74,6 @@ class Directory extends Advance {
    * @var string
    */
   protected $_directory;
-
-  /**
-   * "Cache" for already loaded namespaces
-   *
-   * @var array
-   */
-  private $loaded = [ ];
 
   /**
    * Set given directory to handle
@@ -191,7 +189,7 @@ class Directory extends Advance {
     if( !$filename || !is_file( $filename ) ) self::$files[ $index ] = self::$meta[ $index ] = [ ];
     else if( !is_readable( $filename ) ) Page::getLog()->warning( 'The \'{filename}\' file not readable!', [ 'namespace' => $namespace, 'index' => $index, 'filename' => $filename ], '\Engine\Storage\File' ); // log: warning
     else if( !isset( self::$files[ $index ] ) ) {
-      
+
       self::$files[ $index ] = self::$meta[ $index ] = [ ];
       self::$files[ $index ] = $this->process( @file_get_contents( $filename ), self::CONVERT_UNSERIALIZE, pathinfo( $filename, PATHINFO_EXTENSION ), $namespace, self::$meta[ $index ] );
     }

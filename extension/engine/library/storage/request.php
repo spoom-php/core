@@ -7,13 +7,13 @@ defined( '_PROTECT' ) or die( 'DENIED!' );
  *
  * @package Engine\Storage
  */
-class Request extends Advance {
+class Request extends Multi {
 
   /**
    * @param string    $namespace
    * @param int|mixed $caching
    */
-  public function __construct( $namespace = 'request', $caching = Advance::CACHE_NONE ) {
+  public function __construct( $namespace = 'request', $caching = Multi::CACHE_NONE ) {
     parent::__construct( $namespace, null, $caching );
 
     $this->addr( $_REQUEST, 'request' );

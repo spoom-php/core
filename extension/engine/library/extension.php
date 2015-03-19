@@ -215,8 +215,8 @@ class Extension extends Library {
     }
 
     // log: debug
-    Page::getLog()->debug('Missing (class) library: {classnames}', [ 'classnames' => implode( ',', $class_name ) ], '\Engine\Extension' );
-    
+    Page::getLog()->debug( 'Missing (class) library: {classnames}', [ 'classnames' => implode( ',', $class_name ) ], '\Engine\Extension' );
+
     return false;
   }
   /**
@@ -236,10 +236,10 @@ class Extension extends Library {
       $instance = isset( $param ) ? new $class( $param ) : new $class();
       return $instance;
     }
-    
+
     // log: debug
-    Page::getLog()->debug('Missing (class) instance: {classname}', [ 'classname' => $class_name ], '\Engine\Extension' );
-    
+    Page::getLog()->debug( 'Missing (class) instance: {classname}', [ 'classname' => $class_name ], '\Engine\Extension' );
+
     return null;
   }
 

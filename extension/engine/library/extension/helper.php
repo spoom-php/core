@@ -25,7 +25,6 @@ abstract class Helper {
   public static function validate( $id ) {
     return preg_match( self::REGEXP_ID, $id );
   }
-
   /**
    * Check extension directory existance by id
    *
@@ -70,7 +69,6 @@ abstract class Helper {
   public static function build( $package, $name = null, $feature = null ) {
     return empty( $package ) ? false : trim( implode( '-', [ $package, $name, $feature ] ), '-' );
   }
-
   /**
    * Find extension id from an array of string
    *

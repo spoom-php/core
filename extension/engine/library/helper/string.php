@@ -2,7 +2,7 @@
 
 use Engine\Exception\Strict;
 use Engine\Page;
-use Engine\Storage\Data;
+use Engine\Storage\Single;
 
 defined( '_PROTECT' ) or die( 'DENIED!' );
 
@@ -31,16 +31,16 @@ abstract class String {
   /**
    * Insert variables to the input from insertion array used the regexp constant of class
    *
-   * @param string     $text      input string to insert
-   * @param array|Data $insertion the insertion variables
-   * @param int        $type
+   * @param string       $text      input string to insert
+   * @param array|Single $insertion the insertion variables
+   * @param int          $type
    *
    * @return array|string
    */
   public static function insert( $text, $insertion, $type = self::TYPE_INSERT_EMPTY ) {
 
     // every insertion converted to data
-    if( !( $insertion instanceof Data ) ) $insertion = new Data( $insertion );
+    if( !( $insertion instanceof Single ) ) $insertion = new Single( $insertion );
 
     // find patterns iterate trough the matches
     preg_match_all( self::REGEXP_INSERT_REPLACE, $text, $matches, PREG_SET_ORDER );
@@ -105,7 +105,6 @@ abstract class String {
     $raw = self::hash( $raw, $hash );
     return $length ? substr( $raw, 0, $length ) : $raw;
   }
-
   /**
    * Generates hash with the basic PHP hash() function but handle the errors with exception
    *
@@ -135,7 +134,6 @@ abstract class String {
 
     return $text;
   }
-
   /**
    * Create camelCase version of the input string along the separator
    *
@@ -157,7 +155,6 @@ abstract class String {
 
     return $return;
   }
-
   /**
    * Convert input text into a link
    *

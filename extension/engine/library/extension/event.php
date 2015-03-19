@@ -156,7 +156,7 @@ class Event extends Library implements \Countable, \Iterator, \ArrayAccess {
         $this->_result[ $listener->name ] = null;
         $this->_collector->add( Exception\Helper::wrap( $e ) );
       }
-      
+
       if( $this->_stopped ) break;
     }
 
@@ -215,7 +215,7 @@ class Event extends Library implements \Countable, \Iterator, \ArrayAccess {
 
         return;
       }
-      
+
       self::$cache[ $index ] = $listener;
     }
 
