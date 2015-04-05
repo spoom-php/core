@@ -101,7 +101,7 @@ class Extension extends Library {
     else {
 
       // define directory
-      $directory = Extension\Helper::directory( $this->_id );
+      $directory = Extension\Helper::directory( $this->_id, false );
       if( !$directory ) throw new Exception\System( self::EXCEPTION_CRITICAL_MISSING_EXTENSION, [ 'id' => $this->_id ] );
       else {
 

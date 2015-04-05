@@ -29,7 +29,6 @@ final class Configuration extends DirectoryStorage {
     parent::__construct( $source->directory( '', true ) . Extension::DIRECTORY_CONFIGURATION );
 
     $this->_extension = $source;
-    $this->namespace = 'default';
   }
 
   /**

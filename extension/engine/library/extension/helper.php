@@ -16,6 +16,27 @@ abstract class Helper {
   const REGEXP_ID = '/^([a-z][a-z0-9_]*)(-[a-z][a-z0-9_]*){0,2}$/';
 
   /**
+   * Extension id part separator character
+   */
+  const ID_SEPARATOR = '-';
+  /**
+   * Extension id part count
+   */
+  const ID_PART = 3;
+  /**
+   * Extension id required part index (the package)
+   */
+  const ID_PART_PACKAGE = 0;
+  /**
+   * Extension id optional part index (the name)
+   */
+  const ID_PART_NAME = 1;
+  /**
+   * Extension id optional part index (the feature)
+   */
+  const ID_PART_FEATURE = 2;
+
+  /**
    * Check extension id format
    *
    * @param string $id
@@ -23,7 +44,7 @@ abstract class Helper {
    * @return bool
    */
   public static function validate( $id ) {
-    return preg_match( self::REGEXP_ID, $id );
+    return (bool) preg_match( self::REGEXP_ID, $id );
   }
   /**
    * Check extension directory existance by id
@@ -34,7 +55,7 @@ abstract class Helper {
    * @return bool
    */
   public static function exist( $id, $validate = false ) {
-    return ( !$validate || self::validate( $id ) ) && count( glob( _PATH_BASE . self::directory( $id, false ) . Extension::DIRECTORY_CONFIGURATION . 'manifest.*' ) );
+    return ( !$validate || self::validate( $id ) ) && is_dir( _PATH_BASE . self::directory( $id, false ) );
   }
 
   /**
@@ -67,7 +88,7 @@ abstract class Helper {
    * @return string|bool
    */
   public static function build( $package, $name = null, $feature = null ) {
-    return empty( $package ) ? false : trim( implode( '-', [ $package, $name, $feature ] ), '-' );
+    return empty( $package ) ? false : trim( implode( self::ID_SEPARATOR, [ $package, $name, $feature ] ), self::ID_SEPARATOR );
   }
   /**
    * Find extension id from an array of string
@@ -80,10 +101,10 @@ abstract class Helper {
 
     $counter   = 0;
     $extension = '';
-    while( !empty( $input ) && $counter++ < 3 ) {
+    while( !empty( $input ) && $counter++ < self::ID_PART ) {
 
-      $tmp = ( empty( $extension ) ? '' : '-' ) . $input[ 0 ];
-      if( !self::validate( $tmp ) ) return empty( $extension ) ? false : $extension;
+      $tmp = ( empty( $extension ) ? '' : self::ID_SEPARATOR ) . $input[ 0 ];
+      if( !self::exist( $tmp, true ) ) return empty( $extension ) ? false : $extension;
       else {
 
         $extension = $tmp;
