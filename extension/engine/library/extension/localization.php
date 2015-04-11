@@ -24,25 +24,11 @@ class Localization extends DirectoryStorage {
   private $_extension = null;
 
   /**
-   * Default language directory defined in default configuration file 'localization' entry ( only localization string
-   * defined )
-   *
-   * @var string
-   */
-  private $default_directory;
-  /**
-   * Extension defined base directory for languages
-   *
-   * @var string
-   */
-  private $base_directory;
-
-  /**
    * Currently loaded localization
    *
    * @var string
    */
-  private $_localization;
+  protected $_localization;
 
   /**
    * Set defaults
@@ -50,14 +36,9 @@ class Localization extends DirectoryStorage {
    * @param Extension $source
    */
   function __construct( Extension $source ) {
-    parent::__construct( null, [ 'json', 'ini', 'xml' ] );
+    parent::__construct( $source->directory( '' ) . Extension::DIRECTORY_LOCALIZATION, [ 'json', 'ini', 'xml' ] );
 
     $this->_extension     = $source;
-    $this->namespace      = 'default';
-    $this->base_directory = $this->_extension->directory( '', true ) . Extension::DIRECTORY_LOCALIZATION;
-
-    // define default localizations
-    $this->default_directory = $this->find( $source->option( 'manifest:localization' ) );
   }
 
   /**
@@ -70,9 +51,7 @@ class Localization extends DirectoryStorage {
     if( $index == 'extension' ) return $this->_extension;
     else if( $index == 'localization' ) {
 
-      // call to reload active localization
-      $this->path( '' );
-
+      if( !isset( $this->_localization ) ) $this->localization = Page::getLocalization();
       return $this->_localization;
     }
 
@@ -86,54 +65,60 @@ class Localization extends DirectoryStorage {
   public function __isset( $index ) {
     return $index == 'extension' || $index == 'localization' || parent::__isset( $index );
   }
+  /**
+   * Dynamic setter for privates
+   *
+   * @param string $index
+   * @param mixed  $value
+   */
+  public function __set( $index, $value ) {
+    switch( $index ) {
+      case 'localization':
+
+        $global = Page::getLocalization();
+        if( $this->validate( $value ) ) $this->_localization = $value;
+        else if( $global != $value && $this->validate( $global ) ) $this->_localization = $global;
+        else if( $this->validate( $this->_extension->option( 'manifest:localization' ) ) ) $this->_localization = $this->_extension->option( 'manifest:localization' );
+
+        // log: debug
+        Page::getLog()->debug( 'The \'{localization}\' localization selected', [ 'localization' => $this->_localization, 'directory' => $this->_directory ], '\Engine\Extension\Localization' );
+
+        break;
+      default:
+        parent::__set( $index, $value );
+    }
+  }
 
   /**
-   * Get localization directory if it's available
+   * Check if the given localization name directory exists
    *
-   * @param string $string
+   * @param string $name The localization name to check
    *
-   * @return string|bool
+   * @return bool
    */
-  protected function find( $string ) {
-    if( is_string( $string ) && is_dir( $this->base_directory . $string . '/' ) ) {
-      return $this->base_directory . $string . '/';
-    }
-
-    return false;
+  protected function validate( $name ) {
+    return is_string( $name ) && is_dir( _PATH_BASE . $this->_directory . $name . '/' );
   }
   /**
    * @param string $namespace
+   * @param string|null $extension
+   * @param bool $exist
    *
    * @return mixed
    */
-  protected function path( $namespace ) {
+  protected function path( $namespace, $extension = null, &$exist = false ) {
 
-    $localization = Page::getLocalization();
-    $global       = $this->find( $localization );
+    // define the localization of not already
+    if( !isset( $this->_localization ) ) $this->localization = Page::getLocalization();
 
-    if( $global ) {
-      $this->_localization = $localization;
-      $this->_directory = $global;
+    // change the directory temporary then search for the path
+    $tmp = $this->_directory;
+    $this->_directory .= $this->_localization . '/';
 
-      // log: debug
-      Page::getLog()->debug( 'Global \'{localization}\' localization selected', [ 'localization' => $this->_localization, 'directory' => $this->_directory ], '\Engine\Extension\Localization' );
+    $result           = parent::path( $namespace, $extension, $exist );
+    $this->_directory = $tmp;
 
-    } else if( $this->default_directory ) {
-      $this->_localization = $this->_extension->option( 'manifest:localization' );
-      $this->_directory    = $this->default_directory;
-
-      // log: debug
-      Page::getLog()->debug( 'Default \'{localization}\' localization selected', [ 'localization' => $this->_localization, 'directory' => $this->_directory ], '\Engine\Extension\Localization' );
-
-    } else {
-      $this->_localization = false;
-      $this->_directory = false;
-
-      // log: notice
-      Page::getLog()->notice( 'No localization selected', [ 'extension' => (string) $this->_extension, 'namespace' => $namespace ], '\Engine\Extension\Localization' );
-    }
-
-    return parent::path( $namespace );
+    return $result;
   }
 
   /**

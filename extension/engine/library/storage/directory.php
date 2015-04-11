@@ -133,41 +133,37 @@ class Directory extends Multi {
    * @return Directory
    */
   public function save( $namespace, $extension = null, $permission = 0777 ) {
-    $filename = $this->path( $namespace );
-    $index    = $this->_directory . $namespace;
+
+    $exist = false;
+    $path  = $this->path( $namespace, $extension, $exist );
 
     // if namespace not exists then try to remove the file to
     if( !$this->exist( $namespace . ':' ) ) {
 
-      if( $filename && !is_writeable( $filename ) ) Page::getLog()->warning( 'Can\'t remove the \'{filename}\' file!', [ 'namespace' => $namespace, 'directory' => $index, 'filename' => $filename ], '\Engine\Storage\File' ); // log: warning
-      else if( $filename ) {
-        unset( self::$files[ $index ] );
-        return @unlink( $filename );
+      if( $exist && !is_writeable( _PATH_BASE . $path ) ) Page::getLog()->warning( 'Can\'t remove the \'{path}\' file!', [ 'namespace' => $namespace, 'path' => $path ], '\Engine\Storage\File' ); // log: warning
+      else if( $exist ) {
+
+        unset( self::$files[ $path ] );
+        return @unlink( _PATH_BASE . $path );
       }
 
       // save the content to the file
-    } else if( isset( self::$files[ $index ] ) ) {
+    } else if( isset( self::$files[ $path ] ) ) {
 
-      if( $filename ) $extension = pathinfo( $filename, PATHINFO_EXTENSION );
-      else {
+      $directory = pathinfo( _PATH_BASE . $path, PATHINFO_DIRNAME ) . '/';
+      if( !is_dir( $directory ) && @!mkdir( $directory, $permission, true ) ) {
 
-        $extension = in_array( $extension, $this->_allow ) ? $extension : $this->_default;
-        if( is_dir( $this->_directory ) || @mkdir( $this->_directory, $permission, true ) ) $filename = $this->_directory . $namespace . '.' . $extension;
-        else {
-
-          // log: warning
-          Page::getLog()->warning( 'The \'{filename}\' file directory not writeable!', [ 'namespace' => $namespace, 'directory' => $index, 'filename' => $filename ], '\Engine\Storage\File' );
-
-          return false;
-        }
+        // log: warning
+        Page::getLog()->warning( 'The \'{path}\' file directory not writeable!', [ 'namespace' => $namespace, 'directory' => $directory, 'path' => $path ], '\Engine\Storage\File' );
+        return false;
       }
 
-      $result = $this->process( self::$files[ $index ], self::CONVERT_SERIALIZE, $extension, $namespace, self::$meta[ $index ] );
-      if( ( is_file( $filename ) || @touch( $filename ) ) && is_writeable( $filename ) ) return @file_put_contents( $filename, $result ) > 0;
+      $result = $this->process( self::$files[ $path ], self::CONVERT_SERIALIZE, $extension, $namespace, self::$meta[ $path ] );
+      if( ( is_file( _PATH_BASE . $path ) || @touch( _PATH_BASE . $path ) ) && is_writeable( _PATH_BASE . $path ) ) return @file_put_contents( _PATH_BASE . $path, $result ) > 0;
       else {
 
         // log: warning
-        Page::getLog()->warning( 'The \'{filename}\' file not writeable!', [ 'namespace' => $namespace, 'directory' => $index, 'filename' => $filename ], '\Engine\Storage\File' );
+        Page::getLog()->warning( 'The \'{path}\' file not writeable!', [ 'namespace' => $namespace, 'path' => $path ], '\Engine\Storage\File' );
       }
     }
 
@@ -184,44 +180,63 @@ class Directory extends Multi {
    */
   protected function load( $namespace ) {
 
-    $filename = $this->path( $namespace );
-    $index    = $this->_directory . $namespace;
-    if( !$filename || !is_file( $filename ) ) self::$files[ $index ] = self::$meta[ $index ] = [ ];
-    else if( !is_readable( $filename ) ) Page::getLog()->warning( 'The \'{filename}\' file not readable!', [ 'namespace' => $namespace, 'index' => $index, 'filename' => $filename ], '\Engine\Storage\File' ); // log: warning
-    else if( !isset( self::$files[ $index ] ) ) {
+    $exist = false;
+    $path  = $this->path( $namespace, null, $exist );
+    if( !isset( self::$files[ $path ] ) ) {
 
-      self::$files[ $index ] = self::$meta[ $index ] = [ ];
-      self::$files[ $index ] = $this->process( @file_get_contents( $filename ), self::CONVERT_UNSERIALIZE, pathinfo( $filename, PATHINFO_EXTENSION ), $namespace, self::$meta[ $index ] );
+      self::$files[ $path ] = self::$meta[ $path ] = [ ];
+      if( $exist && is_file( _PATH_BASE . $path ) ) {
+
+        if( !is_readable( _PATH_BASE . $path ) ) Page::getLog()->warning( 'The \'{path}\' file not readable!', [ 'namespace' => $namespace, 'path' => $path ], '\Engine\Storage\File' ); // log: warning
+        else {
+
+          self::$files[ $path ] = $this->process( @file_get_contents( _PATH_BASE . $path ), self::CONVERT_UNSERIALIZE, pathinfo( $path, PATHINFO_EXTENSION ), $namespace, self::$meta[ $path ] );
+        }
+      }
     }
 
     // set storage namespace to point this container
-    $this->addr( self::$files[ $index ], $namespace );
+    $this->addr( self::$files[ $path ], $namespace );
 
     return $this;
   }
 
   /**
-   * Get file path by namespace, returns false
-   * if file not exist
+   * Get file path by namespace
    *
-   * @param string $namespace
+   * @param string      $namespace The namespace
+   * @param string|null $extension Force extension for the file
+   * @param bool        $exist     Indicates the returned path existance
    *
-   * @return mixed
+   * @return null|string
    */
-  protected function path( $namespace ) {
+  protected function path( $namespace, $extension = null, &$exist = false ) {
 
     if( $this->_directory ) {
 
-      $filename = $namespace;
-      $directory = $this->_directory;
-      $path     = $directory . $filename . '.';
+      // define the used extension(s)
+      if( in_array( $extension, $this->_allow ) ) $tmp = [ $extension ];
+      else {
 
-      if( is_dir( $directory ) ) foreach( $this->_allow as $t ) {
-        if( is_file( $path . $t ) && is_readable( $path . $t ) ) return $path . $t;
+        $extension = $this->_default;
+        $tmp       = $this->_allow;
       }
+
+      // try to find the file
+      $path = $this->_directory . $namespace . '.';
+      if( is_dir( _PATH_BASE . $this->_directory ) ) foreach( $tmp as $t ) {
+        if( is_file( _PATH_BASE . $path . $t ) && is_readable( _PATH_BASE . $path . $t ) ) {
+
+          $exist = true;
+          return $path . $t;
+        }
+      }
+
+      // return a non exist path
+      return $path . $extension; 
     }
 
-    return false;
+    return null;
   }
   /**
    * @param \stdClass $index
