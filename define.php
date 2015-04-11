@@ -94,9 +94,9 @@ spl_autoload_register( function ( $class_name ) {
   if( !empty( $extension ) ) {
 
     // finalize the class file path with the remain pieces
-    $directory = \_PATH_EXTENSION . $extension . '/library/';
-    $pieces    = array_splice( $pieces, $i );
     $class     = array_pop( $pieces );
+    $pieces = ltrim( implode( '/', array_splice( $pieces, $i ) ) . '/', '/' );
+    $directory = \_PATH_BASE . \_PATH_EXTENSION . $extension . '/library/';
 
     // support for camelCase nested classes
     $matches = [ ];
@@ -104,16 +104,16 @@ spl_autoload_register( function ( $class_name ) {
     do {
 
       // prepare the next path
-      $tmp = implode( '/', $pieces ) . '/' . implode( '', $matches[ 0 ] );
+      $tmp = $pieces . implode( '', $matches[ 0 ] );
 
       // load the class file with the standard lowercase format
-      $file = \_PATH_BASE . $directory . mb_strtolower( $tmp );
-      if( is_file( $file . '.php' ) ) include( $file . '.php' );
+      $file = $directory . mb_strtolower( $tmp ) . '.php';
+      if( is_file( $file ) ) include( $file );
       else {
 
         // check for non-standard, capital letter files (this files probably 3th part libs)
-        $file = \_PATH_BASE . $directory . $tmp;
-        if( is_file( $file . '.php' ) ) include( $file . '.php' );
+        $file = $directory . $tmp . '.php';
+        if( is_file( $file ) ) include( $file );
         else continue;  // skip the break statement if we don't find the file
       }
 
