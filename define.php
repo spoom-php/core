@@ -67,7 +67,7 @@ define( '_PATH_TMP', 'tmp/' );
 
 /**
  * Class autoloader for the site.
- * Handle engine and extension class load based on namespaces
+ * Handle extension class load based on namespaces
  *
  * @param string $class_name
  */
