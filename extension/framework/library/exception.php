@@ -126,7 +126,7 @@ abstract class Exception extends \Exception implements \JsonSerializable, Librar
     if( $instance ) {
 
       // extend data
-      $data = $data instanceof Single ? $data->geta( '' ) : (array) $data;
+      $data = $data instanceof Single ? $data->getArray( '' ) : (array) $data;
 
       // define the log type
       $type = Log::TYPE_DEBUG;

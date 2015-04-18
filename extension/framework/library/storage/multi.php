@@ -6,35 +6,19 @@ defined( '_PROTECT' ) or die( 'DENIED!' );
  * Class Multi
  * @package Framework\Storage
  *
- * @property string   $namespace      default namespace
- * @property bool     $caching        enable or disable cache
+ * @property string $namespace The default namespace
  */
 class Multi extends Single {
 
   /**
-   * Disable caching
+   * The default namespace
    */
-  const CACHE_NONE = 0;
-  /**
-   * Cache only the actual value of the result
-   */
-  const CACHE_SIMPLE = 1;
-  /**
-   * Cache results by reference (might be buggy with arrays in arrays)
-   */
-  const CACHE_REFERENCE = 2;
+  const NAMESPACE_DEFAULT = 'default';
 
   /**
-   * Cache data storage
-   * @var array
+   * Separator char for the namespace in the indexes
    */
-  private $cache = [ ];
-
-  /**
-   * Cache state ( enabled or disabled )
-   * @var bool
-   */
-  private $_caching = self::CACHE_NONE;
+  const SEPARATOR_NAMESPACE = ':';
 
   /**
    * Default namespace
@@ -49,11 +33,10 @@ class Multi extends Single {
    * @param array|object|null $data
    * @param int               $caching
    */
-  public function __construct( $namespace = 'default', $data = null, $caching = self::CACHE_SIMPLE ) {
-    parent::__construct( $data );
+  public function __construct( $namespace = self::NAMESPACE_DEFAULT, $data = null, $caching = self::CACHE_SIMPLE ) {
+    parent::__construct( $data, $caching );
 
-    $this->namespace = $namespace;
-    $this->caching   = $caching;
+    $this->_namespace = $namespace;
   }
 
   /**
@@ -84,23 +67,12 @@ class Multi extends Single {
   public function __set( $index, $value ) {
     switch( $index ) {
       case 'namespace':
-        $this->_namespace = '' . $value;
 
+        if( !empty( $value ) ) {
+          $this->_namespace = (string) $value;
+        }
+        
         break;
-      case 'caching':
-        $this->_caching = (int) $value;
-
-        // clear the source cache
-        $this->cache = [ ];
-        break;
-
-      /** @noinspection PhpMissingBreakStatementInspection */
-      case 'separator':
-
-        // clear the source cache
-        $this->cache = [ ];
-
-      // falltrough
       default:
         parent::__set( $index, $value );
     }
@@ -120,68 +92,9 @@ class Multi extends Single {
 
     $namespaces = is_array( $namespaces ) ? $namespaces : [ $namespaces ];
     $result     = [ ];
-    foreach( $namespaces as $n ) $result[ $n ] = $this->exist( $n . ':' ) ? $this->source[ $n ] : [ ];
+    foreach( $namespaces as $n ) $result[ $n ] = $this->exist( $n . self::SEPARATOR_NAMESPACE ) ? $this->source[ $n ] : [ ];
 
     return $object ? (object) $result : $result;
-  }
-
-  /**
-   * Extend index with data. If index and data is enumerable ( array or object )
-   * it will be merge index with the data. If index and data is string, the index
-   * concated with data. Finally if the index and the data is numeric, the data
-   * will be added to the index.
-   *
-   * @param string $index
-   * @param mixed  $data
-   * @param bool   $recursive
-   *
-   * @return $this
-   */
-  public function extend( $index, $data, $recursive = false ) {
-    $tmp = parent::extend( $index, $data, $recursive );
-
-    // clear the cache or the cache index
-    $index = $this->index( $index );
-    if( $this->caching == self::CACHE_SIMPLE ) {
-      if( $recursive ) $this->cache = [ ];
-      else unset( $this->cache[ $index->id ] );
-    }
-
-    return $tmp;
-  }
-  /**
-   * Set the index to value and create structure for the index
-   * if it's not exist already
-   *
-   * @param string $index
-   * @param mixed  $value
-   *
-   * @return $this
-   */
-  public function set( $index, $value ) {
-    $tmp = parent::set( $index, $value );
-
-    // clear the cache index
-    $index = $this->index( $index );
-    if( $this->caching == self::CACHE_SIMPLE ) unset( $this->cache[ $index->id ] );
-
-    return $tmp;
-  }
-  /**
-   * Remove an index from the storage. the index can't be null, so with
-   * this function ou cannot clear the storage!
-   *
-   * @param string $index
-   *
-   * @return $this
-   */
-  public function clear( $index ) {
-    $tmp = parent::clear( $index );
-
-    // clear the cache or the cache index
-    if( $this->caching != self::CACHE_NONE ) $this->cache = [ ];
-
-    return $tmp;
   }
 
   /**
@@ -195,10 +108,11 @@ class Multi extends Single {
   protected function addr( &$enumerable, $namespace = null ) {
 
     if( is_array( $enumerable ) || is_object( $enumerable ) ) {
-      $this->source[ is_string( $namespace ) ? $namespace : $this->namespace ] = &$enumerable;
+      $namespace                  = is_string( $namespace ) ? $namespace : $this->namespace;
+      $this->source[ $namespace ] = &$enumerable;
 
       // clear the cache or the cache index
-      if( $this->caching != self::CACHE_NONE ) $this->cache = [ ];
+      if( $this->caching != self::CACHE_NONE ) $this->clean( $namespace . self::SEPARATOR_NAMESPACE );
     }
 
     return $this;
@@ -216,48 +130,6 @@ class Multi extends Single {
     if( is_object( $enumerable ) ) $enumerable = clone $enumerable;
     return $this->addr( $enumerable, $namespace );
   }
-
-  /**
-   * Search for the index pointed value, and return the
-   * result in a { exist, container, key }
-   * like object. If the index was false, the key will be null. Otherwise the key always
-   * set.
-   *
-   * @param \stdClass $index - the Multi::index method result
-   * @param bool      $build - build structure if not exist
-   *
-   * @return object
-   */
-  protected function search( $index, $build = false ) {
-
-    // check the cache. Only load from cache if its getting ( not build ) or if the cache is referenced
-    // because if it's build then the returned value may changed outside
-    if( $this->caching != self::CACHE_NONE && ( !$build || $this->caching == self::CACHE_REFERENCE ) && isset( $this->cache[ $index->id ] ) ) {
-      return (object) [ 'exist' => true, 'container' => &$this->cache[ $index->id ][ 'container' ], 'key' => $this->cache[ $index->id ][ 'key' ] ];
-    }
-
-    // delegate work to the parent, then save the result to the cache if enabled
-    $result = parent::search( $index, $build );
-    if( isset( $result->container ) && ( is_array( $result->container ) || is_object( $result->container ) ) && $this->caching != self::CACHE_NONE ) switch( $this->_caching ) {
-      case self::CACHE_SIMPLE:
-        $this->cache[ $index->id ] = [
-          'container' => $result->container,
-          'key'       => $result->key
-        ];
-
-        break;
-
-      case self::CACHE_REFERENCE:
-        $this->cache[ $index->id ] = [
-          'container' => &$result->container,
-          'key'       => $result->key
-        ];
-
-        break;
-    }
-
-    return $result;
-  }
   /**
    * Parse index string into { string, tokens, namespace, key } object
    * or false, if key not a string or empty. String is the normalised
@@ -272,14 +144,14 @@ class Multi extends Single {
     if( !is_string( $index ) ) return false;
     else {
 
-      $tmp    = explode( ':', trim( $index, ' ' . $this->separator ), 2 );
+      $tmp = explode( self::SEPARATOR_NAMESPACE, trim( $index, ' ' . self::SEPARATOR_KEY ), 2 );
       $result = parent::parse( array_pop( $tmp ) );
 
       // define the namespace and add it to the token list for the search
-      $result->namespace = array_pop( $tmp ) ?: $this->namespace;
+      $result->namespace = array_pop( $tmp ) ?: $this->_namespace;
       array_unshift( $result->token, $result->namespace );
 
-      $result->id = $result->namespace . ':' . $result->key;
+      $result->id = $result->namespace . self::SEPARATOR_NAMESPACE . $result->key;
       return $result;
     }
   }

@@ -182,7 +182,7 @@ class Event extends Library implements \Countable, \Iterator, \ArrayAccess {
     $extension = new Extension( 'framework' );
 
     // collect listeners if event exists and enabled
-    $tmp = $extension->configuration->geta( 'event-' . $this->_namespace . ':' . $this->_name );
+    $tmp = $extension->configuration->getArray( 'event-' . $this->_namespace . ':' . $this->_name );
     foreach( $tmp as $listener ) {
 
       if( !empty( $listener->extension ) && !empty( $listener->library ) ) $this->add( $listener );

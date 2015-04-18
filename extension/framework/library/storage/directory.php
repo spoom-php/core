@@ -108,8 +108,6 @@ class Directory extends Multi {
     return property_exists( $this, '_' . $index ) || parent::__isset( $index );
   }
   /**
-   * Dynamic setter for privates
-   *
    * @param string $index
    * @param mixed  $value
    */
@@ -132,7 +130,7 @@ class Directory extends Multi {
    *
    * @return Directory
    */
-  public function save( $namespace, $extension = null, $permission = 0777 ) {
+  public function write( $namespace, $extension = null, $permission = 0777 ) {
 
     $exist = false;
     $path  = $this->path( $namespace, $extension, $exist );
@@ -170,15 +168,17 @@ class Directory extends Multi {
     return false;
   }
   /**
-   * Load namespace ( file content ) to global storage and
-   * set local storage namespace reference. Only load file
+   * (Pre)load namespace ( file content ) to global storage and set local storage namespace reference. Only load file
    * if isn't already loaded
    *
    * @param string $namespace
    *
    * @return Directory
    */
-  protected function load( $namespace ) {
+  public function read( $namespace ) {
+
+    // flag the namespace loaded
+    $this->loaded[ $namespace ] = true;
 
     $exist = false;
     $path  = $this->path( $namespace, null, $exist );
@@ -233,27 +233,19 @@ class Directory extends Multi {
       }
 
       // return a non exist path
-      return $path . $extension; 
+      return $path . $extension;
     }
 
     return null;
   }
   /**
-   * @param \stdClass $index
-   * @param bool      $build
-   *
-   * @see Advance::search
-   *
-   * @return object
+   * @inheritdoc
    */
   protected function search( $index, $build = false ) {
 
     // try load the file container
     if( !isset( $this->loaded[ $index->namespace ] ) ) {
-      $this->load( $index->namespace );
-
-      // flag the namespace loaded
-      $this->loaded[ $index->namespace ] = true;
+      $this->read( $index->namespace );
     }
 
     // delegate problem to the parent

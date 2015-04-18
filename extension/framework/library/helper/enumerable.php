@@ -304,4 +304,83 @@ abstract class Enumerable {
 
     return $arr;
   }
+
+  /**
+   * Test if the variable is an enumerable (array or object)
+   *
+   * @param mixed $test
+   *
+   * @return bool True if the test is an enumerable
+   */
+  public static function is( $test ) {
+    return is_array( $test ) || is_object( $test );
+  }
+  /**
+   * Search trough an enumerable and return the result
+   *
+   * @param object|array $enumerable The enumerable to search
+   * @param array        $tokens     The search "path" array
+   * @param bool         $build      Build the non existed paths or not
+   *
+   * @return object The { exist: bool, key: string, container: object|array }
+   */
+  public static function search( &$enumerable, $tokens, $build = false ) {
+
+    // if not index return the whole source
+    $result = (object) [ 'exist' => true, 'key' => null, 'container' => &$enumerable ];
+    if( count( $tokens ) ) {
+
+      $result->exist = false;
+      for( $count = count( $tokens ), $i = 0; $i < $count - 1; ++$i ) {
+
+        // handle new key check for two different data type
+        $key = $tokens[ $i ];
+        if( is_array( $result->container ) ) { // handle like an array
+
+          if( !isset( $result->container[ $key ] ) ) {
+            if( $build ) $result->container[ $key ] = [ ];
+            else return $result;
+          }
+
+          $result->container = &$result->container[ $key ];
+
+        } else if( is_object( $result->container ) ) {   // handle like an object
+
+          if( !isset( $result->container->{$key} ) ) {
+            if( $build ) $result->container->{$key} = [ ];
+            else return $result;
+          }
+
+          $result->container = &$result->container->{$key};
+        } else {
+
+          if( $build ) $result->container = [ ];
+          else return $result;
+        }
+      }
+
+      // select key if container exist
+      if( self::is( $result->container ) ) {
+
+        $key = $tokens[ $count - 1 ];
+        if( is_array( $result->container ) ) {
+          if( !isset( $result->container[ $key ] ) ) {
+            if( $build ) $result->container[ $key ] = null;
+            else return $result;
+          }
+        } else {
+          if( !isset( $result->container->{$key} ) ) {
+            if( $build ) $result->container->{$key} = null;
+            else return $result;
+          }
+        }
+
+        // setup the result
+        $result->key   = $key;
+        $result->exist = true;
+      }
+    }
+
+    return $result;
+  }
 }
