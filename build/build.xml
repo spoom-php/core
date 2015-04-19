@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<project name="Webengine framework" default="build" basedir=".">
+<project name="webengine-framework" default="build" basedir=".">
   <property file="${basedir}/build.properties"/>
   <echo message="Ignore directories: ${dir_ignore}"/>
   <echo message="Basedir: ${basedir}"/>
@@ -93,6 +93,8 @@
     <exec executable="phploc">
       <arg value="--log-csv"/>
       <arg value="${build_path}/logs/phploc.csv"/>
+      <arg value="--log-xml"/>
+      <arg value="${build_path}/logs/phploc.xml"/>
       <arg line="${dir_exclude}"/>
       <arg path="${source}"/>
     </exec>
@@ -123,6 +125,10 @@
     </exec>
   </target>
 
+  <target name="phpdox" description="Generate API documentation using PHPDox">
+    <exec executable="phpdox" />
+  </target>
+
   <target name="phpcb" description="Aggregate tool output with PHP_CodeBrowser">
     <exec executable="phpcb">
       <arg value="--log"/>
@@ -138,7 +144,7 @@
   </target>
 
   <!-- target name="build" depends="clean,parallelTasks,phpunit,phpcb"/ -->
-  <target name="build" depends="clean,prepare,parallelTasks,phpcb,publish"/>
+  <target name="build" depends="clean,prepare,parallelTasks,phpcb,phpdox,publish"/>
 
   <!-- target name="build" depends="phpcb"/ -->
   <!-- target name="build" depends="phpmd"/ -->

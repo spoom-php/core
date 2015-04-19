@@ -1,12 +1,15 @@
-# Disable ini or json file direct access ( for configuration files )
-<FilesMatch "\.(ini|json|xml)$">
-  Order deny,allow
-  Deny from all
-</FilesMatch>
-
 # Upload options override
 php_value upload_max_filesize 15M
 php_value post_max_size 30M
+
+# Disable ini or json file direct access ( for configuration files )
+<IfModule mod_alias.c>
+  
+  RedirectMatch 403 /extension/.*?/(configuration)/
+  RedirectMatch 403 /extension/.*?/(localization)/
+  RedirectMatch 403 /extension/.*?/(library)/
+    
+</IfModule>
 
 # Rewrite
 <IfModule mod_rewrite.c>

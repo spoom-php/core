@@ -1,10 +1,23 @@
 <?xml version="1.0"?>
-<ruleset name="PHP-PSR2-modified">
-  <description>PHP Coding standard based on http://www.php-fig.org/psr/psr-2/</description>
+<ruleset name="webengine-php-codestyle">
+  <description>Webengine PHP Coding standard based on http://www.php-fig.org/psr/psr-2/</description>
 
   <rule ref="PSR2"/>
 
-  <rule ref="Generic.CodeAnalysis.ForLoopShouldBeWhileLoop"/>
+  <rule ref="Generic.WhiteSpace.DisallowTabIndent"/>
+  <rule ref="Generic.WhiteSpace.ScopeIndent">
+    <properties>
+      <property name="indent" value="2"/>
+    </properties>
+  </rule>
+
+  <rule ref="Generic.PHP.DisallowShortOpenTag"/>
+  <rule ref="Generic.PHP.UpperCaseConstant"/>
+
+  <rule ref="Generic.NamingConventions.ConstructorName"/>
+  <rule ref="Generic.NamingConventions.UpperCaseConstantName"/>
+  
+  <!-- rule ref="Generic.CodeAnalysis.ForLoopShouldBeWhileLoop"/>
   <rule ref="Generic.CodeAnalysis.ForLoopWithTestFunctionCall"/>
   <rule ref="Generic.CodeAnalysis.JumbledIncrementer"/>
   <rule ref="Generic.CodeAnalysis.UnconditionalIfStatement"/>
@@ -38,5 +51,5 @@
       <property name="indent" value="2"/>
     </properties>
   </rule>
-  <rule ref="Squiz.WhiteSpace.SuperfluousWhitespace"/>
+  <rule ref="Squiz.WhiteSpace.SuperfluousWhitespace"/ -->
 </ruleset>

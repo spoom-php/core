@@ -224,7 +224,7 @@ Other formats can be supported with `\Framework\Storage\Directory::EVENT_CONVERT
 
 The namespaces (files) content is loaded automatically when needed, but only once per run. This means: two instances of storage with
 the same directory, works with the same content regardless of which one does the modifications. The content saving is not
-automatic, so you MUST call the `->save()` method to do that.
+automatic, so you MUST call the `->write()` method to do that.
 
 ### Request (`\Framework\Storage\Request`)
 This special `\Framework\Storage\Multi` storage gives access to the superglobals with storage syntax. The namespaces are the
