@@ -1,16 +1,24 @@
 <?php namespace Framework;
 
 use Framework\Exception\Collector;
+use Framework\Exception\Strict;
 use Framework\Extension;
 use Framework\Helper\Log;
-
-defined( '_PROTECT' ) or die( 'DENIED!' );
 
 /**
  * Class Page
  * @package Framework
  */
 abstract class Page {
+
+  /**
+   * Header already sent when try to redirect the page
+   */
+  const EXCEPTION_ERROR_FAIL_REDIRECT = 'framework#9E';
+  /**
+   * Trying to set invalid localization
+   */
+  const EXCEPTION_WARNING_INVALID_LOCALIZATION = 'framework#10W';
 
   /**
    * Runs right before the Page::start() method finished. No argument
@@ -101,6 +109,7 @@ abstract class Page {
       /** @noinspection PhpMissingBreakStatementInspection */
       case 1:
         $reporting |= E_COMPILE_ERROR | E_PARSE;
+      /** @noinspection PhpMissingBreakStatementInspection */
       default:
 
         ini_set( 'display_errors', 1 );
@@ -158,11 +167,13 @@ abstract class Page {
   }
 
   /**
-   * Redirect to an url with header or javascript redirect
+   * Redirect to an url with header redirect
    *
    * @param mixed $url  The new url. It will be converted to string
    * @param int   $code HTTP Redirect type respsonse code. This number added to 300 to make 30x status code
    * @param bool  $stop Call the page stop() method ot not
+   *
+   * @throws Strict ::EXCEPTION_ERROR_FAIL_REDIRECT
    */
   public static function redirect( $url, $code = 3, $stop = false ) {
     $url = ltrim( trim( $url, ' ' ), '/' );
@@ -170,8 +181,8 @@ abstract class Page {
     // add url base if the url doesn't contains protocol
     if( !preg_match( '#^[a-z]+\://#i', $url ) ) $url = _URL_BASE . $url;
 
-    // switch between javascript and header redirection based on the header state
-    if( headers_sent() ) echo "<script>document.location.href='" . str_replace( "'", "&apos;", $url ) . "';</script>";
+    // check the header state
+    if( headers_sent() ) throw new Strict( self::EXCEPTION_ERROR_FAIL_REDIRECT, [ 'url' => $url ] );
     else {
 
       // add status code and redirect
@@ -220,10 +231,13 @@ abstract class Page {
    * Set page localization
    *
    * @param string $new_localization
+   *
+   * @throws Strict ::EXCEPTION_WARNING_INVALID_LOCALIZATION
    */
   public static function setLocalization( $new_localization ) {
 
     $new_localization = trim( mb_strtolower( $new_localization ) );
-    if( preg_match( '/[a-z]/', $new_localization ) > 0 ) self::$localization = $new_localization;
+    if( preg_match( '/[a-z_-]/', $new_localization ) > 0 ) self::$localization = $new_localization;
+    else throw new Strict( self::EXCEPTION_WARNING_INVALID_LOCALIZATION, [ 'localization' => $new_localization ] );
   }
 }

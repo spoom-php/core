@@ -6,8 +6,6 @@ use Framework\Extension;
 use Framework\Helper\Library;
 use Framework\Page;
 
-defined( '_PROTECT' ) or die( 'DENIED!' );
-
 /**
  * Class Event
  * @package Framework\Extension
@@ -189,7 +187,11 @@ class Event extends Library implements \Countable, \Iterator, \ArrayAccess {
       else {
 
         // log: notice
-        Page::getLog()->notice( 'Invalid event handler for \'{namespace}:{name}\'. Missing library or extension', [ 'listener' => $listener, 'name' => $this->_name, 'namespace' => $this->_namespace ], '\Framework\Extension\Event' );
+        Page::getLog()->notice( 'Invalid event handler for \'{namespace}:{name}\'. Missing library or extension', [
+          'listener'  => $listener,
+          'name'      => $this->_name,
+          'namespace' => $this->_namespace
+        ], '\Framework\Extension\Event' );
       }
     }
   }
@@ -211,7 +213,11 @@ class Event extends Library implements \Countable, \Iterator, \ArrayAccess {
       if( !$listener || !is_callable( [ $listener, 'execute' ] ) ) {
 
         // log: notice
-        Page::getLog()->notice( 'Invalid event handler for \'{namespace}:{name}\'. Missing execute() method', [ 'listener' => $listener, 'name' => $this->_name, 'namespace' => $this->_namespace ], '\Framework\Extension\Event' );
+        Page::getLog()->notice( 'Invalid event handler for \'{namespace}:{name}\'. Missing execute() method', [
+          'listener'  => $listener,
+          'name'      => $this->_name,
+          'namespace' => $this->_namespace
+        ], '\Framework\Extension\Event' );
 
         return;
       }

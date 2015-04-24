@@ -2,8 +2,6 @@
 
 use Framework\Extension;
 
-defined( '_PROTECT' ) or die( 'DENIED!' );
-
 /**
  * Class Helper
  * @package Framework\Extension

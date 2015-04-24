@@ -3,8 +3,6 @@
 use Framework\Extension;
 use Framework\Page;
 
-defined( '_PROTECT' ) or die( 'DENIED!' );
-
 /**
  * Trait Feasible
  * @package Framework\Helper
@@ -27,8 +25,16 @@ trait Feasible {
 
       // check function validity
       $method = $this->method( $name );
-      if( !is_callable( [ $this, $method ] ) ) Page::getLog()->warning( 'Missing \'{name}\' executeable', [ 'name' => $name, 'arguments' => $arguments, 'method' => $method ], '\Framework\Helper\Feasible' ); // log: warning
-      else {
+      if( !is_callable( [ $this, $method ] ) ) {
+
+        // log: warning
+        Page::getLog()->warning( 'Missing \'{name}\' executeable', [
+          'name'      => $name,
+          'arguments' => $arguments,
+          'method'    => $method
+        ], '\Framework\Helper\Feasible' );
+
+      } else {
 
         $reflectionMethod = new \ReflectionMethod( $this, $method );
         if( $reflectionMethod->isProtected() ) $reflectionMethod->setAccessible( true );
@@ -75,5 +81,5 @@ interface FeasibleInterface {
    *
    * @return mixed
    */
-  function execute( $name, $arguments );
+  public function execute( $name, $arguments );
 }

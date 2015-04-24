@@ -1,7 +1,5 @@
 <?php namespace Framework\Storage;
 
-defined( '_PROTECT' ) or die( 'DENIED!' );
-
 /**
  * Class Request
  *

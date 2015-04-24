@@ -1,4 +1,4 @@
-<?php defined( '_PROTECT' ) or die( 'DENIED!' );
+<?php
 
 /**
  * Check php version to avoid syntax and other ugly error messages
@@ -42,9 +42,13 @@ define( '_URL_HTTPS', isset( $_SERVER[ 'HTTPS' ] ) && $_SERVER[ 'HTTPS' ] != 'of
  */
 define( '_URL_PATH', rtrim( dirname( $_SERVER[ 'SCRIPT_NAME' ] ), '\\/ ' ) . '/' );
 /**
+ * The host name from the url
+ */
+define( '_URL_HOST', $_SERVER[ 'SERVER_NAME' ] . ( $_SERVER[ 'SERVER_PORT' ] != [ 80 ] ? ( ':' . $_SERVER[ 'SERVER_PORT' ] ) : '' ) );
+/**
  * The root url with protocol, host and port definition ( if neccessary )
  */
-define( '_URL_ROOT', 'http' . ( _URL_HTTPS ? 's' : '' ) . '://' . $_SERVER[ 'SERVER_NAME' ] . ( !in_array( $_SERVER[ 'SERVER_PORT' ], [ 80 ] ) ? ':' . $_SERVER[ 'SERVER_PORT' ] : '' ) . '/' );
+define( '_URL_ROOT', 'http' . ( _URL_HTTPS ? 's' : '' ) . '://' . _URL_HOST . '/' );
 /**
  * The root url with the url path.
  * This is the "real" url with all neccessary parameter
@@ -90,7 +94,7 @@ spl_autoload_register( function ( $class_name ) {
     }
   }
 
-  // further check is performed only if extension definition exist 
+  // further check is performed only if extension definition exist
   if( !empty( $extension ) ) {
 
     // finalize the class file path with the remain pieces

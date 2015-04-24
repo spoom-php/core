@@ -4,8 +4,6 @@ use Framework\Exception\Strict;
 use Framework\Page;
 use Framework\Storage\Single;
 
-defined( '_PROTECT' ) or die( 'DENIED!' );
-
 /**
  * Class String
  * @package Framework\Helper
@@ -84,8 +82,12 @@ abstract class String {
     if( $secure ) {
 
       // try ssl first
-      if( !function_exists( 'openssl_random_pseudo_bytes' ) ) Page::getLog()->warning( 'Cannot use OpenSSL random, `openssl_random_pseudo_bytes()` doesn\'t exists.', [ ], '\Framework\Helper\String' ); // log: warning
-      else {
+      if( !function_exists( 'openssl_random_pseudo_bytes' ) ) {
+
+        // log: warning
+        Page::getLog()->warning( 'Cannot use OpenSSL random, `openssl_random_pseudo_bytes()` doesn\'t exists.', [ ], '\Framework\Helper\String' );
+
+      } else {
         $tmp = openssl_random_pseudo_bytes( 64, $strong );
 
         // skip ssl since it wasn't using the strong algo

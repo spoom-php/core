@@ -1,7 +1,5 @@
 <?php namespace Framework\Helper;
 
-defined( '_PROTECT' ) or die( 'DENIED!' );
-
 /**
  * Class File
  * @package Framework\Helper
@@ -26,9 +24,9 @@ abstract class File {
 
     $files = [ ];
     $directory_stream = opendir( $directory );
-    while( $f = readdir( $directory_stream ) ) {
-      if( is_dir( $directory . $f ) || $f == '.' || $f == '..' || ( is_string( $regexp ) && !preg_match( $regexp, $f ) ) ) continue;
-      $files[ ] = $fullpath ? $directory . $f : $f;
+    while( $file = readdir( $directory_stream ) ) {
+      if( is_dir( $directory . $file ) || $file == '.' || $file == '..' || ( is_string( $regexp ) && !preg_match( $regexp, $file ) ) ) continue;
+      $files[ ] = $fullpath ? $directory . $file : $file;
     }
 
     return $files;

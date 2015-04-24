@@ -2,8 +2,6 @@
 
 use Framework\Page;
 
-defined( '_PROTECT' ) or die( 'DENIED!' );
-
 /**
  * Class Enumerable
  * @package Framework\Helper
@@ -39,7 +37,7 @@ abstract class Enumerable {
    */
   public static function fromJson( $json, $assoc = false, $depth = 512, $options = 0 ) {
     if( version_compare( phpversion(), '5.4.0', '>=' ) ) $json = json_decode( $json, $assoc, $depth, $options );
-    elseif( version_compare( phpversion(), '5.3.0', '>=' ) ) $json = json_decode( $json, $assoc, $depth );
+    else if( version_compare( phpversion(), '5.3.0', '>=' ) ) $json = json_decode( $json, $assoc, $depth );
     else $json = json_decode( $json, $assoc );
 
     // log: notice
@@ -93,19 +91,21 @@ abstract class Enumerable {
         $key       = $next[ 2 ];
 
         // handle "recursion" end, and set simple data to the container
-        if( !is_object( $element ) || !( $element instanceof \SimpleXMLElement ) || ( !$element->children()->count() && !$element->attributes()->count() ) ) switch( (string) $element ) {
-          case 'NULL':
-            $container = null;
-            continue;
-          case 'TRUE':
-            $container = true;
-            continue;
-          case 'FALSE':
-            $container = false;
-            continue;
-          default:
-            $container = (string) $element;
-            continue;
+        if( !is_object( $element ) || !( $element instanceof \SimpleXMLElement ) || ( !$element->children()->count() && !$element->attributes()->count() ) ) {
+          switch( (string) $element ) {
+            case 'NULL':
+              $container = null;
+              continue;
+            case 'TRUE':
+              $container = true;
+              continue;
+            case 'FALSE':
+              $container = false;
+              continue;
+            default:
+              $container = (string) $element;
+              continue;
+          }
         }
 
         // handle item attributes
@@ -189,9 +189,11 @@ abstract class Enumerable {
       } else foreach( $object->data as $index => $value ) {
 
         // handle attributes, arrays and properties (in this order)
-        if( in_array( $object->key . '.' . $index, $attribute ) ) $objects[ ] = (object) [ 'element' => $element, 'data' => $value, 'name' => $index, 'key' => $object->key . '.' . $index ];
-        else if( self::isArray( $value, false ) ) $objects[ ] = (object) [ 'element' => $element, 'data' => $value, 'name' => $index, 'key' => $object->key . '.' . $index ];
-        else {
+        if( in_array( $object->key . '.' . $index, $attribute ) ) {
+          $objects[ ] = (object) [ 'element' => $element, 'data' => $value, 'name' => $index, 'key' => $object->key . '.' . $index ];
+        } else if( self::isArray( $value, false ) ) {
+          $objects[ ] = (object) [ 'element' => $element, 'data' => $value, 'name' => $index, 'key' => $object->key . '.' . $index ];
+        } else {
           $child = $dom->createElement( is_numeric( $index ) ? $object->name : $index );
 
           $element->appendChild( $child );

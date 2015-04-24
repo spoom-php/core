@@ -2,8 +2,6 @@
 
 use Framework\Extension;
 
-defined( '_PROTECT' ) or die( 'DENIED!' );
-
 /**
  * This should be the base class for every library in the framework or at least needs to implement the LibraryInterface
  *
