@@ -105,7 +105,7 @@
     <exec executable="phpcs" output="${build_path}/logs/phpcs.log">
       <arg value="--report=checkstyle"/>
       <arg value="--report-file=${build_path}/logs/checkstyle.xml"/>
-      <arg value="--standard=${build_path}/phpcs.xml"/>
+      <arg value="--standard=${build_path}/Webe"/>
       <arg path="${source}"/>
       <arg value="--ignore=${dir_ignore}"/>
       <arg value="-v"/>
