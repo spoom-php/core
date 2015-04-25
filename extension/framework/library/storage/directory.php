@@ -4,8 +4,6 @@ use Framework\Extension;
 use Framework\Helper\Enumerable;
 use Framework\Page;
 
-defined( '_PROTECT' ) or die( 'DENIED!' );
-
 /**
  * Class Directory
  * @package Framework\Storage
@@ -138,8 +136,12 @@ class Directory extends Multi {
     // if namespace not exists then try to remove the file to
     if( !$this->exist( $namespace . ':' ) ) {
 
-      if( $exist && !is_writeable( _PATH_BASE . $path ) ) Page::getLog()->warning( 'Can\'t remove the \'{path}\' file!', [ 'namespace' => $namespace, 'path' => $path ], '\Framework\Storage\File' ); // log: warning
-      else if( $exist ) {
+      if( $exist && !is_writeable( _PATH_BASE . $path ) ) {
+
+        // log: warning
+        Page::getLog()->warning( 'Can\'t remove the \'{path}\' file!', [ 'namespace' => $namespace, 'path' => $path ], '\Framework\Storage\File' );
+
+      } else if( $exist ) {
 
         unset( self::$files[ $path ] );
         return @unlink( _PATH_BASE . $path );
@@ -152,13 +154,19 @@ class Directory extends Multi {
       if( !is_dir( $directory ) && @!mkdir( $directory, $permission, true ) ) {
 
         // log: warning
-        Page::getLog()->warning( 'The \'{path}\' file directory not writeable!', [ 'namespace' => $namespace, 'directory' => $directory, 'path' => $path ], '\Framework\Storage\File' );
+        Page::getLog()->warning( 'The \'{path}\' file directory not writeable!', [
+          'namespace' => $namespace,
+          'directory' => $directory,
+          'path'      => $path
+        ], '\Framework\Storage\File' );
+
         return false;
       }
 
       $result = $this->process( self::$files[ $path ], self::CONVERT_SERIALIZE, $extension, $namespace, self::$meta[ $path ] );
-      if( ( is_file( _PATH_BASE . $path ) || @touch( _PATH_BASE . $path ) ) && is_writeable( _PATH_BASE . $path ) ) return @file_put_contents( _PATH_BASE . $path, $result ) > 0;
-      else {
+      if( ( is_file( _PATH_BASE . $path ) || @touch( _PATH_BASE . $path ) ) && is_writeable( _PATH_BASE . $path ) ) {
+        return @file_put_contents( _PATH_BASE . $path, $result ) > 0;
+      } else {
 
         // log: warning
         Page::getLog()->warning( 'The \'{path}\' file not writeable!', [ 'namespace' => $namespace, 'path' => $path ], '\Framework\Storage\File' );
@@ -187,10 +195,16 @@ class Directory extends Multi {
       self::$files[ $path ] = self::$meta[ $path ] = [ ];
       if( $exist && is_file( _PATH_BASE . $path ) ) {
 
-        if( !is_readable( _PATH_BASE . $path ) ) Page::getLog()->warning( 'The \'{path}\' file not readable!', [ 'namespace' => $namespace, 'path' => $path ], '\Framework\Storage\File' ); // log: warning
-        else {
+        if( !is_readable( _PATH_BASE . $path ) ) {
 
-          self::$files[ $path ] = $this->process( @file_get_contents( _PATH_BASE . $path ), self::CONVERT_UNSERIALIZE, pathinfo( $path, PATHINFO_EXTENSION ), $namespace, self::$meta[ $path ] );
+          // log: warning
+          Page::getLog()->warning( 'The \'{path}\' file not readable!', [ 'namespace' => $namespace, 'path' => $path ], '\Framework\Storage\File' );
+
+        } else {
+
+          $extension            = pathinfo( $path, PATHINFO_EXTENSION );
+          $content              = @file_get_contents( _PATH_BASE . $path );
+          self::$files[ $path ] = $this->process( $content, self::CONVERT_UNSERIALIZE, $extension, $namespace, self::$meta[ $path ] );
         }
       }
     }
@@ -265,8 +279,9 @@ class Directory extends Multi {
    * @return mixed
    */
   protected function convertPhp( $content, $type ) {
-    if( $type == self::CONVERT_UNSERIALIZE ) return unserialize( preg_replace( '/^(<\\?php\\s*\\/\\*{)/i', '', preg_replace( '/(}\\s*\\*\\/)$/i', '', $content ) ) );
-    else return '<?php /*{' . serialize( $content ) . '}*/';
+    if( $type == self::CONVERT_UNSERIALIZE ) {
+      return unserialize( preg_replace( '/^(<\\?php\\s*\\/\\*{)/i', '', preg_replace( '/(}\\s*\\*\\/)$/i', '', $content ) ) );
+    } else return '<?php /*{' . serialize( $content ) . '}*/';
 
   }
   /**
@@ -322,8 +337,13 @@ class Directory extends Multi {
    */
   protected function convertXml( $content, $type, $namespace, array &$meta ) {
 
-    if( $type == self::CONVERT_SERIALIZE ) return Enumerable::toXml( $content, isset( $meta[ 'attribute' ] ) ? $meta[ 'attribute' ] : [ ], $namespace, isset( $meta[ 'version' ] ) ? $meta[ 'version' ] : '1.0', isset( $meta[ 'encoding' ] ) ? $meta[ 'encoding' ] : 'UTF-8' )->asXml();
-    else {
+    if( $type == self::CONVERT_SERIALIZE ) {
+
+      $attribute = isset( $meta[ 'attribute' ] ) ? $meta[ 'attribute' ] : [ ];
+      $version   = isset( $meta[ 'version' ] ) ? $meta[ 'version' ] : '1.0';
+      return Enumerable::toXml( $content, $attribute, $namespace, $version, isset( $meta[ 'encoding' ] ) ? $meta[ 'encoding' ] : 'UTF-8' )->asXml();
+
+    } else {
 
       $meta[ 'attribute' ] = [ ];
       $meta[ 'version' ]   = null;

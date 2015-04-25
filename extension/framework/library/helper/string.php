@@ -4,8 +4,6 @@ use Framework\Exception\Strict;
 use Framework\Page;
 use Framework\Storage\Single;
 
-defined( '_PROTECT' ) or die( 'DENIED!' );
-
 /**
  * Class String
  * @package Framework\Helper
@@ -53,7 +51,8 @@ abstract class String {
           break;
         case self::TYPE_INSERT_LEAVE:
         default:
-        $ifnull = $value[ 0 ];
+          $ifnull = $value[ 0 ];
+          break;
       }
 
       // replace the pattern
@@ -84,8 +83,12 @@ abstract class String {
     if( $secure ) {
 
       // try ssl first
-      if( !function_exists( 'openssl_random_pseudo_bytes' ) ) Page::getLog()->warning( 'Cannot use OpenSSL random, `openssl_random_pseudo_bytes()` doesn\'t exists.', [ ], '\Framework\Helper\String' ); // log: warning
-      else {
+      if( !function_exists( 'openssl_random_pseudo_bytes' ) ) {
+
+        // log: warning
+        Page::getLog()->warning( 'Cannot use OpenSSL random, `openssl_random_pseudo_bytes()` doesn\'t exists.', [ ], '\Framework\Helper\String' );
+
+      } else {
         $tmp = openssl_random_pseudo_bytes( 64, $strong );
 
         // skip ssl since it wasn't using the strong algo
@@ -145,7 +148,7 @@ abstract class String {
   public static function toName( $name, $separator = '.' ) {
 
     // TODO escape only non words
-    $name = preg_replace( '/\\' . $separator . '+/i', $separator, trim( $name, $separator ) );
+    $name   = preg_replace( '/\\' . $separator . '+/i', $separator, trim( $name, $separator ) );
     $return = '';
 
     for( $i = 0, $length = mb_strlen( $name ); $i < $length; ++$i ) {

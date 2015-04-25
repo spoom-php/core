@@ -3,8 +3,6 @@
 use Framework\Extension;
 use Framework\Storage\Directory as DirectoryStorage;
 
-defined( '_PROTECT' ) or die( 'DENIED!' );
-
 /**
  * Class Configuration
  * @package Framework\Extension
@@ -25,7 +23,7 @@ final class Configuration extends DirectoryStorage {
    *
    * @param Extension $source
    */
-  function __construct( Extension $source ) {
+  public function __construct( Extension $source ) {
     parent::__construct( $source->directory( '' ) . Extension::DIRECTORY_CONFIGURATION );
 
     $this->_extension = $source;

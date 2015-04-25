@@ -4,8 +4,6 @@ use Framework\Exception\Strict;
 use Framework\Extension;
 use Framework\Storage\Single;
 
-defined( '_PROTECT' ) or die( 'DENIED!' );
-
 /**
  * Class Log
  * @package Framework\Helper
@@ -129,11 +127,11 @@ class Log extends Library {
    * @param string $name      The instance identifier
    * @param string $namespace The default namespace for log entries
    */
-  function __construct( $name, $namespace = '' ) {
+  public function __construct( $name, $namespace = '' ) {
 
     $this->extension = new Extension( 'framework' );
 
-    // save instance properties 
+    // save instance properties
     $this->_name      = $name;
     $this->_namespace = empty( $namespace ) ? (string) $this->extension : $namespace;
 
@@ -177,7 +175,7 @@ class Log extends Library {
   public function create( $message, $data = [ ], $namespace = '', $type = self::TYPE_INFO ) {
 
     // check type against reporting level
-    if( !_LOGGING || _LOGGING < $type ) return true;
+    if( !_LOG_LEVEL || _LOG_LEVEL < $type ) return true;
     else if( !isset( self::$TYPE_NAME[ $type ] ) ) throw new Strict( self::EXCEPTION_NOTICE_INVALID_TYPE, [ 'type' => $type ] );
     else {
 

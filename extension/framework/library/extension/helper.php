@@ -2,8 +2,6 @@
 
 use Framework\Extension;
 
-defined( '_PROTECT' ) or die( 'DENIED!' );
-
 /**
  * Class Helper
  * @package Framework\Extension
@@ -18,11 +16,11 @@ abstract class Helper {
   /**
    * Extension id part separator character
    */
-  const ID_SEPARATOR = '-';
+  const ID_SEPARATOR = _EXTENSION_SEPARATOR;
   /**
    * Extension id part count
    */
-  const ID_PART = 3;
+  const ID_PART = _EXTENSION_DEPTH;
   /**
    * Extension id required part index (the package)
    */

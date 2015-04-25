@@ -5,8 +5,6 @@ use Framework\Helper\LibraryInterface;
 use Framework\Helper\Log;
 use Framework\Storage\Single;
 
-defined( '_PROTECT' ) or die( 'DENIED!' );
-
 /**
  * Extend simple PHP \Exception with the power of code base text with language and insertion support
  *
@@ -28,11 +26,11 @@ abstract class Exception extends \Exception implements \JsonSerializable, Librar
    */
   const TYPE_WARNING = 'W';
   /**
-   * Type for exception that MAY breaks the execution
+   * Type for exception that MAY break the execution
    */
   const TYPE_ERROR = 'E';
   /**
-   * Type for exception that MUST breaks the execution
+   * Type for exception that MUST break the execution
    */
   const TYPE_CRITICAL = 'C';
 
@@ -90,8 +88,8 @@ abstract class Exception extends \Exception implements \JsonSerializable, Librar
         return ( $this->_extension ? $this->_extension->id : '' ) . '#' . $this->getCode() . $this->_type;
       default:
 
-        $iindex = '_' . $index;
-        if( property_exists( $this, $iindex ) ) return $this->{$iindex};
+        $index = '_' . $index;
+        if( property_exists( $this, $index ) ) return $this->{$index};
     }
 
     return null;
@@ -181,7 +179,7 @@ abstract class Exception extends \Exception implements \JsonSerializable, Librar
    * @return mixed data which can be serialized by <b>json_encode</b>,
    * which is a value of any type other than a resource.
    */
-  function jsonSerialize() {
+  public function jsonSerialize() {
     return $this->toObject();
   }
 }

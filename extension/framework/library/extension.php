@@ -3,8 +3,6 @@
 use Framework\Helper\File;
 use Framework\Helper\Library;
 
-defined( '_PROTECT' ) or die( 'DENIED!' );
-
 /**
  * One of the most important class in the framework. Handle all extension
  * stuffs eg: object creation, file getter, configuration and localization
@@ -60,14 +58,12 @@ class Extension extends Library {
    * @var string
    */
   private $_directory = null;
-
   /**
    * Handle configuration files for the extension
    *
    * @var Extension\Configuration
    */
   private $_configuration = null;
-
   /**
    * Handle localization files for the extension
    *

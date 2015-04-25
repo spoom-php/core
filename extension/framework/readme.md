@@ -122,7 +122,7 @@ echo $exception->getMessage() // 'this is a wonderful exception's message'
 
 Every exception can be written in a log with the `->log()` method, where a log manager can be added trough the first parameter,
 but the default is the `\Framework\Page::getLog()`. The `\Framework\Exception\Strict` and `\Framework\Exception\System` get into 
-the log at the instantiation by default. 
+the log at the construct by default. 
 
 ## Extensions
 The function of the framework can be extended by creating extensions. All of the extensions have an identifier, which

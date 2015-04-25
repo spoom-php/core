@@ -3,8 +3,6 @@
 use Framework\Exception;
 use Framework\Extension;
 
-defined( '_PROTECT' ) or die( 'DENIED!' );
-
 /**
  * Class Helper
  * @package Framework\Exception
@@ -85,12 +83,12 @@ abstract class Helper {
    * note: the last given object only used for false throw!
    *
    * @param mixed $objects
-   * @param null  $_
+   * @param null  $args
    *
    * @return array
    * @throws \Exception
    */
-  public static function &thrower( $objects, $_ = null ) {
+  public static function &thrower( $objects, $args = null ) {
 
     if( func_num_args() == 1 ) {
 
@@ -104,17 +102,17 @@ abstract class Helper {
 
     } else {
 
-      $throw_alter = is_array( $objects ) ? $_ : null;
+      $throw_alter = is_array( $objects ) ? $args : null;
       $objects     = is_array( $objects ) ? $objects : func_get_args();
       $num         = count( $objects );
       if( $throw_alter == null ) $throw_alter = isset( $objects[ $num - 1 ] ) ? $objects[ $num - 1 ] : null;
 
       // iterate trought the given objects
       for( $i = 0; $i < $num - 1; ++$i ) {
-        $o = $objects[ $i ];
+        $object = $objects[ $i ];
 
-        if( $o === false ) self::thrower( $throw_alter );
-        else self::thrower( $o );
+        if( $object === false ) self::thrower( $throw_alter );
+        else self::thrower( $object );
       }
     }
 

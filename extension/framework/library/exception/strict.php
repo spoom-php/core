@@ -2,8 +2,6 @@
 
 use Framework\Exception;
 
-defined( '_PROTECT' ) or die( 'DENIED!' );
-
 /**
  * Exception for developers and indicates errors that can be fixed with coding
  *
@@ -21,7 +19,7 @@ class Strict extends Exception {
   public function __construct( $id, array $data = [ ], \Exception $previous = null ) {
     parent::__construct( $id, $data, $previous );
 
-    // strict exceptions always logged
+    // strict exceptions are always logged
     $this->log();
   }
 }

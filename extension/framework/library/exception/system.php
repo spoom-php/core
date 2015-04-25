@@ -2,8 +2,6 @@
 
 use Framework\Exception;
 
-defined( '_PROTECT' ) or die( 'DENIED!' );
-
 /**
  * Exception for unfixable errors. An offline database, missing file...something like that
  *
@@ -21,7 +19,7 @@ class System extends Exception {
   public function __construct( $id, array $data = [ ], \Exception $previous = null ) {
     parent::__construct( $id, $data, $previous );
 
-    // system exceptions always logged
+    // system exceptions are always logged
     $this->log();
   }
 }

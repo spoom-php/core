@@ -1,7 +1,5 @@
 <?php namespace Framework\Storage;
 
-defined( '_PROTECT' ) or die( 'DENIED!' );
-
 /**
  * Class Multi
  * @package Framework\Storage
@@ -71,7 +69,7 @@ class Multi extends Single {
         if( !empty( $value ) ) {
           $this->_namespace = (string) $value;
         }
-        
+
         break;
       default:
         parent::__set( $index, $value );
@@ -161,7 +159,7 @@ class Multi extends Single {
    *
    * @return mixed|object
    */
-  function jsonSerialize() {
+  public function jsonSerialize() {
     return $this->convert();
   }
 }

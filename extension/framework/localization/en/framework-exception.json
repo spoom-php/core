@@ -6,5 +6,7 @@
   "#5C": "Missing extension: {id}",
   "#6N": "Invalid extension id: {id}",
   "#7N": "Invalid log type: {type}",
-  "#8E": "Invalid algorithm '{algorithm}' for hashing"
+  "#8E": "Invalid algorithm '{algorithm}' for hashing",
+  "#9E": "Can not redirect to '{url}', header already sent",
+  "#10W": "Invalid localization: {localization}"
 }

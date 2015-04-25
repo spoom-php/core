@@ -3,8 +3,6 @@
 use Framework\Exception;
 use Framework\Helper\Library;
 
-defined( '_PROTECT' ) or die( 'DENIED!' );
-
 /**
  * This class can collect \Exception-s and return the collected exceptions
  *
@@ -98,11 +96,20 @@ class Collector extends Library implements \Iterator, \Countable {
     $return = [ ];
     $count  = count( $storage );
 
-    // list from zero to limit
-    if( !is_numeric( $limit ) ) for( $i = 0; $i < $offset && $i < $count; ++$i ) $return[ ] = $storage[ $i ];
+    if( !is_numeric( $limit ) ) {
 
-    // list from limit to max
-    else for( $i = $offset; $i < $limit && $i < $count; ++$i ) $return[ ] = $storage[ $i ];
+      // list from zero to limit
+      for( $i = 0; $i < $offset && $i < $count; ++$i ) {
+        $return[ ] = $storage[ $i ];
+      }
+
+    } else {
+
+      // list from limit to max
+      for( $i = $offset; $i < $limit && $i < $count; ++$i ) {
+        $return[ ] = $storage[ $i ];
+      }
+    }
 
     return $return;
   }

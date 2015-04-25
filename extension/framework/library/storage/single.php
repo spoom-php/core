@@ -3,8 +3,6 @@
 use Framework\Helper\Enumerable;
 use Framework\Helper\Library;
 
-defined( '_PROTECT' ) or die( 'DENIED!' );
-
 /**
  * Class Single
  * @package Framework\Storage
@@ -404,22 +402,24 @@ class Single extends Library implements \JsonSerializable, \ArrayAccess {
     }
 
     $result = Enumerable::search( $this->source, $index->token, $build );
-    if( Enumerable::is( $result->container ) ) switch( $this->_caching ) {
-      case self::CACHE_SIMPLE:
-        $this->cache[ 'search' ][ $index->id ] = [
-          'container' => $result->container,
-          'key'       => $result->key
-        ];
+    if( Enumerable::is( $result->container ) ) {
 
-        break;
+      switch( $this->_caching ) {
+        case self::CACHE_SIMPLE:
 
-      case self::CACHE_REFERENCE:
-        $this->cache[ 'search' ][ $index->id ] = [
-          'container' => &$result->container,
-          'key'       => $result->key
-        ];
+          $this->cache[ 'search' ][ $index->id ] = [
+            'container' => $result->container,
+            'key'       => $result->key
+          ];
+          break;
 
-        break;
+        case self::CACHE_REFERENCE:
+          $this->cache[ 'search' ][ $index->id ] = [
+            'container' => &$result->container,
+            'key'       => $result->key
+          ];
+          break;
+      }
     }
 
     return $result;
@@ -464,7 +464,7 @@ class Single extends Library implements \JsonSerializable, \ArrayAccess {
       if( $i == $index->id || strpos( $i, $index->id . '.' ) === 0 ) unset( $this->cache[ 'search' ][ $i ] );
     }
   }
-  
+
   /**
    * Wrapper for index parsing
    *

@@ -5,8 +5,6 @@ use Framework\Helper\String;
 use Framework\Page;
 use Framework\Storage\Directory as DirectoryStorage;
 
-defined( '_PROTECT' ) or die( 'DENIED!' );
-
 /**
  * Class Localization
  * @package Framework\Extension
@@ -35,10 +33,10 @@ class Localization extends DirectoryStorage {
    *
    * @param Extension $source
    */
-  function __construct( Extension $source ) {
+  public function __construct( Extension $source ) {
     parent::__construct( $source->directory( '' ) . Extension::DIRECTORY_LOCALIZATION, [ 'json', 'ini', 'xml' ] );
 
-    $this->_extension     = $source;
+    $this->_extension = $source;
   }
 
   /**
@@ -78,10 +76,15 @@ class Localization extends DirectoryStorage {
         $global = Page::getLocalization();
         if( $this->validate( $value ) ) $this->_localization = $value;
         else if( $global != $value && $this->validate( $global ) ) $this->_localization = $global;
-        else if( $this->validate( $this->_extension->option( 'manifest:localization' ) ) ) $this->_localization = $this->_extension->option( 'manifest:localization' );
+        else if( $this->validate( $this->_extension->option( 'manifest:localization' ) ) ) {
+          $this->_localization = $this->_extension->option( 'manifest:localization' );
+        }
 
         // log: debug
-        Page::getLog()->debug( 'The \'{localization}\' localization selected', [ 'localization' => $this->_localization, 'directory' => $this->_directory ], '\Framework\Extension\Localization' );
+        Page::getLog()->debug( 'The \'{localization}\' localization selected', [
+          'localization' => $this->_localization,
+          'directory'    => $this->_directory
+        ], '\Framework\Extension\Localization' );
 
         break;
       default:
@@ -100,9 +103,9 @@ class Localization extends DirectoryStorage {
     return is_string( $name ) && is_dir( _PATH_BASE . $this->_directory . $name . '/' );
   }
   /**
-   * @param string $namespace
+   * @param string      $namespace
    * @param string|null $extension
-   * @param bool $exist
+   * @param bool        $exist
    *
    * @return mixed
    */
