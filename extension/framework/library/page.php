@@ -60,7 +60,7 @@ abstract class Page {
    * the start and argument passing between run and stop methods
    */
   public static function execute() {
-    if( !_REPORTING ) ob_start();
+    if( !_REPORT_LEVEL ) ob_start();
     self::start();
 
     try {
@@ -70,7 +70,7 @@ abstract class Page {
       $content = [ ];
     }
 
-    $buffer = !_REPORTING ? ob_get_clean() : null;
+    $buffer = !_REPORT_LEVEL ? ob_get_clean() : null;
     echo self::stop( $content, $buffer );
 
     exit();
@@ -83,7 +83,7 @@ abstract class Page {
 
     // setup error reporting based on _REPORTING flag
     $reporting = 0;
-    switch( _REPORTING ) {
+    switch( _REPORT_LEVEL ) {
       case 0:
 
         error_reporting( -1 );

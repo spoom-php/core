@@ -51,7 +51,8 @@ abstract class String {
           break;
         case self::TYPE_INSERT_LEAVE:
         default:
-        $ifnull = $value[ 0 ];
+          $ifnull = $value[ 0 ];
+          break;
       }
 
       // replace the pattern
@@ -147,7 +148,7 @@ abstract class String {
   public static function toName( $name, $separator = '.' ) {
 
     // TODO escape only non words
-    $name = preg_replace( '/\\' . $separator . '+/i', $separator, trim( $name, $separator ) );
+    $name   = preg_replace( '/\\' . $separator . '+/i', $separator, trim( $name, $separator ) );
     $return = '';
 
     for( $i = 0, $length = mb_strlen( $name ); $i < $length; ++$i ) {

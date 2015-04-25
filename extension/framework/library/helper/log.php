@@ -175,7 +175,7 @@ class Log extends Library {
   public function create( $message, $data = [ ], $namespace = '', $type = self::TYPE_INFO ) {
 
     // check type against reporting level
-    if( !_LOGGING || _LOGGING < $type ) return true;
+    if( !_LOG_LEVEL || _LOG_LEVEL < $type ) return true;
     else if( !isset( self::$TYPE_NAME[ $type ] ) ) throw new Strict( self::EXCEPTION_NOTICE_INVALID_TYPE, [ 'type' => $type ] );
     else {
 

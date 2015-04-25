@@ -9,28 +9,28 @@ if( version_compare( PHP_VERSION, '5.4.0' ) < 0 ) die( 'You need at least PHP 5.
  * State variable that define how site react to exceptions and other type of missbehaviors and what type of errors
  * displayed by PHP. It can be:
  *  
- *  0: Disable all reporting
+ *  0: Silent mode
  *  1: Enable reporting from 'critical' level (PHP: E_COMPILE_ERROR | E_PARSE)
  *  2: Enable reporting from 'error' level (PHP: E_ERROR | E_CORE_ERROR | E_USER_ERROR | E_RECOVERABLE_ERROR)
  *  3: Enable reporting from 'warning' level (PHP: E_WARNING | E_COMPILE_WARNING | E_CORE_WARNING | E_USER_WARNING)
  *  4: Enable reporting from 'notice' level (PHP: E_NOTICE | E_USER_NOTICE)
  *  5: Enable reporting from 'info' level (PHP: E_STRICT | E_DEPRECATED | E_USER_DEPRECATED)
- *  6: Enable all reporting (PHP: E_ALL)
+ *  6: Debug mode
  */
-define( '_REPORTING', 6 );
+define( '_REPORT_LEVEL', 6 );
 
 /*
  * State variable that define how site handle log messages. It can be:
  *  
- *  0: Disable all log
+ *  0: Silent mode
  *  1: Enable logs from 'critical' level
  *  2: Enable logs from 'error' level
  *  3: Enable logs from 'warning' level
  *  4: Enable logs from 'notice' level
  *  5: Enable logs from 'info' level
- *  6: Enable all log level
+ *  6: Debug mode
  */
-define( '_LOGGING', 6 );
+define( '_LOG_LEVEL', 6 );
 
 /**
  * Detect secure http protocol
@@ -70,6 +70,19 @@ define( '_PATH_EXTENSION', 'extension/' );
 define( '_PATH_TMP', 'tmp/' );
 
 /**
+ * The extension id maximum depth. This is the maximum number of parts that is separated by the _EXTENSION_SEPARATOR
+ */
+define( '_EXTENSION_DEPTH', 3 );
+/**
+ * The extension id part separator character
+ */
+define( '_EXTENSION_SEPARATOR', '-' );
+/**
+ * The extensions library files path relative from the extension base directory
+ */
+define( '_EXTENSION_LIBRARY', 'library/' );
+
+/**
  * Class autoloader for the site.
  * Handle extension class load based on namespaces
  *
@@ -82,11 +95,11 @@ spl_autoload_register( function ( $class_name ) {
 
   // find the extension from the class namespace
   $extension = '';
-  for( $i = 0, $count = count( $pieces ); $i < 3 && $i < $count; ) {
+  for( $i = 0, $count = count( $pieces ); $i < _EXTENSION_DEPTH && $i < $count; ) {
 
     // check if this path is an extension: check existance of the extension directory
-    $tmp = $extension . ( $i > 0 ? '-' : '' ) . mb_strtolower( $pieces[ $i ] );
-    if( !is_dir( \_PATH_BASE . \_PATH_EXTENSION . $tmp . '/' ) ) break;
+    $tmp = $extension . ( $i > 0 ? _EXTENSION_SEPARATOR : '' ) . mb_strtolower( $pieces[ $i ] );
+    if( !is_dir( _PATH_BASE . _PATH_EXTENSION . $tmp . '/' ) ) break;
     else {
 
       ++$i;
@@ -100,7 +113,7 @@ spl_autoload_register( function ( $class_name ) {
     // finalize the class file path with the remain pieces
     $class     = array_pop( $pieces );
     $pieces = ltrim( implode( '/', array_splice( $pieces, $i ) ) . '/', '/' );
-    $directory = \_PATH_BASE . \_PATH_EXTENSION . $extension . '/library/';
+    $directory = _PATH_BASE . _PATH_EXTENSION . $extension . '/' . _EXTENSION_LIBRARY;
 
     // support for camelCase nested classes
     $matches = [ ];
