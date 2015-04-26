@@ -129,7 +129,7 @@ class Log extends Library {
    */
   public function __construct( $name, $namespace = '' ) {
 
-    $this->extension = new Extension( 'framework' );
+    $this->extension = Extension::instance( 'framework' );
 
     // save instance properties
     $this->_name      = $name;

@@ -66,7 +66,7 @@ abstract class Exception extends \Exception implements \JsonSerializable, Librar
 
     // parse id to "properties"
     $tmp              = Exception\Helper::parse( $id );
-    $this->_extension = new Extension( $tmp->extension );
+    $this->_extension = Extension::instance( $tmp->extension );
     $this->_type      = $tmp->type;
 
     // save data

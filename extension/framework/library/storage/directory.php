@@ -373,7 +373,7 @@ class Directory extends Multi {
     if( method_exists( $this, $method ) ) return $this->{$method}( $content, $type, $namespace, $meta );
     else {
 
-      $extension = new Extension( 'framework' );
+      $extension = Extension::instance( 'framework' );
       $event     = $extension->trigger(
         self::EVENT_CONVERT, [
           'content'   => $content,

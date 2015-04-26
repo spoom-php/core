@@ -177,7 +177,7 @@ class Event extends Library implements \Countable, \Iterator, \ArrayAccess {
    */
   private function load() {
     $this->listeners = [ ];
-    $extension = new Extension( 'framework' );
+    $extension = Extension::instance( 'framework' );
 
     // collect listeners if event exists and enabled
     $tmp = $extension->configuration->getArray( 'event-' . $this->_namespace . ':' . $this->_name );
@@ -207,8 +207,8 @@ class Event extends Library implements \Countable, \Iterator, \ArrayAccess {
     $index = $options->extension . ':' . $options->library;
     if( !isset( self::$cache[ $index ] ) ) {
 
-      $extension = new Extension( $options->extension );
-      $listener = $extension->instance( $options->library );
+      $extension = Extension::instance( $options->extension );
+      $listener  = $extension->create( $options->library );
 
       if( !$listener || !is_callable( [ $listener, 'execute' ] ) ) {
 

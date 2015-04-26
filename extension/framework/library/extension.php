@@ -17,6 +17,13 @@ use Framework\Helper\Library;
 class Extension extends Library {
 
   /**
+   * Extension instance cache
+   *
+   * @var array[string]Extension
+   */
+  private static $instance = [ ];
+  
+  /**
    * Exception code for invalid manifest data. This mostly indicates the extension package and name
    * missmatch in the manifest and the extension path. One data will be passed:
    *  - id [string]: Extension id
@@ -216,7 +223,7 @@ class Extension extends Library {
     return false;
   }
   /**
-   * Get extension library class instance with given param.
+   * Create a new instance from extension library class with given param.
    *
    * @param string|array $class_name String with dot separated namespace ( exclude Package\Name\ ) or an array of this
    *                                 strings ( return the first exist )
@@ -224,7 +231,7 @@ class Extension extends Library {
    *
    * @return mixed
    */
-  public function instance( $class_name, $param = null ) {
+  public function create( $class_name, $param = null ) {
 
     $class = $this->library( $class_name );
     if( $class ) {
@@ -251,5 +258,21 @@ class Extension extends Library {
 
     $event = new Extension\Event( $this->id, $event, $arguments );
     return $event->execute();
+  }
+
+  /**
+   * Get an extension instance from the shared instance cache
+   *
+   * @param string $id The extension id
+   *
+   * @return Extension
+   */
+  public static function instance( $id ) {
+
+    if( !isset( self::$instance[ $id ] ) ) {
+      self::$instance[ $id ] = new Extension( $id );
+    }
+
+    return self::$instance[ $id ];
   }
 }

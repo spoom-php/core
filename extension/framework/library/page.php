@@ -117,7 +117,7 @@ abstract class Page {
     }
 
     // setup localization options
-    $extension = new Extension( 'framework' );
+    $extension = Extension::instance( 'framework' );
     self::$localization = $extension->option( 'manifest:localization', 'en' );
     setlocale( LC_ALL, $extension->option( 'default:locale', null ) );
 
@@ -138,7 +138,7 @@ abstract class Page {
    * @return array|null The collected page contents
    */
   public static function run() {
-    $extension = new Extension( 'framework' );
+    $extension = Extension::instance( 'framework' );
 
     // call display event to let extensions render the content
     $event = $extension->trigger( self::EVENT_RUN );
@@ -157,7 +157,7 @@ abstract class Page {
     ob_start();
 
     // call display end event ( the render )
-    $extension = new Extension( 'framework' );
+    $extension = Extension::instance( 'framework' );
     $extension->trigger( self::EVENT_STOP, [
       'content' => $content,
       'buffer'  => $buffer
@@ -221,7 +221,7 @@ abstract class Page {
   public static function getLocalization() {
     if( !self::$localization ) {
 
-      $extension = new Extension( 'framework' );
+      $extension = Extension::instance( 'framework' );
       self::$localization = $extension->option( 'manifest:localization', 'en' );
     }
 
