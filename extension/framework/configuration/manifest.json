@@ -1,6 +1,6 @@
 {
-  "package": "framework",
-  "version": "0.4.4",
+  "id": "framework",
+  "version": "0.5.0",
   "localization": "en",
   "author": {
     "name": "Nagy Samu",
