@@ -153,7 +153,7 @@ version (**version**), default localization (**localization**, and the selected 
 **/extension/framework/configuration/manifest.json**
 `````javascript
 {
-  "package": "framework",
+  "id": "framework",
   "version": "0.5.0",
   "localization": "en",
   "author": {
@@ -257,9 +257,9 @@ handling:
  
 Every level has a dedicated method in the class.
 
-With the `_LOGGING` constant in the **define.php** you can ignore all log below a level. The constant value is the lowest
+With the `_LOG_LEVEL` constant in the **define.php** you can ignore all log below a level. The constant value is the lowest
 level that is NOT ignored. In the list above the critical is the highest and the debug is the lowest level, the rest is
-in the right order. For example: if the `_LOGGING` value is 4, then the`\Framework\Helper\Log::TYPE_NOTICE` ...
+in the right order. For example: if the `_LOG_LEVEL` value is 4, then the`\Framework\Helper\Log::TYPE_NOTICE` ...
 `\Framework\Helper\Log::TYPE_CRITICAL` intervall will be logged, the entries with `\Framework\Helper\Log::TYPE_INFO` and
 `\Framework\Helper\Log::TYPE_DEBUG` level will be ignored. The 6 value means ALL, the 0 is the NONE.
  
