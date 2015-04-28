@@ -97,19 +97,24 @@ abstract class Helper {
    */
   public static function search( array &$input ) {
 
-    $counter   = 0;
-    $extension = '';
-    while( !empty( $input ) && $counter++ < self::ID_PART ) {
+    $name   = '';
+    $length = 0;
+    for( $i = 0, $count = count( $input ), $tmp = ''; $i < _EXTENSION_DEPTH && $i < $count; ++$i ) {
 
-      $tmp = ( empty( $extension ) ? '' : self::ID_SEPARATOR ) . $input[ 0 ];
-      if( !self::exist( $tmp, true ) ) return empty( $extension ) ? false : $extension;
-      else {
+      // check if this path is an extension: check existance of the extension directory
+      $tmp .= ( $i > 0 ? _EXTENSION_SEPARATOR : '' ) . mb_strtolower( $input[ $i ] );
+      if( self::exist( $tmp, true ) ) {
 
-        $extension = $tmp;
-        array_shift( $input );
+        $length = $i + 1;
+        $name   = $tmp;
       }
     }
 
-    return false;
+    if( !$length ) return '';
+    else {
+
+      $input = array_slice( $input, $length );
+      return $name;
+    }
   }
 }
