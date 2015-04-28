@@ -95,14 +95,14 @@ spl_autoload_register( function ( $class_name ) {
 
   // find the extension from the class namespace
   $extension = '';
-  for( $i = 0, $count = count( $pieces ); $i < _EXTENSION_DEPTH && $i < $count; ) {
+  $length = 0;
+  for( $i = 0, $count = count( $pieces ), $tmp = ''; $i < _EXTENSION_DEPTH && $i < $count; ++$i ) {
 
     // check if this path is an extension: check existance of the extension directory
-    $tmp = $extension . ( $i > 0 ? _EXTENSION_SEPARATOR : '' ) . mb_strtolower( $pieces[ $i ] );
-    if( !is_dir( _PATH_BASE . _PATH_EXTENSION . $tmp . '/' ) ) break;
-    else {
+    $tmp .= ( $i > 0 ? _EXTENSION_SEPARATOR : '' ) . mb_strtolower( $pieces[ $i ] );
+    if( is_dir( _PATH_BASE . _PATH_EXTENSION . $tmp . '/' ) ) {
 
-      ++$i;
+      $length = $i + 1;
       $extension = $tmp;
     }
   }
@@ -112,7 +112,7 @@ spl_autoload_register( function ( $class_name ) {
 
     // finalize the class file path with the remain pieces
     $class     = array_pop( $pieces );
-    $pieces = ltrim( implode( '/', array_splice( $pieces, $i ) ) . '/', '/' );
+    $pieces = ltrim( implode( '/', array_splice( $pieces, $length ) ) . '/', '/' );
     $directory = _PATH_BASE . _PATH_EXTENSION . $extension . '/' . _EXTENSION_LIBRARY;
 
     // support for camelCase nested classes
