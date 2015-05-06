@@ -7,7 +7,7 @@ use Framework\Storage\Directory as DirectoryStorage;
  * Class Configuration
  * @package Framework\Extension
  *
- * @property Extension $extension
+ * @property-read Extension $extension
  */
 final class Configuration extends DirectoryStorage {
 

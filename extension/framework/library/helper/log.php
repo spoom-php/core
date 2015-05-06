@@ -8,8 +8,8 @@ use Framework\Storage\Single;
  * Class Log
  * @package Framework\Helper
  *
- * @property string namespace The default namespace for log entries
- * @property string name      The instance identifier
+ * @property-read string namespace The default namespace for log entries
+ * @property-read string name      The instance identifier
  */
 class Log extends Library {
 

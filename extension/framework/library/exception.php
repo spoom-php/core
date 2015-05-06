@@ -10,10 +10,10 @@ use Framework\Storage\Single;
  *
  * @package Framework
  *
- * @property array       $data      The data attached to the exception
- * @property Extension   $extension The message source
- * @property string      $type      The "danger level". This can only be a self::TYPE_* constants
- * @property string      $id        The unique identifier. The format is '<extension>#<code><type>'
+ * @property-read array       $data      The data attached to the exception
+ * @property-read Extension   $extension The message source
+ * @property-read string      $type      The "danger level". This can only be a self::TYPE_* constants
+ * @property-read string      $id        The unique identifier. The format is '<extension>#<code><type>'
  */
 abstract class Exception extends \Exception implements \JsonSerializable, LibraryInterface {
 

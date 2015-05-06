@@ -10,13 +10,13 @@ use Framework\Page;
  * Class Event
  * @package Framework\Extension
  *
- * @property bool        $prevented The default event action has been prevented or not
- * @property bool        $stopped   Stopped next handler call or not
- * @property string      $name      The event name
- * @property string      $namespace The event namespace
- * @property array       $argument  The arguments passed to the event call
- * @property array|null  $result    The handler's results in an array indexed by the handler names
- * @property Collector   $collector The exception collector
+ * @property      bool        $prevented The default event action has been prevented or not
+ * @property      bool        $stopped   Stopped next handler call or not
+ * @property-read string      $name      The event name
+ * @property-read string      $namespace The event namespace
+ * @property-read array       $argument  The arguments passed to the event call
+ * @property-read array|null  $result    The handler's results in an array indexed by the handler names
+ * @property-read Collector   $collector The exception collector
  */
 class Event extends Library implements \Countable, \Iterator, \ArrayAccess {
 

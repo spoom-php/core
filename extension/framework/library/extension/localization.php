@@ -9,8 +9,8 @@ use Framework\Storage\Directory as DirectoryStorage;
  * Class Localization
  * @package Framework\Extension
  *
- * @property Extension $extension
- * @property string    $localization
+ * @property-read Extension $extension
+ * @property      string    $localization
  */
 class Localization extends DirectoryStorage {
 
