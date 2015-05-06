@@ -28,6 +28,17 @@ abstract class Helper {
   const REGEXP_ID = '/^([a-z\\-]+)#([0-9]+)([NWEC])$/';
 
   /**
+   * Test the given object instance is \Exception or Collector and has \Exception
+   *
+   * @param mixed $object
+   *
+   * @return boolean
+   */
+  public static function is( $object ) {
+    return $object instanceof \Exception || ( $object instanceof Collector && $object->contains() );
+  }
+
+  /**
    * Exception id parser to information object
    *
    * @param string $id ::REGEXP_ID formatted string
@@ -46,7 +57,6 @@ abstract class Helper {
       'type'      => $matches[ 3 ],
     ];
   }
-
   /**
    * Build the exception message
    *
@@ -58,6 +68,30 @@ abstract class Helper {
    */
   public static function build( Extension $extension, $code, array $data = [ ] ) {
     return $extension->text( 'framework-exception:#' . $code, $data );
+  }
+  /**
+   * Extract exception data into array format
+   *
+   * @param \Exception $exception The exception to convert
+   * @param bool       $more Append additional data to the result
+   *
+   * @return array|null
+   */
+  public static function convert( \Exception $exception = null, $more = false ) {
+
+    if( empty( $exception ) ) return null;
+    else if( $exception instanceof Exception ) return $exception->toArray( $more );
+    else {
+      
+      $tmp = [ 'code' => $exception->getCode(), 'message' => $exception->getMessage() ];
+      if( $more ) {
+        $tmp[ 'line' ]     = $more ? ( $exception->getFile() . ':' . $exception->getLine() ) : null;
+        $tmp[ 'trace' ]    = $more ? $exception->getTrace() : null;
+        $tmp[ 'previous' ] = $more ? self::convert( $exception->getPrevious(), $more ) : null;
+      }
+
+      return $tmp;
+    }
   }
 
   /**
@@ -117,16 +151,5 @@ abstract class Helper {
     }
 
     return $objects;
-  }
-
-  /**
-   * Test the given object instance is \Exception or Collector and has \Exception
-   *
-   * @param mixed $object
-   *
-   * @return boolean
-   */
-  public static function is( $object ) {
-    return $object instanceof \Exception || ( $object instanceof Collector && $object->contains() );
   }
 }

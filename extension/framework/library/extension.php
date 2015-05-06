@@ -10,9 +10,9 @@ use Framework\Helper\Library;
  *
  * @package Framework
  *
- * @property string                        $id            Unique name
- * @property Extension\Configuration       $configuration The configuration storage object
- * @property Extension\Localization        $localization  The localization storage object
+ * @property-read string                  $id            Unique name
+ * @property-read Extension\Configuration $configuration The configuration storage object
+ * @property-read Extension\Localization  $localization  The localization storage object
  */
 class Extension extends Library {
 
@@ -22,7 +22,7 @@ class Extension extends Library {
    * @var array[string]Extension
    */
   private static $instance = [ ];
-  
+
   /**
    * Exception code for invalid manifest data. This mostly indicates the extension package and name
    * missmatch in the manifest and the extension path. One data will be passed:
