@@ -1,5 +1,6 @@
 <?php namespace Framework;
 
+use Framework\Exception\Helper;
 use Framework\Extension;
 use Framework\Helper\LibraryInterface;
 use Framework\Helper\Log;
@@ -144,6 +145,7 @@ abstract class Exception extends \Exception implements \JsonSerializable, Librar
       }
 
       // create a new log entry
+      $data['exception'] = $this->toArray( true );
       $instance->create( $this->message, $this->data + $data, $this->id, $type );
     }
 
@@ -153,24 +155,37 @@ abstract class Exception extends \Exception implements \JsonSerializable, Librar
   /**
    * Make an associative array from the exception
    *
+   * @param bool $more Append additional data to the result
+   *
    * @return array
    */
-  public function toArray() {
-    return [
+  public function toArray( $more = false ) {
+    
+    $tmp = [
       'id'        => $this->id,
-      'code'      => $this->code,
+      'code'      => $this->getCode(),
       'message'   => $this->getMessage(),
       'extension' => $this->_extension ? $this->_extension->id : null,
       'data'      => $this->_data
     ];
+
+    if( $more ) {
+      $tmp[ 'line' ]  = $this->getFile() . ':' . $this->getLine();
+      $tmp[ 'trace' ] = $this->getTrace();
+      $tmp[ 'previous' ] = Helper::convert( $this->getPrevious(), $more );
+    }
+
+    return $tmp;
   }
   /**
    * Like toArray() just object
    *
+   * @param bool $more Append additional data to the result
+   *
    * @return object
    */
-  public function toObject() {
-    return (object) $this->toArray();
+  public function toObject( $more = false ) {
+    return (object) $this->toArray( $more );
   }
 
   /**
