@@ -8,9 +8,9 @@ use Framework\Page;
  * Class Directory
  * @package Framework\Storage
  *
- * @property string $directory The directory base for the storage
- * @property string $default   The default extension for saving files
- * @property array  $allow     The allowed file extension to handle as namespace
+ * @property-read string $directory The directory base for the storage
+ * @property      string $default   The default extension for saving files
+ * @property-read array  $allow     The allowed file extension to handle as namespace
  */
 class Directory extends Multi {
 
