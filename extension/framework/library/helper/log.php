@@ -33,27 +33,27 @@ class Log extends Library {
   /**
    * Level of critical logs
    */
-  const TYPE_CRITICAL = 1;
+  const TYPE_CRITICAL = _LEVEL_CRITICAL;
   /**
    * Level of error logs
    */
-  const TYPE_ERROR = 2;
+  const TYPE_ERROR = _LEVEL_ERROR;
   /**
    * Level of warning logs
    */
-  const TYPE_WARNING = 3;
+  const TYPE_WARNING = _LEVEL_WARNING;
   /**
    * Level of notice logs
    */
-  const TYPE_NOTICE = 4;
+  const TYPE_NOTICE = _LEVEL_NOTICE;
   /**
    * Level of info logs
    */
-  const TYPE_INFO = 5;
+  const TYPE_INFO = _LEVEL_INFO;
   /**
    * Level of debug logs
    */
-  const TYPE_DEBUG = 6;
+  const TYPE_DEBUG = _LEVEL_DEBUG;
 
   /**
    * Name of critical logs
@@ -180,7 +180,7 @@ class Log extends Library {
     else {
 
       // define local variables and trigger event for external loggers
-      $data = $data instanceof Single ? $data : new Single( $data );
+      $data        = $data instanceof Single ? $data : new Single( $data );
       $namespace   = empty( $namespace ) ? $this->_namespace : $namespace;
       $description = String::insert( $message, $data, String::TYPE_INSERT_LEAVE );
       $event       = $this->extension->trigger( self::EVENT_CREATE, [

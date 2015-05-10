@@ -19,21 +19,21 @@ use Framework\Storage\Single;
 abstract class Exception extends \Exception implements \JsonSerializable, LibraryInterface {
 
   /**
-   * Type for impactless exception
+   * Type for exception that MUST break the execution
    */
-  const TYPE_NOTICE = 'N';
-  /**
-   * Type for exception that SHOULD NOT break the execution
-   */
-  const TYPE_WARNING = 'W';
+  const TYPE_CRITICAL = 'C';
   /**
    * Type for exception that MAY break the execution
    */
   const TYPE_ERROR = 'E';
   /**
-   * Type for exception that MUST break the execution
+   * Type for exception that SHOULD NOT break the execution
    */
-  const TYPE_CRITICAL = 'C';
+  const TYPE_WARNING = 'W';
+  /**
+   * Type for impactless exception
+   */
+  const TYPE_NOTICE = 'N';
 
   /**
    * Insertion data
