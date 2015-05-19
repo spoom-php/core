@@ -60,7 +60,7 @@ abstract class Page {
    * the start and argument passing between run and stop methods
    */
   public static function execute() {
-    if( !_REPORT_LEVEL ) ob_start();
+    if( _REPORT_LEVEL != _LEVEL_DEBUG ) ob_start();
     self::start();
 
     try {
@@ -70,10 +70,8 @@ abstract class Page {
       $content = [ ];
     }
 
-    $buffer = !_REPORT_LEVEL ? ob_get_clean() : null;
-    echo self::stop( $content, $buffer );
-
-    exit();
+    $buffer = _REPORT_LEVEL != _LEVEL_DEBUG ? ob_get_clean() : null;
+    self::stop( $content, $buffer );
   }
 
   /**
@@ -81,10 +79,12 @@ abstract class Page {
    */
   public static function start() {
 
+    // TODO convert $argv into request variables to better CLI support
+
     // setup error reporting based on _REPORTING flag
     $reporting = 0;
     switch( _REPORT_LEVEL ) {
-      case 0:
+      case _LEVEL_NONE:
 
         error_reporting( -1 );
         ini_set( 'display_errors', 0 );
@@ -92,22 +92,22 @@ abstract class Page {
         break;
 
       /** @noinspection PhpMissingBreakStatementInspection */
-      case 6:
+      case _LEVEL_DEBUG:
         $reporting = E_ALL;
       /** @noinspection PhpMissingBreakStatementInspection */
-      case 5:
+      case _LEVEL_INFO:
         $reporting |= E_STRICT | E_DEPRECATED | E_USER_DEPRECATED;
       /** @noinspection PhpMissingBreakStatementInspection */
-      case 4:
+      case _LEVEL_NOTICE:
         $reporting |= E_NOTICE | E_USER_NOTICE;
       /** @noinspection PhpMissingBreakStatementInspection */
-      case 3:
+      case _LEVEL_WARNING:
         $reporting |= E_WARNING | E_COMPILE_WARNING | E_CORE_WARNING | E_USER_WARNING;
       /** @noinspection PhpMissingBreakStatementInspection */
-      case 2:
+      case _LEVEL_ERROR:
         $reporting |= E_ERROR | E_CORE_ERROR | E_USER_ERROR | E_RECOVERABLE_ERROR;
       /** @noinspection PhpMissingBreakStatementInspection */
-      case 1:
+      case _LEVEL_CRITICAL:
         $reporting |= E_COMPILE_ERROR | E_PARSE;
       /** @noinspection PhpMissingBreakStatementInspection */
       default:
@@ -150,11 +150,8 @@ abstract class Page {
    *
    * @param array       $content the page content array
    * @param string|null $buffer  additional but probably trash or error information
-   *
-   * @return string the page result
    */
   public static function stop( array $content = [ ], $buffer = null ) {
-    ob_start();
 
     // call display end event ( the render )
     $extension = Extension::instance( 'framework' );
@@ -162,12 +159,12 @@ abstract class Page {
       'content' => $content,
       'buffer'  => $buffer
     ] );
-
-    return ob_get_clean();
   }
 
   /**
    * Redirect to an url with header redirect
+   *
+   * FIXME This is HTTP related method which is need to be changed or removed (?)
    *
    * @param mixed $url  The new url. It will be converted to string
    * @param int   $code HTTP Redirect type respsonse code. This number added to 300 to make 30x status code
@@ -191,7 +188,9 @@ abstract class Page {
     }
 
     // call stop (or exit) to finish the page
-    $stop ? self::stop() : exit();
+    if( $stop ) self::stop();
+
+    exit();
   }
 
   /**

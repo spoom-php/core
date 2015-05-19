@@ -5,46 +5,82 @@
  */
 if( version_compare( PHP_VERSION, '5.4.0' ) < 0 ) die( 'You need at least PHP 5.4, but you only have ' . PHP_VERSION . '.' );
 
+/**
+ * The level of silence
+ */
+define( '_LEVEL_NONE', 0 );
+/**
+ * The level of critical problems
+ */
+define( '_LEVEL_CRITICAL', 1 );
+/**
+ * The level of errors
+ */
+define( '_LEVEL_ERROR', 2 );
+/**
+ * The level of warnings
+ */
+define( '_LEVEL_WARNING', 3 );
+/**
+ * The level of noticable problems but nothing serious
+ */
+define( '_LEVEL_NOTICE', 4 );
+/**
+ * The level of informations
+ */
+define( '_LEVEL_INFO', 5 );
+/**
+ * The level of all problems (debugging)
+ */
+define( '_LEVEL_DEBUG', 6 );
+
 /*
  * State variable that define how site react to exceptions and other type of missbehaviors and what type of errors
  * displayed by PHP. It can be:
  *  
- *  0: Silent mode
- *  1: Enable reporting from 'critical' level (PHP: E_COMPILE_ERROR | E_PARSE)
- *  2: Enable reporting from 'error' level (PHP: E_ERROR | E_CORE_ERROR | E_USER_ERROR | E_RECOVERABLE_ERROR)
- *  3: Enable reporting from 'warning' level (PHP: E_WARNING | E_COMPILE_WARNING | E_CORE_WARNING | E_USER_WARNING)
- *  4: Enable reporting from 'notice' level (PHP: E_NOTICE | E_USER_NOTICE)
- *  5: Enable reporting from 'info' level (PHP: E_STRICT | E_DEPRECATED | E_USER_DEPRECATED)
- *  6: Debug mode
+ *  _LEVEL_NONE: Silent mode
+ *  _LEVEL_CRITICAL: Enable reporting from 'critical' level (PHP: E_COMPILE_ERROR | E_PARSE)
+ *  _LEVEL_ERROR: Enable reporting from 'error' level (PHP: E_ERROR | E_CORE_ERROR | E_USER_ERROR | E_RECOVERABLE_ERROR)
+ *  _LEVEL_WARNING: Enable reporting from 'warning' level (PHP: E_WARNING | E_COMPILE_WARNING | E_CORE_WARNING | E_USER_WARNING)
+ *  _LEVEL_NOTICE: Enable reporting from 'notice' level (PHP: E_NOTICE | E_USER_NOTICE)
+ *  _LEVEL_INFO: Enable reporting from 'info' level (PHP: E_STRICT | E_DEPRECATED | E_USER_DEPRECATED)
+ *  _LEVEL_DEBUG: Debug mode
  */
-define( '_REPORT_LEVEL', 6 );
-
+define( '_REPORT_LEVEL', _LEVEL_NONE );
 /*
  * State variable that define how site handle log messages. It can be:
  *  
- *  0: Silent mode
- *  1: Enable logs from 'critical' level
- *  2: Enable logs from 'error' level
- *  3: Enable logs from 'warning' level
- *  4: Enable logs from 'notice' level
- *  5: Enable logs from 'info' level
- *  6: Debug mode
+ *  _LEVEL_NONE: Silent mode
+ *  _LEVEL_CRITICAL: Enable logs from 'critical' level
+ *  _LEVEL_ERROR: Enable logs from 'error' level
+ *  _LEVEL_WARNING: Enable logs from 'warning' level
+ *  _LEVEL_NOTICE: Enable logs from 'notice' level
+ *  _LEVEL_INFO: Enable logs from 'info' level
+ *  _LEVEL_DEBUG: Debug mode
  */
-define( '_LOG_LEVEL', 6 );
+define( '_LOG_LEVEL', _LEVEL_NONE );
 
-/**
- * Detect secure http protocol
- */
-define( '_URL_HTTPS', isset( $_SERVER[ 'HTTPS' ] ) && $_SERVER[ 'HTTPS' ] != 'off' );
 /**
  * The path part of the url.
  * This will be the relative path to the index.php ( or an another entry point of the site, tha include this file )
  */
 define( '_URL_PATH', rtrim( dirname( $_SERVER[ 'SCRIPT_NAME' ] ), '\\/ ' ) . '/' );
 /**
- * The host name from the url
+ * Detect secure http protocol
  */
-define( '_URL_HOST', $_SERVER[ 'SERVER_NAME' ] . ( $_SERVER[ 'SERVER_PORT' ] != [ 80 ] ? ( ':' . $_SERVER[ 'SERVER_PORT' ] ) : '' ) );
+define( '_URL_HTTPS', isset( $_SERVER[ 'HTTPS' ] ) && $_SERVER[ 'HTTPS' ] != 'off' );
+/**
+ * The server name from the url, configuration or the ip address
+ */
+define( '_URL_SERVER', @$_SERVER[ 'SERVER_NAME' ] ?: gethostbyname( gethostname() ) );
+/**
+ * The port number for the request, or null if not defined
+ */
+define( '_URL_PORT', @$_SERVER[ 'SERVER_PORT' ] ?: null );
+/**
+ * The host name from the url with port definition if necessary
+ */
+define( '_URL_HOST', _URL_SERVER . ( !_URL_PORT || _URL_PORT == ( _URL_HTTPS ? 443 : 80 ) ? '' : ( ':' . _URL_PORT ) ) );
 /**
  * The root url with protocol, host and port definition ( if neccessary )
  */
