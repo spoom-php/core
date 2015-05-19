@@ -61,18 +61,26 @@ define( '_REPORT_LEVEL', _LEVEL_NONE );
 define( '_LOG_LEVEL', _LEVEL_NONE );
 
 /**
- * Detect secure http protocol
- */
-define( '_URL_HTTPS', isset( $_SERVER[ 'HTTPS' ] ) && $_SERVER[ 'HTTPS' ] != 'off' );
-/**
  * The path part of the url.
  * This will be the relative path to the index.php ( or an another entry point of the site, tha include this file )
  */
 define( '_URL_PATH', rtrim( dirname( $_SERVER[ 'SCRIPT_NAME' ] ), '\\/ ' ) . '/' );
 /**
- * The host name from the url
+ * Detect secure http protocol
  */
-define( '_URL_HOST', $_SERVER[ 'SERVER_NAME' ] . ( $_SERVER[ 'SERVER_PORT' ] != [ 80 ] ? ( ':' . $_SERVER[ 'SERVER_PORT' ] ) : '' ) );
+define( '_URL_HTTPS', isset( $_SERVER[ 'HTTPS' ] ) && $_SERVER[ 'HTTPS' ] != 'off' );
+/**
+ * The server name from the url, configuration or the ip address
+ */
+define( '_URL_SERVER', @$_SERVER[ 'SERVER_NAME' ] ?: gethostbyname( gethostname() ) );
+/**
+ * The port number for the request, or null if not defined
+ */
+define( '_URL_PORT', @$_SERVER[ 'SERVER_PORT' ] ?: null );
+/**
+ * The host name from the url with port definition if necessary
+ */
+define( '_URL_HOST', _URL_SERVER . ( !_URL_PORT || _URL_PORT == ( _URL_HTTPS ? 443 : 80 ) ? '' : ( ':' . _URL_PORT ) ) );
 /**
  * The root url with protocol, host and port definition ( if neccessary )
  */
