@@ -143,7 +143,7 @@ class Single extends Library implements \JsonSerializable, \ArrayAccess {
 
     // don't set the source attribute directly
     $result = $this->search( $index = $this->index( $index ), true );
-    if( $index && $result->key ) {
+    if( $index && $result->key != '' ) {
 
       if( is_array( $result->container ) ) $target = &$result->container[ $result->key ];
       else $target = &$result->container->{$result->key};
@@ -172,7 +172,7 @@ class Single extends Library implements \JsonSerializable, \ArrayAccess {
     $result = $this->search( $index = $this->index( $index ), true );
 
     // set the value
-    if( !$result->key ) $value = &$result->container;
+    if( $result->key == '' ) $value = &$result->container;
     else if( is_array( $result->container ) ) $value = &$result->container[ $result->key ];
     else $value = &$result->container->{$result->key};
 
@@ -208,7 +208,7 @@ class Single extends Library implements \JsonSerializable, \ArrayAccess {
     $result = $this->search( $index = $this->index( $index ) );
     if( $result->exist ) {
 
-      if( !$result->key ) $result->container = [ ];
+      if( $result->key == '' ) $result->container = [ ];
       else if( is_array( $result->container ) ) unset( $result->container[ $result->key ] );
       else unset( $result->container->{$result->key} );
 
@@ -251,7 +251,7 @@ class Single extends Library implements \JsonSerializable, \ArrayAccess {
       if( $result->exist ) {
 
         // find the value
-        if( !$result->key ) $value = &$result->container;
+        if( $result->key == '' ) $value = &$result->container;
         else if( is_array( $result->container ) ) $value = &$result->container[ $result->key ];
         else $value = &$result->container->{$result->key};
 
@@ -259,7 +259,7 @@ class Single extends Library implements \JsonSerializable, \ArrayAccess {
         if( is_array( $value ) || is_object( $value ) ) {
 
           foreach( $value as $key => $data ) {
-            $full_key = trim( $index->key ) == '' ? ( $index->string . $key ) : ( $index->string . self::SEPARATOR_KEY . $key );
+            $full_key = trim( $index->key ) == '' ? ( $index->id . $key ) : ( $index->id . self::SEPARATOR_KEY . $key );
             $result   = $function( $key, $data, !$index ? $key : $full_key, $this );
 
             if( $result === false ) break;
@@ -433,21 +433,22 @@ class Single extends Library implements \JsonSerializable, \ArrayAccess {
    */
   protected function parse( $index ) {
 
-    $result = (object) [ 'id' => '', 'key' => '', 'token' => [ ], 'type' => null ];
     if( !is_string( $index ) ) return null;
     else {
 
+      $result = (object) [ 'id' => '', 'key' => '', 'token' => [ ], 'type' => null ];
+
       // normalize the index to id
-      $tmp = trim( $index, ' ' . self::SEPARATOR_KEY . self::SEPARATOR_TYPE );
+      $tmp = rtrim( trim( $index, ' ' . self::SEPARATOR_KEY ), self::SEPARATOR_TYPE );
       $result->id = $tmp;
 
       // define and parse key, type
-      $tmp = explode( self::SEPARATOR_TYPE, $tmp );
-      $result->key  = $tmp[ 0 ];
+      $tmp         = explode( self::SEPARATOR_TYPE, $tmp, 2 );
+      $result->key = trim( $tmp[ 0 ] );
       $result->type = empty( $tmp[ 1 ] ) ? null : $tmp[ 1 ];
 
       // explode key into tokens
-      $result->token = empty( $result->key ) ? [ ] : explode( self::SEPARATOR_KEY, $result->key );
+      $result->token = $result->key == '' ? [ ] : explode( self::SEPARATOR_KEY, $result->key );
 
       return $result;
     }
@@ -459,7 +460,7 @@ class Single extends Library implements \JsonSerializable, \ArrayAccess {
    */
   protected function clean( $index = null ) {
 
-    if( empty( $index ) || empty( $index->id ) ) $this->cache[ 'search' ] = [ ];
+    if( !$index || trim( $index->id ) == '' ) $this->cache[ 'search' ] = [ ];
     else foreach( $this->cache[ 'search' ] as $i => $_ ) {
       if( $i == $index->id || strpos( $i, $index->id . '.' ) === 0 ) unset( $this->cache[ 'search' ][ $i ] );
     }
@@ -496,8 +497,8 @@ class Single extends Library implements \JsonSerializable, \ArrayAccess {
 
     // define the default result
     $tmp = $this->search( $index );
-    if( $tmp->exist ) $result = $tmp->key ? ( is_array( $tmp->container ) ? $tmp->container[ $tmp->key ] : $tmp->container->{$tmp->key} ) : $tmp->container;
-    else $result = $default;
+    if( !$tmp->exist ) $result = $default;
+    else $result = $tmp->key != '' ? ( is_array( $tmp->container ) ? $tmp->container[ $tmp->key ] : $tmp->container->{$tmp->key} ) : $tmp->container;
 
     // switch result based on the type
     switch( $index->type ) {
