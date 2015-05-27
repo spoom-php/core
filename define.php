@@ -89,7 +89,7 @@ define( '_URL_ROOT', 'http' . ( _URL_HTTPS ? 's' : '' ) . '://' . _URL_HOST . '/
  * The root url with the url path.
  * This is the "real" url with all neccessary parameter
  */
-define( '_URL_BASE', _URL_ROOT . ( _URL_PATH != '/' ? _URL_PATH : '' ) );
+define( '_URL_BASE', _URL_ROOT . ltrim( _URL_PATH, '/' ) );
 
 /**
  * Directory base of the framework.
