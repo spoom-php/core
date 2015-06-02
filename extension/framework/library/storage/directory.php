@@ -255,7 +255,7 @@ class Directory extends Multi {
   /**
    * @inheritdoc
    */
-  protected function search( $index, $build = false ) {
+  protected function search( $index, $build = false, $is_read = true ) {
 
     // try load the file container
     if( !isset( $this->loaded[ $index->namespace ] ) ) {
@@ -263,7 +263,7 @@ class Directory extends Multi {
     }
 
     // delegate problem to the parent
-    return parent::search( $index, $build );
+    return parent::search( $index, $build, $is_read );
   }
 
   /**
