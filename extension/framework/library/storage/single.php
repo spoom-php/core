@@ -142,8 +142,8 @@ class Single extends Library implements \JsonSerializable, \ArrayAccess {
   public function set( $index, $value ) {
 
     // don't set the source attribute directly
-    $result = $this->search( $index = $this->index( $index ), true );
-    if( $index && $result->key != '' ) {
+    $result = $this->search( $index = $this->index( $index ), true, false );
+    if( $index && $result->key !== null ) {
 
       if( is_array( $result->container ) ) $target = &$result->container[ $result->key ];
       else $target = &$result->container->{$result->key};
@@ -169,10 +169,10 @@ class Single extends Library implements \JsonSerializable, \ArrayAccess {
    * @return $this
    */
   public function extend( $index, $data, $recursive = false ) {
-    $result = $this->search( $index = $this->index( $index ), true );
+    $result = $this->search( $index = $this->index( $index ), true, false );
 
     // set the value
-    if( $result->key == '' ) $value = &$result->container;
+    if( $result->key === null ) $value = &$result->container;
     else if( is_array( $result->container ) ) $value = &$result->container[ $result->key ];
     else $value = &$result->container->{$result->key};
 
@@ -205,10 +205,10 @@ class Single extends Library implements \JsonSerializable, \ArrayAccess {
    */
   public function clear( $index ) {
 
-    $result = $this->search( $index = $this->index( $index ) );
+    $result = $this->search( $index = $this->index( $index ), false, false );
     if( $result->exist ) {
 
-      if( $result->key == '' ) $result->container = [ ];
+      if( $result->key === null ) $result->container = [ ];
       else if( is_array( $result->container ) ) unset( $result->container[ $result->key ] );
       else unset( $result->container->{$result->key} );
 
@@ -251,15 +251,15 @@ class Single extends Library implements \JsonSerializable, \ArrayAccess {
       if( $result->exist ) {
 
         // find the value
-        if( $result->key == '' ) $value = &$result->container;
+        if( $result->key === null ) $value = &$result->container;
         else if( is_array( $result->container ) ) $value = &$result->container[ $result->key ];
         else $value = &$result->container->{$result->key};
 
         // check the value type
-        if( is_array( $value ) || is_object( $value ) ) {
+        if( Enumerable::is( $value ) ) {
 
           foreach( $value as $key => $data ) {
-            $full_key = trim( $index->key ) == '' ? ( $index->id . $key ) : ( $index->id . self::SEPARATOR_KEY . $key );
+            $full_key = trim( $index->key ) === '' ? ( $index->id . $key ) : ( $index->id . self::SEPARATOR_KEY . $key );
             $result   = $function( $key, $data, !$index ? $key : $full_key, $this );
 
             if( $result === false ) break;
@@ -384,16 +384,20 @@ class Single extends Library implements \JsonSerializable, \ArrayAccess {
    * like object. If the index was false, the key will be null. Otherwise the key always
    * set.
    *
-   * @param \stdClass $index - the Simple::parse method result
-   * @param bool $build - build structure if not exist
+   * @param \stdClass $index   The Simple::parse method result
+   * @param bool      $build   Build structure if not exist (when true, the third parameter can't be true)
+   * @param bool      $is_read The search result will be used to read or write operation (don't use simple cache for write)
    *
    * @return object
    */
-  protected function search( $index, $build = false ) {
+  protected function search( $index, $build = false, $is_read = true ) {
 
-    // check the cache. Only load from cache if its getting ( not build ) or if the cache is referenced
+    // TODO remove this in the next major release (this is just for compatibility reasons)
+    if( $build ) $is_read = false;
+
+    // check the cache. Only load from cache if its getting ( read operation ) or if the cache is referenced
     // because if it's build then the returned value may changed outside
-    if( $this->_caching != self::CACHE_NONE && ( !$build || $this->_caching == self::CACHE_REFERENCE ) && isset( $this->cache[ 'search' ][ $index->id ] ) ) {
+    if( $this->_caching != self::CACHE_NONE && ( $is_read || $this->_caching == self::CACHE_REFERENCE ) && isset( $this->cache[ 'search' ][ $index->id ] ) ) {
       return (object) [
         'exist'     => true,
         'container' => &$this->cache[ 'search' ][ $index->id ][ 'container' ],
@@ -448,8 +452,8 @@ class Single extends Library implements \JsonSerializable, \ArrayAccess {
       $result->type = empty( $tmp[ 1 ] ) ? null : $tmp[ 1 ];
 
       // explode key into tokens
-      $result->token = $result->key == '' ? [ ] : explode( self::SEPARATOR_KEY, $result->key );
-
+      $result->token = $result->key === '' ? [ ] : explode( self::SEPARATOR_KEY, $result->key );
+      
       return $result;
     }
   }
@@ -498,7 +502,7 @@ class Single extends Library implements \JsonSerializable, \ArrayAccess {
     // define the default result
     $tmp = $this->search( $index );
     if( !$tmp->exist ) $result = $default;
-    else $result = $tmp->key != '' ? ( is_array( $tmp->container ) ? $tmp->container[ $tmp->key ] : $tmp->container->{$tmp->key} ) : $tmp->container;
+    else $result = $tmp->key !== null ? ( is_array( $tmp->container ) ? $tmp->container[ $tmp->key ] : $tmp->container->{$tmp->key} ) : $tmp->container;
 
     // switch result based on the type
     switch( $index->type ) {
