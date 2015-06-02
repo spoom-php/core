@@ -136,6 +136,6 @@ class Localization extends DirectoryStorage {
   public function getPattern( $index, $insertion, $default = '' ) {
 
     $value = $this->getString( $index, $default );
-    return String::insert( $value, is_array( $insertion ) ? $insertion : [ $insertion ] );
+    return String::insert( $value, $insertion );
   }
 }

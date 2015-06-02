@@ -47,10 +47,10 @@ abstract class Helper {
    * @throws Strict ::EXCEPTION_INVALID_ID when the ID format is wrong
    */
   public static function parse( $id ) {
-
+    
     // validate the id
     $matches = [ ];
-    if( preg_match( self::REGEXP_ID, $id, $matches ) === false ) throw new Strict( self::EXCEPTION_NOTICE_INVALID_ID, [ 'id' => $id ] );
+    if( !preg_match( self::REGEXP_ID, $id, $matches ) ) throw new Strict( self::EXCEPTION_NOTICE_INVALID_ID, [ 'id' => $id ] );
     else return (object) [
       'extension' => $matches[ 1 ],
       'code'      => (int) $matches[ 2 ],
