@@ -4,6 +4,8 @@
  * Class Request
  *
  * @package Framework\Storage
+ *
+ * @deprecated
  */
 class Request extends Multi {
 

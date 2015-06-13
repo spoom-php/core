@@ -63,31 +63,45 @@ define( '_LOG_LEVEL', _LEVEL_NONE );
 /**
  * The path part of the url.
  * This will be the relative path to the index.php ( or an another entry point of the site, tha include this file )
+ *
+ * @depricated
  */
 define( '_URL_PATH', rtrim( dirname( $_SERVER[ 'SCRIPT_NAME' ] ), '\\/ ' ) . '/' );
 /**
  * Detect secure http protocol
+ *
+ * @depricated
  */
 define( '_URL_HTTPS', isset( $_SERVER[ 'HTTPS' ] ) && $_SERVER[ 'HTTPS' ] != 'off' );
 /**
  * The server name from the url, configuration or the ip address
+ *
+ * @depricated
  */
 define( '_URL_SERVER', @$_SERVER[ 'SERVER_NAME' ] ?: gethostbyname( gethostname() ) );
 /**
  * The port number for the request, or null if not defined
+ *
+ * @depricated
  */
 define( '_URL_PORT', @$_SERVER[ 'SERVER_PORT' ] ?: null );
 /**
  * The host name from the url with port definition if necessary
+ *
+ * @depricated
  */
 define( '_URL_HOST', _URL_SERVER . ( !_URL_PORT || _URL_PORT == ( _URL_HTTPS ? 443 : 80 ) ? '' : ( ':' . _URL_PORT ) ) );
 /**
  * The root url with protocol, host and port definition ( if neccessary )
+ *
+ * @depricated
  */
 define( '_URL_ROOT', 'http' . ( _URL_HTTPS ? 's' : '' ) . '://' . _URL_HOST . '/' );
 /**
  * The root url with the url path.
  * This is the "real" url with all neccessary parameter
+ *
+ * @depricated
  */
 define( '_URL_BASE', _URL_ROOT . ltrim( _URL_PATH, '/' ) );
 
@@ -152,8 +166,8 @@ spl_autoload_register( function ( $class_name ) {
     $directory = _PATH_BASE . _PATH_EXTENSION . $extension . '/' . _EXTENSION_LIBRARY;
 
     // support for camelCase nested classes
-    $matches = [ ];
-    preg_match_all( '/((?:^|[A-Z])[a-z]+)/', $class, $matches );
+    $matches = [];
+    preg_match_all( '/((?:^|[A-Z]+)([a-z]+|$))/', $class, $matches );
     do {
 
       // prepare the next path
@@ -163,6 +177,8 @@ spl_autoload_register( function ( $class_name ) {
       $file = $directory . mb_strtolower( $tmp ) . '.php';
       if( is_file( $file ) ) include( $file );
       else {
+        
+        // TODO support for lowercase path but case sensitive filename
 
         // check for non-standard, capital letter files (this files probably 3th part libs)
         $file = $directory . $tmp . '.php';
