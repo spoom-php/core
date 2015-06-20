@@ -100,6 +100,13 @@ class Log extends Library {
   ];
 
   /**
+   * Holds the instanced loggers by $name
+   *
+   * @var Log[]
+   */
+  private static $instance = [];
+  
+  /**
    * @var Extension
    */
   private $extension;
@@ -266,4 +273,20 @@ class Log extends Library {
   public function critical( $message, $data = [ ], $namespace = '' ) {
     return $this->create( $message, $data, $namespace, self::TYPE_CRITICAL );
   }
+
+  /**
+   * Instance factory (identified by the name)
+   *
+   * @param string $name The logger unique name
+   *
+   * @return Log
+   */
+  public static function instance( $name ) {
+    
+    if( !isset( self::$instance[ $name ] ) ) {
+      self::$instance[ $name ] = new Log( $name );
+    }
+
+    return self::$instance[ $name ];
+}
 }

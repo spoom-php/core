@@ -43,13 +43,6 @@ abstract class Page {
   private static $collector = null;
 
   /**
-   * Default logger
-   *
-   * @var Log
-   */
-  private static $log = null;
-
-  /**
    * @var string
    */
   private static $localization = null;
@@ -203,13 +196,12 @@ abstract class Page {
     return self::$collector;
   }
   /**
-   * Getter for log
+   * Getter for log. It is just a wrapper for `Log::instance('framework');`
    *
    * @return Log
    */
   public static function getLog() {
-    if( !self::$log ) self::$log = new Log( 'framework' );
-    return self::$log;
+    return Log::instance( 'framework' );
   }
 
   /**

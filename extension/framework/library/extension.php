@@ -2,6 +2,7 @@
 
 use Framework\Helper\File;
 use Framework\Helper\Library;
+use Framework\Helper\Log;
 
 /**
  * One of the most important class in the framework. Handle all extension
@@ -13,6 +14,7 @@ use Framework\Helper\Library;
  * @property-read string                  $id            Unique name
  * @property-read Extension\Configuration $configuration The configuration storage object
  * @property-read Extension\Localization  $localization  The localization storage object
+ * @property-read Log $log           The default extension logger instance
  */
 class Extension extends Library {
 
@@ -77,6 +79,12 @@ class Extension extends Library {
    * @var Extension\Localization
    */
   private $_localization = null;
+  /**
+   * The logger instance for the extension (the log name is the extension id)
+   *
+   * @var Log
+   */
+  private $_log = null;
 
   /**
    * Object constructor. Define directory of the object
@@ -125,8 +133,16 @@ class Extension extends Library {
   public function __get( $index ) {
 
     $iindex = '_' . $index;
-    if( property_exists( $this, $iindex ) ) return $this->{$iindex};
-    else return parent::__get( $index );
+    if( !property_exists( $this, $iindex ) ) return parent::__get( $index );
+    else {
+
+      // lazy create the logger
+      if( $index == 'log' && !$this->_log ) {
+        $this->_log = Log::instance( $this->_id );
+      }
+
+      return $this->{$iindex};
+    }
   }
   /**
    * @param string $index
