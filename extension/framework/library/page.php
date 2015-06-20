@@ -72,8 +72,6 @@ abstract class Page {
    */
   public static function start() {
 
-    // TODO convert $argv into request variables to better CLI support
-
     // setup error reporting based on _REPORTING flag
     $reporting = 0;
     switch( _REPORT_LEVEL ) {
@@ -110,8 +108,8 @@ abstract class Page {
     }
 
     // setup localization options
-    $extension = Extension::instance( 'framework' );
-    self::$localization = $extension->option( 'manifest:localization', 'en' );
+    $extension          = Extension::instance( 'framework' );
+    self::$localization = $extension->option( 'default:localization', $extension->option( 'manifest:localization', 'en' ) );
     setlocale( LC_ALL, $extension->option( 'default:locale', null ) );
 
     // setup encoding
