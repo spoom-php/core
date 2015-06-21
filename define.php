@@ -63,31 +63,45 @@ define( '_LOG_LEVEL', _LEVEL_NONE );
 /**
  * The path part of the url.
  * This will be the relative path to the index.php ( or an another entry point of the site, tha include this file )
+ *
+ * @depricated Use one of the HTTP specialized extensions
  */
 define( '_URL_PATH', rtrim( dirname( $_SERVER[ 'SCRIPT_NAME' ] ), '\\/ ' ) . '/' );
 /**
  * Detect secure http protocol
+ *
+ * @depricated Use one of the HTTP specialized extensions
  */
 define( '_URL_HTTPS', isset( $_SERVER[ 'HTTPS' ] ) && $_SERVER[ 'HTTPS' ] != 'off' );
 /**
  * The server name from the url, configuration or the ip address
+ *
+ * @depricated Use one of the HTTP specialized extensions
  */
 define( '_URL_SERVER', @$_SERVER[ 'SERVER_NAME' ] ?: gethostbyname( gethostname() ) );
 /**
  * The port number for the request, or null if not defined
+ *
+ * @depricated Use one of the HTTP specialized extensions
  */
 define( '_URL_PORT', @$_SERVER[ 'SERVER_PORT' ] ?: null );
 /**
  * The host name from the url with port definition if necessary
+ *
+ * @depricated Use one of the HTTP specialized extensions
  */
 define( '_URL_HOST', _URL_SERVER . ( !_URL_PORT || _URL_PORT == ( _URL_HTTPS ? 443 : 80 ) ? '' : ( ':' . _URL_PORT ) ) );
 /**
  * The root url with protocol, host and port definition ( if neccessary )
+ *
+ * @depricated Use one of the HTTP specialized extensions
  */
 define( '_URL_ROOT', 'http' . ( _URL_HTTPS ? 's' : '' ) . '://' . _URL_HOST . '/' );
 /**
  * The root url with the url path.
  * This is the "real" url with all neccessary parameter
+ *
+ * @depricated Use one of the HTTP specialized extensions
  */
 define( '_URL_BASE', _URL_ROOT . ltrim( _URL_PATH, '/' ) );
 

@@ -3,6 +3,8 @@
 /**
  * Class Request
  *
+ * @depricated Use one of the HTTP specialized extensions
+ *
  * @package Framework\Storage
  */
 class Request extends Multi {
