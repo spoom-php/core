@@ -460,13 +460,22 @@ class Single extends Library implements \JsonSerializable, \ArrayAccess {
   /**
    * Clean the search cache based on the index
    *
-   * @param object|null $index The result of `->index()` method or null
+   * @param string|object|null $index The result of `->index()` method or null
    */
   protected function clean( $index = null ) {
 
-    if( !$index || trim( $index->id ) == '' ) $this->cache[ 'search' ] = [ ];
+    // parse string index
+    if( $index && !is_object( $index ) ) {
+      $index = $this->index( $index );
+    }
+
+    // clear the cache
+    if( !$index || empty( $index->token ) ) $this->cache[ 'search' ] = [ ];
     else foreach( $this->cache[ 'search' ] as $i => $_ ) {
-      if( $i == $index->id || strpos( $i, $index->id . '.' ) === 0 ) unset( $this->cache[ 'search' ][ $i ] );
+
+      if( $i == $index->token[ 0 ] || strpos( $i, $index->token[ 0 ] ) === 0 ) {
+        unset( $this->cache[ 'search' ][ $i ] );
+      }
     }
   }
 

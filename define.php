@@ -166,8 +166,8 @@ spl_autoload_register( function ( $class_name ) {
     $directory = _PATH_BASE . _PATH_EXTENSION . $extension . '/' . _EXTENSION_LIBRARY;
 
     // support for camelCase nested classes
-    $matches = [ ];
-    preg_match_all( '/((?:^|[A-Z])[a-z]+)/', $class, $matches );
+    $matches = [];
+    preg_match_all( '/((?:^|[A-Z]+)([a-z]+|$))/', $class, $matches );
     do {
 
       // prepare the next path
@@ -177,6 +177,8 @@ spl_autoload_register( function ( $class_name ) {
       $file = $directory . mb_strtolower( $tmp ) . '.php';
       if( is_file( $file ) ) include( $file );
       else {
+        
+        // TODO support for lowercase path but case sensitive filename
 
         // check for non-standard, capital letter files (this files probably 3th part libs)
         $file = $directory . $tmp . '.php';

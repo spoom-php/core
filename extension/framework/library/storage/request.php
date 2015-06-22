@@ -6,6 +6,8 @@
  * @depricated Use one of the HTTP specialized extensions
  *
  * @package Framework\Storage
+ *
+ * @deprecated
  */
 class Request extends Multi {
 

@@ -21,12 +21,13 @@ trait Feasible {
   protected function execute( $name, $arguments = null ) {
 
     // check execution name validity
-    if( is_string( $name ) && mb_strlen( $name ) > 0 && $this->prepare( $name ) !== false ) {
+    if( is_string( $name ) && mb_strlen( $name ) > 0 && ( $name = $this->prepare( $name ) ) !== false ) {
 
       // check function validity
-      $method = $this->method( $name );
-      if( !is_callable( [ $this, $method ] ) ) {
-
+      $method = $this->method( $name, true );
+      if( $method ) return $method->invokeArgs( $this, is_array( $arguments ) ? $arguments : ( $arguments === null ? [ ] : [ $arguments ] ) );
+      else {
+        
         // log: warning
         Page::getLog()->warning( 'Missing \'{name}\' executeable', [
           'name'      => $name,
@@ -34,13 +35,6 @@ trait Feasible {
           'method'    => $method
         ], '\Framework\Helper\Feasible' );
 
-      } else {
-
-        $reflectionMethod = new \ReflectionMethod( $this, $method );
-        if( $reflectionMethod->isProtected() ) $reflectionMethod->setAccessible( true );
-
-        // execute the function
-        return $reflectionMethod->invokeArgs( $this, is_array( $arguments ) ? $arguments : ( $arguments === null ? [ ] : [ $arguments ] ) );
       }
     }
 
@@ -54,18 +48,32 @@ trait Feasible {
    *
    * @return string
    */
-  private function prepare( $name ) {
+  protected function prepare( $name ) {
     return $name;
   }
   /**
    * Get function name based on execution name
    *
    * @param string $name
+   * @param bool   $instance Return an instance of \ReflectionMethod instead of the method name
    *
-   * @return string
+   * @return null|\ReflectionMethod|string NULL, if the instance is true and there was no method or private
    */
-  private function method( $name ) {
-    return String::toName( $name );
+  protected function method( $name, $instance = false ) {
+
+    $name = String::toName( $name );
+    if( !$instance ) return $name;
+    else if( !is_callable( [ $this, $name ] ) ) return null;
+    else {
+
+      $method = new \ReflectionMethod( $this, $name );
+      if( $method->isPrivate() ) return null;
+      else {
+
+        if( $method->isProtected() ) $method->setAccessible( true );
+        return $method;
+      }
+    }
   }
 }
 
