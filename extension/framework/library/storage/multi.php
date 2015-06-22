@@ -110,7 +110,9 @@ class Multi extends Single {
       $this->source[ $namespace ] = &$enumerable;
 
       // clear the cache or the cache index
-      if( $this->caching != self::CACHE_NONE ) $this->clean( $namespace . self::SEPARATOR_NAMESPACE );
+      if( $this->caching != self::CACHE_NONE ) {
+        $this->clean( $this->parse( $namespace . self::SEPARATOR_NAMESPACE ) );
+      }
     }
 
     return $this;
