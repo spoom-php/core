@@ -473,7 +473,7 @@ class Single extends Library implements \JsonSerializable, \ArrayAccess {
     if( !$index || empty( $index->token ) ) $this->cache[ 'search' ] = [ ];
     else foreach( $this->cache[ 'search' ] as $i => $_ ) {
 
-      if( $i == $index->token[ 0 ] || strpos( $i, $index->token[ 0 ] . '.' ) === 0 ) {
+      if( $i == $index->token[ 0 ] || strpos( $i, $index->token[ 0 ] ) === 0 ) {
         unset( $this->cache[ 'search' ][ $i ] );
       }
     }
