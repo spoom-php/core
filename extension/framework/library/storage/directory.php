@@ -3,6 +3,7 @@
 use Framework\Extension;
 use Framework\Helper\Enumerable;
 use Framework\Page;
+use Framework\Storage;
 
 /**
  * Class Directory
@@ -12,7 +13,7 @@ use Framework\Page;
  * @property      string $default   The default extension for saving files
  * @property-read array  $allow     The allowed file extension to handle as namespace
  */
-class Directory extends Multi {
+class Directory extends Storage {
 
   /**
    * Event called for (un)serialize the data to/from the file. Five arguments passed:
@@ -80,7 +81,7 @@ class Directory extends Multi {
    * @param mixed  $allow
    */
   public function __construct( $directory, $allow = [ 'php', 'ini', 'json', 'xml' ] ) {
-    parent::__construct( 'default', null, self::CACHE_NONE );
+    parent::__construct( null, 'default', self::CACHE_NONE );
 
     $this->_directory = $directory ? rtrim( $directory, '\\/' ) . '/' : null;
     $this->_allow = is_array( $allow ) ? $allow : [ @(string) $allow ];
@@ -210,7 +211,7 @@ class Directory extends Multi {
     }
 
     // set storage namespace to point this container
-    $this->addr( self::$files[ $path ], $namespace );
+    $this->connect( self::$files[ $path ], $namespace );
 
     return $this;
   }
@@ -316,7 +317,7 @@ class Directory extends Multi {
     if( $type == self::CONVERT_SERIALIZE ) $return = Enumerable::toJson( $content, JSON_PRETTY_PRINT );
     else {
 
-      $return = Enumerable::fromJson( $content, !$this->prefer );
+      $return = Enumerable::fromJson( $content, false );
       if( $return ) $return = (array) $return;
     }
 

@@ -2,7 +2,7 @@
 
 use Framework\Exception\Strict;
 use Framework\Extension;
-use Framework\Storage\Single;
+use Framework\Storage;
 
 /**
  * Class Log
@@ -26,7 +26,7 @@ class Log extends Library {
    *  - type [int]: The log entry type (level)
    *  - description [string]: The message with the inserted data
    *  - &message [string]: The raw message
-   *  - &data [Single]: The raw data
+   *  - &data [Storage]: The raw data
    */
   const EVENT_CREATE = 'log.create';
 
@@ -172,7 +172,7 @@ class Log extends Library {
 
   /**
    * @param string              $message   The log message pattern
-   * @param array|object|Single $data      The pattern insertion or additional data
+   * @param array|object|Storage $data The pattern insertion or additional data
    * @param string              $namespace The namespace for the log entry
    * @param int                 $type      The log level
    *
@@ -187,7 +187,7 @@ class Log extends Library {
     else {
 
       // define local variables and trigger event for external loggers
-      $data        = $data instanceof Single ? $data : new Single( $data );
+      $data = $data instanceof Storage ? $data : new Storage( $data );
       $namespace   = empty( $namespace ) ? $this->_namespace : $namespace;
       $description = String::insert( $message, $data, String::TYPE_INSERT_LEAVE );
       $event       = $this->extension->trigger( self::EVENT_CREATE, [
@@ -215,7 +215,7 @@ class Log extends Library {
 
   /**
    * @param string              $message   The log message pattern
-   * @param array|object|Single $data      The pattern insertion or additional data
+   * @param array|object|Storage $data The pattern insertion or additional data
    * @param string              $namespace The namespace for the log entry
    *
    * @return bool
@@ -225,7 +225,7 @@ class Log extends Library {
   }
   /**
    * @param string              $message   The log message pattern
-   * @param array|object|Single $data      The pattern insertion or additional data
+   * @param array|object|Storage $data The pattern insertion or additional data
    * @param string              $namespace The namespace for the log entry
    *
    * @return bool
@@ -235,7 +235,7 @@ class Log extends Library {
   }
   /**
    * @param string              $message   The log message pattern
-   * @param array|object|Single $data      The pattern insertion or additional data
+   * @param array|object|Storage $data The pattern insertion or additional data
    * @param string              $namespace The namespace for the log entry
    *
    * @return bool
@@ -245,7 +245,7 @@ class Log extends Library {
   }
   /**
    * @param string              $message   The log message pattern
-   * @param array|object|Single $data      The pattern insertion or additional data
+   * @param array|object|Storage $data The pattern insertion or additional data
    * @param string              $namespace The namespace for the log entry
    *
    * @return bool
@@ -255,7 +255,7 @@ class Log extends Library {
   }
   /**
    * @param string              $message   The log message pattern
-   * @param array|object|Single $data      The pattern insertion or additional data
+   * @param array|object|Storage $data The pattern insertion or additional data
    * @param string              $namespace The namespace for the log entry
    *
    * @return bool
@@ -265,7 +265,7 @@ class Log extends Library {
   }
   /**
    * @param string              $message   The log message pattern
-   * @param array|object|Single $data      The pattern insertion or additional data
+   * @param array|object|Storage $data The pattern insertion or additional data
    * @param string              $namespace The namespace for the log entry
    *
    * @return bool
@@ -288,5 +288,5 @@ class Log extends Library {
     }
 
     return self::$instance[ $name ];
-}
+  }
 }
