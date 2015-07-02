@@ -4,11 +4,194 @@ use Framework\Helper\Enumerable;
 use Framework\Helper\Library;
 
 /**
+ * Interface StorageInterface
+ * @package Framework\Storage
+ */
+interface StorageInterface extends \ArrayAccess, \JsonSerializable {
+
+  /**
+   * Disable caching
+   */
+  const CACHE_NONE = 0;
+  /**
+   * Cache only the actual value of the result
+   */
+  const CACHE_SIMPLE = 1;
+  /**
+   * Cache results by reference (might be buggy with arrays in arrays)
+   */
+  const CACHE_REFERENCE = 2;
+
+  /**
+   * Key separator in the indexes
+   */
+  const SEPARATOR_KEY = '.';
+  /**
+   * Separator char for the namespace in the indexes
+   */
+  const SEPARATOR_NAMESPACE = ':';
+  /**
+   * Type forcing separator in the indexes
+   */
+  const SEPARATOR_TYPE = '!';
+
+  /**
+   * String result type
+   */
+  const TYPE_STRING = 'string';
+  /**
+   * Number (int or float) result type
+   */
+  const TYPE_NUMBER = 'number';
+  /**
+   * Boolean result type
+   */
+  const TYPE_BOOLEAN = 'boolean';
+  /**
+   * Array result type
+   */
+  const TYPE_ARRAY = 'array';
+  /**
+   * Object result type
+   */
+  const TYPE_OBJECT = 'object';
+  /**
+   * Callable result type
+   */
+  const TYPE_CALLABLE = 'callable';
+
+  /**
+   * Get indexed value from the storage, or the second parameter if index not exist
+   *
+   * @param string $index   The index in the storage
+   * @param mixed  $default The returned value if index not found
+   *
+   * @return mixed
+   */
+  public function get( $index, $default = null );
+  /**
+   * Get indexed (only string type) value from the storage, or the second parameter if index not exist or not string
+   *
+   * @param string $index   The index in the storage
+   * @param mixed  $default The returned value if index not found
+   *
+   * @return string|mixed
+   */
+  public function getString( $index, $default = '' );
+  /**
+   * Get indexed (only number type) value from the storage, or the second parameter if index not exist, not int or
+   * float
+   *
+   * @param string $index   The index in the storage
+   * @param mixed  $default The returned value if index not found
+   *
+   * @return number|mixed
+   */
+  public function getNumber( $index, $default = 0 );
+  /**
+   * Get indexed (only array type) value from the storage, or the second parameter if index not exist or not
+   * enumerable. Object will be typecasted to array
+   *
+   * @param string $index   The index in the storage
+   * @param mixed  $default The returned value if index not found
+   *
+   * @return array|mixed
+   */
+  public function getArray( $index, $default = [ ] );
+  /**
+   * Get indexed (only object type) value from the storage, or the second parameter if index not exist or not
+   * enumerable. Arrays will be typecasted to object
+   *
+   * @param string $index   The index in the storage
+   * @param mixed  $default The returned value if index not found
+   *
+   * @return object|mixed
+   */
+  public function getObject( $index, $default = null );
+  /**
+   * Get indexed (only boolean type) value from the storage, or the second parameter if index not exist, not boolean
+   * or not 1/0 value
+   *
+   * @param string $index   The index in the storage
+   * @param mixed  $default The returned value if index not found
+   *
+   * @return bool|mixed
+   */
+  public function getBoolean( $index, $default = false );
+  /**
+   * Get indexed (only callable type) value from the storage, or the second parameter if index not exist or not
+   * callable
+   *
+   * @param string $index   The index in the storage
+   * @param mixed  $default The returned value if index not found
+   *
+   * @return callable|mixed
+   */
+  public function getCallable( $index, $default = null );
+
+  /**
+   * Set the index to value and create structure for the index
+   * if it's not exist already
+   *
+   * @param string $index
+   * @param mixed  $value
+   *
+   * @return $this
+   */
+  public function set( $index, $value );
+  /**
+   * Extend index with data. If index and data is enumerable ( array or object )
+   * it will be merge index with the data. If index and data is string, the index
+   * concated with data. Finally if the index and the data is numeric, the data
+   * will be added to the index.
+   *
+   * @param string $index
+   * @param mixed  $data
+   * @param bool   $recursive
+   *
+   * @return $this
+   */
+  public function extend( $index, $data, $recursive = false );
+  /**
+   * Remove an index from the storage. the index can't be null, so with
+   * this function ou cannot clear the storage!
+   *
+   * @param string $index
+   *
+   * @return $this
+   */
+  public function clear( $index );
+
+  /**
+   * Check index existance
+   *
+   * @param string $index
+   *
+   * @return bool
+   */
+  public function exist( $index );
+  /**
+   * Iterate through an index with given function.
+   * The function get value, index, this params
+   * each iteration.
+   * The function parameters are: key, value, index, self
+   *
+   *
+   * @param callable $function
+   * @param string   $index
+   *
+   * @return $this
+   */
+  public function each( $function, $index );
+}
+
+/**
  * Class Storage
  * @package Framework
  *
- * @property int   $caching The cache type. One of the CACHE_* constants
- * @property mixed $source
+ * @property      int         $caching The cache type. One of the CACHE_* constants
+ * @property-read mixed       $source
+ * @property      string|null $namespace
  */
 class Storage extends Library implements StorageInterface {
 
@@ -43,6 +226,11 @@ class Storage extends Library implements StorageInterface {
    */
   protected $_source = [ ];
 
+  /**
+   * @param mixed|null  $data
+   * @param string|null $namespace
+   * @param int         $caching
+   */
   public function __construct( $data = null, $namespace = null, $caching = self::CACHE_SIMPLE ) {
 
     if( Enumerable::is( $data ) ) $this->_source = $data;
@@ -101,11 +289,11 @@ class Storage extends Library implements StorageInterface {
    */
   public function set( $index, $value ) {
 
-    // don't set the source attribute directly
     $result = $this->search( $index = $this->index( $index ), true, false );
-    if( $index && $result->key !== null ) {
+    if( $index ) {
 
-      if( is_array( $result->container ) ) $target = &$result->container[ $result->key ];
+      if( $result->key === null ) $target = &$result->container;
+      else if( is_array( $result->container ) ) $target = &$result->container[ $result->key ];
       else $target = &$result->container->{$result->key};
 
       $target = $value;
@@ -571,185 +759,4 @@ class Storage extends Library implements StorageInterface {
   public function offsetUnset( $offset ) {
     $this->clear( $offset );
   }
-}
-/**
- * Interface StorageInterface
- * @package Framework\Storage
- */
-interface StorageInterface extends \ArrayAccess, \JsonSerializable {
-
-  /**
-   * Disable caching
-   */
-  const CACHE_NONE = 0;
-  /**
-   * Cache only the actual value of the result
-   */
-  const CACHE_SIMPLE = 1;
-  /**
-   * Cache results by reference (might be buggy with arrays in arrays)
-   */
-  const CACHE_REFERENCE = 2;
-
-  /**
-   * Key separator in the indexes
-   */
-  const SEPARATOR_KEY = '.';
-  /**
-   * Separator char for the namespace in the indexes
-   */
-  const SEPARATOR_NAMESPACE = ':';
-  /**
-   * Type forcing separator in the indexes
-   */
-  const SEPARATOR_TYPE = '!';
-
-  /**
-   * String result type
-   */
-  const TYPE_STRING = 'string';
-  /**
-   * Number (int or float) result type
-   */
-  const TYPE_NUMBER = 'number';
-  /**
-   * Boolean result type
-   */
-  const TYPE_BOOLEAN = 'boolean';
-  /**
-   * Array result type
-   */
-  const TYPE_ARRAY = 'array';
-  /**
-   * Object result type
-   */
-  const TYPE_OBJECT = 'object';
-  /**
-   * Callable result type
-   */
-  const TYPE_CALLABLE = 'callable';
-
-  /**
-   * Get indexed value from the storage, or the second parameter if index not exist
-   *
-   * @param string $index   The index in the storage
-   * @param mixed  $default The returned value if index not found
-   *
-   * @return mixed
-   */
-  public function get( $index, $default = null );
-  /**
-   * Get indexed (only string type) value from the storage, or the second parameter if index not exist or not string
-   *
-   * @param string $index   The index in the storage
-   * @param mixed  $default The returned value if index not found
-   *
-   * @return string|mixed
-   */
-  public function getString( $index, $default = '' );
-  /**
-   * Get indexed (only number type) value from the storage, or the second parameter if index not exist, not int or
-   * float
-   *
-   * @param string $index   The index in the storage
-   * @param mixed  $default The returned value if index not found
-   *
-   * @return number|mixed
-   */
-  public function getNumber( $index, $default = 0 );
-  /**
-   * Get indexed (only array type) value from the storage, or the second parameter if index not exist or not
-   * enumerable. Object will be typecasted to array
-   *
-   * @param string $index   The index in the storage
-   * @param mixed  $default The returned value if index not found
-   *
-   * @return array|mixed
-   */
-  public function getArray( $index, $default = [ ] );
-  /**
-   * Get indexed (only object type) value from the storage, or the second parameter if index not exist or not
-   * enumerable. Arrays will be typecasted to object
-   *
-   * @param string $index   The index in the storage
-   * @param mixed  $default The returned value if index not found
-   *
-   * @return object|mixed
-   */
-  public function getObject( $index, $default = null );
-  /**
-   * Get indexed (only boolean type) value from the storage, or the second parameter if index not exist, not boolean
-   * or not 1/0 value
-   *
-   * @param string $index   The index in the storage
-   * @param mixed  $default The returned value if index not found
-   *
-   * @return bool|mixed
-   */
-  public function getBoolean( $index, $default = false );
-  /**
-   * Get indexed (only callable type) value from the storage, or the second parameter if index not exist or not
-   * callable
-   *
-   * @param string $index   The index in the storage
-   * @param mixed  $default The returned value if index not found
-   *
-   * @return callable|mixed
-   */
-  public function getCallable( $index, $default = null );
-
-  /**
-   * Set the index to value and create structure for the index
-   * if it's not exist already
-   *
-   * @param string $index
-   * @param mixed  $value
-   *
-   * @return $this
-   */
-  public function set( $index, $value );
-  /**
-   * Extend index with data. If index and data is enumerable ( array or object )
-   * it will be merge index with the data. If index and data is string, the index
-   * concated with data. Finally if the index and the data is numeric, the data
-   * will be added to the index.
-   *
-   * @param string $index
-   * @param mixed  $data
-   * @param bool   $recursive
-   *
-   * @return $this
-   */
-  public function extend( $index, $data, $recursive = false );
-  /**
-   * Remove an index from the storage. the index can't be null, so with
-   * this function ou cannot clear the storage!
-   *
-   * @param string $index
-   *
-   * @return $this
-   */
-  public function clear( $index );
-
-  /**
-   * Check index existance
-   *
-   * @param string $index
-   *
-   * @return bool
-   */
-  public function exist( $index );
-  /**
-   * Iterate through an index with given function.
-   * The function get value, index, this params
-   * each iteration.
-   * The function parameters are: key, value, index, self
-   *
-   *
-   * @param callable $function
-   * @param string   $index
-   *
-   * @return $this
-   */
-  public function each( $function, $index );
 }

@@ -254,7 +254,7 @@ abstract class Enumerable {
           $tmp = &$tmp[ $key ];
         }
       }
-      $tmp = $value;
+      $tmp[ $key ] = $value;
     }
 
     return (object) $result;

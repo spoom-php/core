@@ -8,5 +8,15 @@
   "#7N": "Invalid log type: {type}",
   "#8E": "Invalid algorithm '{algorithm}' for hashing",
   "#9E": "Can not redirect to '{url}', header already sent",
-  "#10W": "Invalid localization: {localization}"
+  "#10W": "Invalid localization: {localization}",
+
+  "#11N": "The namespace can't be null in the multi permanent storage",
+  "#12W": "Can't write the path ({path}) due to: {error}",
+  "#13E": "Can't write the path ({path}) due to: {error}",
+  "#14W": "Can't read the path ({path})",
+  "#15E": "Can't read the path ({path}) due to: {error}",
+  "#16W": "Can't remove the path ({path})",
+  "#17E": "Can't remove the path ({path}) due to: {error}",
+  "#18W": "The path for the permanent storage is not defined",
+  "#19N": "Can't clean some remained file ({path}) after format change"
 }
