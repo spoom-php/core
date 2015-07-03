@@ -152,6 +152,14 @@ class Extension extends Library {
   public function __isset( $index ) {
     return property_exists( $this, '_' . $index ) || parent::__isset( $index );
   }
+  /**
+   * Clone the configuration and localization properties
+   */
+  public function __clone() {
+    
+    $this->_configuration = clone $this->_configuration;
+    $this->_localization = clone $this->_localization;
+  }
 
   /**
    * Get language string from the extension language object. It's a proxy for Localization::getPattern() method

@@ -5,18 +5,19 @@ use Framework\Exception\Collector;
 use Framework\Extension;
 use Framework\Helper\Library;
 use Framework\Page;
+use Framework\Storage;
 
 /**
  * Class Event
  * @package Framework\Extension
  *
- * @property      bool        $prevented The default event action has been prevented or not
- * @property      bool        $stopped   Stopped next handler call or not
- * @property-read string      $name      The event name
- * @property-read string      $namespace The event namespace
- * @property-read array       $argument  The arguments passed to the event call
- * @property-read array|null  $result    The handler's results in an array indexed by the handler names
- * @property-read Collector   $collector The exception collector
+ * @property      bool       $prevented The default event action has been prevented or not
+ * @property      bool       $stopped   Stopped next handler call or not
+ * @property-read string     $name      The event name
+ * @property-read string     $namespace The event namespace
+ * @property-read array      $argument  The arguments passed to the event call
+ * @property-read array|null $result    The handler's results in an array indexed by the handler names
+ * @property-read Collector  $collector The exception collector
  */
 class Event extends Library implements \Countable, \Iterator, \ArrayAccess {
 
@@ -26,6 +27,12 @@ class Event extends Library implements \Countable, \Iterator, \ArrayAccess {
    * @var array
    */
   private static $cache = [ ];
+  /**
+   * Storage for the event handlers
+   *
+   * @var Storage
+   */
+  private static $storage;
 
   /**
    * Attached listeners storage
@@ -82,6 +89,12 @@ class Event extends Library implements \Countable, \Iterator, \ArrayAccess {
    * @param array  $arguments
    */
   public function __construct( $namespace, $name, $arguments = [ ] ) {
+
+    // define the default storage
+    if( !self::$storage ) {
+      self::$storage                    = clone ( Extension::instance( 'framework' )->configuration );
+      self::$storage->converter->native = true;
+    }
 
     // set default params
     $this->_namespace = $namespace;
@@ -144,11 +157,6 @@ class Event extends Library implements \Countable, \Iterator, \ArrayAccess {
 
         $this->_result[ $listener->name ] = $listener->instance->execute( $this->_namespace . '.' . $this->_name, [ $this, $listener->data ] );
 
-      } catch( Exception $e ) {
-
-        $this->_result[ $listener->name ] = null;
-        $this->_collector->add( $e );
-
       } catch( \Exception $e ) {
 
         $this->_result[ $listener->name ] = null;
@@ -177,11 +185,10 @@ class Event extends Library implements \Countable, \Iterator, \ArrayAccess {
    */
   private function load() {
     $this->listeners = [ ];
-    $extension = Extension::instance( 'framework' );
 
     // collect listeners if event exists and enabled
-    $tmp = $extension->configuration->getArray( 'event-' . $this->_namespace . ':' . $this->_name );
-    foreach( $tmp as $listener ) {
+    $listener_list = self::$storage->getArray( 'event-' . $this->_namespace . ':' . $this->_name );
+    foreach( $listener_list as $listener ) {
 
       if( !empty( $listener->extension ) && !empty( $listener->library ) ) $this->add( $listener );
       else {

@@ -1,7 +1,7 @@
 <?php namespace Framework\Extension;
 
 use Framework\Extension;
-use Framework\Storage\Directory as DirectoryStorage;
+use Framework\Storage;
 
 /**
  * Class Configuration
@@ -9,7 +9,7 @@ use Framework\Storage\Directory as DirectoryStorage;
  *
  * @property-read Extension $extension
  */
-final class Configuration extends DirectoryStorage {
+class Configuration extends Storage\File {
 
   /**
    * Extension data source

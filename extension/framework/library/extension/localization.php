@@ -1,9 +1,8 @@
 <?php namespace Framework\Extension;
 
 use Framework\Extension;
-use Framework\Helper\String;
 use Framework\Page;
-use Framework\Storage\Directory as DirectoryStorage;
+use Framework\Storage;
 
 /**
  * Class Localization
@@ -12,7 +11,7 @@ use Framework\Storage\Directory as DirectoryStorage;
  * @property-read Extension $extension
  * @property      string    $localization
  */
-class Localization extends DirectoryStorage {
+class Localization extends Storage\File {
 
   /**
    * Extension data source
@@ -34,7 +33,7 @@ class Localization extends DirectoryStorage {
    * @param Extension $source
    */
   public function __construct( Extension $source ) {
-    parent::__construct( $source->directory( '' ) . Extension::DIRECTORY_LOCALIZATION, [ 'json', 'ini', 'xml' ] );
+    parent::__construct( $source->directory( '' ) . Extension::DIRECTORY_LOCALIZATION );
 
     $this->_extension = $source;
   }
@@ -83,7 +82,7 @@ class Localization extends DirectoryStorage {
         // log: debug
         Page::getLog()->debug( 'The \'{localization}\' localization selected', [
           'localization' => $this->_localization,
-          'directory'    => $this->_directory
+          'directory'    => $this->_path
         ], '\Framework\Extension\Localization' );
 
         break;
@@ -100,42 +99,27 @@ class Localization extends DirectoryStorage {
    * @return bool
    */
   protected function validate( $name ) {
-    return is_string( $name ) && is_dir( _PATH_BASE . $this->_directory . $name . '/' );
+    return is_string( $name ) && is_dir( _PATH_BASE . $this->_path . $name . '/' );
   }
   /**
    * @param string      $namespace
-   * @param string|null $extension
+   * @param string|null $format
    * @param bool        $exist
    *
    * @return mixed
    */
-  protected function path( $namespace, $extension = null, &$exist = false ) {
+  protected function getFile( $namespace, $format = null, &$exist = false ) {
 
     // define the localization of not already
     if( !isset( $this->_localization ) ) $this->localization = Page::getLocalization();
 
     // change the directory temporary then search for the path
-    $tmp = $this->_directory;
-    $this->_directory .= $this->_localization . '/';
+    $tmp = $this->_path;
+    $this->_path .= $this->_localization . '/';
 
-    $result           = parent::path( $namespace, $extension, $exist );
-    $this->_directory = $tmp;
+    $result           = parent::getFile( $namespace, $format, $exist );
+    $this->_path = $tmp;
 
     return $result;
-  }
-
-  /**
-   * Same as the getString method, but insert data to string with String::insert()
-   *
-   * @param string $index
-   * @param array  $insertion
-   * @param string $default
-   *
-   * @return null|string
-   */
-  public function getPattern( $index, $insertion, $default = '' ) {
-
-    $value = $this->getString( $index, $default );
-    return String::insert( $value, $insertion );
   }
 }

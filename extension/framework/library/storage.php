@@ -2,6 +2,7 @@
 
 use Framework\Helper\Enumerable;
 use Framework\Helper\Library;
+use Framework\Helper\String;
 
 /**
  * Interface StorageInterface
@@ -277,6 +278,17 @@ class Storage extends Library implements StorageInterface {
         break;
     }
   }
+  /**
+   * Create deep copy from the source and clears the cache
+   */
+  public function __clone() {
+
+    $this->_source = Enumerable::copy( $this->_source );
+    $this->cache   = [
+      'index'  => [ ],
+      'search' => [ ]
+    ];
+  }
 
   /**
    * Set the index to value and create structure for the index
@@ -428,7 +440,7 @@ class Storage extends Library implements StorageInterface {
    * @return mixed
    */
   public function get( $index, $default = null ) {
-    return $this->process( $this->index( $index ), $default, func_num_args() > 1 );
+    return $this->process( $this->index( $index ), $default );
   }
   /**
    * Get indexed (only string type) value from the storage, or the second parameter if index not exist or not string
@@ -524,6 +536,20 @@ class Storage extends Library implements StorageInterface {
     $index->type = self::TYPE_CALLABLE;
 
     return $this->process( $index, $default );
+  }
+  /**
+   * Same as the getString method, but insert data to string with String::insert()
+   *
+   * @param string $index
+   * @param array  $insertion
+   * @param string $default
+   *
+   * @return null|string
+   */
+  public function getPattern( $index, $insertion, $default = '' ) {
+
+    $value = $this->getString( $index, $default );
+    return is_string( $value ) ? String::insert( $value, $insertion ) : $value;
   }
 
   /**
@@ -674,11 +700,10 @@ class Storage extends Library implements StorageInterface {
    *
    * @param object    $index       The result of index() method
    * @param mixed     $default     The default value if no right type cast or existance
-   * @param   boolean $use_default Flag for
    *
    * @return mixed
    */
-  private function process( $index, $default, $use_default = true ) {
+  private function process( $index, $default ) {
 
     // define the default result
     $tmp = $this->search( $index );
@@ -691,38 +716,38 @@ class Storage extends Library implements StorageInterface {
       case self::TYPE_STRING:
 
         if( $tmp->exist && ( is_string( $result ) || is_numeric( $result ) || is_null( $result ) ) ) $result = (string) $result;
-        else $result = ( $use_default ? $default : '' );
+        else $result = $default;
 
         break;
 
       // force numeric type
       case self::TYPE_NUMBER:
 
-        $result = $tmp->exist && is_numeric( $result ) ? ( $result == (int) $result ? (int) $result : (float) $result ) : ( $use_default ? $default : 0 );
+        $result = $tmp->exist && is_numeric( $result ) ? ( $result == (int) $result ? (int) $result : (float) $result ) : $default;
         break;
 
       // force array type
       case self::TYPE_ARRAY:
 
-        $result = $tmp->exist && ( is_array( $result ) || is_object( $result ) ) ? (array) $result : ( $use_default ? $default : [ ] );
+        $result = $tmp->exist && ( is_array( $result ) || is_object( $result ) ) ? (array) $result : $default;
         break;
 
       // force object type
       case self::TYPE_OBJECT:
 
-        $result = $tmp->exist && ( is_object( $result ) || is_array( $result ) ) ? (object) $result : ( $use_default ? $default : null );
+        $result = $tmp->exist && ( is_object( $result ) || is_array( $result ) ) ? (object) $result : $default;
         break;
 
       // force boolean type
       case self::TYPE_BOOLEAN:
 
-        $result = $tmp->exist && ( is_bool( $result ) || in_array( $result, [ 1, 0, '1', '0' ], true ) ) ? (bool) $result : ( $use_default ? $default : false );
+        $result = $tmp->exist && ( is_bool( $result ) || in_array( $result, [ 1, 0, '1', '0' ], true ) ) ? (bool) $result : $default;
         break;
 
       // force callable type
       case self::TYPE_CALLABLE:
 
-        $result = $tmp->exist && is_callable( $result ) ? $result : ( $use_default ? $default : null );
+        $result = $tmp->exist && is_callable( $result ) ? $result : $default;
         break;
     }
 

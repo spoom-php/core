@@ -80,6 +80,15 @@ abstract class Permanent extends Storage {
         parent::__set( $index, $value );
     }
   }
+  /**
+   * Clone the converter and all of the stored meta
+   */
+  public function __clone() {
+    parent::__clone();
+
+    $this->_converter = clone $this->_converter;
+    $this->meta       = Enumerable::copy( $this->meta );
+  }
 
   /**
    * Save the namespace's actual storage data in the given (or the default) format
