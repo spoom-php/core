@@ -254,7 +254,7 @@ abstract class Enumerable {
           $tmp = &$tmp[ $key ];
         }
       }
-      $tmp = $value;
+      $tmp[ $key ] = $value;
     }
 
     return (object) $result;
@@ -283,28 +283,30 @@ abstract class Enumerable {
   /**
    * Deep copy of an array or an object
    *
-   * @param array|object $array
+   * @param array|object $input
    *
    * @return array|object
    */
-  public static function copy( $array ) {
-    $arr = null;
+  public static function copy( $input ) {
 
-    if( is_array( $array ) ) {
-      $arr = [ ];
+    if( is_array( $input ) ) {
 
-      foreach( $array as $k => $e ) {
-        $arr[ $k ] = is_object( $e ) || is_array( $e ) ? self::copy( $e ) : $e;
+      $tmp = [ ];
+      foreach( $input as $k => $e ) {
+        $tmp[ $k ] = self::is( $e ) ? self::copy( $e ) : $e;
       }
-    } else if( is_object( $array ) ) {
-      $arr = new \stdClass();
 
-      foreach( $array as $k => $e ) {
-        $arr->{$k} = is_object( $e ) || is_array( $e ) ? self::copy( $e ) : $e;
+      $input = $tmp;
+
+    } else if( is_object( $input ) ) {
+      $input = clone $input;
+
+      if( $input instanceof \stdClass ) foreach( $input as $k => $e ) {
+        $input->{$k} = self::is( $e ) ? self::copy( $e ) : $e;
       }
     }
 
-    return $arr;
+    return $input;
   }
 
   /**

@@ -1,5 +1,7 @@
 <?php namespace Framework\Storage;
 
+use Framework\Storage;
+
 /**
  * Class Request
  *
@@ -9,7 +11,7 @@
  *
  * @deprecated
  */
-class Request extends Multi {
+class Request extends Storage {
 
   /**
    * Namespace for $_REQUEST superglobal
@@ -40,15 +42,15 @@ class Request extends Multi {
    * @param string    $namespace
    * @param int|mixed $caching
    */
-  public function __construct( $namespace = 'request', $caching = Multi::CACHE_NONE ) {
+  public function __construct( $namespace = 'request', $caching = Storage::CACHE_NONE ) {
     parent::__construct( $namespace, null, $caching );
 
-    $this->addr( $_REQUEST, self::NAMESPACE_REQUEST );
-    $this->addr( $_POST, self::NAMESPACE_POST );
-    $this->addr( $_FILES, self::NAMESPACE_FILES );
-    $this->addr( $_GET, self::NAMESPACE_GET );
-    $this->addr( $_COOKIE, self::NAMESPACE_COOKIE );
-    $this->addr( $_SERVER, self::NAMESPACE_SERVER );
+    $this->connect( $_REQUEST, self::NAMESPACE_REQUEST );
+    $this->connect( $_POST, self::NAMESPACE_POST );
+    $this->connect( $_FILES, self::NAMESPACE_FILES );
+    $this->connect( $_GET, self::NAMESPACE_GET );
+    $this->connect( $_COOKIE, self::NAMESPACE_COOKIE );
+    $this->connect( $_SERVER, self::NAMESPACE_SERVER );
   }
 
   /**

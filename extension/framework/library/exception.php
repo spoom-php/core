@@ -4,7 +4,6 @@ use Framework\Exception\Helper;
 use Framework\Extension;
 use Framework\Helper\LibraryInterface;
 use Framework\Helper\Log;
-use Framework\Storage\Single;
 
 /**
  * Extend simple PHP \Exception with the power of code base text with language and insertion support
@@ -125,7 +124,7 @@ abstract class Exception extends \Exception implements \JsonSerializable, Librar
     if( $instance ) {
 
       // extend data
-      $data = $data instanceof Single ? $data->getArray( '' ) : (array) $data;
+      $data = $data instanceof Storage ? $data->getArray( '' ) : (array) $data;
 
       // define the log type
       $type = Log::TYPE_DEBUG;
