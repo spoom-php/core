@@ -1,6 +1,6 @@
 <?php namespace Framework\Helper;
 
-use Framework\Page;
+use Framework\Request;
 
 /**
  * Class Enumerable
@@ -20,7 +20,7 @@ abstract class Enumerable {
   public static function toJson( $object, $options = 0 ) {
 
     $result = json_encode( $object, $options );
-    if( $result === false ) Page::getLog()->notice( 'Failed JSON encode', [ 'object' => $object ], '\Framework\Helper\Enumerable' ); // log: notice
+    if( $result === false ) Request::getLog()->notice( 'Failed JSON encode', [ 'object' => $object ], '\Framework\Helper\Enumerable' ); // log: notice
 
     return $result;
   }
@@ -41,7 +41,7 @@ abstract class Enumerable {
     else $json = json_decode( $json, $assoc );
 
     // log: notice
-    if( json_last_error() != JSON_ERROR_NONE ) Page::getLog()->notice( 'Failed JSON decode: #{error.code} {error.message}', [
+    if( json_last_error() != JSON_ERROR_NONE ) Request::getLog()->notice( 'Failed JSON decode: #{error.code} {error.message}', [
       'string' => $json,
       'error'  => [
         'message' => json_last_error_msg(),
@@ -76,7 +76,7 @@ abstract class Enumerable {
     $dom    = new \DOMDocument();
     $object = [ ];
 
-    if( !$dom->load( $xml ) ) Page::getLog()->notice( 'Failed XML decode', [ 'xml' => $xml ], '\Framework\Helper\Enumerable' ); // log: notice
+    if( !$dom->load( $xml ) ) Request::getLog()->notice( 'Failed XML decode', [ 'xml' => $xml ], '\Framework\Helper\Enumerable' ); // log: notice
     else {
 
       $version  = $dom->xmlVersion;
@@ -239,7 +239,7 @@ abstract class Enumerable {
 
     $result = [ ];
     $ini    = parse_ini_string( $content, false );
-    if( !is_array( $ini ) ) Page::getLog()->notice( 'Invalid INI file', [ 'content' => $content ], '\Framework\Helper\Enumerable' ); // log: notice
+    if( !is_array( $ini ) ) Request::getLog()->notice( 'Invalid INI file', [ 'content' => $content ], '\Framework\Helper\Enumerable' ); // log: notice
     else foreach( $ini as $key => $value ) {
 
       $keys = explode( '.', $key );

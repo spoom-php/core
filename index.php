@@ -1,4 +1,11 @@
-<?php require_once 'define.php';
+<?php require 'framework.php';
 
-// Execute the page
-\Framework\Page::execute();
+try {
+
+  \Framework::run( function () {
+    \Framework\Request::execute();
+  } );
+
+} catch( \Exception $e ) {
+  die( $e->getMessage() );
+}

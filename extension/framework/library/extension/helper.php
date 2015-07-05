@@ -16,11 +16,11 @@ abstract class Helper {
   /**
    * Extension id part separator character
    */
-  const ID_SEPARATOR = _EXTENSION_SEPARATOR;
+  const ID_SEPARATOR = \Framework::EXTENSION_SEPARATOR;
   /**
    * Extension id part count
    */
-  const ID_PART = _EXTENSION_DEPTH;
+  const ID_PART = \Framework::EXTENSION_DEPTH;
   /**
    * Extension id required part index (the package)
    */
@@ -72,7 +72,7 @@ abstract class Helper {
     else {
 
       // return the directory
-      return _PATH_EXTENSION . $id . '/';
+      return \Framework::PATH_EXTENSION . $id . '/';
     }
   }
 
@@ -99,10 +99,10 @@ abstract class Helper {
 
     $name   = '';
     $length = 0;
-    for( $i = 0, $count = count( $input ), $tmp = ''; $i < _EXTENSION_DEPTH && $i < $count; ++$i ) {
+    for( $i = 0, $count = count( $input ), $tmp = ''; $i < \Framework::EXTENSION_DEPTH && $i < $count; ++$i ) {
 
       // check if this path is an extension: check existance of the extension directory
-      $tmp .= ( $i > 0 ? _EXTENSION_SEPARATOR : '' ) . mb_strtolower( $input[ $i ] );
+      $tmp .= ( $i > 0 ? \Framework::EXTENSION_SEPARATOR : '' ) . mb_strtolower( $input[ $i ] );
       if( self::exist( $tmp, true ) ) {
 
         $length = $i + 1;

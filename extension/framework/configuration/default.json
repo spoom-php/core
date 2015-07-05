@@ -1,4 +1,8 @@
 {
+  "level": {
+    "log": "none",
+    "report": "warning"
+  },
   "localization": "en",
   "locale": "english",
   "timezone": "Europe/Budapest",

@@ -1,7 +1,7 @@
 <?php namespace Framework\Helper;
 
 use Framework\Exception\Strict;
-use Framework\Page;
+use Framework\Request;
 use Framework\Storage\Single;
 
 /**
@@ -86,14 +86,14 @@ abstract class String {
       if( !function_exists( 'openssl_random_pseudo_bytes' ) ) {
 
         // log: warning
-        Page::getLog()->warning( 'Cannot use OpenSSL random, `openssl_random_pseudo_bytes()` doesn\'t exists.', [ ], '\Framework\Helper\String' );
+        Request::getLog()->warning( 'Cannot use OpenSSL random, `openssl_random_pseudo_bytes()` doesn\'t exists.', [ ], '\Framework\Helper\String' );
 
       } else {
         $tmp = openssl_random_pseudo_bytes( 64, $strong );
 
         // skip ssl since it wasn't using the strong algo
         if( $strong === true ) $raw .= $tmp;
-        else Page::getLog()->notice( 'Generated OpenSSL random value is not strong, what next?', [ ], '\Framework\Helper\String' ); // log: notice
+        else Request::getLog()->notice( 'Generated OpenSSL random value is not strong, what next?', [ ], '\Framework\Helper\String' ); // log: notice
       }
 
       // try to read from the unix RNG

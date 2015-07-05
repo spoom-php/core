@@ -6,10 +6,10 @@ use Framework\Extension;
 use Framework\Helper\Log;
 
 /**
- * Class Page
+ * Class Request
  * @package Framework
  */
-abstract class Page {
+class Request {
 
   /**
    * Header already sent when try to redirect the page
@@ -21,19 +21,19 @@ abstract class Page {
   const EXCEPTION_WARNING_INVALID_LOCALIZATION = 'framework#10W';
 
   /**
-   * Runs right before the Page::start() method finished. No argument
+   * Runs right before the Request::start() method finished. No argument
    */
-  const EVENT_START = 'page.start';
+  const EVENT_START = 'request.start';
   /**
-   * Runs in the Page::run() method, and this method returns this event result. No argument
+   * Runs in the Request::run() method, and this method returns this event result. No argument
    */
-  const EVENT_RUN = 'page.run';
+  const EVENT_RUN = 'request.run';
   /**
-   * Runs in the Page::stop() method after enable output buffering. Arguments:
-   *  - content [string]: The content to render
+   * Runs in the Request::stop() method after enable output buffering. Arguments:
+   *  - content [string[]]: The contents to render
    *  - buffer [string]: Some output "trash" or empty
    */
-  const EVENT_STOP = 'page.stop';
+  const EVENT_STOP = 'request.stop';
 
   /**
    * Exception collector, for runtime error collect
@@ -53,9 +53,11 @@ abstract class Page {
    * the start and argument passing between run and stop methods
    */
   public static function execute() {
-    if( _REPORT_LEVEL != _LEVEL_DEBUG ) ob_start();
-    self::start();
 
+    $report = \Framework::reportLevel();
+    if( $report != \Framework::LEVEL_DEBUG ) ob_start();
+
+    self::start();
     try {
       $content = self::run();
     } catch( \Exception $e ) {
@@ -63,52 +65,22 @@ abstract class Page {
       $content = [ ];
     }
 
-    $buffer = _REPORT_LEVEL != _LEVEL_DEBUG ? ob_get_clean() : null;
+    $buffer = $report != \Framework::LEVEL_DEBUG ? ob_get_clean() : null;
     self::stop( $content, $buffer );
   }
 
   /**
-   * Trigger page start event and initialise some basics for the Page. This should be called once and before the run
+   * Trigger page start event and initialise some basics for the Request. This should be called once and before the run
    */
   public static function start() {
 
-    // setup error reporting based on _REPORTING flag
-    $reporting = 0;
-    switch( _REPORT_LEVEL ) {
-      case _LEVEL_NONE:
-
-        error_reporting( -1 );
-        ini_set( 'display_errors', 0 );
-
-        break;
-
-      /** @noinspection PhpMissingBreakStatementInspection */
-      case _LEVEL_DEBUG:
-        $reporting = E_ALL;
-      /** @noinspection PhpMissingBreakStatementInspection */
-      case _LEVEL_INFO:
-        $reporting |= E_STRICT | E_DEPRECATED | E_USER_DEPRECATED;
-      /** @noinspection PhpMissingBreakStatementInspection */
-      case _LEVEL_NOTICE:
-        $reporting |= E_NOTICE | E_USER_NOTICE;
-      /** @noinspection PhpMissingBreakStatementInspection */
-      case _LEVEL_WARNING:
-        $reporting |= E_WARNING | E_COMPILE_WARNING | E_CORE_WARNING | E_USER_WARNING;
-      /** @noinspection PhpMissingBreakStatementInspection */
-      case _LEVEL_ERROR:
-        $reporting |= E_ERROR | E_CORE_ERROR | E_USER_ERROR | E_RECOVERABLE_ERROR;
-      /** @noinspection PhpMissingBreakStatementInspection */
-      case _LEVEL_CRITICAL:
-        $reporting |= E_COMPILE_ERROR | E_PARSE;
-      /** @noinspection PhpMissingBreakStatementInspection */
-      default:
-
-        ini_set( 'display_errors', 1 );
-        error_reporting( $reporting );
-    }
-
     // setup localization options
-    $extension          = Extension::instance( 'framework' );
+    $extension = Extension::instance( 'framework' );
+
+    // setup the reporting levels
+    \Framework::reportLevel( $extension->option( 'default:level.report', null ) );
+    \Framework::logLevel( $extension->option( 'default:level.log', null ) );
+
     self::$localization = $extension->option( 'default:localization', $extension->option( 'manifest:localization', 'en' ) );
     setlocale( LC_ALL, $extension->option( 'default:locale', null ) );
 
@@ -129,6 +101,7 @@ abstract class Page {
    * @return array|null The collected page contents
    */
   public static function run() {
+
     $extension = Extension::instance( 'framework' );
 
     // call display event to let extensions render the content

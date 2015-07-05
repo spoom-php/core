@@ -4,7 +4,7 @@ use Framework\Exception;
 use Framework\Exception\Collector;
 use Framework\Extension;
 use Framework\Helper\Library;
-use Framework\Page;
+use Framework\Request;
 
 /**
  * Class Event
@@ -187,7 +187,7 @@ class Event extends Library implements \Countable, \Iterator, \ArrayAccess {
       else {
 
         // log: notice
-        Page::getLog()->notice( 'Invalid event handler for \'{namespace}:{name}\'. Missing library or extension', [
+        Request::getLog()->notice( 'Invalid event handler for \'{namespace}:{name}\'. Missing library or extension', [
           'listener'  => $listener,
           'name'      => $this->_name,
           'namespace' => $this->_namespace
@@ -213,7 +213,7 @@ class Event extends Library implements \Countable, \Iterator, \ArrayAccess {
       if( !$listener || !is_callable( [ $listener, 'execute' ] ) ) {
 
         // log: notice
-        Page::getLog()->notice( 'Invalid event handler for \'{namespace}:{name}\'. Missing execute() method', [
+        Request::getLog()->notice( 'Invalid event handler for \'{namespace}:{name}\'. Missing execute() method', [
           'listener'  => $listener,
           'name'      => $this->_name,
           'namespace' => $this->_namespace

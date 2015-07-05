@@ -33,27 +33,27 @@ class Log extends Library {
   /**
    * Level of critical logs
    */
-  const TYPE_CRITICAL = _LEVEL_CRITICAL;
+  const TYPE_CRITICAL = \Framework::LEVEL_CRITICAL;
   /**
    * Level of error logs
    */
-  const TYPE_ERROR = _LEVEL_ERROR;
+  const TYPE_ERROR = \Framework::LEVEL_ERROR;
   /**
    * Level of warning logs
    */
-  const TYPE_WARNING = _LEVEL_WARNING;
+  const TYPE_WARNING = \Framework::LEVEL_WARNING;
   /**
    * Level of notice logs
    */
-  const TYPE_NOTICE = _LEVEL_NOTICE;
+  const TYPE_NOTICE = \Framework::LEVEL_NOTICE;
   /**
    * Level of info logs
    */
-  const TYPE_INFO = _LEVEL_INFO;
+  const TYPE_INFO = \Framework::LEVEL_INFO;
   /**
    * Level of debug logs
    */
-  const TYPE_DEBUG = _LEVEL_DEBUG;
+  const TYPE_DEBUG = \Framework::LEVEL_DEBUG;
 
   /**
    * Name of critical logs
@@ -83,7 +83,7 @@ class Log extends Library {
   /**
    * Pattern for one log entry for file based logging. This can be processed as a csv row
    */
-  const PATTERN_MESSAGE = "{time};{type};{namespace};{message};{data};{description}\n";
+  const PATTERN_MESSAGE = "{time};{type};{namespace};{description};{data};{message}\n";
 
   /**
    * Map log levels to log name
@@ -104,8 +104,8 @@ class Log extends Library {
    *
    * @var Log[]
    */
-  private static $instance = [];
-  
+  private static $instance = [ ];
+
   /**
    * @var Extension
    */
@@ -143,10 +143,10 @@ class Log extends Library {
     $this->_namespace = empty( $namespace ) ? (string) $this->extension : $namespace;
 
     // define the default log file
-    if( is_dir( _PATH_BASE . _PATH_TMP ) || mkdir( _PATH_BASE . _PATH_TMP, 0777, true ) ) {
+    if( is_dir( _PATH_BASE . \Framework::PATH_TMP ) || mkdir( _PATH_BASE . \Framework::PATH_TMP, 0777, true ) ) {
 
       $date        = date( 'Ymd' );
-      $this->_file = _PATH_BASE . _PATH_TMP . "{$name}-{$date}.log";
+      $this->_file = _PATH_BASE . \Framework::PATH_TMP . "{$name}-{$date}.log";
     }
   }
 
@@ -182,7 +182,8 @@ class Log extends Library {
   public function create( $message, $data = [ ], $namespace = '', $type = self::TYPE_INFO ) {
 
     // check type against reporting level
-    if( !_LOG_LEVEL || _LOG_LEVEL < $type ) return true;
+    $level = \Framework::logLevel();
+    if( $level == \Framework::LEVEL_NONE || $level < $type ) return true;
     else if( !isset( self::$TYPE_NAME[ $type ] ) ) throw new Strict( self::EXCEPTION_NOTICE_INVALID_TYPE, [ 'type' => $type ] );
     else {
 
@@ -282,11 +283,11 @@ class Log extends Library {
    * @return Log
    */
   public static function instance( $name ) {
-    
+
     if( !isset( self::$instance[ $name ] ) ) {
       self::$instance[ $name ] = new Log( $name );
     }
 
     return self::$instance[ $name ];
-}
+  }
 }

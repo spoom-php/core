@@ -2,7 +2,7 @@
 
 use Framework\Extension;
 use Framework\Helper\String;
-use Framework\Page;
+use Framework\Request;
 use Framework\Storage\Directory as DirectoryStorage;
 
 /**
@@ -49,7 +49,7 @@ class Localization extends DirectoryStorage {
     if( $index == 'extension' ) return $this->_extension;
     else if( $index == 'localization' ) {
 
-      if( !isset( $this->_localization ) ) $this->localization = Page::getLocalization();
+      if( !isset( $this->_localization ) ) $this->localization = Request::getLocalization();
       return $this->_localization;
     }
 
@@ -73,7 +73,7 @@ class Localization extends DirectoryStorage {
     switch( $index ) {
       case 'localization':
 
-        $global = Page::getLocalization();
+        $global = Request::getLocalization();
         if( $this->validate( $value ) ) $this->_localization = $value;
         else if( $global != $value && $this->validate( $global ) ) $this->_localization = $global;
         else if( $this->validate( $this->_extension->option( 'manifest:localization' ) ) ) {
@@ -81,7 +81,7 @@ class Localization extends DirectoryStorage {
         }
 
         // log: debug
-        Page::getLog()->debug( 'The \'{localization}\' localization selected', [
+        Request::getLog()->debug( 'The \'{localization}\' localization selected', [
           'localization' => $this->_localization,
           'directory'    => $this->_directory
         ], '\Framework\Extension\Localization' );
@@ -112,7 +112,7 @@ class Localization extends DirectoryStorage {
   protected function path( $namespace, $extension = null, &$exist = false ) {
 
     // define the localization of not already
-    if( !isset( $this->_localization ) ) $this->localization = Page::getLocalization();
+    if( !isset( $this->_localization ) ) $this->localization = Request::getLocalization();
 
     // change the directory temporary then search for the path
     $tmp = $this->_directory;

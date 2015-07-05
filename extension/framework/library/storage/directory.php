@@ -2,7 +2,7 @@
 
 use Framework\Extension;
 use Framework\Helper\Enumerable;
-use Framework\Page;
+use Framework\Request;
 
 /**
  * Class Directory
@@ -139,7 +139,7 @@ class Directory extends Multi {
       if( $exist && !is_writeable( _PATH_BASE . $path ) ) {
 
         // log: warning
-        Page::getLog()->warning( 'Can\'t remove the \'{path}\' file!', [ 'namespace' => $namespace, 'path' => $path ], '\Framework\Storage\File' );
+        Request::getLog()->warning( 'Can\'t remove the \'{path}\' file!', [ 'namespace' => $namespace, 'path' => $path ], '\Framework\Storage\File' );
 
       } else if( $exist ) {
 
@@ -154,7 +154,7 @@ class Directory extends Multi {
       if( !is_dir( $directory ) && @!mkdir( $directory, $permission, true ) ) {
 
         // log: warning
-        Page::getLog()->warning( 'The \'{path}\' file directory not writeable!', [
+        Request::getLog()->warning( 'The \'{path}\' file directory not writeable!', [
           'namespace' => $namespace,
           'directory' => $directory,
           'path'      => $path
@@ -169,7 +169,7 @@ class Directory extends Multi {
       } else {
 
         // log: warning
-        Page::getLog()->warning( 'The \'{path}\' file not writeable!', [ 'namespace' => $namespace, 'path' => $path ], '\Framework\Storage\File' );
+        Request::getLog()->warning( 'The \'{path}\' file not writeable!', [ 'namespace' => $namespace, 'path' => $path ], '\Framework\Storage\File' );
       }
     }
 
@@ -198,7 +198,7 @@ class Directory extends Multi {
         if( !is_readable( _PATH_BASE . $path ) ) {
 
           // log: warning
-          Page::getLog()->warning( 'The \'{path}\' file not readable!', [ 'namespace' => $namespace, 'path' => $path ], '\Framework\Storage\File' );
+          Request::getLog()->warning( 'The \'{path}\' file not readable!', [ 'namespace' => $namespace, 'path' => $path ], '\Framework\Storage\File' );
 
         } else {
 
@@ -388,7 +388,7 @@ class Directory extends Multi {
       else {
 
         // log: warning
-        Page::getLog()->warning( 'Missing converter for \'{format}\' type files', [
+        Request::getLog()->warning( 'Missing converter for \'{format}\' type files', [
           'format' => $format, 'type' => $type, 'namespace' => $namespace
         ], '\Framework\Storage\File' );
 

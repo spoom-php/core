@@ -1,7 +1,7 @@
 <?php namespace Framework\Helper;
 
 use Framework\Extension;
-use Framework\Page;
+use Framework\Request;
 
 /**
  * Trait Feasible
@@ -29,7 +29,7 @@ trait Feasible {
       else {
         
         // log: warning
-        Page::getLog()->warning( 'Missing \'{name}\' executeable', [
+        Request::getLog()->warning( 'Missing \'{name}\' executeable', [
           'name'      => $name,
           'arguments' => $arguments,
           'method'    => $method

@@ -234,7 +234,7 @@ class Extension extends Library {
     }
 
     // log: debug
-    Page::getLog()->debug( 'Missing (class) library: {classnames}', [ 'classnames' => implode( ',', $class_name ) ], '\Framework\Extension' );
+    Request::getLog()->debug( 'Missing (class) library: {classnames}', [ 'classnames' => implode( ',', $class_name ) ], '\Framework\Extension' );
 
     return false;
   }
@@ -257,7 +257,7 @@ class Extension extends Library {
     }
 
     // log: debug
-    Page::getLog()->debug( 'Missing (class) instance: {classname}', [ 'classname' => $class_name ], '\Framework\Extension' );
+    Request::getLog()->debug( 'Missing (class) instance: {classname}', [ 'classname' => $class_name ], '\Framework\Extension' );
 
     return null;
   }

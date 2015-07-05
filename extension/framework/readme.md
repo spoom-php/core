@@ -1,33 +1,33 @@
 The framework extension
 ======
 
-## Page manager (`\Framework\Page` class)
-All of the data related to the page and the code that can generate the page are stored and handled by the `\Framework\Page`
-static class. It stores a basic log(`\Framework\Page::getLog()`), exception collector (`\Framework\Page::getCollector()`),
-as well as the default localization (`\Framework\Page::getLocalization()`). 
+## Request manager (`\Framework\Request` class)
+All of the data related to the page and the code that can generate the page are stored and handled by the `\Framework\Request`
+static class. It stores a basic log(`\Framework\Request::getLog()`), exception collector (`\Framework\Request::getCollector()`),
+as well as the default localization (`\Framework\Request::getLocalization()`). 
 
-It's enough to call the `\Framework\Page::execute()` method to run the generation of the page. It basically calls three
-methods `\Framework\Page::start()`, `\Framework\Page::run()`, `\Framework\Page::stop()` in this order, but it handles errors as
+It's enough to call the `\Framework\Request::execute()` method to run the generation of the page. It basically calls three
+methods `\Framework\Request::start()`, `\Framework\Request::run()`, `\Framework\Request::stop()` in this order, but it handles errors as
 well as, and has other functions too. If it's needed you are able to call them separately (for example on pages where
 there is no output, but keeping the order is highly recommended (and most of the times the `::start()`
 essential).
 
 The `::start()` initializes the settings of the PHP and the attributes of the static class, and then triggers the
-`\Framework\Page::EVENT_PAGE_START` event to make different kinds of registered handlers to be able to initialize their
-own code. The `::run()` is basically a method responsible for triggering the `\Framework\Page::EVENT_PAGE_RUN` event, where
+`\Framework\Request::EVENT_PAGE_START` event to make different kinds of registered handlers to be able to initialize their
+own code. The `::run()` is basically a method responsible for triggering the `\Framework\Request::EVENT_PAGE_RUN` event, where
 the registered handlers are able to generate the page's content and to give it (or them) back as the result of the
 event. This return value (or values) will be the `::run()`'s result (or results), in array format. The `::stop()`
-method is to make the `::run()`'s result displayable with the trigger of the `\Framework\Page::EVENT_PAGE_STOP` event. In this
+method is to make the `::run()`'s result displayable with the trigger of the `\Framework\Request::EVENT_PAGE_STOP` event. In this
 event the registered operators are able to send the final content to the output based on the event's arguments.
 These three sections are completely independent from format and application, and in themselves don't generate any kind
 of output. It's just a frame, which defines the content generation extensions (for example the 'mvc'), general process. 
 
-Use the `\Framework\Page::redirect()` for redirect to a new URL. 
+Use the `\Framework\Request::redirect()` for redirect to a new URL. 
 
 ## Event management
 The event's function is to make other codes (so called handlers) to be able to react to particular extensions' operations,
 and through the event result even be able to modify its result. The generation of the page is also based on this method,
-with the `\Framework\Page::EVENT_*` event.  To run an event, `\Framework\Extension\Event` event has to be instantiated, giving
+with the `\Framework\Request::EVENT_*` event.  To run an event, `\Framework\Extension\Event` event has to be instantiated, giving
 the namespace, the name of the event and it's parameters. After this the event is runable with the `->execute()` method
 (mostly only once, but running it more times is also available). For the extension-based call, use the 
 `\Framework\Extension->trigger()`, which gives the extension's identifier as the event's namespace, the other parameters
@@ -121,7 +121,7 @@ echo $exception->getMessage() // 'this is a wonderful exception's message'
 `````
 
 Every exception can be written in a log with the `->log()` method, where a log manager can be added trough the first parameter,
-but the default is the `\Framework\Page::getLog()`. The `\Framework\Exception\Strict` and `\Framework\Exception\System` get into 
+but the default is the `\Framework\Request::getLog()`. The `\Framework\Exception\Strict` and `\Framework\Exception\System` get into 
 the log at the construct by default. 
 
 ## Extensions
@@ -176,7 +176,7 @@ in the extensions configuration.
 In the */extension/\<id\>/localization/* directory, you can define localization files under directory named as the language
 code. The language code can be anything, but the standard is the two or three letter code of the language. For example the
 english files SHOULD be defined in */extension/\<id\>/localization/en/* directory. The system localization code determined
-from the `Page::getLocalization()` method, or (if this directory doesn't exist) from the **manifest:localization** configuration
+from the `Request::getLocalization()` method, or (if this directory doesn't exist) from the **manifest:localization** configuration
 of the extension. The files can be in json, ini, xml and php format. 
 
 The localization files content is available through the `\Framework\Extension\Localization` class instance or the
