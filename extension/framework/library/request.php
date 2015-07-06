@@ -95,7 +95,7 @@ class Request {
     mb_http_output( $extension->option( 'default:encoding', 'utf8' ) );
 
     // setup timezones
-    date_default_timezone_set( $extension->option( 'default:timezone', 'UTC' ) );
+    date_default_timezone_set( $extension->option( 'default:timezone', date_default_timezone_get() ) );
 
     // Call initialise event
     $extension->trigger( self::EVENT_START );
