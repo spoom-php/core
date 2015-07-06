@@ -12,9 +12,10 @@ use Framework\Helper\Log;
  * @package Framework
  *
  * @property-read string                  $id            Unique name
+ * @property-read Storage\File $manifest      The manifest storage
  * @property-read Extension\Configuration $configuration The configuration storage object
  * @property-read Extension\Localization  $localization  The localization storage object
- * @property-read Log $log           The default extension logger instance
+ * @property-read Log          $log           The default extension logger instance
  */
 class Extension extends Library {
 
@@ -61,6 +62,7 @@ class Extension extends Library {
    */
   private $_id;
 
+  private $_manifest;
   /**
    * Extension directory from root without _PATH_BASE
    *
@@ -117,9 +119,10 @@ class Extension extends Library {
       else {
 
         $this->_directory = $directory;
+        $this->_manifest = new Storage\File( $this->_directory . 'manifest' );
 
         // TODO add custom configuration and localization object support through manifest
-        
+
         // create and configure configuration object
         $this->_configuration = new Extension\Configuration( $this );
         $this->_localization  = new Extension\Localization( $this );
