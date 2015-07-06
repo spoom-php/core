@@ -5,7 +5,7 @@ php_value post_max_size 30M
 # Disable files direct access
 <IfModule mod_alias.c>
   
-  RedirectMatch 403 /define.php
+  RedirectMatch 403 /framework.php
   RedirectMatch 403 /extension/.*?/(configuration)/
   RedirectMatch 403 /extension/.*?/(localization)/
   RedirectMatch 403 /extension/.*?/(library)/

@@ -3,6 +3,9 @@
     "log": "none",
     "report": "warning"
   },
+
+  "import": {},
+  
   "localization": "en",
   "locale": "english",
   "timezone": "Europe/Budapest",

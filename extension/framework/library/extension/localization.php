@@ -72,11 +72,23 @@ class Localization extends Storage\File {
     switch( $index ) {
       case 'localization':
 
+        // save the original localization for later compare
+        $tmp = $this->_localization;
+
+        // set the new localization
         $global = Request::getLocalization();
         if( $this->validate( $value ) ) $this->_localization = $value;
         else if( $global != $value && $this->validate( $global ) ) $this->_localization = $global;
         else if( $this->validate( $this->_extension->option( 'manifest:localization' ) ) ) {
           $this->_localization = $this->_extension->option( 'manifest:localization' );
+        }
+
+        // clear meta/cache/storage when the localization has changed
+        if( $this->_localization != $tmp ) {
+
+          $this->_source = [ ];
+          $this->meta    = [ ];
+          $this->clean();
         }
 
         // log: debug

@@ -13,6 +13,8 @@ use Framework\Storage;
  * Class Permanent
  * @package Framework\Storage
  *
+ * TODO add static cache for the load mechanism to optimalize the process
+ *
  * @property-read Exception|null     $exception The latest exception object
  * @property-read PermanentConverter $converter The converter object that parse and build the input and output object/string
  * @property      bool               $auto      Autoload the namespaces or not

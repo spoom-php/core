@@ -118,6 +118,8 @@ class Extension extends Library {
 
         $this->_directory = $directory;
 
+        // TODO add custom configuration and localization object support through manifest
+        
         // create and configure configuration object
         $this->_configuration = new Extension\Configuration( $this );
         $this->_localization  = new Extension\Localization( $this );

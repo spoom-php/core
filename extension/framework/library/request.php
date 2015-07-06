@@ -81,6 +81,12 @@ class Request {
     \Framework::reportLevel( $extension->option( 'default:level.report', null ) );
     \Framework::logLevel( $extension->option( 'default:level.log', null ) );
 
+    // add custom namespaces from configuration
+    $import = $extension->option( 'default:import!array' );
+    if( !empty( $import ) ) foreach( $import as $namespace => $path ) {
+      \Framework::connect( $namespace, $path );
+    }
+
     self::$localization = $extension->option( 'default:localization', $extension->option( 'manifest:localization', 'en' ) );
     setlocale( LC_ALL, $extension->option( 'default:locale', null ) );
 
