@@ -120,12 +120,6 @@ class Extension extends Library {
 
         $this->_directory = $directory;
         $this->_manifest = new Storage\File( $this->_directory . 'manifest' );
-
-        // TODO add custom configuration and localization object support through manifest
-
-        // create and configure configuration object
-        $this->_configuration = new Extension\Configuration( $this );
-        $this->_localization  = new Extension\Localization( $this );
       }
     }
   }
@@ -141,11 +135,32 @@ class Extension extends Library {
     if( !property_exists( $this, $iindex ) ) return parent::__get( $index );
     else {
 
-      // lazy create the logger
-      if( $index == 'log' && !$this->_log ) {
-        $this->_log = Log::instance( $this->_id );
-      }
+      // lazy create some variable
+      switch( $index ) {
+        case 'log':
 
+          if( !$this->_log ) {
+            $this->_log = Log::instance( $this->_id );
+          }
+
+          break;
+
+        // TODO add custom configuration and localization object support through manifest
+        case 'configuration':
+
+          if( !$this->_configuration ) {
+            $this->_configuration = new Extension\Configuration( $this );
+          }
+
+          break;
+        case 'localization':
+
+          if( !$this->_localization ) {
+            $this->_localization = new Extension\Localization( $this );
+          }
+
+          break;
+      }
       return $this->{$iindex};
     }
   }
@@ -162,8 +177,8 @@ class Extension extends Library {
    */
   public function __clone() {
 
-    $this->_configuration = clone $this->_configuration;
-    $this->_localization = clone $this->_localization;
+    if( $this->_configuration ) $this->_configuration = clone $this->_configuration;
+    if( $this->_localization ) $this->_localization = clone $this->_localization;
   }
 
   /**
@@ -176,7 +191,7 @@ class Extension extends Library {
    * @return string
    */
   public function text( $index, $insertion = null, $default = '' ) {
-    return $this->_localization->getPattern( $index, $insertion, $default );
+    return $this->localization->getPattern( $index, $insertion, $default );
   }
   /**
    * Get configuration variable from extension configuration object. It's a proxy for Configuration::get() method
@@ -187,7 +202,7 @@ class Extension extends Library {
    * @return mixed
    */
   public function option( $index, $default = null ) {
-    return $this->_configuration->get( $index, $default );
+    return $this->configuration->get( $index, $default );
   }
 
   /**

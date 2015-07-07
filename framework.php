@@ -237,6 +237,28 @@ class Framework {
       return $name;
     }
   }
+  /**
+   * Get a class fully qualified name
+   *
+   * @param string    $definition A fully qualified classname or an extension library with 'extension:library' syntax where the library is in dot notated format
+   * @param bool|true $validate   Only return the class if it's really exists
+   *
+   * @return string|null The class fully qualified name or null if not exist and validate is true
+   */
+  public static function library( $definition, $validate = true ) {
+
+    if( !strpos( $definition, ':' ) ) $class = '\\' . trim( $definition, '\\' );
+    else {
+
+      list( $extension, $library ) = explode( ':', $definition, 2 );
+      $class = str_replace( self::EXTENSION_SEPARATOR, ' ', $extension ) . ' ' . str_replace( '.', ' ', $library );
+      if( ctype_lower( str_replace( ' ', '', $class ) ) ) $class = ucwords( $class );
+
+      $class = '\\' . str_replace( ' ', '\\', $class );
+    }
+
+    return !$validate || self::import( $class ) ? $class : null;
+  }
 
   /**
    * Add custom namespace root directory for the importer
