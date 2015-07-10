@@ -104,44 +104,6 @@ class Event extends Library implements \Countable, \Iterator, \ArrayAccess {
   }
 
   /**
-   * Getter for _ prefixed attributes
-   *
-   * @param string $index
-   *
-   * @return string|null
-   */
-  public function __get( $index ) {
-
-    $index = '_' . $index;
-    return property_exists( $this, $index ) ? $this->{$index} : null;
-  }
-  /**
-   * Setter for stopped or prevent attribute
-   *
-   * @param string $index
-   * @param mixed  $value
-   */
-  public function __set( $index, $value ) {
-
-    switch( $index ) {
-      case 'stopped':
-        $this->_stopped = $value == true;
-        break;
-      case 'prevented':
-        $this->_prevented = $value == true;
-        break;
-    }
-  }
-  /**
-   * @param string $index
-   *
-   * @return bool
-   */
-  public function __isset( $index ) {
-    return property_exists( $this, '_' . $index );
-  }
-
-  /**
    * Execute the event. Collect and call listeners and store results.
    *
    * @return self
@@ -238,6 +200,61 @@ class Event extends Library implements \Countable, \Iterator, \ArrayAccess {
       'instance'  => self::$cache[ $index ],
       'data'      => isset( $options->data ) ? $options->data : null
     ];
+  }
+
+  /**
+   * @return string
+   */
+  public function getName() {
+    return $this->_name;
+  }
+  /**
+   * @return null|string
+   */
+  public function getNamespace() {
+    return $this->_namespace;
+  }
+  /**
+   * @return array
+   */
+  public function getArgument() {
+    return $this->_argument;
+  }
+  /**
+   * @return array|null
+   */
+  public function getResult() {
+    return $this->_result;
+  }
+  /**
+   * @return Collector
+   */
+  public function getCollector() {
+    return $this->_collector;
+  }
+  /**
+   * @return boolean
+   */
+  public function isStopped() {
+    return $this->_stopped;
+  }
+  /**
+   * @param boolean $value
+   */
+  public function setStopped( $value ) {
+    $this->_stopped = (bool) $value;
+  }
+  /**
+   * @return boolean
+   */
+  public function isPrevented() {
+    return $this->_prevented;
+  }
+  /**
+   * @param boolean $value
+   */
+  public function setPrevented( $value ) {
+    $this->_prevented = (bool) $value;
   }
 
   /**

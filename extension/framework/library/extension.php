@@ -11,6 +11,8 @@ use Framework\Helper\Log;
  *
  * @package Framework
  *
+ * TODO add custom configuration and localization object support through manifest
+ *
  * @property-read string                  $id            Unique name
  * @property-read Storage\File $manifest      The manifest storage
  * @property-read Extension\Configuration $configuration The configuration storage object
@@ -62,6 +64,11 @@ class Extension extends Library {
    */
   private $_id;
 
+  /**
+   * Provide the manifest data access
+   *
+   * @var Storage\File
+   */
   private $_manifest;
   /**
    * Extension directory from root without _PATH_BASE
@@ -124,54 +131,6 @@ class Extension extends Library {
     }
   }
 
-  /**
-   * @param string $index
-   *
-   * @return mixed
-   */
-  public function __get( $index ) {
-
-    $iindex = '_' . $index;
-    if( !property_exists( $this, $iindex ) ) return parent::__get( $index );
-    else {
-
-      // lazy create some variable
-      switch( $index ) {
-        case 'log':
-
-          if( !$this->_log ) {
-            $this->_log = Log::instance( $this->_id );
-          }
-
-          break;
-
-        // TODO add custom configuration and localization object support through manifest
-        case 'configuration':
-
-          if( !$this->_configuration ) {
-            $this->_configuration = new Extension\Configuration( $this );
-          }
-
-          break;
-        case 'localization':
-
-          if( !$this->_localization ) {
-            $this->_localization = new Extension\Localization( $this );
-          }
-
-          break;
-      }
-      return $this->{$iindex};
-    }
-  }
-  /**
-   * @param string $index
-   *
-   * @return bool
-   */
-  public function __isset( $index ) {
-    return property_exists( $this, '_' . $index ) || parent::__isset( $index );
-  }
   /**
    * Clone the configuration and localization properties
    */
@@ -254,7 +213,7 @@ class Extension extends Library {
   public function library( $class_name ) {
     if( !is_array( $class_name ) ) $class_name = [ $class_name ];
 
-    $base = str_replace( '-', '\\', $this->id ) . '\\';
+    $base = str_replace( '-', '\\', $this->_id ) . '\\';
     foreach( $class_name as $name ) {
 
       $class = $base . str_replace( '.', '\\', $name );
@@ -300,8 +259,54 @@ class Extension extends Library {
    */
   public function trigger( $event, $arguments = [ ] ) {
 
-    $event = new Extension\Event( $this->id, $event, $arguments );
+    $event = new Extension\Event( $this->_id, $event, $arguments );
     return $event->execute();
+  }
+
+  /**
+   * @return string
+   */
+  public function getId() {
+    return $this->_id;
+  }
+  /**
+   * @return Storage\File
+   */
+  public function getManifest() {
+    return $this->_manifest;
+  }
+  /**
+   * @return Extension\Configuration
+   */
+  public function getConfiguration() {
+
+    if( !$this->_configuration ) {
+      $this->_configuration = new Extension\Configuration( $this );
+    }
+
+    return $this->_configuration;
+  }
+  /**
+   * @return Extension\Localization
+   */
+  public function getLocalization() {
+
+    if( !$this->_localization ) {
+      $this->_localization = new Extension\Localization( $this );
+    }
+
+    return $this->_localization;
+  }
+  /**
+   * @return Log
+   */
+  public function getLog() {
+
+    if( !$this->_log ) {
+      $this->_log = Log::instance( $this->_id );
+    }
+
+    return $this->_log;
   }
 
   /**

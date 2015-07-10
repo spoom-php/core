@@ -151,26 +151,6 @@ class Log extends Library {
   }
 
   /**
-   * @param string $index
-   *
-   * @return mixed
-   */
-  public function __get( $index ) {
-
-    $iindex = '_' . $index;
-    if( property_exists( $this, $iindex ) ) return $this->{$iindex};
-    else return null;
-  }
-  /**
-   * @param string $index
-   *
-   * @return bool
-   */
-  public function __isset( $index ) {
-    return property_exists( $this, '_' . $index );
-  }
-
-  /**
    * @param string              $message   The log message pattern
    * @param array|object|Storage $data The pattern insertion or additional data
    * @param string              $namespace The namespace for the log entry
@@ -274,7 +254,26 @@ class Log extends Library {
   public function critical( $message, $data = [ ], $namespace = '' ) {
     return $this->create( $message, $data, $namespace, self::TYPE_CRITICAL );
   }
-
+  
+  /**
+   * @return string
+   */
+  public function getNamespace() {
+    return $this->_namespace;
+  }
+  /**
+   * @return string
+   */
+  public function getName() {
+    return $this->_name;
+  }
+  /**
+   * @return string
+   */
+  public function getFile() {
+    return $this->_file;
+  }
+  
   /**
    * Instance factory (identified by the name)
    *

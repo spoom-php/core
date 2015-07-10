@@ -66,23 +66,6 @@ abstract class Permanent extends Storage {
   }
 
   /**
-   * @param string $index
-   * @param mixed  $value
-   */
-  public function __set( $index, $value ) {
-
-    switch( $index ) {
-      case 'auto':
-        $this->_auto = (bool) $value;
-        break;
-      case 'format':
-        $this->_format = (string) $value;
-        break;
-      default:
-        parent::__set( $index, $value );
-    }
-  }
-  /**
    * Clone the converter and all of the stored meta
    */
   public function __clone() {
@@ -184,12 +167,49 @@ abstract class Permanent extends Storage {
   protected function search( $index, $build = false, $is_read = true ) {
 
     // try to load the storage data if there is no already
-    if( $this->_auto && empty( $this->meta[ $index->namespace ] ) ) {
+    if( $this->isAuto() && empty( $this->meta[ $index->namespace ] ) ) {
       $this->load( $index->namespace );
     }
 
     // delegate problem to the parent
     return parent::search( $index, $build, $is_read );
+  }
+
+  /**
+   * @return Exception|null
+   */
+  public function getException() {
+    return $this->_exception;
+  }
+  /**
+   * @return PermanentConverter
+   */
+  public function getConverter() {
+    return $this->_converter;
+  }
+  /**
+   * @return boolean
+   */
+  public function isAuto() {
+    return $this->_auto;
+  }
+  /**
+   * @param boolean $value
+   */
+  public function setAuto( $value ) {
+    $this->_auto = (bool) $value;
+  }
+  /**
+   * @return string
+   */
+  public function getFormat() {
+    return $this->_format;
+  }
+  /**
+   * @param string $value
+   */
+  public function setFormat( $value ) {
+    $this->_format = (string) $value;
   }
 
   /**
@@ -239,6 +259,13 @@ class PermanentMeta extends Storage {
 
     $this->_format = $format;
   }
+
+  /**
+   * @return string
+   */
+  public function getFormat() {
+    return $this->_format;
+  }
 }
 /**
  * Class PermanentConverter
@@ -270,17 +297,6 @@ class PermanentConverter extends Library implements FeasibleInterface {
    * @var bool
    */
   protected $_native = false;
-
-  /**
-   * @param $name
-   * @param $value
-   */
-  public function __set( $name, $value ) {
-
-    if( $name == 'native' ) {
-      $this->_native = (bool) $value;
-    }
-  }
 
   /**
    * Serialize any content to a formatted (the output format specified by the meta property) string
@@ -476,5 +492,18 @@ class PermanentConverter extends Library implements FeasibleInterface {
     $meta->set( '', [ 'attribute' => $attribute, 'version' => $version, 'encoding' => $encoding ] );
 
     return $tmp;
+  }
+
+  /**
+   * @return boolean
+   */
+  public function isNative() {
+    return $this->_native;
+  }
+  /**
+   * @param boolean $value
+   */
+  public function setNative( $value ) {
+    $this->_native = (bool) $value;
   }
 }

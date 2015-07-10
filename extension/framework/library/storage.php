@@ -184,15 +184,36 @@ interface StorageInterface extends \ArrayAccess, \JsonSerializable {
    * @return $this
    */
   public function each( $function, $index );
+
+  /**
+   * @return int
+   */
+  public function getCaching();
+  /**
+   * @param int $value
+   */
+  public function setCaching( $value );
+  /**
+   * @return null|string
+   */
+  public function getNamespace();
+  /**
+   * @param null|string $value
+   */
+  public function setNamespace( $value );
+  /**
+   * @return array
+   */
+  public function getSource();
 }
 
 /**
  * Class Storage
  * @package Framework
  *
- * @property      int         $caching The cache type. One of the CACHE_* constants
- * @property-read mixed       $source
- * @property      string|null $namespace
+ * @property      int         $caching   The cache type. One of the CACHE_* constants
+ * @property-read mixed       $source    The storage source variable
+ * @property      string|null $namespace The default namespace if not provided. If null, no default namespace is added to the index
  */
 class Storage extends Library implements StorageInterface {
 
@@ -239,45 +260,6 @@ class Storage extends Library implements StorageInterface {
     $this->_namespace = $namespace;
   }
 
-  /**
-   * @param string $index
-   *
-   * @return mixed
-   */
-  public function __get( $index ) {
-    $iindex = '_' . $index;
-
-    if( property_exists( $this, $iindex ) ) return $this->{$iindex};
-    else return parent::__get( $index );
-  }
-  /**
-   * @param string $index
-   *
-   * @return bool
-   */
-  public function __isset( $index ) {
-    return property_exists( $this, '_' . $index ) || parent::__isset( $index );
-  }
-  /**
-   * @param string $index
-   * @param mixed  $value
-   */
-  public function __set( $index, $value ) {
-
-    switch( $index ) {
-      case 'namespace':
-
-        $this->_namespace = !empty( $value ) ? (string) $value : null;
-
-        break;
-      case 'caching':
-
-        $this->_caching = (int) $value;
-        $this->clean();
-
-        break;
-    }
-  }
   /**
    * Create deep copy from the source and clears the cache
    */
@@ -563,10 +545,10 @@ class Storage extends Library implements StorageInterface {
   protected function connect( &$enumerable, $namespace ) {
 
     if( Enumerable::is( $enumerable ) ) {
-      $this->source[ $namespace ] = &$enumerable;
+      $this->_source[ $namespace ] = &$enumerable;
 
       // clear the cache or the cache index
-      if( $this->caching != self::CACHE_NONE ) {
+      if( $this->_caching != self::CACHE_NONE ) {
         $this->clean( $this->parse( $namespace . self::SEPARATOR_NAMESPACE ) );
       }
     }
@@ -698,8 +680,8 @@ class Storage extends Library implements StorageInterface {
   /**
    * Process the storage getter result. This will convert the result to the right type
    *
-   * @param object    $index       The result of index() method
-   * @param mixed     $default     The default value if no right type cast or existance
+   * @param object $index   The result of index() method
+   * @param mixed  $default The default value if no right type cast or existance
    *
    * @return mixed
    */
@@ -752,6 +734,38 @@ class Storage extends Library implements StorageInterface {
     }
 
     return $result;
+  }
+
+  /**
+   * @return int
+   */
+  public function getCaching() {
+    return $this->_caching;
+  }
+  /**
+   * @param int $value
+   */
+  public function setCaching( $value ) {
+    $this->_caching = (int) $value;
+    $this->clean();
+  }
+  /**
+   * @return null|string
+   */
+  public function getNamespace() {
+    return $this->_namespace;
+  }
+  /**
+   * @param null|string $value
+   */
+  public function setNamespace( $value ) {
+    $this->_namespace = !empty( $value ) ? (string) $value : null;
+  }
+  /**
+   * @return array
+   */
+  public function getSource() {
+    return $this->_source;
   }
 
   /**

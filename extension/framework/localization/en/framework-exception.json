@@ -18,5 +18,7 @@
   "#16W": "Can't remove the path ({path})",
   "#17E": "Can't remove the path ({path}) due to: {error}",
   "#18W": "The path for the permanent storage is not defined",
-  "#19N": "Can't clean some remained file ({path}) after format change"
+  "#19N": "Can't clean some remained file ({path}) after format change",
+
+  "#20N": "Missing class property"
 }
