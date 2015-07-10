@@ -13,11 +13,11 @@ use Framework\Helper\Log;
  *
  * TODO add custom configuration and localization object support through manifest
  *
- * @property-read string                  $id            Unique name
- * @property-read Storage\File $manifest      The manifest storage
- * @property-read Extension\Configuration $configuration The configuration storage object
- * @property-read Extension\Localization  $localization  The localization storage object
- * @property-read Log          $log           The default extension logger instance
+ * @property-read string                           $id            Unique name
+ * @property-read Storage\File                     $manifest      The manifest storage
+ * @property-read Extension\ConfigurationInterface $configuration The configuration storage object
+ * @property-read Extension\LocalizationInterface  $localization  The localization storage object
+ * @property-read Log                              $log           The default extension logger instance
  */
 class Extension extends Library {
 
@@ -39,6 +39,18 @@ class Extension extends Library {
    *  - id [string]: Extension id
    */
   const EXCEPTION_CRITICAL_MISSING_EXTENSION = 'framework#5C';
+  /**
+   * The configuration class definition invalid. Data:
+   *  - extension [string]: The extension id
+   *  - class [string]: The classname that is invalid (or null if not exist)
+   */
+  const EXCEPTION_INVALID_CONFIGURATION = 'framework#21C';
+  /**
+   * The localization class definition invalid. Data:
+   *  - extension [string]: The extension id
+   *  - class [string]: The classname that is invalid (or null if not exist)
+   */
+  const EXCEPTION_INVALID_LOCALIZATION = 'framework#22C';
 
   /**
    * Exception code for invalid extension id
@@ -79,13 +91,13 @@ class Extension extends Library {
   /**
    * Handle configuration files for the extension
    *
-   * @var Extension\Configuration
+   * @var Extension\ConfigurationInterface
    */
   private $_configuration = null;
   /**
    * Handle localization files for the extension
    *
-   * @var Extension\Localization
+   * @var Extension\LocalizationInterface
    */
   private $_localization = null;
   /**
@@ -114,7 +126,7 @@ class Extension extends Library {
     else {
 
       $class     = explode( '\\', mb_strtolower( get_class( $this ) ) );
-      $this->_id = Extension\Helper::search( $class );
+      $this->_id = \Framework::search( $class );
     }
 
     if( !Extension\Helper::validate( $this->_id ) ) throw new Exception\Strict( self::EXCEPTION_NOTICE_INVALID_ID, [ 'id' => $this->_id ] );
@@ -276,23 +288,38 @@ class Extension extends Library {
     return $this->_manifest;
   }
   /**
-   * @return Extension\Configuration
+   * @return Extension\ConfigurationInterface
+   * @throws Exception\System
    */
   public function getConfiguration() {
 
     if( !$this->_configuration ) {
-      $this->_configuration = new Extension\Configuration( $this );
+
+      $tmp   = $this->_manifest->getString( 'storage.configuration', 'framework:extension.configuration' );
+      $class = \Framework::library( $tmp );
+      if( $class && is_subclass_of( $class, '\Framework\Extension\ConfigurationInterface' ) ) $this->_configuration = new $class( $this );
+      else throw new Exception\System( self::EXCEPTION_INVALID_CONFIGURATION, [
+        'extension' => $this->_id,
+        'class'     => \Framework::library( $tmp, false )
+      ] );
     }
 
     return $this->_configuration;
   }
   /**
-   * @return Extension\Localization
+   * @return Extension\LocalizationInterface
+   * @throws Exception\System
    */
   public function getLocalization() {
 
     if( !$this->_localization ) {
-      $this->_localization = new Extension\Localization( $this );
+
+      $class = \Framework::library( $this->_manifest->getString( 'storage.localization', 'framework:extension.localization' ) );
+      if( $class && is_subclass_of( $class, '\Framework\Extension\LocalizationInterface' ) ) $this->_localization = new $class( $this );
+      else throw new Exception\System( self::EXCEPTION_INVALID_LOCALIZATION, [
+        'extension' => $this->_id,
+        'class'     => $class
+      ] );
     }
 
     return $this->_localization;

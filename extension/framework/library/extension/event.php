@@ -11,6 +11,8 @@ use Framework\Storage;
  * Class Event
  * @package Framework\Extension
  *
+ * TODO rethink the event storage type
+ *
  * @property      bool       $prevented The default event action has been prevented or not
  * @property      bool       $stopped   Stopped next handler call or not
  * @property-read string     $name      The event name
@@ -30,7 +32,7 @@ class Event extends Library implements \Countable, \Iterator, \ArrayAccess {
   /**
    * Storage for the event handlers
    *
-   * @var Storage
+   * @var Storage\Permanent
    */
   private static $storage;
 
@@ -92,8 +94,10 @@ class Event extends Library implements \Countable, \Iterator, \ArrayAccess {
 
     // define the default storage
     if( !self::$storage ) {
-      self::$storage                    = clone ( Extension::instance( 'framework' )->configuration );
-      self::$storage->converter->native = true;
+      
+      $extension                             = Extension::instance( 'framework' );
+      self::$storage                         = new Storage\File( $extension->directory() . Extension::DIRECTORY_CONFIGURATION );
+      self::$storage->getConverter()->native = true;
     }
 
     // set default params

@@ -20,5 +20,7 @@
   "#18W": "The path for the permanent storage is not defined",
   "#19N": "Can't clean some remained file ({path}) after format change",
 
-  "#20N": "Missing class property"
+  "#20N": "Missing class property ({property})",
+  "#21C": "Invalid or missing configuration storage ({class}) for the '{extension}' extension",
+  "#22C": "Invalid or missing localization storage ({class}) for the '{extension}' extension"
 }

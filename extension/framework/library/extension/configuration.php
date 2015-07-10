@@ -3,13 +3,28 @@
 use Framework\Extension;
 use Framework\Storage;
 
+interface ConfigurationInterface extends Storage\PermanentInterface {
+
+  /**
+   * Set defaults
+   *
+   * @param Extension $source
+   */
+  public function __construct( Extension $source );
+
+  /**
+   * @return Extension
+   */
+  public function getExtension();
+}
+
 /**
  * Class Configuration
  * @package Framework\Extension
  *
  * @property-read Extension $extension The extension source of the configuration
  */
-class Configuration extends Storage\File {
+class Configuration extends Storage\File implements ConfigurationInterface {
 
   /**
    * Extension data source

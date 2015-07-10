@@ -247,7 +247,8 @@ class Framework {
    */
   public static function library( $definition, $validate = true ) {
 
-    if( !strpos( $definition, ':' ) ) $class = '\\' . trim( $definition, '\\' );
+    if( empty( $definition ) ) return $validate ? null : $definition;
+    else if( !strpos( $definition, ':' ) ) $class = '\\' . trim( $definition, '\\' );
     else {
 
       list( $extension, $library ) = explode( ':', $definition, 2 );

@@ -7,6 +7,8 @@ use Framework\Helper\String;
 /**
  * Interface StorageInterface
  * @package Framework\Storage
+ *
+ * TODO optimize the 'search' cache format (for non-exists indexes)
  */
 interface StorageInterface extends \ArrayAccess, \JsonSerializable {
 
@@ -129,6 +131,16 @@ interface StorageInterface extends \ArrayAccess, \JsonSerializable {
    * @return callable|mixed
    */
   public function getCallable( $index, $default = null );
+  /**
+   * Same as the getString method, but insert data to string with String::insert()
+   *
+   * @param string $index
+   * @param array  $insertion
+   * @param string $default
+   *
+   * @return null|string
+   */
+  public function getPattern( $index, $insertion, $default = '' );
 
   /**
    * Set the index to value and create structure for the index
@@ -573,31 +585,26 @@ class Storage extends Library implements StorageInterface {
     // because if it's build then the returned value may changed outside
     if( $this->_caching != self::CACHE_NONE && ( $is_read || $this->_caching == self::CACHE_REFERENCE ) && isset( $this->cache[ 'search' ][ $index->id ] ) ) {
       return (object) [
-        'exist'     => true,
+        'exist' => $this->cache[ 'search' ][ $index->id ][ 'exist' ],
         'container' => &$this->cache[ 'search' ][ $index->id ][ 'container' ],
         'key'       => $this->cache[ 'search' ][ $index->id ][ 'key' ]
       ];
     }
 
     $result = Enumerable::search( $this->_source, $index->token, $build );
-    if( Enumerable::is( $result->container ) ) {
+    switch( $this->_caching ) {
+      case self::CACHE_SIMPLE:
 
-      switch( $this->_caching ) {
-        case self::CACHE_SIMPLE:
+        $this->cache[ 'search' ][ $index->id ] = (array) $result;
+        break;
 
-          $this->cache[ 'search' ][ $index->id ] = [
-            'container' => $result->container,
-            'key'       => $result->key
-          ];
-          break;
-
-        case self::CACHE_REFERENCE:
-          $this->cache[ 'search' ][ $index->id ] = [
-            'container' => &$result->container,
-            'key'       => $result->key
-          ];
-          break;
-      }
+      case self::CACHE_REFERENCE:
+        $this->cache[ 'search' ][ $index->id ] = [
+          'exist'     => $result->exist,
+          'container' => &$result->container,
+          'key'       => $result->key
+        ];
+        break;
     }
 
     return $result;

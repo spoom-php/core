@@ -5,13 +5,44 @@ use Framework\Request;
 use Framework\Storage;
 
 /**
+ * Interface LocalizationInterface
+ * @package Framework\Extension
+ */
+interface LocalizationInterface extends Storage\PermanentInterface {
+
+  /**
+   * Set defaults
+   *
+   * @param Extension $source
+   */
+  public function __construct( Extension $source );
+
+  /**
+   * @return Extension
+   */
+  public function getExtension();
+  /**
+   * Get the current localization name
+   *
+   * @return string
+   */
+  public function getLocalization();
+  /**
+   * Set the current localization name
+   *
+   * @param string $value
+   */
+  public function setLocalization( $value );
+}
+
+/**
  * Class Localization
  * @package Framework\Extension
  *
  * @property-read Extension $extension    The extension source of the localization
  * @property      string    $localization The current localization name
  */
-class Localization extends Storage\File {
+class Localization extends Storage\File implements LocalizationInterface {
 
   /**
    * Extension data source
