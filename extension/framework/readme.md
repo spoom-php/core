@@ -176,7 +176,7 @@ in the extensions configuration.
 In the */extension/\<id\>/localization/* directory, you can define localization files under directory named as the language
 code. The language code can be anything, but the standard is the two or three letter code of the language. For example the
 english files SHOULD be defined in */extension/\<id\>/localization/en/* directory. The system localization code determined
-from the `Request::getLocalization()` method, or (if this directory doesn't exist) from the **manifest:localization** configuration
+from the `Request::getLocalization()` method, or (if this directory doesn't exist) from the manifest **localization** index
 of the extension. The files can be in json, ini, xml and php format. 
 
 The localization files content is available through the `\Framework\Extension\Localization` class instance or the

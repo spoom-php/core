@@ -9,7 +9,6 @@ use Framework\Exception;
  * TODO implement multi storage null namespace support (synced namespace save/load/remove)
  *
  * @property-read string $path  The path base for the storage
- * @property-read bool   $multi Use namespaces or not (directory or simple file storage)
  */
 class File extends Permanent {
 
@@ -75,21 +74,7 @@ class File extends Permanent {
   public function __construct( $path ) {
     $this->_path = $path;
 
-    parent::__construct( null, $this->multi ? 'default' : null, self::CACHE_NONE );
-  }
-
-  /**
-   * @param string $index
-   *
-   * @return bool|mixed
-   */
-  public function __get( $index ) {
-
-    if( $index == 'multi' ) {
-      return $this->_path && $this->_path{strlen( $this->_path ) - 1} === '/';
-    }
-
-    return parent::__get( $index );
+    parent::__construct( null, $this->isMulti() ? 'default' : null, self::CACHE_NONE );
   }
 
   /**
@@ -195,7 +180,7 @@ class File extends Permanent {
     if( !$this->_path ) throw new Exception\Strict( self::EXCEPTION_MISSING_PATH );
     else {
 
-      if( !$this->multi ) $path = $this->_path . '.';
+      if( !$this->isMulti() ) $path = $this->_path . '.';
       else if( $namespace === null ) throw new Exception\Strict( self::EXCEPTION_INVALID_NAMESPACE );
       else $path = $this->_path . $namespace . '.';
 
@@ -277,5 +262,20 @@ class File extends Permanent {
       $result = @unlink( _PATH_BASE . $path );
       if( !$result ) throw new Exception\System( self::EXCEPTION_FAIL_DESTROY, [ 'path' => $path, 'error' => error_get_last() ] );
     }
+  }
+
+  /**
+   * Use namespaces or not (directory or simple file storage)
+   *
+   * @return bool
+   */
+  public function isMulti() {
+    return $this->_path && $this->_path{strlen( $this->_path ) - 1} === '/';
+  }
+  /**
+   * @return string
+   */
+  public function getPath() {
+    return $this->_path;
   }
 }

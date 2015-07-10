@@ -11,6 +11,8 @@ use Framework\Storage;
  * Class Event
  * @package Framework\Extension
  *
+ * TODO rethink the event storage type
+ *
  * @property      bool       $prevented The default event action has been prevented or not
  * @property      bool       $stopped   Stopped next handler call or not
  * @property-read string     $name      The event name
@@ -30,7 +32,7 @@ class Event extends Library implements \Countable, \Iterator, \ArrayAccess {
   /**
    * Storage for the event handlers
    *
-   * @var Storage
+   * @var Storage\Permanent
    */
   private static $storage;
 
@@ -92,8 +94,10 @@ class Event extends Library implements \Countable, \Iterator, \ArrayAccess {
 
     // define the default storage
     if( !self::$storage ) {
-      self::$storage                    = clone ( Extension::instance( 'framework' )->configuration );
-      self::$storage->converter->native = true;
+      
+      $extension                             = Extension::instance( 'framework' );
+      self::$storage                         = new Storage\File( $extension->directory() . Extension::DIRECTORY_CONFIGURATION );
+      self::$storage->getConverter()->native = true;
     }
 
     // set default params
@@ -101,44 +105,6 @@ class Event extends Library implements \Countable, \Iterator, \ArrayAccess {
     $this->_name      = $name;
     $this->_argument  = $arguments;
     $this->_collector = new Collector();
-  }
-
-  /**
-   * Getter for _ prefixed attributes
-   *
-   * @param string $index
-   *
-   * @return string|null
-   */
-  public function __get( $index ) {
-
-    $index = '_' . $index;
-    return property_exists( $this, $index ) ? $this->{$index} : null;
-  }
-  /**
-   * Setter for stopped or prevent attribute
-   *
-   * @param string $index
-   * @param mixed  $value
-   */
-  public function __set( $index, $value ) {
-
-    switch( $index ) {
-      case 'stopped':
-        $this->_stopped = $value == true;
-        break;
-      case 'prevented':
-        $this->_prevented = $value == true;
-        break;
-    }
-  }
-  /**
-   * @param string $index
-   *
-   * @return bool
-   */
-  public function __isset( $index ) {
-    return property_exists( $this, '_' . $index );
   }
 
   /**
@@ -238,6 +204,61 @@ class Event extends Library implements \Countable, \Iterator, \ArrayAccess {
       'instance'  => self::$cache[ $index ],
       'data'      => isset( $options->data ) ? $options->data : null
     ];
+  }
+
+  /**
+   * @return string
+   */
+  public function getName() {
+    return $this->_name;
+  }
+  /**
+   * @return null|string
+   */
+  public function getNamespace() {
+    return $this->_namespace;
+  }
+  /**
+   * @return array
+   */
+  public function getArgument() {
+    return $this->_argument;
+  }
+  /**
+   * @return array|null
+   */
+  public function getResult() {
+    return $this->_result;
+  }
+  /**
+   * @return Collector
+   */
+  public function getCollector() {
+    return $this->_collector;
+  }
+  /**
+   * @return boolean
+   */
+  public function isStopped() {
+    return $this->_stopped;
+  }
+  /**
+   * @param boolean $value
+   */
+  public function setStopped( $value ) {
+    $this->_stopped = (bool) $value;
+  }
+  /**
+   * @return boolean
+   */
+  public function isPrevented() {
+    return $this->_prevented;
+  }
+  /**
+   * @param boolean $value
+   */
+  public function setPrevented( $value ) {
+    $this->_prevented = (bool) $value;
   }
 
   /**

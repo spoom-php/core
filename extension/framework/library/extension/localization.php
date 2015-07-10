@@ -5,13 +5,44 @@ use Framework\Request;
 use Framework\Storage;
 
 /**
+ * Interface LocalizationInterface
+ * @package Framework\Extension
+ */
+interface LocalizationInterface extends Storage\PermanentInterface {
+
+  /**
+   * Set defaults
+   *
+   * @param Extension $source
+   */
+  public function __construct( Extension $source );
+
+  /**
+   * @return Extension
+   */
+  public function getExtension();
+  /**
+   * Get the current localization name
+   *
+   * @return string
+   */
+  public function getLocalization();
+  /**
+   * Set the current localization name
+   *
+   * @param string $value
+   */
+  public function setLocalization( $value );
+}
+
+/**
  * Class Localization
  * @package Framework\Extension
  *
- * @property-read Extension $extension
- * @property      string    $localization
+ * @property-read Extension $extension    The extension source of the localization
+ * @property      string    $localization The current localization name
  */
-class Localization extends Storage\File {
+class Localization extends Storage\File implements LocalizationInterface {
 
   /**
    * Extension data source
@@ -36,71 +67,6 @@ class Localization extends Storage\File {
     parent::__construct( $source->directory( '' ) . Extension::DIRECTORY_LOCALIZATION );
 
     $this->_extension = $source;
-  }
-
-  /**
-   * @param $index
-   *
-   * @return Extension|string|null
-   */
-  public function __get( $index ) {
-
-    if( $index == 'extension' ) return $this->_extension;
-    else if( $index == 'localization' ) {
-
-      if( !isset( $this->_localization ) ) $this->localization = Request::getLocalization();
-      return $this->_localization;
-    }
-
-    return parent::__get( $index );
-  }
-  /**
-   * @param string $index
-   *
-   * @return bool
-   */
-  public function __isset( $index ) {
-    return $index == 'extension' || $index == 'localization' || parent::__isset( $index );
-  }
-  /**
-   * Dynamic setter for privates
-   *
-   * @param string $index
-   * @param mixed  $value
-   */
-  public function __set( $index, $value ) {
-    switch( $index ) {
-      case 'localization':
-
-        // save the original localization for later compare
-        $tmp = $this->_localization;
-
-        // set the new localization
-        $global = Request::getLocalization();
-        if( $this->validate( $value ) ) $this->_localization = $value;
-        else if( $global != $value && $this->validate( $global ) ) $this->_localization = $global;
-        else if( $this->validate( $this->_extension->option( 'manifest:localization' ) ) ) {
-          $this->_localization = $this->_extension->option( 'manifest:localization' );
-        }
-
-        // clear meta/cache/storage when the localization has changed
-        if( $this->_localization != $tmp ) {
-
-          $this->_source = [ ];
-          $this->meta    = [ ];
-          $this->clean();
-        }
-
-        // log: debug
-        Request::getLog()->debug( 'The \'{localization}\' localization selected', [
-          'localization' => $this->_localization,
-          'directory' => $this->_path
-        ], '\Framework\Extension\Localization' );
-
-        break;
-      default:
-        parent::__set( $index, $value );
-    }
   }
 
   /**
@@ -133,5 +99,51 @@ class Localization extends Storage\File {
     $this->_path = $tmp;
 
     return $result;
+  }
+
+  /**
+   * @return Extension
+   */
+  public function getExtension() {
+    return $this->_extension;
+  }
+  /**
+   * @return string
+   */
+  public function getLocalization() {
+
+    if( !isset( $this->_localization ) ) $this->setLocalization( Request::getLocalization() );
+
+    return $this->_localization;
+  }
+  /**
+   * @param string $value
+   */
+  public function setLocalization( $value ) {
+
+    // save the original localization for later compare
+    $tmp = $this->_localization;
+
+    // set the new localization
+    $global = Request::getLocalization();
+    if( $this->validate( $value ) ) $this->_localization = $value;
+    else if( $global != $value && $this->validate( $global ) ) $this->_localization = $global;
+    else if( $this->validate( $this->_extension->manifest->getString( 'localization' ) ) ) {
+      $this->_localization = $this->_extension->manifest->getString( 'localization' );
+    }
+
+    // clear meta/cache/storage when the localization has changed
+    if( $this->_localization != $tmp ) {
+
+      $this->_source = [ ];
+      $this->meta    = [ ];
+      $this->clean();
+    }
+
+    // log: debug
+    Request::getLog()->debug( 'The \'{localization}\' localization selected', [
+      'localization' => $this->_localization,
+      'directory'    => $this->_path
+    ], '\Framework\Extension\Localization' );
   }
 }

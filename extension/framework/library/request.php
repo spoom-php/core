@@ -87,7 +87,7 @@ class Request {
       \Framework::connect( $namespace, $path );
     }
 
-    self::$localization = $extension->option( 'default:localization', $extension->option( 'manifest:localization', 'en' ) );
+    self::$localization = $extension->option( 'default:localization', $extension->manifest->getString( 'localization', 'en' ) );
     setlocale( LC_ALL, $extension->option( 'default:locale', null ) );
 
     // setup encoding
@@ -190,7 +190,7 @@ class Request {
     if( !self::$localization ) {
 
       $extension = Extension::instance( 'framework' );
-      self::$localization = $extension->option( 'manifest:localization', 'en' );
+      self::$localization = $extension->manifest->getString( 'localization', 'en' );
     }
 
     return self::$localization;

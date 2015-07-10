@@ -8,19 +8,89 @@ use Framework\Helper\FeasibleInterface;
 use Framework\Helper\Library;
 use Framework\Request;
 use Framework\Storage;
+use Framework\StorageInterface;
 
+/**
+ * Interface PermanentInterface
+ * @package Framework\Storage
+ */
+interface PermanentInterface extends StorageInterface {
+
+  /**
+   * Save the namespace's actual storage data in the given (or the default) format
+   *
+   * @param string|null $format    The format that the converter instance will recognise
+   * @param string|null $namespace The namespace to save
+   *
+   * @return $this
+   */
+  public function save( $format = null, $namespace = null );
+  /**
+   * Load the given namespace into the storage
+   *
+   * @param string|null $namespace The namespace to load
+   *
+   * @return $this
+   */
+  public function load( $namespace = null );
+  /**
+   * Remove the namespace data from the storage and the permanent storage
+   *
+   * @param string|null $namespace
+   *
+   * @return $this
+   */
+  public function remove( $namespace = null );
+
+  /**
+   * Get the latest exception object
+   *
+   * @return Exception|null
+   */
+  public function getException();
+  /**
+   * Get the converter object that parse and build the input and output object/string
+   *
+   * @return PermanentConverter
+   */
+  public function getConverter();
+  /**
+   * Autoload the namespaces or not
+   *
+   * @return boolean
+   */
+  public function isAuto();
+  /**
+   * Set new value to autoload the namespaces or not
+   *
+   * @param boolean $value
+   */
+  public function setAuto( $value );
+  /**
+   * Get the default converter format
+   *
+   * @return string
+   */
+  public function getFormat();
+  /**
+   * Set the default converter format
+   *
+   * @param string $value
+   */
+  public function setFormat( $value );
+}
 /**
  * Class Permanent
  * @package Framework\Storage
  *
- * TODO add static cache for the load mechanism to optimalize the process
+ * TODO add static cache for the load mechanism to optimize the process
  *
  * @property-read Exception|null     $exception The latest exception object
  * @property-read PermanentConverter $converter The converter object that parse and build the input and output object/string
  * @property      bool               $auto      Autoload the namespaces or not
  * @property      string             $format    The default format for saving
  */
-abstract class Permanent extends Storage {
+abstract class Permanent extends Storage implements PermanentInterface {
 
   /**
    * Store metadata for loaded namespaces
@@ -65,23 +135,6 @@ abstract class Permanent extends Storage {
     $this->_converter = $converter ?: new PermanentConverter();
   }
 
-  /**
-   * @param string $index
-   * @param mixed  $value
-   */
-  public function __set( $index, $value ) {
-
-    switch( $index ) {
-      case 'auto':
-        $this->_auto = (bool) $value;
-        break;
-      case 'format':
-        $this->_format = (string) $value;
-        break;
-      default:
-        parent::__set( $index, $value );
-    }
-  }
   /**
    * Clone the converter and all of the stored meta
    */
@@ -184,12 +237,49 @@ abstract class Permanent extends Storage {
   protected function search( $index, $build = false, $is_read = true ) {
 
     // try to load the storage data if there is no already
-    if( $this->_auto && empty( $this->meta[ $index->namespace ] ) ) {
+    if( $this->isAuto() && empty( $this->meta[ $index->namespace ] ) ) {
       $this->load( $index->namespace );
     }
 
     // delegate problem to the parent
     return parent::search( $index, $build, $is_read );
+  }
+
+  /**
+   * @return Exception|null
+   */
+  public function getException() {
+    return $this->_exception;
+  }
+  /**
+   * @return PermanentConverter
+   */
+  public function getConverter() {
+    return $this->_converter;
+  }
+  /**
+   * @return boolean
+   */
+  public function isAuto() {
+    return $this->_auto;
+  }
+  /**
+   * @param boolean $value
+   */
+  public function setAuto( $value ) {
+    $this->_auto = (bool) $value;
+  }
+  /**
+   * @return string
+   */
+  public function getFormat() {
+    return $this->_format;
+  }
+  /**
+   * @param string $value
+   */
+  public function setFormat( $value ) {
+    $this->_format = (string) $value;
   }
 
   /**
@@ -239,6 +329,13 @@ class PermanentMeta extends Storage {
 
     $this->_format = $format;
   }
+
+  /**
+   * @return string
+   */
+  public function getFormat() {
+    return $this->_format;
+  }
 }
 /**
  * Class PermanentConverter
@@ -270,17 +367,6 @@ class PermanentConverter extends Library implements FeasibleInterface {
    * @var bool
    */
   protected $_native = false;
-
-  /**
-   * @param $name
-   * @param $value
-   */
-  public function __set( $name, $value ) {
-
-    if( $name == 'native' ) {
-      $this->_native = (bool) $value;
-    }
-  }
 
   /**
    * Serialize any content to a formatted (the output format specified by the meta property) string
@@ -476,5 +562,18 @@ class PermanentConverter extends Library implements FeasibleInterface {
     $meta->set( '', [ 'attribute' => $attribute, 'version' => $version, 'encoding' => $encoding ] );
 
     return $tmp;
+  }
+
+  /**
+   * @return boolean
+   */
+  public function isNative() {
+    return $this->_native;
+  }
+  /**
+   * @param boolean $value
+   */
+  public function setNative( $value ) {
+    $this->_native = (bool) $value;
   }
 }

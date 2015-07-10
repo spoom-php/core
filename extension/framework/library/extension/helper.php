@@ -93,28 +93,10 @@ abstract class Helper {
    *
    * @param string[] $input
    *
+   * @deprecated Use the \Framework::search() instead
    * @return bool|string
    */
   public static function search( array &$input ) {
-
-    $name   = '';
-    $length = 0;
-    for( $i = 0, $count = count( $input ), $tmp = ''; $i < \Framework::EXTENSION_DEPTH && $i < $count; ++$i ) {
-
-      // check if this path is an extension: check existance of the extension directory
-      $tmp .= ( $i > 0 ? \Framework::EXTENSION_SEPARATOR : '' ) . mb_strtolower( $input[ $i ] );
-      if( self::exist( $tmp, true ) ) {
-
-        $length = $i + 1;
-        $name   = $tmp;
-      }
-    }
-
-    if( !$length ) return '';
-    else {
-
-      $input = array_slice( $input, $length );
-      return $name;
-    }
+    return \Framework::search( $input );
   }
 }
