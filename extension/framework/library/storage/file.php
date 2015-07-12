@@ -1,6 +1,7 @@
 <?php namespace Framework\Storage;
 
 use Framework\Exception;
+use Framework\Helper;
 
 /**
  * Class File
@@ -145,7 +146,7 @@ class File extends Permanent {
 
       $result = $this->readFile( $path );
 
-      $meta                     = new PermanentMeta( pathinfo( $path, PATHINFO_EXTENSION ) );
+      $meta = new Helper\ConverterMeta( pathinfo( $path, PATHINFO_EXTENSION ) );
       $this->meta[ $namespace ] = $meta;
 
       return $result;

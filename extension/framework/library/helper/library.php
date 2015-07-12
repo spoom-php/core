@@ -31,7 +31,7 @@ class Library implements LibraryInterface {
    */
   public function __get( $index ) {
 
-    // TODO remove the legacy '_...' getters
+    // FIXME remove the legacy '_...' getters
 
     $method = static::searchGetter( $index, $this );
     if( $method ) return $this->{$method}();
@@ -58,7 +58,7 @@ class Library implements LibraryInterface {
    */
   public function __isset( $index ) {
 
-    // TODO remove the legacy '_...' getters
+    // FIXME remove the legacy '_...' getters
 
     return property_exists( $this, '_' . $index ) || static::searchGetter( $index, $this ) !== null;
   }

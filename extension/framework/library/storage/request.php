@@ -56,8 +56,6 @@ class Request extends Storage {
   /**
    * Create, remove, update a cookie
    *
-   * TODO implement setcookie with an event ( secure the cookie, or else )
-   *
    * @param string      $index
    * @param mixed       $value
    * @param int|null    $expire

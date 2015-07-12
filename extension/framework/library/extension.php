@@ -11,8 +11,6 @@ use Framework\Helper\Log;
  *
  * @package Framework
  *
- * TODO add custom configuration and localization object support through manifest
- *
  * @property-read string                           $id            Unique name
  * @property-read Storage\File                     $manifest      The manifest storage
  * @property-read Extension\ConfigurationInterface $configuration The configuration storage object

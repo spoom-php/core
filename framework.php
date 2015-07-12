@@ -4,7 +4,7 @@
  * Directory base of the framework.
  * Can be used to include files in php without worry the correct include path
  *
- * TODO This can be replaced with the \Framework::PATH_BASE after PHP5.6
+ * FIXME This can be replaced with the \Framework::PATH_BASE after PHP5.6
  */
 define( '_PATH_BASE', rtrim( dirname( __FILE__ ), '\\/' ) . '/' );
 

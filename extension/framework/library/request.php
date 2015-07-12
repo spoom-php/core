@@ -134,7 +134,7 @@ class Request {
   /**
    * Redirect to an url with header redirect
    *
-   * FIXME This is HTTP related method which is need to be changed or removed (?)
+   * @deprecated Use one of the HTTP related extensions
    *
    * @param mixed $url  The new url. It will be converted to string
    * @param int   $code HTTP Redirect type respsonse code. This number added to 300 to make 30x status code
