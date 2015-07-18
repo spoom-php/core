@@ -1,5 +1,5 @@
 {
-  "#0E": "Unknown exception",
+  "#0": "Unknown exception",
   "#1E": "#{code}: {message}",
   "#3N": "Invalid exception id: {id}",
   "#4C": "Invalid manifest for extension '{id}'",

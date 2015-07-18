@@ -77,9 +77,9 @@ class Framework {
   /**
    * Link level names to their numeric representation
    *
-   * @var int[string]
+   * @var array[string]int
    */
-  private static $LEVEL = [
+  private static $LEVEL_NAME = [
     'none'     => self::LEVEL_NONE,
     'critical' => self::LEVEL_CRITICAL,
     'error'    => self::LEVEL_ERROR,
@@ -94,13 +94,10 @@ class Framework {
    *
    * @var int
    */
-  private static $level_log = self::LEVEL_WARNING;
-  /**
-   * The framework report level
-   *
-   * @var int
-   */
-  private static $level_report = self::LEVEL_NONE;
+  private static $level = [
+    'log'    => self::LEVEL_WARNING,
+    'report' => self::LEVEL_NONE
+  ];
 
   /**
    * Store the custom namespace connections to their root paths
@@ -116,7 +113,7 @@ class Framework {
    *
    * @throws Exception
    */
-  public static function run( callable $main ) {
+  public static function setup( callable $main ) {
 
     // check php version to avoid syntax and other ugly error messages
     if( version_compare( PHP_VERSION, self::DEPENDENCY_PHP ) < 0 ) {
@@ -133,78 +130,11 @@ class Framework {
     }
 
     // setup log and report levels
-    self::logLevel( self::$level_log );
-    self::reportLevel( self::$level_report );
+    self::logLevel( self::logLevel() );
+    self::reportLevel( self::reportLevel() );
 
     // call the main function
     $main();
-  }
-
-  /**
-   * Get or set the log level
-   *
-   * @param int|string|null $value The new log level
-   *
-   * @return int
-   */
-  public static function logLevel( $value = null ) {
-
-    if( $value !== null ) {
-      self::$level_log = is_string( $value ) ? self::$LEVEL[ $value ] : $value;
-    }
-
-    return self::$level_log;
-  }
-  /**
-   * Get or set the report level
-   *
-   * @param int|string|null $value The new report level
-   *
-   * @return int
-   */
-  public static function reportLevel( $value = null ) {
-
-    if( $value !== null ) {
-
-      self::$level_report = is_string( $value ) ? self::$LEVEL[ $value ] : $value;
-
-      // setup error reporting in PHP
-      $reporting = 0;
-      switch( self::$level_report ) {
-        case _LEVEL_NONE:
-
-          error_reporting( -1 );
-          ini_set( 'display_errors', 0 );
-
-          break;
-
-        /** @noinspection PhpMissingBreakStatementInspection */
-        case _LEVEL_DEBUG:
-          $reporting = E_ALL;
-        /** @noinspection PhpMissingBreakStatementInspection */
-        case _LEVEL_INFO:
-          $reporting |= E_STRICT | E_DEPRECATED | E_USER_DEPRECATED;
-        /** @noinspection PhpMissingBreakStatementInspection */
-        case _LEVEL_NOTICE:
-          $reporting |= E_NOTICE | E_USER_NOTICE;
-        /** @noinspection PhpMissingBreakStatementInspection */
-        case _LEVEL_WARNING:
-          $reporting |= E_WARNING | E_COMPILE_WARNING | E_CORE_WARNING | E_USER_WARNING;
-        /** @noinspection PhpMissingBreakStatementInspection */
-        case _LEVEL_ERROR:
-          $reporting |= E_ERROR | E_CORE_ERROR | E_USER_ERROR | E_RECOVERABLE_ERROR;
-        /** @noinspection PhpMissingBreakStatementInspection */
-        case _LEVEL_CRITICAL:
-          $reporting |= E_COMPILE_ERROR | E_PARSE;
-        /** @noinspection PhpMissingBreakStatementInspection */
-        default:
-
-          ini_set( 'display_errors', 1 );
-          error_reporting( $reporting );
-      }
-    }
-
-    return self::$level_report;
   }
 
   /**
@@ -339,6 +269,90 @@ class Framework {
   }
 
   /**
+   * Get the level from the name or the name from the level
+   *
+   * @param int|string $input The level or the name
+   * @param bool       $name  Return the name or the level
+   *
+   * @return int|string|null Null, if the input is invalid
+   */
+  public static function getLevel( $input, $name = true ) {
+
+    if( is_string( $input ) ) return isset( self::$LEVEL_NAME[ $input ] ) ? ( $name ? $input : self::$LEVEL_NAME[ $input ] ) : null;
+    else {
+
+      $tmp = array_search( $input, self::$LEVEL_NAME );
+      return $tmp === false ? null : ( $name ? (int) $input : $tmp );
+    }
+  }
+  /**
+   * Get or set the log level
+   *
+   * @param int|string|null $value The new log level
+   *
+   * @return int
+   */
+  public static function logLevel( $value = null ) {
+
+    if( $value !== null ) {
+      self::$level[ 'log' ] = self::getLevel( $value, false );
+    }
+
+    return self::$level[ 'log' ];
+  }
+  /**
+   * Get or set the report level
+   *
+   * @param int|string|null $value The new report level
+   *
+   * @return int
+   */
+  public static function reportLevel( $value = null ) {
+
+    if( $value !== null ) {
+
+      self::$level[ 'report' ] = self::getLevel( $value );
+
+      // setup error reporting in PHP
+      $reporting = 0;
+      switch( self::$level[ 'report' ] ) {
+        case self::LEVEL_NONE:
+
+          error_reporting( -1 );
+          ini_set( 'display_errors', 0 );
+
+          break;
+
+        /** @noinspection PhpMissingBreakStatementInspection */
+        case self::LEVEL_DEBUG:
+          $reporting = E_ALL;
+        /** @noinspection PhpMissingBreakStatementInspection */
+        case self::LEVEL_INFO:
+          $reporting |= E_STRICT | E_DEPRECATED | E_USER_DEPRECATED;
+        /** @noinspection PhpMissingBreakStatementInspection */
+        case self::LEVEL_NOTICE:
+          $reporting |= E_NOTICE | E_USER_NOTICE;
+        /** @noinspection PhpMissingBreakStatementInspection */
+        case self::LEVEL_WARNING:
+          $reporting |= E_WARNING | E_COMPILE_WARNING | E_CORE_WARNING | E_USER_WARNING;
+        /** @noinspection PhpMissingBreakStatementInspection */
+        case self::LEVEL_ERROR:
+          $reporting |= E_ERROR | E_CORE_ERROR | E_USER_ERROR | E_RECOVERABLE_ERROR;
+        /** @noinspection PhpMissingBreakStatementInspection */
+        case self::LEVEL_CRITICAL:
+          $reporting |= E_COMPILE_ERROR | E_PARSE;
+        /** @noinspection PhpMissingBreakStatementInspection */
+        default:
+
+          ini_set( 'display_errors', 1 );
+          error_reporting( $reporting );
+      }
+    }
+
+    return self::$level[ 'report' ];
+  }
+
+  /**
    * Find and read library files. This will check several case scenario of the name/path
    *
    * @param string $name The file name
@@ -411,49 +425,6 @@ class Framework {
     return array_reverse( $result );
   }
 }
-
-/**
- * The level of silence
- *
- * @depricated Use \Framework::LEVEL_NONE instead
- */
-define( '_LEVEL_NONE', Framework::LEVEL_NONE );
-/**
- * The level of critical problems
- *
- * @depricated Use \Framework::LEVEL_CRITICAL instead
- */
-define( '_LEVEL_CRITICAL', Framework::LEVEL_CRITICAL );
-/**
- * The level of errors
- *
- * @depricated Use \Framework::LEVEL_ERROR instead
- */
-define( '_LEVEL_ERROR', Framework::LEVEL_ERROR );
-/**
- * The level of warnings
- *
- * @depricated Use \Framework::LEVEL_WARNING instead
- */
-define( '_LEVEL_WARNING', Framework::LEVEL_WARNING );
-/**
- * The level of noticable problems but nothing serious
- *
- * @depricated Use \Framework::LEVEL_NOTICE instead
- */
-define( '_LEVEL_NOTICE', Framework::LEVEL_NOTICE );
-/**
- * The level of informations
- *
- * @depricated Use \Framework::LEVEL_INFO instead
- */
-define( '_LEVEL_INFO', Framework::LEVEL_INFO );
-/**
- * The level of all problems (debugging)
- *
- * @depricated Use \Framework::LEVEL_DEBUG instead
- */
-define( '_LEVEL_DEBUG', Framework::LEVEL_DEBUG );
 
 /**
  * The path part of the url.

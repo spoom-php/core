@@ -585,7 +585,7 @@ class Storage extends Library implements StorageInterface {
     // because if it's build then the returned value may changed outside
     if( $this->_caching != self::CACHE_NONE && ( $is_read || $this->_caching == self::CACHE_REFERENCE ) && isset( $this->cache[ 'search' ][ $index->id ] ) ) {
       return (object) [
-        'exist' => $this->cache[ 'search' ][ $index->id ][ 'exist' ],
+        'exist'     => $this->cache[ 'search' ][ $index->id ][ 'exist' ],
         'container' => &$this->cache[ 'search' ][ $index->id ][ 'container' ],
         'key'       => $this->cache[ 'search' ][ $index->id ][ 'key' ]
       ];
@@ -767,6 +767,9 @@ class Storage extends Library implements StorageInterface {
    */
   public function setNamespace( $value ) {
     $this->_namespace = !empty( $value ) ? (string) $value : null;
+
+    // clear the index cache to avoid invalid index matches
+    $this->cache[ 'index' ] = [ ];
   }
   /**
    * @return array

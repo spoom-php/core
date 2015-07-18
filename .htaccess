@@ -1,23 +1,14 @@
-# Upload options override
-php_value upload_max_filesize 15M
-php_value post_max_size 30M
-
-# Disable files direct access
-<IfModule mod_alias.c>
-  
-  RedirectMatch 403 /framework.php
-  RedirectMatch 403 /extension/.*?/(configuration)/
-  RedirectMatch 403 /extension/.*?/(localization)/
-  RedirectMatch 403 /extension/.*?/(library)/
-    
-</IfModule>
-
-# URL rewrite: rewrite all path to the index
 <IfModule mod_rewrite.c>
 
+  # setup the rewrite engine
   RewriteEngine on
   RewriteBase /
+    
+  # Disable files direct access
+  RewriteRule ^/?framework.php - [R=403,L]
+  RewriteRule ^/?extension/.*?/(configuration|localization|library)/ - [R=403,L]
 
+  # rewrite all invalid path to the index
   RewriteCond %{REQUEST_FILENAME} !-f
   RewriteCond %{REQUEST_FILENAME} !-d
   RewriteRule .* index.php [L]
