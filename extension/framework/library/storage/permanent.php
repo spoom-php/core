@@ -96,6 +96,29 @@ abstract class Permanent extends Storage implements PermanentInterface {
   const EXCEPTION_MISSING_META = 'framework#23W';
 
   /**
+   * Triggered before the namespace saving. The save can be prevented. Arguments:
+   * - instance [Permanent]: The storage instance
+   * - namespace [string|null]: The namespace to save
+   * - &meta [ConverterMeta]: The content meta data
+   * - &content [mixed]: The content to save
+   */
+  const EVENT_SAVE = 'storage.permanent.save';
+  /**
+   * Triggered before the namespace loading. The load can be prevented. Arguments:
+   * - instance [Permanent]: The storage instance
+   * - namespace [string|null]: The namespace to load
+   * - &meta [ConverterMeta|null]: The content output meta data
+   */
+  const EVENT_LOAD = 'storage.permanent.load';
+  /**
+   * Triggered before the namespace removing. The remove can be prevented. Arguments:
+   * - instance [Permanent]: The storage instance
+   * - namespace [string|null]: The namespace to remove
+   * - &meta [ConverterMeta|null]: The content meta data if available
+   */
+  const EVENT_REMOVE = 'storage.permanent.remove';
+
+  /**
    * Store metadata for loaded namespaces
    *
    * @var Helper\ConverterMeta[string]
@@ -164,11 +187,28 @@ abstract class Permanent extends Storage implements PermanentInterface {
       if( !empty( $format ) ) $meta = new Helper\ConverterMeta( $format );
       else $meta = isset( $this->meta[ $namespace ] ) ? $this->meta[ $namespace ] : new Helper\ConverterMeta( $this->_format );
 
-      $index   = $namespace ? ( $namespace . self::SEPARATOR_NAMESPACE ) : '';
-      $content = $this->_converter->serialize( $this->getObject( $index ), $meta );
+      $index = $namespace ? ( $namespace . self::SEPARATOR_NAMESPACE ) : '';
+      $value = $this->getObject( $index );
 
-      $this->meta[ $namespace ] = $meta;
-      $this->write( $content, $namespace );
+      // trigger before save event for custom storage
+      $extension = Extension::instance( 'framework' );
+      $event     = $extension->trigger( self::EVENT_SAVE, [
+        'instance'  => $this,
+        'namespace' => $namespace,
+        'meta'      => &$meta,
+        'content'   => &$value
+      ] );
+
+      // check the event result
+      if( $event->collector->contains() ) throw $event->collector->get();
+      else if( !$event->isPrevented() ) {
+
+        // do the native saving
+        $content = $this->_converter->serialize( $value, $meta );
+
+        $this->meta[ $namespace ] = $meta;
+        $this->write( $content, $namespace );
+      }
 
     } catch( \Exception $e ) {
       $this->_exception = Exception\Helper::wrap( $e )->log();
@@ -188,12 +228,39 @@ abstract class Permanent extends Storage implements PermanentInterface {
 
     try {
 
-      $content = $this->read( $namespace );
-      if( empty( $this->meta[ $namespace ] ) || !( $this->meta[ $namespace ] instanceof Helper\ConverterMeta ) ) {
-        throw new Exception\Strict( self::EXCEPTION_MISSING_META, [ 'namespace' => $namespace ] );
-      } else {
+      $meta = null;
 
-        $index = $namespace ? ( $namespace . self::SEPARATOR_NAMESPACE ) : '';
+      // trigger before load event for custom storage
+      $extension = Extension::instance( 'framework' );
+      $event     = $extension->trigger( self::EVENT_LOAD, [
+        'instance'  => $this,
+        'namespace' => $namespace,
+        'meta'      => &$meta
+      ] );
+
+      // check the event result
+      if( $event->collector->contains() ) throw $event->collector->get();
+      else if( !$event->isPrevented() ) $content = $this->read( $namespace, $meta );
+      else {
+
+        // search for the content in the results
+        $content = null;
+        foreach( $event as $result ) {
+
+          if( is_string( $result ) ) {
+            $content = $result;
+            break;
+          }
+        }
+      }
+
+      // check the meta type
+      if( !( $meta instanceof Helper\ConverterMeta ) ) throw new Exception\Strict( self::EXCEPTION_MISSING_META, [ 'namespace' => $namespace ] );
+      else {
+
+        // do the rest of the work for the loading
+        $this->meta[ $namespace ] = $meta;
+        $index                    = $namespace ? ( $namespace . self::SEPARATOR_NAMESPACE ) : '';
         $this->set( $index, $this->_converter->unserialize( $content, $this->meta[ $namespace ] ) );
       }
 
@@ -215,12 +282,27 @@ abstract class Permanent extends Storage implements PermanentInterface {
 
     try {
 
-      $this->destroy( $namespace );
+      // trigger before load event for custom storage
+      $extension = Extension::instance( 'framework' );
+      $event     = $extension->trigger( self::EVENT_REMOVE, [
+        'instance'  => $this,
+        'namespace' => $namespace,
+        'meta'      => isset( $this->meta[ $namespace ] ) ? $this->meta[ $namespace ] : null
+      ] );
 
-      $index = $namespace ? ( $namespace . self::SEPARATOR_NAMESPACE ) : '';
-      $this->clear( $index );
+      // check the event result
+      if( $event->collector->contains() ) throw $event->collector->get();
+      else {
 
-      unset( $this->meta[ $namespace ] );
+        // call the native destroy if not prevented
+        if( !$event->isPrevented() ) $this->destroy( $namespace );
+
+        // do the rest of the remove
+        $index = $namespace ? ( $namespace . self::SEPARATOR_NAMESPACE ) : '';
+        $this->clear( $index );
+
+        unset( $this->meta[ $namespace ] );
+      }
 
     } catch( \Exception $e ) {
       $this->_exception = Exception\Helper::wrap( $e )->log();
@@ -294,13 +376,14 @@ abstract class Permanent extends Storage implements PermanentInterface {
    */
   abstract protected function write( $content, $namespace = null );
   /**
-   * Read a namespace data from the permanent storage. The meta for the namespace MUST exist after the read in the meta property
+   * Read a namespace data from the permanent storage
    *
    * @param string|null $namespace The namespace
+   * @param null        $meta      The meta for the namespace MUST exist after the read
    *
-   * @return string|null
+   * @return null|string
    */
-  abstract protected function read( $namespace = null );
+  abstract protected function read( $namespace = null, &$meta = null );
   /**
    * Destroy a namespace's permanent storage. The meta for the namespace MAY available through the meta property
    *
