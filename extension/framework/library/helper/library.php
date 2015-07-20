@@ -4,6 +4,13 @@ use Framework\Exception;
 use Framework\Extension;
 
 /**
+ * Interface LibraryInterface
+ * @package Framework\Helper
+ */
+interface LibraryInterface {
+}
+
+/**
  * This should be the base class for every library in the framework or at least needs to implement the LibraryInterface
  *
  * @package Framework\Helper
@@ -88,14 +95,19 @@ class Library implements LibraryInterface {
     if( !array_key_exists( $cache, self::$cache ) ) {
 
       self::$cache[ $cache ] = null;
-      if( property_exists( $instance, '_' . $field ) ) {
 
-        $property = str_replace( ' ', '', ucwords( str_replace( '_', ' ', $field ) ) );
-        $getters  = [ 'get', 'is', 'has' ];
-        foreach( $getters as $getter ) {
+      $reflection = null;
+      $property = str_replace( ' ', '', ucwords( str_replace( '_', ' ', $field ) ) );
+      $getters  = [ 'get', 'is', 'has' ];
+      foreach( $getters as $getter ) {
+                
+        $method = $getter . $property;
+        if( is_callable( [ $instance, $method ] ) ) {
 
-          $method = $getter . $property;
-          if( is_callable( [ $instance, $method ] ) ) {
+          // FIXME optimalize this reflection stuff (or just remove it?)
+          
+          $reflection = !$reflection ? new \ReflectionClass( $instance ) : $reflection;
+          if( $reflection->getMethod( $method )->getNumberOfRequiredParameters() == 0 ) {
             self::$cache[ $cache ] = $method;
             break;
           }
@@ -119,21 +131,17 @@ class Library implements LibraryInterface {
     if( !array_key_exists( $cache, self::$cache ) ) {
 
       self::$cache[ $cache ] = null;
-      if( property_exists( $instance, '_' . $field ) ) {
-        $property = str_replace( ' ', '', ucwords( str_replace( '_', ' ', $field ) ) );
-        $method   = 'set' . $property;
 
-        if( is_callable( [ $instance, $method ] ) ) self::$cache[ $cache ] = $method;
+      $property = str_replace( ' ', '', ucwords( str_replace( '_', ' ', $field ) ) );
+      $method   = 'set' . $property;
+      
+      // FIXME optimalize this reflection stuff (or just remove it?)
+      
+      if( is_callable( [ $instance, $method ] ) && ( new \ReflectionClass( $instance ) )->getMethod( $method )->getNumberOfRequiredParameters() <= 1 ) {
+        self::$cache[ $cache ] = $method;
       }
     }
 
     return self::$cache[ $cache ];
   }
-}
-
-/**
- * Interface LibraryInterface
- * @package Framework\Helper
- */
-interface LibraryInterface {
 }

@@ -75,8 +75,8 @@ abstract class Enumerable {
     // collect encoding and version from xml data
     $dom    = new \DOMDocument();
     $object = [ ];
-
-    if( !$dom->load( $xml ) ) Request::getLog()->notice( 'Failed XML decode', [ 'xml' => $xml ], '\Framework\Helper\Enumerable' ); // log: notice
+    
+    if( !$dom->loadXML( $xml ) ) Request::getLog()->notice( 'Failed XML decode', [ 'xml' => $xml ], '\Framework\Helper\Enumerable' ); // log: notice
     else {
 
       $version  = $dom->xmlVersion;
@@ -299,10 +299,15 @@ abstract class Enumerable {
       $input = $tmp;
 
     } else if( is_object( $input ) ) {
-      $input = clone $input;
 
-      if( $input instanceof \stdClass ) foreach( $input as $k => $e ) {
-        $input->{$k} = self::is( $e ) ? self::copy( $e ) : $e;
+      if( !($input instanceof \stdClass) ) $input = clone $input;
+      else {
+        
+        $tmp = new \stdClass();
+        foreach( $input as $k => $e ) {
+          $tmp->{$k} = self::is( $e ) ? self::copy( $e ) : $e;
+        }
+        $input = $tmp;
       }
     }
 

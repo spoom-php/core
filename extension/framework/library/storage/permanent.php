@@ -81,6 +81,7 @@ interface PermanentInterface extends StorageInterface {
  * @package Framework\Storage
  *
  * TODO add static cache for the load mechanism to optimize the process
+ * TODO add write- and readable feature
  *
  * @property-read Exception|null   $exception The latest exception object
  * @property-read Helper\Converter $converter The converter object that parse and build the input and output object/string
@@ -184,8 +185,13 @@ abstract class Permanent extends Storage implements PermanentInterface {
 
     try {
 
-      if( !empty( $format ) ) $meta = new Helper\ConverterMeta( $format );
-      else $meta = isset( $this->meta[ $namespace ] ) ? $this->meta[ $namespace ] : new Helper\ConverterMeta( $this->_format );
+      if( empty( $format ) ) $meta = isset( $this->meta[ $namespace ] ) ? $this->meta[ $namespace ] : new Helper\ConverterMeta( $this->_format );
+      else {
+
+        // don's create new converter if the format is the same
+        if( isset( $this->meta[ $namespace ] ) && $this->meta[ $namespace ]->format == $format ) $meta = $this->meta[ $namespace ];
+        else $meta = new Helper\ConverterMeta( $format );
+      }
 
       $index = $namespace ? ( $namespace . self::SEPARATOR_NAMESPACE ) : '';
       $value = $this->getObject( $index );
@@ -324,7 +330,11 @@ abstract class Permanent extends Storage implements PermanentInterface {
 
     // try to load the storage data if there is no already
     if( $this->isAuto() && empty( $this->meta[ $index->namespace ] ) ) {
+
       $this->load( $index->namespace );
+      
+      // clean any cache for this index to follow the change
+      $this->clean( $index );
     }
 
     // delegate problem to the parent

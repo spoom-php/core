@@ -3,6 +3,10 @@
 use Framework\Extension;
 use Framework\Storage;
 
+/**
+ * Interface ConfigurationInterface
+ * @package Framework\Extension
+ */
 interface ConfigurationInterface extends Storage\PermanentInterface {
 
   /**
