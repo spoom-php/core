@@ -132,11 +132,13 @@ class File extends Permanent {
    * Read the namespace file resource
    *
    * @param string|null $namespace
+   * @param null        $meta
    *
-   * @return string|null
-   * @throws Exception
+   * @return null|string
+   * @throws Exception\Strict
+   * @throws Exception\System
    */
-  protected function read( $namespace = null ) {
+  protected function read( $namespace = null, &$meta = null ) {
 
     $exist = false;
     $path  = $this->getFile( $namespace, null, $exist );
@@ -145,9 +147,7 @@ class File extends Permanent {
     else {
 
       $result = $this->readFile( $path );
-
       $meta = new Helper\ConverterMeta( pathinfo( $path, PATHINFO_EXTENSION ) );
-      $this->meta[ $namespace ] = $meta;
 
       return $result;
     }

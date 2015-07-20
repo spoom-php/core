@@ -28,7 +28,13 @@ class Event extends Library implements \Countable, \Iterator, \ArrayAccess {
    *
    * @var array
    */
-  private static $cache = [ ];
+  private static $cache_instance = [ ];
+  /**
+   * Array of the event's listener array data
+   *
+   * @var array
+   */
+  private static $cache_listener = [ ];
   /**
    * Storage for the event handlers
    *
@@ -94,7 +100,7 @@ class Event extends Library implements \Countable, \Iterator, \ArrayAccess {
 
     // define the default storage
     if( !self::$storage ) {
-      
+
       $extension                             = Extension::instance( 'framework' );
       self::$storage                         = new Storage\File( $extension->directory() . Extension::DIRECTORY_CONFIGURATION );
       self::$storage->getConverter()->native = true;
@@ -150,11 +156,19 @@ class Event extends Library implements \Countable, \Iterator, \ArrayAccess {
    *  } structure. The order in the event handlers array is the execution order when the event is triggers
    */
   private function load() {
-    $this->listeners = [ ];
 
-    // collect listeners if event exists and enabled
-    $listener_list = self::$storage->getArray( 'event-' . $this->_namespace . ':' . $this->_name );
-    foreach( $listener_list as $listener ) {
+    $this->listeners = [ ];
+    $index           = 'event-' . $this->_namespace . ':' . $this->_name;
+
+    // load the listener list
+    if( !isset( self::$cache_listener[ $index ] ) ) {
+
+      self::$cache_listener[ $index ] = [ ];
+      self::$cache_listener[ $index ] = self::$storage->getArray( $index );
+    }
+
+    // try to add the listeners
+    foreach( self::$cache_listener[ $index ] as $listener ) try {
 
       if( !empty( $listener->extension ) && !empty( $listener->library ) ) $this->add( $listener );
       else {
@@ -166,6 +180,16 @@ class Event extends Library implements \Countable, \Iterator, \ArrayAccess {
           'namespace' => $this->_namespace
         ], '\Framework\Extension\Event' );
       }
+
+    } catch( \Exception $e ) {
+
+      // log: notice
+      Request::getLog()->notice( 'Invalid event handler for \'{namespace}:{name}\'. Exception on create.', [
+        'listener'  => $listener,
+        'name'      => $this->_name,
+        'namespace' => $this->_namespace,
+        'exception' => Exception\Helper::convert( $e )
+      ], '\Framework\Extension\Event' );
     }
   }
   /**
@@ -178,7 +202,7 @@ class Event extends Library implements \Countable, \Iterator, \ArrayAccess {
     if( empty( $options->enabled ) || !Extension\Helper::exist( $options->extension, true ) ) return;
 
     $index = $options->extension . ':' . $options->library;
-    if( !isset( self::$cache[ $index ] ) ) {
+    if( !isset( self::$cache_instance[ $index ] ) ) {
 
       $extension = Extension::instance( $options->extension );
       $listener  = $extension->create( $options->library );
@@ -195,13 +219,13 @@ class Event extends Library implements \Countable, \Iterator, \ArrayAccess {
         return;
       }
 
-      self::$cache[ $index ] = $listener;
+      self::$cache_instance[ $index ] = $listener;
     }
 
     $this->listeners[ $index ] = (object) [
       'name'      => $index,
       'extension' => $options->extension,
-      'instance'  => self::$cache[ $index ],
+      'instance'  => self::$cache_instance[ $index ],
       'data'      => isset( $options->data ) ? $options->data : null
     ];
   }
