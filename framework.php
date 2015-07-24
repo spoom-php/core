@@ -226,6 +226,7 @@ class Framework {
 
       // fix for absolute class definitions
       $class = trim( $class, '\\' );
+      $classname = $class;
 
       // try first the custom paths (custom autoload path support)
       foreach( self::$connection as $namespace => $directory ) {
@@ -234,14 +235,14 @@ class Framework {
         if( strpos( $class, $namespace ) === 0 ) {
 
           $root  = rtrim( $directory, '/' ) . '/';
-          $class = substr( $class, strlen( $namespace ) );
+          $classname = substr( $class, strlen( $namespace ) );
 
           break;
         }
       }
 
       // define the path and the class name for the further checks
-      $path = explode( '\\', trim( $class, '\\' ) );
+      $path = explode( '\\', trim( $classname, '\\' ) );
       $name = array_pop( $path );
 
       // try to find an extension library
@@ -282,7 +283,7 @@ class Framework {
     else {
 
       $tmp = array_search( $input, self::$LEVEL_NAME );
-      return $tmp === false ? null : ( $name ? (int) $input : $tmp );
+      return $tmp === false ? null : ( $name ? $tmp : (int) $input );
     }
   }
   /**
@@ -470,16 +471,3 @@ define( '_URL_ROOT', 'http' . ( _URL_HTTPS ? 's' : '' ) . '://' . _URL_HOST . '/
  * @depricated Use one of the HTTP specialized extensions
  */
 define( '_URL_BASE', _URL_ROOT . ltrim( _URL_PATH, '/' ) );
-
-/**
- * Extension directory without the _PATH_BASE
- *
- * @deprecated Use \Framework::PATH_EXTENSION instead
- */
-define( '_PATH_EXTENSION', \Framework::PATH_EXTENSION );
-/**
- * Tmp directory without the _PATH_BASE
- *
- * @depricated Use \Framework::PATH_TMP instead
- */
-define( '_PATH_TMP', \Framework::PATH_TMP );

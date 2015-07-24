@@ -4,6 +4,21 @@ use Framework\Extension;
 use Framework\Request;
 
 /**
+ * Interface FeasibleInterface
+ * @package Framework\Helper
+ */
+interface FeasibleInterface {
+
+  /**
+   * @param string $name
+   * @param mixed  $arguments
+   *
+   * @return mixed
+   */
+  public function execute( $name, $arguments );
+}
+
+/**
  * Trait Feasible
  * @package Framework\Helper
  */
@@ -75,19 +90,4 @@ trait Feasible {
       }
     }
   }
-}
-
-/**
- * Interface FeasibleInterface
- * @package Framework\Helper
- */
-interface FeasibleInterface {
-
-  /**
-   * @param string $name
-   * @param mixed  $arguments
-   *
-   * @return mixed
-   */
-  public function execute( $name, $arguments );
 }

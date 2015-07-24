@@ -221,12 +221,11 @@ class Extension extends Library {
    * @return string|false
    */
   public function library( $class_name ) {
+    
     if( !is_array( $class_name ) ) $class_name = [ $class_name ];
-
-    $base = str_replace( '-', '\\', $this->_id ) . '\\';
     foreach( $class_name as $name ) {
 
-      $class = $base . str_replace( '.', '\\', $name );
+      $class = \Framework::library( $this->_id . ':' . $name );
       if( class_exists( $class, true ) ) return $class;
     }
 

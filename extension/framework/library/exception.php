@@ -96,13 +96,14 @@ abstract class Exception extends \Exception implements \JsonSerializable, Librar
     $this->_extension = Extension::instance( $tmp->extension );
     $this->_type      = $tmp->type;
     $this->_level     = self::$LEVEL[ $this->_type ];
-    $this->_id        = ( $this->_extension ? $this->_extension->id : '' ) . '#' . $this->getCode() . $this->_type;
-
+    
     // save data
     $this->_data = $data;
 
     // init the parent object with custom data
     parent::__construct( Exception\Helper::build( $this->_extension, $tmp->code . $this->_type, $this->_data ), $tmp->code, $previous );
+
+    $this->_id = ( $this->_extension ? $this->_extension->id : '' ) . '#' . $this->getCode() . $this->_type;
   }
 
   /**

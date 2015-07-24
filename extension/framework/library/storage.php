@@ -20,10 +20,6 @@ interface StorageInterface extends \ArrayAccess, \JsonSerializable {
    * Cache only the actual value of the result
    */
   const CACHE_SIMPLE = 1;
-  /**
-   * Cache results by reference (might be buggy with arrays in arrays)
-   */
-  const CACHE_REFERENCE = 2;
 
   /**
    * Key separator in the indexes
@@ -294,18 +290,20 @@ class Storage extends Library implements StorageInterface {
    * @return $this
    */
   public function set( $index, $value ) {
-
+    
     $result = $this->search( $index = $this->index( $index ), true, false );
-    if( $index ) {
+    if( $result->exist ) {
 
       if( $result->key === null ) $target = &$result->container;
       else if( is_array( $result->container ) ) $target = &$result->container[ $result->key ];
       else $target = &$result->container->{$result->key};
 
-      $target = $value;
-
       // clear the cache or the cache index
-      if( $this->_caching != self::CACHE_NONE ) $this->clean( $index );
+      if( $this->_caching != self::CACHE_NONE ) {
+        $this->clean( $index );
+      }
+
+      $target = $value;
     }
 
     return $this;
@@ -581,12 +579,11 @@ class Storage extends Library implements StorageInterface {
    */
   protected function search( $index, $build = false, $is_read = true ) {
 
-    // check the cache. Only load from cache if its getting ( read operation ) or if the cache is referenced
-    // because if it's build then the returned value may changed outside
-    if( $this->_caching != self::CACHE_NONE && ( $is_read || $this->_caching == self::CACHE_REFERENCE ) && isset( $this->cache[ 'search' ][ $index->id ] ) ) {
+    // check the cache. Only load from cache if its getting ( read operation ) because if it's build then the returned value may changed outside
+    if( $this->_caching != self::CACHE_NONE && $is_read && isset( $this->cache[ 'search' ][ $index->id ] ) ) {
       return (object) [
         'exist'     => $this->cache[ 'search' ][ $index->id ][ 'exist' ],
-        'container' => &$this->cache[ 'search' ][ $index->id ][ 'container' ],
+        'container' => $this->cache[ 'search' ][ $index->id ][ 'container' ],
         'key'       => $this->cache[ 'search' ][ $index->id ][ 'key' ]
       ];
     }
@@ -596,14 +593,6 @@ class Storage extends Library implements StorageInterface {
       case self::CACHE_SIMPLE:
 
         $this->cache[ 'search' ][ $index->id ] = (array) $result;
-        break;
-
-      case self::CACHE_REFERENCE:
-        $this->cache[ 'search' ][ $index->id ] = [
-          'exist'     => $result->exist,
-          'container' => &$result->container,
-          'key'       => $result->key
-        ];
         break;
     }
 
@@ -660,7 +649,7 @@ class Storage extends Library implements StorageInterface {
     if( !$index || empty( $index->token ) ) $this->cache[ 'search' ] = [ ];
     else foreach( $this->cache[ 'search' ] as $i => $_ ) {
 
-      if( $i == $index->token[ 0 ] || strpos( $i, $index->token[ 0 ] ) === 0 ) {
+      if( empty( $i ) || $i == $index->token[ 0 ] || strpos( $i, $index->token[ 0 ] ) === 0 ) {
         unset( $this->cache[ 'search' ][ $i ] );
       }
     }
@@ -718,13 +707,13 @@ class Storage extends Library implements StorageInterface {
       // force array type
       case self::TYPE_ARRAY:
 
-        $result = $tmp->exist && ( is_array( $result ) || is_object( $result ) ) ? (array) $result : $default;
+        $result = $tmp->exist && Enumerable::is( $result ) ? (array) $result : $default;
         break;
 
       // force object type
       case self::TYPE_OBJECT:
 
-        $result = $tmp->exist && ( is_object( $result ) || is_array( $result ) ) ? (object) $result : $default;
+        $result = $tmp->exist && Enumerable::is( $result ) ? (object) $result : $default;
         break;
 
       // force boolean type
