@@ -1,10 +1,9 @@
 Framework
 ======
-The framework is a simple class with some constants, internal log/reporting level handling and an extension search feature. The main function is the library
-importer with autoload support.
-
-In your bootstrap file you must call the `Framework::setup()` to initialize the framework (autoloader, default levels and some checks). For the method you can
-specify a main function that runs after the initialization. The default *index.php* has an example for this. 
+The framework is a single class with some constants, internal log/reporting level handling and an extension search feature. This class main function is the
+library importer with autoload support. Any other feature is provided by extensions.
+The framework MUST be initialized before use. So in the bootstrap file you MUST call the `Framework::setup()` to initialize the framework (autoloader, default
+levels and some checks). For the method you can specify a main function that runs after the initialization. The default *index.php* has an example for this. 
 
 # Importer
 The library import is accessible with the `\Framework::import()` method. This method use only one parameter that MUST be the fully qualified name of the class
@@ -50,41 +49,44 @@ namespace's root path. For example:
 The nesting and letter case supports also applied to the custom roots. **The custom root lookup is executed before the standard extension library lookup, so be
 careful of the namespace you connect.**
 
-# Standards
-**This will apply to the framework and all extensions either\!**
+# Development
 The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT", "SHOULD", "SHOULD NOT", "RECOMMENDED", "MAY", and
 "OPTIONAL" in this document are to be interpreted as described in [RFC 2119](http://tools.ietf.org/html/rfc2119).
 
+**This will apply to the framework and all extensions either\!**
+
 ## Coding standard
-Code MUST follow [PSR-1](http://www.php-fig.org/psr/psr-1/ "PSR-1") guide with the following modifications: 
+Code MUST follow the [PSR-1](http://www.php-fig.org/psr/psr-1/ "PSR-1") guide with the following modifications: 
 
  - Autoloading has support for multiple classes in a file
  - Property names MUST be in $under\_score format
+ - Property accessor and mutator SHOULD defined with the 'get|is\*' and 'set\*()' methods (for interface support). It's RECOMMENDED to also have magic access to
+   this properties through this methods
 
-## Exception handling
+### Exception handling
  
  - The exceptions in the code SHOULD never be returned by a method or function. You MUST throw an exception, or store it in 
    a class `->exception` or `->collector` property\!
 
 ## Coding style
-The code MUST follow [PSR-2](http://www.php-fig.org/psr/psr-2/ "PSR-2") guide with the following modifications and extras:
+The code MUST follow the [PSR-2](http://www.php-fig.org/psr/psr-2/ "PSR-2") guide with the following modifications and extras:
 
- - Code MUST use 2 spaces for indenting instead of tabs
- - Opening braces for classes MUST go on the same line, and closing braces MUST go on the next line after the body
- - Opening braces for methods MUST go on the same line, and closing braces MUST go on the next line after the body
- - The abstract, final and static MUST be declared after the visibility
- - Control structure keywords, method and function calls MUST NOT have one space after them
+ - Code MUST use **2 spaces** for indenting instead of tabs
+ - Opening braces for classes MUST go **on the same line**, and closing braces MUST go on the next line after the body
+ - Opening braces for methods MUST go **on the same line**, and closing braces MUST go on the next line after the body
+ - The abstract, final and static MUST be declared **after** the visibility
+ - Control structure keywords, method and function calls **MUST NOT have** one space after them
  - Opening parentheses for control structures MUST have a space after them, and closing parentheses for control structures MUST have a space before
- - Lists of implements SHOULD NOT be split across multiple lines
- - Argument lists SHOULD NOT be split across multiple lines
+ - Lists of implements **SHOULD NOT be split** across multiple lines
+ - Argument lists **SHOULD NOT be split** across multiple lines
  - When making a method or function call, there MUST be a space after the opening parenthesis, and there MUST be a space before the closing parenthesis
  
  - FIXME and TODO for class or method MUST be placed after the description in the PHPDoc
 
 ## Language
-All elements in the code (variables-, class-, method names, comments...etc) and readme files MUST be written in
+All elements in the code (variables-, classes-, methods-, comments...etc) and readme files MUST be written in
 English (US) language. The documentation MAY be written in other languages, but an English version of the documentation
-MUST exists.  
+MUST exists.
 
 ## Versioning
 Version numbers MUST follow the [Semantic Versioning](http://semver.org/) rules. 
@@ -94,10 +96,10 @@ One commit MUST contains only one extension's changes, but one repository MAY co
 model MUST follow [this](http://nvie.com/posts/a-successful-git-branching-model/) "rules", with a little differences:
 
  - The 'develop' branch name MUST be 'development'
- - The commits of unfinished features (in any 'feature-*' branch) SHALL NOT have title. In the main branches ('development'
-   or 'master') all commit MUST have a title (including merge commits)
+ - The commits of unfinished features (in any 'feature-*' branch) SHOULD NOT have title. In the main branches ('development'
+   or 'master'...or any other) all commit MUST have a title (including merge commits)
  - Avoid unnecessary merge commits from remote update in the main branches
- - The commits in the 'master' branch MUST be tagged with the version name, with 'v0.0.0' format 
+ - The commits in the 'master' branch MUST be tagged with the version name, with 'v\<version\>' format 
 
 ### Commit message format
 `title`  
@@ -106,15 +108,16 @@ model MUST follow [this](http://nvie.com/posts/a-successful-git-branching-model/
 `type`\!:`description`  
 
 #### Types
-An **\!** after the type indicates the compatibility broker changes.
+An **\!** after the type indicates the compatibility broker changes. 
 
- - fix *(F in legacy message)*
+ - fix
  - refactor
  - deprecated
  - remove
- - update *(U in legacy message)*
- - new *(N in legacy message)*
- - other *(O, C in legacy message)*
+ - update
+ - new
+ - other
+ - ...
 
 ### Example
 This is the commit title  
