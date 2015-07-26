@@ -1,26 +1,35 @@
 Framework
 ======
+The framework is a simple class with some constants, internal log/reporting level handling and an extension search feature. The main function is the library
+importer with autoload support.
 
-# Autoloader
-The autoloader is defined in *define.php*. This file loads extension libraries from standard extension directory
-structure (based on the class and it's namespaces), but it's also capable to load some special cases. The basic extension
-namespace definition is:
+In your bootstrap file you must call the `Framework::setup()` to initialize the framework (autoloader, default levels and some checks). For the method you can
+specify a main function that runs after the initialization. The default *index.php* has an example for this. 
 
-  `\<Package>(\<Name>(\<Feature>)?)?(\<Namespaces>)*\<Class>`
+# Importer
+The library import is accessible with the `\Framework::import()` method. This method use only one parameter that MUST be the fully qualified name of the class
+that needs to be imported. This method's result is true if the given class is exists after the import. The importer main purpose is to load extension's library
+classes but it also supports custom namespace sources that is compatible with PSR-4. Example for extensions:
+
+  `\<Package>(\<Name>(\<Feature>)?)?(\<Namespaces>)*\<Class(Fragment)*>`
 
 This "defines" the following directory structure and filename: 
 
-  */extension/\<package\>(-\<name\>)(-\<feature\>)?)?/library/(\<namespaces\>/)\*\<class\>.php*
+  */extension/\<package\>(-\<name\>)(-\<feature\>)?)?/library/(\<namespaces\>/)\*\<class\>(\<fragment\>)\*.php*
   
-Directory structure (including the filename) SHOULD be lowercase, and the namespaces for that MAY have ucfirst.
-The loader supports the mixed lettercase structures as well, but in this case the directory structure lettercase MUST
-be the same as the namespaces.
+Directory structure (including the filename) SHOULD be lowercase, and the namespaces for that MAY have ucfirst. The importer also supports the mixed lettercase
+structures as well (in case-sensitive environment), but not recommended. Examples:
 
- - RECOMMENDED: `\Sample\FoO\ClassName` -\> */extension/sample/library/foo/classname.php*
- - AVAILABLE: `\SamplE\FoO\ClassName` -\> */extension/sample/library/FoO/ClassName.php*
- - WRONG: `\SamplE\FoO\ClassName` -\> */extension/sample/library/foo/classname.php*
- 
-Multiple classes per file are also supported, but only use this when it's REALLY needed\! For example: Define a trait
+ The `\SamplE\FoO\bAr\ClassName` class can be in:
+  - */extension/sample/library/foo/bar/classname.php*
+  - */extension/sample/library/foo/bar/ClassName.php*
+  - */extension/sample/library/FoO/bAr/ClassName.php*
+  - */custom/sample/foo/bar/classname.php*
+  - */custom/sample/foo/bar/ClassName.php*
+  - */custom/samplE/FoO/bAr/ClassName.php*
+
+## Class nesting
+The fragment parts can be ignored in the file name, so you could put more class in one file. For example: Define a trait
 and an interface for it may be in the same file, or custom exception classes used by only one class... etc.
 This nested classes' name MUST be started with the file name that contains the class, and the remain part MUST be separated with
 an uppercase letter. For example the `\Sample\Foo\ClassNameException` class' files can be:
@@ -28,6 +37,18 @@ an uppercase letter. For example the `\Sample\Foo\ClassNameException` class' fil
   - */extension/sample/library/foo/class.php*
   - */extension/sample/library/foo/classname.php*
   - */extension/sample/library/foo/classnameexception.php*
+  
+## Custom roots
+The importer supports custom roots for namespaces. Custom root can be added with the `Framework::connect()` method where you MUST specify the namespace and this
+namespace's root path. For example:
+
+`````php
+ \Framework::connect('\Sample\Foo\', '/custom/location');
+ // after that the '\Sample\Foo\Bar\Class' will be loaded from '/custom/location/bar/class.php'
+`````
+
+The nesting and letter case supports also applied to the custom roots. **The custom root lookup is executed before the standard extension library lookup, so be
+careful of the namespace you connect.**
 
 # Standards
 **This will apply to the framework and all extensions either\!**
