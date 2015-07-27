@@ -10,6 +10,8 @@ define( '_PATH_BASE', rtrim( dirname( __FILE__ ), '\\/' ) . '/' );
 
 /**
  * Class Framework
+ *
+ * @since 0.6.0
  */
 class Framework {
 

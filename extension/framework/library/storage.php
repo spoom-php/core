@@ -219,6 +219,8 @@ interface StorageInterface extends \ArrayAccess, \JsonSerializable {
  * Class Storage
  * @package Framework
  *
+ * @since   0.6.0
+ *
  * @property      int         $caching   The cache type. One of the CACHE_* constants
  * @property-read mixed       $source    The storage source variable
  * @property      string|null $namespace The default namespace if not provided. If null, no default namespace is added to the index

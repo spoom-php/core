@@ -195,18 +195,24 @@ class Log extends Library {
   }
 
   /**
+   * @since 0.6.0
+   *
    * @return string
    */
   public function getNamespace() {
     return $this->_namespace;
   }
   /**
+   * @since 0.6.0
+   *
    * @return string
    */
   public function getName() {
     return $this->_name;
   }
   /**
+   * @since 0.6.0
+   *
    * @return string
    */
   public function getFile() {

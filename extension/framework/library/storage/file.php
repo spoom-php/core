@@ -7,6 +7,8 @@ use Framework\Helper;
  * Class File
  * @package Framework\Storage
  *
+ * @since   0.6.0
+ *
  * TODO implement multi storage null namespace support (synced namespace save/load/remove)
  *
  * @property-read string $path  The path base for the storage
