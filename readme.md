@@ -53,7 +53,7 @@ careful of the namespace you connect.**
 The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT", "SHOULD", "SHOULD NOT", "RECOMMENDED", "MAY", and
 "OPTIONAL" in this document are to be interpreted as described in [RFC 2119](http://tools.ietf.org/html/rfc2119).
 
-**This will apply to the framework and all extensions either\!**
+**This will apply to the framework and all extensions either!**
 
 ## Coding standard
 Code MUST follow the [PSR-1](http://www.php-fig.org/psr/psr-1/ "PSR-1") guide with the following modifications: 
@@ -105,10 +105,10 @@ model MUST follow [this](http://nvie.com/posts/a-successful-git-branching-model/
 `title`  
   
 `content`  
-`type`\!:`description`  
+`type`!:`description`  
 
 #### Types
-An **\!** after the type indicates the compatibility broker changes. 
+An **!** after the type indicates the compatibility broker changes. 
 
  - fix
  - refactor
