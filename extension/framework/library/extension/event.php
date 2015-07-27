@@ -3,6 +3,7 @@
 use Framework\Exception;
 use Framework\Exception\Collector;
 use Framework\Extension;
+use Framework\Helper\FeasibleInterface;
 use Framework\Helper\Library;
 use Framework\Request;
 use Framework\Storage;
@@ -207,7 +208,7 @@ class Event extends Library implements \Countable, \Iterator, \ArrayAccess {
       $extension = Extension::instance( $options->extension );
       $listener  = $extension->create( $options->library );
 
-      if( !$listener || !is_callable( [ $listener, 'execute' ] ) ) {
+      if( !$listener || !( $listener instanceof FeasibleInterface ) ) {
 
         // log: notice
         Request::getLog()->notice( 'Invalid event handler for \'{namespace}:{name}\'. Missing execute() method', [
