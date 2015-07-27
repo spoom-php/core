@@ -1,15 +1,36 @@
 <?php namespace Framework\Extension;
 
 use Framework\Extension;
-use Framework\Storage\Directory as DirectoryStorage;
+use Framework\Storage;
+
+/**
+ * Interface ConfigurationInterface
+ * @package Framework\Extension
+ *
+ * @since   0.6.0
+ */
+interface ConfigurationInterface extends Storage\PermanentInterface {
+
+  /**
+   * Set defaults
+   *
+   * @param Extension $source
+   */
+  public function __construct( Extension $source );
+
+  /**
+   * @return Extension
+   */
+  public function getExtension();
+}
 
 /**
  * Class Configuration
  * @package Framework\Extension
  *
- * @property-read Extension $extension
+ * @property-read Extension $extension The extension source of the configuration
  */
-final class Configuration extends DirectoryStorage {
+class Configuration extends Storage\File implements ConfigurationInterface {
 
   /**
    * Extension data source
@@ -30,23 +51,9 @@ final class Configuration extends DirectoryStorage {
   }
 
   /**
-   * Getter for extension
-   *
-   * @param $index
-   *
-   * @return Extension|mixed
+   * @return Extension
    */
-  public function __get( $index ) {
-
-    if( $index === 'extension' ) return $this->_extension;
-    else return parent::__get( $index );
-  }
-  /**
-   * @param string $index
-   *
-   * @return bool
-   */
-  public function __isset( $index ) {
-    return $index === 'extension' || parent::__isset( $index );
+  public function getExtension() {
+    return $this->_extension;
   }
 }

@@ -1,5 +1,13 @@
 {
-  "locale": "english",
-  "timezone": "Europe/Budapest",
+  "level": {
+    "log": "none",
+    "report": "warning"
+  },
+
+  "import": {},
+  
+  "localization": "en",
+  "locale": null,
+  "timezone": null,
   "encoding": "utf8"
 }

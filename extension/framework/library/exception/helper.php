@@ -47,7 +47,7 @@ abstract class Helper {
    * @throws Strict ::EXCEPTION_INVALID_ID when the ID format is wrong
    */
   public static function parse( $id ) {
-    
+
     // validate the id
     $matches = [ ];
     if( !preg_match( self::REGEXP_ID, $id, $matches ) ) throw new Strict( self::EXCEPTION_NOTICE_INVALID_ID, [ 'id' => $id ] );
@@ -67,13 +67,15 @@ abstract class Helper {
    * @return string
    */
   public static function build( Extension $extension, $code, array $data = [ ] ) {
-    return $extension->text( 'framework-exception:#' . $code, $data );
+
+    $tmp = $extension->text( 'framework-exception:#' . $code, $data, null );
+    return $tmp ? $tmp : $extension->text( 'framework-exception:#' . ( (int) $code ), $data );
   }
   /**
    * Extract exception data into array format
    *
    * @param \Exception $exception The exception to convert
-   * @param bool       $more Append additional data to the result
+   * @param bool       $more      Append additional data to the result
    *
    * @return array|null
    */
@@ -82,7 +84,7 @@ abstract class Helper {
     if( empty( $exception ) ) return null;
     else if( $exception instanceof Exception ) return $exception->toArray( $more );
     else {
-      
+
       $tmp = [ 'code' => $exception->getCode(), 'message' => $exception->getMessage() ];
       if( $more ) {
         $tmp[ 'line' ]     = $more ? ( $exception->getFile() . ':' . $exception->getLine() ) : null;
@@ -134,7 +136,8 @@ abstract class Helper {
         else if( $objects instanceof \Exception ) throw self::wrap( $objects );
       }
 
-    } else {
+    }
+    else {
 
       $throw_alter = is_array( $objects ) ? $args : null;
       $objects     = is_array( $objects ) ? $objects : func_get_args();

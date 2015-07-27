@@ -1,7 +1,22 @@
 <?php namespace Framework\Helper;
 
 use Framework\Extension;
-use Framework\Page;
+use Framework\Request;
+
+/**
+ * Interface FeasibleInterface
+ * @package Framework\Helper
+ */
+interface FeasibleInterface {
+
+  /**
+   * @param string $name
+   * @param mixed  $arguments
+   *
+   * @return mixed
+   */
+  public function execute( $name, $arguments );
+}
 
 /**
  * Trait Feasible
@@ -29,7 +44,7 @@ trait Feasible {
       else {
         
         // log: warning
-        Page::getLog()->warning( 'Missing \'{name}\' executeable', [
+        Request::getLog()->warning( 'Missing \'{name}\' executeable', [
           'name'      => $name,
           'arguments' => $arguments,
           'method'    => $method
@@ -75,19 +90,4 @@ trait Feasible {
       }
     }
   }
-}
-
-/**
- * Interface FeasibleInterface
- * @package Framework\Helper
- */
-interface FeasibleInterface {
-
-  /**
-   * @param string $name
-   * @param mixed  $arguments
-   *
-   * @return mixed
-   */
-  public function execute( $name, $arguments );
 }

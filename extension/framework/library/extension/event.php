@@ -3,20 +3,24 @@
 use Framework\Exception;
 use Framework\Exception\Collector;
 use Framework\Extension;
+use Framework\Helper\FeasibleInterface;
 use Framework\Helper\Library;
-use Framework\Page;
+use Framework\Request;
+use Framework\Storage;
 
 /**
  * Class Event
  * @package Framework\Extension
  *
- * @property      bool        $prevented The default event action has been prevented or not
- * @property      bool        $stopped   Stopped next handler call or not
- * @property-read string      $name      The event name
- * @property-read string      $namespace The event namespace
- * @property-read array       $argument  The arguments passed to the event call
- * @property-read array|null  $result    The handler's results in an array indexed by the handler names
- * @property-read Collector   $collector The exception collector
+ * TODO rethink the event storage type
+ *
+ * @property      bool       $prevented The default event action has been prevented or not
+ * @property      bool       $stopped   Stopped next handler call or not
+ * @property-read string     $name      The event name
+ * @property-read string     $namespace The event namespace
+ * @property-read array      $argument  The arguments passed to the event call
+ * @property-read array|null $result    The handler's results in an array indexed by the handler names
+ * @property-read Collector  $collector The exception collector
  */
 class Event extends Library implements \Countable, \Iterator, \ArrayAccess {
 
@@ -25,7 +29,19 @@ class Event extends Library implements \Countable, \Iterator, \ArrayAccess {
    *
    * @var array
    */
-  private static $cache = [ ];
+  private static $cache_instance = [ ];
+  /**
+   * Array of the event's listener array data
+   *
+   * @var array
+   */
+  private static $cache_listener = [ ];
+  /**
+   * Storage for the event handlers
+   *
+   * @var Storage\Permanent
+   */
+  private static $storage;
 
   /**
    * Attached listeners storage
@@ -83,49 +99,19 @@ class Event extends Library implements \Countable, \Iterator, \ArrayAccess {
    */
   public function __construct( $namespace, $name, $arguments = [ ] ) {
 
+    // define the default storage
+    if( !self::$storage ) {
+
+      $extension                             = Extension::instance( 'framework' );
+      self::$storage                         = new Storage\File( $extension->directory() . Extension::DIRECTORY_CONFIGURATION );
+      self::$storage->getConverter()->native = true;
+    }
+
     // set default params
     $this->_namespace = $namespace;
     $this->_name      = $name;
     $this->_argument  = $arguments;
     $this->_collector = new Collector();
-  }
-
-  /**
-   * Getter for _ prefixed attributes
-   *
-   * @param string $index
-   *
-   * @return string|null
-   */
-  public function __get( $index ) {
-
-    $index = '_' . $index;
-    return property_exists( $this, $index ) ? $this->{$index} : null;
-  }
-  /**
-   * Setter for stopped or prevent attribute
-   *
-   * @param string $index
-   * @param mixed  $value
-   */
-  public function __set( $index, $value ) {
-
-    switch( $index ) {
-      case 'stopped':
-        $this->_stopped = $value == true;
-        break;
-      case 'prevented':
-        $this->_prevented = $value == true;
-        break;
-    }
-  }
-  /**
-   * @param string $index
-   *
-   * @return bool
-   */
-  public function __isset( $index ) {
-    return property_exists( $this, '_' . $index );
   }
 
   /**
@@ -143,11 +129,6 @@ class Event extends Library implements \Countable, \Iterator, \ArrayAccess {
       try {
 
         $this->_result[ $listener->name ] = $listener->instance->execute( $this->_namespace . '.' . $this->_name, [ $this, $listener->data ] );
-
-      } catch( Exception $e ) {
-
-        $this->_result[ $listener->name ] = null;
-        $this->_collector->add( $e );
 
       } catch( \Exception $e ) {
 
@@ -176,23 +157,40 @@ class Event extends Library implements \Countable, \Iterator, \ArrayAccess {
    *  } structure. The order in the event handlers array is the execution order when the event is triggers
    */
   private function load() {
-    $this->listeners = [ ];
-    $extension = Extension::instance( 'framework' );
 
-    // collect listeners if event exists and enabled
-    $tmp = $extension->configuration->getArray( 'event-' . $this->_namespace . ':' . $this->_name );
-    foreach( $tmp as $listener ) {
+    $this->listeners = [ ];
+    $index           = 'event-' . $this->_namespace . ':' . $this->_name;
+
+    // load the listener list
+    if( !isset( self::$cache_listener[ $index ] ) ) {
+
+      self::$cache_listener[ $index ] = [ ];
+      self::$cache_listener[ $index ] = self::$storage->getArray( $index );
+    }
+
+    // try to add the listeners
+    foreach( self::$cache_listener[ $index ] as $listener ) try {
 
       if( !empty( $listener->extension ) && !empty( $listener->library ) ) $this->add( $listener );
       else {
 
         // log: notice
-        Page::getLog()->notice( 'Invalid event handler for \'{namespace}:{name}\'. Missing library or extension', [
+        Request::getLog()->notice( 'Invalid event handler for \'{namespace}:{name}\'. Missing library or extension', [
           'listener'  => $listener,
           'name'      => $this->_name,
           'namespace' => $this->_namespace
         ], '\Framework\Extension\Event' );
       }
+
+    } catch( \Exception $e ) {
+
+      // log: notice
+      Request::getLog()->notice( 'Invalid event handler for \'{namespace}:{name}\'. Exception on create.', [
+        'listener'  => $listener,
+        'name'      => $this->_name,
+        'namespace' => $this->_namespace,
+        'exception' => Exception\Helper::convert( $e )
+      ], '\Framework\Extension\Event' );
     }
   }
   /**
@@ -205,15 +203,15 @@ class Event extends Library implements \Countable, \Iterator, \ArrayAccess {
     if( empty( $options->enabled ) || !Extension\Helper::exist( $options->extension, true ) ) return;
 
     $index = $options->extension . ':' . $options->library;
-    if( !isset( self::$cache[ $index ] ) ) {
+    if( !isset( self::$cache_instance[ $index ] ) ) {
 
       $extension = Extension::instance( $options->extension );
       $listener  = $extension->create( $options->library );
 
-      if( !$listener || !is_callable( [ $listener, 'execute' ] ) ) {
+      if( !$listener || !( $listener instanceof FeasibleInterface ) ) {
 
         // log: notice
-        Page::getLog()->notice( 'Invalid event handler for \'{namespace}:{name}\'. Missing execute() method', [
+        Request::getLog()->notice( 'Invalid event handler for \'{namespace}:{name}\'. Missing execute() method', [
           'listener'  => $listener,
           'name'      => $this->_name,
           'namespace' => $this->_namespace
@@ -222,15 +220,88 @@ class Event extends Library implements \Countable, \Iterator, \ArrayAccess {
         return;
       }
 
-      self::$cache[ $index ] = $listener;
+      self::$cache_instance[ $index ] = $listener;
     }
 
     $this->listeners[ $index ] = (object) [
       'name'      => $index,
       'extension' => $options->extension,
-      'instance'  => self::$cache[ $index ],
+      'instance'  => self::$cache_instance[ $index ],
       'data'      => isset( $options->data ) ? $options->data : null
     ];
+  }
+
+  /**
+   * @since 0.6.0
+   *
+   * @return string
+   */
+  public function getName() {
+    return $this->_name;
+  }
+  /**
+   * @since 0.6.0
+   *
+   * @return null|string
+   */
+  public function getNamespace() {
+    return $this->_namespace;
+  }
+  /**
+   * @since 0.6.0
+   *
+   * @return array
+   */
+  public function getArgument() {
+    return $this->_argument;
+  }
+  /**
+   * @since 0.6.0
+   *
+   * @return array|null
+   */
+  public function getResult() {
+    return $this->_result;
+  }
+  /**
+   * @since 0.6.0
+   *
+   * @return Collector
+   */
+  public function getCollector() {
+    return $this->_collector;
+  }
+  /**
+   * @since 0.6.0
+   *
+   * @return boolean
+   */
+  public function isStopped() {
+    return $this->_stopped;
+  }
+  /**
+   * @since 0.6.0
+   *
+   * @param boolean $value
+   */
+  public function setStopped( $value ) {
+    $this->_stopped = (bool) $value;
+  }
+  /**
+   * @since 0.6.0
+   *
+   * @return boolean
+   */
+  public function isPrevented() {
+    return $this->_prevented;
+  }
+  /**
+   * @since 0.6.0
+   *
+   * @param boolean $value
+   */
+  public function setPrevented( $value ) {
+    $this->_prevented = (bool) $value;
   }
 
   /**

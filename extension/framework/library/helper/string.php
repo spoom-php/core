@@ -1,8 +1,8 @@
 <?php namespace Framework\Helper;
 
 use Framework\Exception\Strict;
-use Framework\Page;
-use Framework\Storage\Single;
+use Framework\Request;
+use Framework\Storage;
 
 /**
  * Class String
@@ -30,7 +30,7 @@ abstract class String {
    * Insert variables to the input from insertion array used the regexp constant of class
    *
    * @param string       $text      input string to insert
-   * @param array|Single $insertion the insertion variables
+   * @param array|Storage $insertion the insertion variables
    * @param int          $type
    *
    * @return array|string
@@ -38,7 +38,7 @@ abstract class String {
   public static function insert( $text, $insertion, $type = self::TYPE_INSERT_EMPTY ) {
 
     // every insertion converted to data
-    if( !( $insertion instanceof Single ) ) $insertion = new Single( $insertion );
+    if( !( $insertion instanceof Storage ) ) $insertion = new Storage( $insertion );
 
     // find patterns iterate trough the matches
     preg_match_all( self::REGEXP_INSERT_REPLACE, $text, $matches, PREG_SET_ORDER );
@@ -86,14 +86,14 @@ abstract class String {
       if( !function_exists( 'openssl_random_pseudo_bytes' ) ) {
 
         // log: warning
-        Page::getLog()->warning( 'Cannot use OpenSSL random, `openssl_random_pseudo_bytes()` doesn\'t exists.', [ ], '\Framework\Helper\String' );
+        Request::getLog()->warning( 'Cannot use OpenSSL random, `openssl_random_pseudo_bytes()` doesn\'t exists.', [ ], '\Framework\Helper\String' );
 
       } else {
         $tmp = openssl_random_pseudo_bytes( 64, $strong );
 
         // skip ssl since it wasn't using the strong algo
         if( $strong === true ) $raw .= $tmp;
-        else Page::getLog()->notice( 'Generated OpenSSL random value is not strong, what next?', [ ], '\Framework\Helper\String' ); // log: notice
+        else Request::getLog()->notice( 'Generated OpenSSL random value is not strong, what next?', [ ], '\Framework\Helper\String' ); // log: notice
       }
 
       // try to read from the unix RNG
