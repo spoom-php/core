@@ -8,6 +8,8 @@ use Framework\Storage;
  * Class Converter
  * @package Framework\Helper
  *
+ * @since   0.6.0
+ *
  * @property bool $native Use only the native converters, do not trigger the event
  */
 class Converter extends Library implements FeasibleInterface {
@@ -247,6 +249,8 @@ class Converter extends Library implements FeasibleInterface {
 /**
  * Class ConverterMeta
  * @package Framework\Helper
+ *
+ * @since   0.6.0
  *
  * @property-read string $format The format of the storage
  */

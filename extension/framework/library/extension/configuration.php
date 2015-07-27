@@ -6,6 +6,8 @@ use Framework\Storage;
 /**
  * Interface ConfigurationInterface
  * @package Framework\Extension
+ *
+ * @since   0.6.0
  */
 interface ConfigurationInterface extends Storage\PermanentInterface {
 

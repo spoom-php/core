@@ -7,6 +7,8 @@ use Framework\Storage;
 /**
  * Interface LocalizationInterface
  * @package Framework\Extension
+ *
+ * @since   0.6.0
  */
 interface LocalizationInterface extends Storage\PermanentInterface {
 
@@ -102,12 +104,16 @@ class Localization extends Storage\File implements LocalizationInterface {
   }
 
   /**
+   * @since 0.6.0
+   *
    * @return Extension
    */
   public function getExtension() {
     return $this->_extension;
   }
   /**
+   * @since 0.6.0
+   *
    * @return string
    */
   public function getLocalization() {
@@ -117,6 +123,8 @@ class Localization extends Storage\File implements LocalizationInterface {
     return $this->_localization;
   }
   /**
+   * @since 0.6.0
+   *
    * @param string $value
    */
   public function setLocalization( $value ) {

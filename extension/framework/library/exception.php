@@ -209,30 +209,40 @@ abstract class Exception extends \Exception implements \JsonSerializable, Librar
   }
 
   /**
+   * @since 0.6.0
+   *
    * @return string
    */
   public function getId() {
     return $this->_id;
   }
   /**
+   * @since 0.6.0
+   *
    * @return array
    */
   public function getData() {
     return $this->_data;
   }
   /**
+   * @since 0.6.0
+   *
    * @return string
    */
   public function getType() {
     return $this->_type;
   }
   /**
+   * @since 0.6.0
+   *
    * @return int
    */
   public function getLevel() {
     return $this->_level;
   }
   /**
+   * @since 0.6.0
+   *
    * @return \Framework\Extension
    */
   public function getExtension() {

@@ -232,54 +232,72 @@ class Event extends Library implements \Countable, \Iterator, \ArrayAccess {
   }
 
   /**
+   * @since 0.6.0
+   *
    * @return string
    */
   public function getName() {
     return $this->_name;
   }
   /**
+   * @since 0.6.0
+   *
    * @return null|string
    */
   public function getNamespace() {
     return $this->_namespace;
   }
   /**
+   * @since 0.6.0
+   *
    * @return array
    */
   public function getArgument() {
     return $this->_argument;
   }
   /**
+   * @since 0.6.0
+   *
    * @return array|null
    */
   public function getResult() {
     return $this->_result;
   }
   /**
+   * @since 0.6.0
+   *
    * @return Collector
    */
   public function getCollector() {
     return $this->_collector;
   }
   /**
+   * @since 0.6.0
+   *
    * @return boolean
    */
   public function isStopped() {
     return $this->_stopped;
   }
   /**
+   * @since 0.6.0
+   *
    * @param boolean $value
    */
   public function setStopped( $value ) {
     $this->_stopped = (bool) $value;
   }
   /**
+   * @since 0.6.0
+   *
    * @return boolean
    */
   public function isPrevented() {
     return $this->_prevented;
   }
   /**
+   * @since 0.6.0
+   *
    * @param boolean $value
    */
   public function setPrevented( $value ) {

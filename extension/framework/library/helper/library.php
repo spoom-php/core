@@ -27,6 +27,8 @@ class Library implements LibraryInterface {
   /**
    * There is no getter or setter for the requested property. Argument:
    *  - property [string]: The requested property name
+   *
+   * @since 0.6.0
    */
   const EXCEPTION_MISSING_PROPERTY = 'framework#20N';
 
@@ -48,6 +50,8 @@ class Library implements LibraryInterface {
   /**
    * @param $index
    * @param $value
+   *
+   * @since 0.6.0
    *
    * @return mixed
    * @throws Exception\Strict
@@ -87,6 +91,8 @@ class Library implements LibraryInterface {
    * @param string $field    The field name in the instance
    * @param object $instance The instance of the class
    *
+   * @since 0.6.0
+   *
    * @return string|null The getter method name that exists in the instance or null on failure
    */
   public static function searchGetter( $field, $instance ) {
@@ -122,6 +128,8 @@ class Library implements LibraryInterface {
    *
    * @param string $field    The field name in the instance
    * @param object $instance The instance of the class
+   *
+   * @since 0.6.0
    *
    * @return string|null The setter method name that exists in the instance or null on failure
    */

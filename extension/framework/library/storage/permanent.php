@@ -10,6 +10,8 @@ use Framework\StorageInterface;
 /**
  * Interface PermanentInterface
  * @package Framework\Storage
+ *
+ * @since   0.6.0
  */
 interface PermanentInterface extends StorageInterface {
 
@@ -79,6 +81,8 @@ interface PermanentInterface extends StorageInterface {
 /**
  * Class Permanent
  * @package Framework\Storage
+ *
+ * @since   0.6.0
  *
  * TODO add static cache for the load mechanism to optimize the process
  * TODO add write- and readable feature

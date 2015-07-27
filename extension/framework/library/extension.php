@@ -41,12 +41,16 @@ class Extension extends Library {
    * The configuration class definition invalid. Data:
    *  - extension [string]: The extension id
    *  - class [string]: The classname that is invalid (or null if not exist)
+   *
+   * @since 0.6.0
    */
   const EXCEPTION_INVALID_CONFIGURATION = 'framework#21C';
   /**
    * The localization class definition invalid. Data:
    *  - extension [string]: The extension id
    *  - class [string]: The classname that is invalid (or null if not exist)
+   *
+   * @since 0.6.0
    */
   const EXCEPTION_INVALID_LOCALIZATION = 'framework#22C';
 
@@ -143,6 +147,8 @@ class Extension extends Library {
 
   /**
    * Clone the configuration and localization properties
+   *
+   * @since 0.6.0
    */
   public function __clone() {
 
@@ -273,18 +279,24 @@ class Extension extends Library {
   }
 
   /**
+   * @since 0.6.0
+   *
    * @return string
    */
   public function getId() {
     return $this->_id;
   }
   /**
+   * @since 0.6.0
+   *
    * @return Storage\File
    */
   public function getManifest() {
     return $this->_manifest;
   }
   /**
+   * @since 0.6.0
+   *
    * @return Extension\ConfigurationInterface
    * @throws Exception\System
    */
@@ -304,6 +316,8 @@ class Extension extends Library {
     return $this->_configuration;
   }
   /**
+   * @since 0.6.0
+   *
    * @return Extension\LocalizationInterface
    * @throws Exception\System
    */
@@ -322,6 +336,8 @@ class Extension extends Library {
     return $this->_localization;
   }
   /**
+   * @since 0.6.0
+   *
    * @return Log
    */
   public function getLog() {
