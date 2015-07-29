@@ -9,5 +9,8 @@ class FrameworkHelperTest extends PHPUnit_Framework_TestCase {
     parent::__construct( $name, $data, $dataName );
   }
 
-  // TODO test uncovered String and File method
+  public function testString() {
+
+    // TODO test uncovered String and File method
+  }
 }

@@ -166,7 +166,7 @@ class Extension extends Library {
    * @return string
    */
   public function text( $index, $insertion = null, $default = '' ) {
-    return $this->localization->getPattern( $index, $insertion, $default );
+    return $this->getLocalization()->getPattern( $index, $insertion, $default );
   }
   /**
    * Get configuration variable from extension configuration object. It's a proxy for Configuration::get() method
@@ -177,7 +177,7 @@ class Extension extends Library {
    * @return mixed
    */
   public function option( $index, $default = null ) {
-    return $this->configuration->get( $index, $default );
+    return $this->getConfiguration()->get( $index, $default );
   }
 
   /**

@@ -145,6 +145,7 @@ class File extends Permanent {
     $exist = false;
     $path  = $this->getFile( $namespace, null, $exist );
 
+    $meta = new Helper\ConverterMeta( $this->format );
     if( !$exist || !is_file( _PATH_BASE . $path ) ) return null;
     else {
 
