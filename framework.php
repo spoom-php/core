@@ -314,7 +314,7 @@ class Framework {
 
     if( $value !== null ) {
 
-      self::$level[ 'report' ] = self::getLevel( $value );
+      self::$level[ 'report' ] = self::getLevel( $value, false );
 
       // setup error reporting in PHP
       $reporting = 0;
