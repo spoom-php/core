@@ -342,6 +342,13 @@ abstract class Enumerable {
       $result->exist = false;
       for( $count = count( $tokens ), $i = 0; $i < $count - 1; ++$i ) {
 
+        // check the container type
+        if( !Enumerable::is( $result->container ) ) {
+
+          if( $build ) $result->container = [ ];
+          else return $result;
+        }
+        
         // handle new key check for two different data type
         $key = $tokens[ $i ];
         if( is_array( $result->container ) ) { // handle like an array
@@ -361,10 +368,6 @@ abstract class Enumerable {
           }
 
           $result->container = &$result->container->{$key};
-        } else {
-
-          if( $build ) $result->container = [ ];
-          else return $result;
         }
       }
 

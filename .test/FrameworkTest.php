@@ -53,5 +53,9 @@ class FrameworkTest extends PHPUnit_Framework_TestCase {
     $this->assertEquals( \Framework::LEVEL_ERROR, \Framework::getLevel( \Framework::LEVEL_ERROR, false ) );
 
     $this->assertEquals( null, \Framework::getLevel( 'csoki', true ) );
+
+    // reporting setup check
+    \Framework::reportLevel( \Framework::LEVEL_CRITICAL );
+    $this->assertEquals( E_COMPILE_ERROR | E_PARSE, error_reporting() );
   }
 }
