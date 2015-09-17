@@ -43,7 +43,7 @@ class Request extends Storage {
    * @param int|mixed $caching
    */
   public function __construct( $namespace = 'request', $caching = Storage::CACHE_NONE ) {
-    parent::__construct( $namespace, null, $caching );
+    parent::__construct( $namespace, self::NAMESPACE_REQUEST, $caching );
 
     $this->connect( $_REQUEST, self::NAMESPACE_REQUEST );
     $this->connect( $_POST, self::NAMESPACE_POST );
