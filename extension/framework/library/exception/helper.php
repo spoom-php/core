@@ -87,9 +87,10 @@ abstract class Helper {
 
       $tmp = [ 'code' => $exception->getCode(), 'message' => $exception->getMessage() ];
       if( $more ) {
-        $tmp[ 'line' ]     = $more ? ( $exception->getFile() . ':' . $exception->getLine() ) : null;
-        $tmp[ 'trace' ]    = $more ? $exception->getTrace() : null;
-        $tmp[ 'previous' ] = $more ? self::convert( $exception->getPrevious(), $more ) : null;
+
+        $tmp[ 'line' ]     = $exception->getFile() . ':' . $exception->getLine();
+        $tmp[ 'trace' ]    = $exception->getTrace();
+        $tmp[ 'previous' ] = self::convert( $exception->getPrevious(), $more );
       }
 
       return $tmp;
@@ -136,8 +137,7 @@ abstract class Helper {
         else if( $objects instanceof \Exception ) throw self::wrap( $objects );
       }
 
-    }
-    else {
+    } else {
 
       $throw_alter = is_array( $objects ) ? $args : null;
       $objects     = is_array( $objects ) ? $objects : func_get_args();
