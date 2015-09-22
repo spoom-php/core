@@ -143,15 +143,16 @@ class Framework {
    * Search the extension name from the input string array. The strings, used for the extension name will be sliced from the input array
    *
    * @param string[] $input The input strings
+   * @param int      $depth Maximum depth for the extension id
    *
    * @return string The extension name if any
    */
-  public static function search( array &$input ) {
+  public static function search( array &$input, $depth = self::EXTENSION_DEPTH ) {
 
     // find the extension from the class namespace
     $name   = '';
     $length = 0;
-    for( $i = 0, $count = count( $input ), $tmp = ''; $i < self::EXTENSION_DEPTH && $i < $count; ++$i ) {
+    for( $i = 0, $count = count( $input ), $tmp = ''; $i < $depth && $i < $count; ++$i ) {
 
       // check if this path is an extension: check existance of the extension directory
       $tmp .= ( $i > 0 ? self::EXTENSION_SEPARATOR : '' ) . mb_strtolower( $input[ $i ] );
@@ -228,7 +229,6 @@ class Framework {
 
       // fix for absolute class definitions
       $class = trim( $class, '\\' );
-      $classname = $class;
 
       // try first the custom paths (custom autoload path support)
       foreach( self::$connection as $namespace => $directory ) {
@@ -236,38 +236,35 @@ class Framework {
         $namespace = trim( $namespace, '\\' ) . '\\';
         if( strpos( $class, $namespace ) === 0 ) {
 
-          $root  = rtrim( $directory, '/' ) . '/';
-          $classname = substr( $class, strlen( $namespace ) );
+          $path = explode( '\\', trim( substr( $class, strlen( $namespace ) ), '\\' ) );
+          $name = array_pop( $path );
 
-          break;
+          // return when the loader find a perfect match, and the class really exist
+          if( self::find( $name, $path, rtrim( $directory, '/' ) . '/' ) && class_exists( $class, false ) ) {
+            return true;
+          }
         }
       }
-
-      // define the path and the class name for the further checks
-      $path = explode( '\\', trim( $classname, '\\' ) );
-      $name = array_pop( $path );
 
       // try to find an extension library
-      if( !isset( $root ) ) {
+      $depth = self::EXTENSION_DEPTH;
+      for( $i = $depth; $i > 0; --$i ) {
+
+        $path = explode( '\\', trim( $class, '\\' ) );
+        $name = array_pop( $path );
 
         $extension = self::search( $path );
-        if( !empty( $extension ) ) {
+        if( empty( $extension ) ) break;
+        else {
+          
           $root = self::PATH_BASE . self::PATH_EXTENSION . $extension . '/' . self::EXTENSION_LIBRARY;
+          if( self::find( $name, $path, $root ) && class_exists( $class, false ) ) {
+            return true;
+          }
         }
       }
 
-      // check root existance and then try to find the original full named class file
-      $path = ltrim( implode( '/', $path ) . '/', '/' );
-      if( isset( $root ) && !self::read( $name, $path, $root ) ) {
-
-        // try to tokenize the class name (based on camel or TitleCase) to support for nested classes
-        $tmp = self::tokenize( $name );
-        foreach( $tmp as $name ) if( self::read( $name, $path, $root ) ) {
-          break;
-        }
-      }
-
-      return class_exists( $class, false );
+      return false;
     }
   }
 
@@ -426,6 +423,31 @@ class Framework {
     }
 
     return array_reverse( $result );
+  }
+  /**
+   * Find the class file and load it
+   *
+   * @param string $name The class name
+   * @param string $path The file path
+   * @param string $root The path's root
+   *
+   * @return bool True if the file was successfully loaded
+   */
+  protected static function find( $name, $path, $root ) {
+
+    // check root existance and then try to find the original full named class file
+    $path = ltrim( implode( '/', $path ) . '/', '/' );
+    if( self::read( $name, $path, $root ) ) return true;
+    else {
+
+      // try to tokenize the class name (based on camel or TitleCase) to support for nested classes
+      $tmp = self::tokenize( $name );
+      foreach( $tmp as $name ) if( self::read( $name, $path, $root ) ) {
+        return true;
+      }
+
+      return false;
+    }
   }
 }
 

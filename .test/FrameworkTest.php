@@ -39,6 +39,10 @@ class FrameworkTest extends PHPUnit_Framework_TestCase {
     // remove the custom path
     \Framework::disconnect( 'Custom\NS' );
     $this->assertEquals( null, \Framework::library( 'Custom\NS\Invalid' ) );
+    
+    // test the extension class override
+    \Framework::connect( 'Framework\Exception', \Framework::PATH_BASE . '.test/src/CusTom/framework/exception' );
+    $this->assertEquals( 'test', Framework\Exception\System::test() );
   }
 
   /**
