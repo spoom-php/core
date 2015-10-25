@@ -10,7 +10,9 @@ use Framework\Storage\File as StorageFile;
  * Class Storage
  * @package Framework\Event
  */
-class Storage extends Library {
+class Storage extends Library implements \Countable, \Iterator {
+
+  const DIRECTORY_SOURCE = 'asset/event/';
 
   /**
    * The static listener storage (file based)
@@ -19,6 +21,12 @@ class Storage extends Library {
    */
   private static $source;
 
+  /**
+   * Iterator cursor
+   *
+   * @var int
+   */
+  private $cursor = 0;
   /**
    * Static listener status flag
    *
@@ -82,6 +90,7 @@ class Storage extends Library {
    */
   protected function load() {
 
+    // load only once
     if( !$this->loaded ) {
       $this->loaded = true;
 
@@ -89,7 +98,7 @@ class Storage extends Library {
       if( !isset( self::$source ) ) {
 
         $extension    = Extension::instance( 'framework' );
-        self::$source = new StorageFile( $extension->directory( 'asset/event' ) );
+        self::$source = new StorageFile( $extension->directory( self::DIRECTORY_SOURCE ) );
 
         self::$source->getConverter()->native = true;
       }
@@ -121,5 +130,71 @@ class Storage extends Library {
 
     $this->load();
     return $this->_list;
+  }
+
+  /**
+   * Return the current element
+   * @link  http://php.net/manual/en/iterator.current.php
+   * @return mixed Can return any type.
+   * @since 5.0.0
+   */
+  public function current() {
+
+    $this->load();
+    $this->_list[ $this->cursor ];
+  }
+  /**
+   * Move forward to next element
+   * @link  http://php.net/manual/en/iterator.next.php
+   * @return void Any returned value is ignored.
+   * @since 5.0.0
+   */
+  public function next() {
+    ++$this->cursor;
+  }
+  /**
+   * Return the key of the current element
+   * @link  http://php.net/manual/en/iterator.key.php
+   * @return mixed scalar on success, or null on failure.
+   * @since 5.0.0
+   */
+  public function key() {
+    return $this->cursor;
+  }
+  /**
+   * Checks if current position is valid
+   * @link  http://php.net/manual/en/iterator.valid.php
+   * @return boolean The return value will be casted to boolean and then evaluated.
+   * Returns true on success or false on failure.
+   * @since 5.0.0
+   */
+  public function valid() {
+
+    $this->load();
+    return isset( $this->_list[ $this->cursor ] );
+  }
+  /**
+   * Rewind the Iterator to the first element
+   * @link  http://php.net/manual/en/iterator.rewind.php
+   * @return void Any returned value is ignored.
+   * @since 5.0.0
+   */
+  public function rewind() {
+    $this->cursor = 0;
+  }
+
+  /**
+   * Count elements of an object
+   * @link  http://php.net/manual/en/countable.count.php
+   * @return int The custom count as an integer.
+   * </p>
+   * <p>
+   * The return value is cast to an integer.
+   * @since 5.1.0
+   */
+  public function count() {
+
+    $this->load();
+    return count( $this->_list );
   }
 }
