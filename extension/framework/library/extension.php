@@ -1,5 +1,6 @@
 <?php namespace Framework;
 
+use Framework;
 use Framework\Helper\File;
 use Framework\Helper\Library;
 use Framework\Helper\Log;
@@ -270,12 +271,12 @@ class Extension extends Library {
    * @param string $event     The dot separated event name
    * @param array  $arguments Arguments passed to the event handlers
    *
-   * @return Extension\Event
+   * @return Framework\EventData
    */
   public function trigger( $event, $arguments = [ ] ) {
 
-    $event = new Extension\Event( $this->_id, $event, $arguments );
-    return $event->execute();
+    $event = Framework\Event::instance( $this->_id, $event );
+    return $event->execute( $arguments );
   }
 
   /**

@@ -111,8 +111,8 @@ class Request {
     $extension = Extension::instance( 'framework' );
 
     // call display event to let extensions render the content
-    $event = $extension->trigger( self::EVENT_RUN );
-    return $event->result;
+    $result = $extension->trigger( self::EVENT_RUN );
+    return $result->getArray( '' );
   }
   /**
    * Trigger the page stop event with the given arguments. In this method the page should be rendered to
@@ -189,7 +189,7 @@ class Request {
   public static function getLocalization() {
     if( !self::$localization ) {
 
-      $extension = Extension::instance( 'framework' );
+      $extension          = Extension::instance( 'framework' );
       self::$localization = $extension->manifest->getString( 'localization', 'en' );
     }
 
