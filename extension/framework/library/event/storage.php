@@ -42,6 +42,11 @@ class Storage extends Library implements \Countable, \Iterator {
   private $_list = [ ];
 
   /**
+   * @var Event
+   */
+  private $_event;
+
+  /**
    * @param Event $event
    */
   public function __construct( Event $event ) {
@@ -103,8 +108,8 @@ class Storage extends Library implements \Countable, \Iterator {
         self::$source->getConverter()->native = true;
       }
 
-      // try to create the listeners
-      $tmp = self::$source->getArray( (string) $this->_event );
+      // try to create the listeners (the reverse order is for the unshifting)
+      $tmp = array_reverse( self::$source->getArray( (string) $this->_event ) );
       foreach( $tmp as $listener ) try {
 
         array_unshift( $this->_list, new Event\Listener(
@@ -131,6 +136,12 @@ class Storage extends Library implements \Countable, \Iterator {
     $this->load();
     return $this->_list;
   }
+  /**
+   * @return Event
+   */
+  public function getEvent() {
+    return $this->_event;
+  }
 
   /**
    * Return the current element
@@ -141,7 +152,7 @@ class Storage extends Library implements \Countable, \Iterator {
   public function current() {
 
     $this->load();
-    $this->_list[ $this->cursor ];
+    return $this->_list[ $this->cursor ];
   }
   /**
    * Move forward to next element

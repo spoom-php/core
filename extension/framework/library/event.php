@@ -123,8 +123,8 @@ class Event extends Library {
  *
  * @property-read Event     $event
  * @property-read Collector $collector
- * @property-read bool      $stopped
- * @property-read bool      $prevented
+ * @property bool           $stopped
+ * @property bool           $prevented
  */
 class EventData extends Storage {
 

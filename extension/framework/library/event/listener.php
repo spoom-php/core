@@ -1,10 +1,10 @@
 <?php namespace Framework\Event;
 
+use Framework;
 use Framework\EventData;
 use Framework\Exception;
 use Framework\Helper\FeasibleInterface;
 use Framework\Helper\Library;
-use Framework\Storage;
 use Framework\StorageInterface;
 
 /**
@@ -47,7 +47,7 @@ class Listener extends Library {
   /**
    * Additional data for execute
    *
-   * @var StorageInterface
+   * @var Framework\StorageInterface
    */
   protected $_data;
   /**
@@ -56,16 +56,16 @@ class Listener extends Library {
   protected $_enable;
 
   /**
-   * @param string                 $library Fully qualified class name or extension library index of the handler class
-   * @param array|StorageInterface $data    Provided data on execute
-   * @param bool                   $enable  Allow execute or not
+   * @param string                           $library Fully qualified class name or extension library index of the handler class
+   * @param array|Framework\StorageInterface $data    Provided data on execute
+   * @param bool                             $enable  Allow execute or not
    *
    * @throws Exception\Strict
    */
   public function __construct( $library, $data = [ ], $enable = true ) {
 
     $this->setLibrary( $library );
-    $this->_data   = $data instanceof StorageInterface ? $data : new Storage( $data );
+    $this->_data   = $data instanceof Framework\StorageInterface ? $data : new Framework\Storage( $data );
     $this->_enable = (bool) $enable;
   }
 
