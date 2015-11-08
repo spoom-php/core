@@ -169,7 +169,7 @@ abstract class String {
 
     $source = [
       '/á/i', '/é/i', '/ű|ú|ü/i', '/ő|ó|ö/i', '/í/i', // accented characters
-      '/[\W]+/i',                                     // special characters
+      '/[\W]+/iu',                                     // special characters
       '/[\s]+/'                                       // whitespaces
     ];
     $target = [ 'a', 'e', 'u', 'o', 'i', '-', '+' ];
