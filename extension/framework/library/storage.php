@@ -43,6 +43,14 @@ interface StorageInterface extends \ArrayAccess, \JsonSerializable {
    */
   const TYPE_NUMBER = 'number';
   /**
+   * Int result type
+   */
+  const TYPE_INTEGER = 'integer';
+  /**
+   * Float result type
+   */
+  const TYPE_FLOAT = 'float';
+  /**
    * Boolean result type
    */
   const TYPE_BOOLEAN = 'boolean';
@@ -87,6 +95,26 @@ interface StorageInterface extends \ArrayAccess, \JsonSerializable {
    * @return number|mixed
    */
   public function getNumber( $index, $default = 0 );
+  /**
+   * Get indexed (only int type) value from the storage, or the second parameter if index not exist, not int or
+   * float
+   *
+   * @param string $index   The index in the storage
+   * @param mixed  $default The returned value if index not found
+   *
+   * @return int|mixed
+   */
+  public function getInteger( $index, $default = 0 );
+  /**
+   * Get indexed (only float type) value from the storage, or the second parameter if index not exist, not int or
+   * float
+   *
+   * @param string $index   The index in the storage
+   * @param mixed  $default The returned value if index not found
+   *
+   * @return float|mixed
+   */
+  public function getFloat( $index, $default = 0.0 );
   /**
    * Get indexed (only array type) value from the storage, or the second parameter if index not exist or not
    * enumerable. Object will be typecasted to array
@@ -468,6 +496,38 @@ class Storage extends Library implements StorageInterface {
     return $this->process( $index, $default );
   }
   /**
+   * Get indexed (only int type) value from the storage, or the second parameter if index not exist, not int or
+   * float
+   *
+   * @param string $index   The index in the storage
+   * @param mixed  $default The returned value if index not found
+   *
+   * @return int|mixed
+   */
+  public function getInteger( $index, $default = 0 ) {
+
+    $index       = $this->index( $index );
+    $index->type = self::TYPE_INTEGER;
+
+    return $this->process( $index, $default );
+  }
+  /**
+   * Get indexed (only float type) value from the storage, or the second parameter if index not exist, not int or
+   * float
+   *
+   * @param string $index   The index in the storage
+   * @param mixed  $default The returned value if index not found
+   *
+   * @return float|mixed
+   */
+  public function getFloat( $index, $default = 0 ) {
+
+    $index       = $this->index( $index );
+    $index->type = self::TYPE_FLOAT;
+
+    return $this->process( $index, $default );
+  }
+  /**
    * Get indexed (only array type) value from the storage, or the second parameter if index not exist or not
    * enumerable. Object will be typecasted to array
    *
@@ -706,6 +766,19 @@ class Storage extends Library implements StorageInterface {
         $result = $tmp->exist && is_numeric( $result ) ? ( $result == (int) $result ? (int) $result : (float) $result ) : $default;
         break;
 
+      // force integer type
+      case 'int':
+      case self::TYPE_INTEGER:
+
+        $result = $tmp->exist && is_numeric( $result ) ? ( (int) $result ) : $default;
+        break;
+
+      // force float type
+      case self::TYPE_FLOAT:
+
+        $result = $tmp->exist && is_numeric( $result ) ? ( (float) $result ) : $default;
+        break;
+      
       // force array type
       case self::TYPE_ARRAY:
 

@@ -25,6 +25,10 @@ class FrameworkStorageTest extends PHPUnit_Framework_TestCase {
     $this->assertEquals( true, $storage->getBoolean( 'test1.test6' ) );
     $this->assertEquals( function () {
     }, $storage->getCallable( 'test1.test7' ) );
+    $this->assertEquals( 9, $storage->getInteger( 'test1.test20' ) );
+    $this->assertEquals( 9, $storage->get( 'test1.test20!int' ) );
+    $this->assertEquals( 9.9, $storage->getFloat( 'test1.test20' ), '', 0.1 );
+    $this->assertEquals( 9.9, $storage->get( 'test1.test20!float' ), '', 0.1 );
 
     // test invalid values
     $this->assertEquals( 0, $storage->getNumber( 'test1.test9' ) );
@@ -137,7 +141,8 @@ class FrameworkStorageTest extends PHPUnit_Framework_TestCase {
           'test6' => true,
           'test7' => function () {
           },
-          'test8' => 'test'
+          'test8' => 'test',
+          'test20' => 9.9,
         ]
       ], null, \Framework\Storage::CACHE_NONE ) ],
       [ new \Framework\Storage( [
@@ -154,7 +159,8 @@ class FrameworkStorageTest extends PHPUnit_Framework_TestCase {
           'test6' => true,
           'test7' => function () {
           },
-          'test8' => 'test'
+          'test8' => 'test',
+          'test20' => 9.9,
         ]
       ], null, \Framework\Storage::CACHE_SIMPLE ) ]
     ];
