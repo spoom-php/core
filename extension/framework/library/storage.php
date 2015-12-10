@@ -2,6 +2,7 @@
 
 use Framework\Helper\Enumerable;
 use Framework\Helper\Library;
+use Framework\Helper\Number;
 use Framework\Helper\String;
 
 /**
@@ -760,7 +761,7 @@ class Storage extends Library implements StorageInterface {
       // force string type
       case self::TYPE_STRING:
 
-        if( $tmp->exist && ( is_string( $result ) || is_numeric( $result ) || is_null( $result ) ) ) $result = (string) $result;
+        if( $tmp->exist && ( is_string( $result ) || Number::is( $result, false ) || is_null( $result ) ) ) $result = (string) $result;
         else $result = $default;
 
         break;
@@ -768,20 +769,20 @@ class Storage extends Library implements StorageInterface {
       // force numeric type
       case self::TYPE_NUMBER:
 
-        $result = $tmp->exist && is_numeric( $result ) ? ( $result == (int) $result ? (int) $result : (float) $result ) : $default;
+        $result = $tmp->exist && Number::is( $result ) ? Number::read( $result ) : $default;
         break;
 
       // force integer type
       case 'int':
       case self::TYPE_INTEGER:
 
-        $result = $tmp->exist && is_numeric( $result ) ? ( (int) $result ) : $default;
+        $result = $tmp->exist && Number::is( $result ) ? ( (int) Number::read( $result ) ) : $default;
         break;
 
       // force float type
       case self::TYPE_FLOAT:
 
-        $result = $tmp->exist && is_numeric( $result ) ? ( (float) $result ) : $default;
+        $result = $tmp->exist && Number::is( $result ) ? ( (float) Number::read( $result ) ) : $default;
         break;
       
       // force array type
