@@ -25,7 +25,7 @@ abstract class Helper {
   /**
    * Exception id format
    */
-  const REGEXP_ID = '/^([a-z\\-]+)#([0-9]+)([NWEC])$/';
+  const REGEXP_ID = '/^([a-z0-9_\\-]+)#([0-9]+)([NWEC])$/';
 
   /**
    * Test the given object instance is \Exception or Collector and has \Exception

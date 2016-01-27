@@ -13,7 +13,9 @@ use Framework\Storage;
  * @property bool $native Use only the native converters, do not trigger the event
  */
 class Converter extends Library implements FeasibleInterface {
-  use Feasible;
+  use Feasible {
+    execute as executeFeasible;
+  }
 
   /**
    * Event triggered when a content is being serialized. The result MAY contains string values, and the last result will be used if any. The serialize can
@@ -36,6 +38,15 @@ class Converter extends Library implements FeasibleInterface {
    * @var bool
    */
   protected $_native = false;
+
+  /**
+   * @inheritDoc
+   *
+   * @return mixed
+   */
+  public function execute( $name, $arguments = null ) {
+    return $this->executeFeasible( $name, $arguments );
+  }
 
   /**
    * Serialize any content to a formatted (the output format specified by the meta property) string
