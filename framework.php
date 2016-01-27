@@ -185,7 +185,7 @@ class Framework {
 
       list( $extension, $library ) = explode( ':', $definition, 2 );
       $class = str_replace( self::EXTENSION_SEPARATOR, ' ', $extension ) . ' ' . str_replace( '.', ' ', $library );
-      if( ctype_lower( str_replace( ' ', '', $class ) ) ) $class = ucwords( $class );
+      if( ctype_lower( preg_replace( '/[\\W\\d]/i', '', $class ) ) ) $class = ucwords( $class );
 
       $class = '\\' . str_replace( ' ', '\\', $class );
     }
