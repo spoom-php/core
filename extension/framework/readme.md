@@ -203,7 +203,7 @@ namespaces will be the file names in the directory (for single file the namespac
 # Helper classes
 The `\Framework\Helper\Enumerable` static class contains methods for object and class handling. Contains JSON, XML and ini parse and stringify, and some array
 operations. The `\Framework\Helper\File` static class contains file and directory operations. For now it's pretty small, but will extend when needed. The
-`\Framework\Helper\String` static class contains useful methods for string operations. There is object insertion to string, link to convert and safe unique id
+`\Framework\Helper\Text` static class contains useful methods for string operations. There is object insertion to string, link to convert and safe unique id
 generation.
 
 ## Log

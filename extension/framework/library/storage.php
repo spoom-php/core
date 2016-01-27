@@ -3,7 +3,7 @@
 use Framework\Helper\Enumerable;
 use Framework\Helper\Library;
 use Framework\Helper\Number;
-use Framework\Helper\String;
+use Framework\Helper\Text;
 
 /**
  * Interface StorageInterface
@@ -36,7 +36,7 @@ interface StorageInterface extends \ArrayAccess, \JsonSerializable {
   const SEPARATOR_TYPE = '!';
 
   /**
-   * String result type
+   * Text result type
    */
   const TYPE_STRING = 'string';
   /**
@@ -157,7 +157,7 @@ interface StorageInterface extends \ArrayAccess, \JsonSerializable {
    */
   public function getCallable( $index, $default = null );
   /**
-   * Same as the getString method, but insert data to string with String::insert()
+   * Same as the getString method, but insert data to string with Text::insert()
    *
    * @param string $index
    * @param array  $insertion
@@ -596,7 +596,7 @@ class Storage extends Library implements StorageInterface {
     return $this->process( $index, $default );
   }
   /**
-   * Same as the getString method, but insert data to string with String::insert()
+   * Same as the getString method, but insert data to string with Text::insert()
    *
    * @param string $index
    * @param array  $insertion
@@ -607,7 +607,7 @@ class Storage extends Library implements StorageInterface {
   public function getPattern( $index, $insertion, $default = '' ) {
 
     $value = $this->getString( $index, $default );
-    return is_string( $value ) ? String::insert( $value, $insertion ) : $value;
+    return is_string( $value ) ? Text::insert( $value, $insertion ) : $value;
   }
 
   /**

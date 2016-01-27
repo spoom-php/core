@@ -354,12 +354,12 @@ class Extension extends Library {
    *
    * @param string $id The extension id
    *
-   * @return Extension
+   * @return static
    */
   public static function instance( $id ) {
 
     if( !isset( self::$instance[ $id ] ) ) {
-      self::$instance[ $id ] = new Extension( $id );
+      self::$instance[ $id ] = new static( $id );
     }
 
     return self::$instance[ $id ];

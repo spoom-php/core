@@ -5,10 +5,10 @@ use Framework\Request;
 use Framework\Storage;
 
 /**
- * Class String
+ * Class Text
  * @package Framework\Helper
  */
-abstract class String {
+abstract class Text {
 
   const EXCEPTION_ERROR_HASH_INVALID_ALGORITHM = 'framework#8E';
 
@@ -29,9 +29,9 @@ abstract class String {
   /**
    * Insert variables to the input from insertion array used the regexp constant of class
    *
-   * @param string       $text      input string to insert
+   * @param string        $text      input string to insert
    * @param array|Storage $insertion the insertion variables
-   * @param int          $type
+   * @param int           $type
    *
    * @return array|string
    */

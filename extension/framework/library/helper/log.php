@@ -105,7 +105,7 @@ class Log extends Library {
       // define local variables and trigger event for external loggers
       $data        = $data instanceof Storage ? $data : new Storage( $data );
       $namespace   = empty( $namespace ) ? $this->_namespace : $namespace;
-      $description = String::insert( $message, $data, String::TYPE_INSERT_LEAVE );
+      $description = Text::insert( $message, $data, Text::TYPE_INSERT_LEAVE );
       $event       = $this->extension->trigger( self::EVENT_CREATE, [
         'instance'    => $this,
         'namespace'   => $namespace,
@@ -119,13 +119,13 @@ class Log extends Library {
       if( !$event->prevented && $this->_file ) {
 
         list( $usec, $sec ) = explode( ' ', microtime() );
-        file_put_contents( $this->_file, String::insert( self::PATTERN_MESSAGE, [
+        file_put_contents( $this->_file, Text::insert( self::PATTERN_MESSAGE, [
           'time'        => date( 'Y-m-d\TH:i:s.', $sec ) . substr( $usec, 2 ),
           'level'       => \Framework::getLevel( $level ),
           'namespace'   => str_replace( ';', ',', $namespace ),
           'message'     => str_replace( ';', ',', $message ),
           'data'        => str_replace( ';', ',', json_encode( $data ) ),
-          'description' => str_replace( ';', ',', String::insert( $message, $data, String::TYPE_INSERT_LEAVE ) )
+          'description' => str_replace( ';', ',', Text::insert( $message, $data, Text::TYPE_INSERT_LEAVE ) )
         ] ), FILE_APPEND );
       }
 
@@ -224,12 +224,12 @@ class Log extends Library {
    *
    * @param string $name The logger unique name
    *
-   * @return Log
+   * @return static
    */
   public static function instance( $name ) {
 
     if( !isset( self::$instance[ $name ] ) ) {
-      self::$instance[ $name ] = new Log( $name );
+      self::$instance[ $name ] = new static( $name );
     }
 
     return self::$instance[ $name ];
