@@ -145,21 +145,29 @@ abstract class Text {
     return $text;
   }
   /**
-   * Create camelCase version of the input string along the separator
+   * Create camelCase version of the input string along the separator(s)
    *
-   * @param string $name
-   * @param string $separator
+   * @since {?} Add support for multiple separator
+   *
+   * @param string          $name
+   * @param string|string[] $separator
    *
    * @return string
    */
   public static function toName( $name, $separator = '.' ) {
 
-    // TODO escape only non words
-    $name   = preg_replace( '/\\' . $separator . '+/i', $separator, trim( $name, $separator ) );
-    $return = '';
+    // preprocess the separator and the name inputs
+    $separator = is_array( $separator ) ? $separator : [ $separator ];
+    foreach( $separator as &$tmp ) {
 
+      $tmp  = $tmp{0};
+      $name = preg_replace( '/\\' . preg_quote( $tmp, '/' ) . '+/i', $tmp, trim( $name, $tmp ) );
+    }
+
+    // create the new name
+    $return = '';
     for( $i = 0, $length = mb_strlen( $name ); $i < $length; ++$i ) {
-      if( $name{$i} === $separator ) $return .= mb_strtoupper( $name{++$i} );
+      if( in_array( $name{$i}, $separator ) ) $return .= mb_strtoupper( $name{++$i} );
       else $return .= $name{$i};
     }
 

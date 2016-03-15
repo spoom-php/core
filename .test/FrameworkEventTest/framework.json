@@ -1,0 +1,26 @@
+{
+  "test": {
+    "simple": [
+      {
+        "library": "framework:test",
+        "data": {
+          "test": "simple"
+        },
+        "enable": true
+      },
+      {
+        "library": "framework:test2",
+        "enable": true
+      }
+    ],
+    "advance": [
+      {
+        "library": "framework:test",
+        "data": {
+          "test": "advance"
+        },
+        "enable": true
+      }
+    ]
+  }
+}

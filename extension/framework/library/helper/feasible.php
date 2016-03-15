@@ -69,6 +69,8 @@ trait Feasible {
   /**
    * Get function name based on execution name
    *
+   * @since {?} Support ':' and '-' characters in the name
+   *
    * @param string $name
    * @param bool   $instance Return an instance of \ReflectionMethod instead of the method name
    *
@@ -76,7 +78,7 @@ trait Feasible {
    */
   protected function method( $name, $instance = false ) {
 
-    $name = String::toName( $name );
+    $name = String::toName( $name, [ '.', ':', '-' ] );
     if( !$instance ) return $name;
     else if( !is_callable( [ $this, $name ] ) ) return null;
     else {
