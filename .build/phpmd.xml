@@ -9,14 +9,9 @@
   <!-- rule ref="rulesets/codesize.xml/CyclomaticComplexity"/ -->
   <!-- rule ref="rulesets/codesize.xml/NPathComplexity"/ -->
   <!-- rule ref="rulesets/codesize.xml/ExcessiveClassComplexity"/ -->
-  <!--
+  <!-- rule ref="rulesets/codesize.xml/ExcessiveClassLength"/ -->
+  <!-- rule ref="rulesets/codesize.xml/ExcessiveMethodLength"/ -->
  
- ezekkel egyelore baj van
-   <rule ref="rulesets/codesize.xml/ExcessiveClassLength"/>
-   <rule ref="rulesets/codesize.xml/ExcessiveMethodLength"/>
- 
- -->
-
   <rule ref="rulesets/codesize.xml/TooManyFields"/>
   <rule ref="rulesets/codesize.xml/ExcessiveParameterList"/>
 
