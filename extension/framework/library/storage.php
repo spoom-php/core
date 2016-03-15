@@ -296,16 +296,14 @@ class Storage extends Library implements StorageInterface {
     $result = $this->search( $index = $this->index( $index ), true, false );
     if( $result->exist ) {
 
-      if( $result->key === null ) $target = &$result->container;
-      else if( is_array( $result->container ) ) $target = &$result->container[ $result->key ];
-      else $target = &$result->container->{$result->key};
+      if( $result->key === null ) $result->container = $value;
+      else if( Enumerable::isArrayLike( $result->container ) ) $result->container[ $result->key ] = $value;
+      else $result->container->{$result->key} = $value;
 
       // clear the cache or the cache index
       if( $this->_caching != self::CACHE_NONE ) {
         $this->clean( $index );
       }
-
-      $target = $value;
     }
 
     return $this;
@@ -325,10 +323,10 @@ class Storage extends Library implements StorageInterface {
   public function extend( $index, $data, $recursive = false ) {
     $result = $this->search( $index = $this->index( $index ), true, false );
 
-    // set the value
-    if( $result->key === null ) $value = &$result->container;
-    else if( is_array( $result->container ) ) $value = &$result->container[ $result->key ];
-    else $value = &$result->container->{$result->key};
+    // get the value to extend it
+    if( $result->key === null ) $value = $result->container;
+    else if( Enumerable::isArrayLike( $result->container ) ) $value = $result->container[ $result->key ];
+    else $value = $result->container->{$result->key};
 
     // handle data manipulation
     if( !isset( $value ) ) $value = $data;
@@ -343,6 +341,11 @@ class Storage extends Library implements StorageInterface {
       $value = $recursive ? array_merge_recursive( $value, $data ) : array_merge( $value, $data );
       if( $convert ) $value = (object) $value;
     }
+
+    // set the manipulated value
+    if( $result->key === null ) $result->container = $value;
+    else if( Enumerable::isArrayLike( $result->container ) ) $result->container[ $result->key ] = $value;
+    else $result->container->{$result->key} = $value;
 
     // clear the cache or the cache index
     if( $this->_caching != self::CACHE_NONE ) $this->clean( $index );
@@ -363,7 +366,7 @@ class Storage extends Library implements StorageInterface {
     if( $result->exist ) {
 
       if( $result->key === null ) $result->container = [ ];
-      else if( is_array( $result->container ) ) unset( $result->container[ $result->key ] );
+      else if( Enumerable::isArrayLike( $result->container ) ) unset( $result->container[ $result->key ] );
       else unset( $result->container->{$result->key} );
 
       // clear the cache or the cache index
@@ -405,9 +408,9 @@ class Storage extends Library implements StorageInterface {
       if( $result->exist ) {
 
         // find the value
-        if( $result->key === null ) $value = &$result->container;
-        else if( is_array( $result->container ) ) $value = &$result->container[ $result->key ];
-        else $value = &$result->container->{$result->key};
+        if( $result->key === null ) $value = $result->container;
+        else if( Enumerable::isArrayLike( $result->container ) ) $value = $result->container[ $result->key ];
+        else $value = $result->container->{$result->key};
 
         // check the value type
         if( Enumerable::is( $value ) ) {
@@ -688,7 +691,9 @@ class Storage extends Library implements StorageInterface {
     // define the default result
     $tmp = $this->search( $index );
     if( !$tmp->exist ) $result = $default;
-    else $result = $tmp->key !== null ? ( is_array( $tmp->container ) ? $tmp->container[ $tmp->key ] : $tmp->container->{$tmp->key} ) : $tmp->container;
+    else if( $tmp->key === null ) $result = $tmp->container;
+    else if( Enumerable::isArrayLike( $tmp->container ) ) $result = $tmp->container[ $tmp->key ];
+    else $result = $tmp->container->{$tmp->key};
 
     // switch result based on the type
     switch( $index->type ) {

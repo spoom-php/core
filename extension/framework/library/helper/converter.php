@@ -220,7 +220,7 @@ class Converter extends Library implements FeasibleInterface {
       'storage',
       $meta->getString( 'version', '1.0' ),
       $meta->getString( 'encoding', 'UTF-8' )
-    )->asXml();
+    )->asXML();
   }
   /**
    * XML converter based on the Enumberable class xml related methods

@@ -65,6 +65,17 @@ class FrameworkStorageTest extends PHPUnit_Framework_TestCase {
     $this->assertEquals( 121212, $storage[ 'test0.test12' ] );
     unset( $storage[ 'test0.test12' ] );
     $this->assertEquals( false, isset( $storage[ 'test0.test12' ] ) );
+
+    // test the storage in storage access and modification
+    $storage2 = new \Framework\Storage( [ 'test30' => [ 'test0' => 'test0' ] ] );
+    $storage->set( 'test30', $storage2 );
+    $this->assertEquals( 'test0', $storage->get( 'test30.test30.test0' ) );
+    $storage->set( 'test30.test30.test1', 'test1' );
+    $this->assertEquals( 'test1', $storage->get( 'test30.test30.test1' ) );
+    $this->assertEquals( 'test1', $storage2->get( 'test30.test1' ) );
+    $storage->set( 'test30.test30.test0', 'test2' );
+    $this->assertEquals( 'test2', $storage->get( 'test30.test30.test0' ) );
+    $this->assertEquals( 'test2', $storage2->get( 'test30.test0' ) );
   }
   /**
    * @dataProvider provider
