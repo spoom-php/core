@@ -118,12 +118,13 @@ class Event extends Library {
   }
 }
 /**
- * Class EventData
+ * Store an event arguments (the 'argument' namespace) and results ('result' namespace)
+ *
  * @package Framework
  *
  * @property-read Event     $event
  * @property-read Collector $collector
- * @property bool           $stopped
+ * @property bool           $stopped This flag doesn't stop the listener calls, but the listeners MUST respect it internally
  * @property bool           $prevented
  */
 class EventData extends Storage {

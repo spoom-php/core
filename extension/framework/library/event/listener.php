@@ -18,13 +18,14 @@ use Framework\StorageInterface;
 class Listener extends Library {
 
   /**
-   * Library for the listener is missing
+   * Library for the listener is missing. Data:
+   *  - value [string]: The library path/name
    */
-  const EXCEPTION_MISSING_LIBRARY = 'framework#0E';
+  const EXCEPTION_MISSING_LIBRARY = 'framework#24E';
   /**
    * Library for the listener isn't implement the self::CLASS_LIBRARY
    */
-  const EXCEPTION_INVALID_LIBRARY = 'framework#0E';
+  const EXCEPTION_INVALID_LIBRARY = 'framework#25E';
 
   /**
    * The listener instance MUST implement this interface
