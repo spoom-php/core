@@ -295,6 +295,7 @@ abstract class Enumerable {
    *
    * @param mixed $test
    *
+   * @since 0.6.4
    * @return bool
    */
   public static function isArrayLike( $test ) {

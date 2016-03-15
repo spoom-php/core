@@ -293,6 +293,7 @@ class File extends Permanent {
   }
 
   /**
+   * @since 0.6.4
    * @return string
    */
   public function getBase() {
@@ -301,6 +302,7 @@ class File extends Permanent {
   /**
    * @param string $value
    *
+   * @since 0.6.4
    * @return File
    */
   public function setBase( $value ) {
