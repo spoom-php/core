@@ -65,6 +65,13 @@ class File extends Permanent {
   const EXCEPTION_FAIL_CLEAN = 'framework#19N';
 
   /**
+   * Base for the path
+   *
+   * @var string
+   */
+  private $_base;
+
+  /**
    * Directory path for the source
    *
    * @var string
@@ -73,9 +80,11 @@ class File extends Permanent {
 
   /**
    * @param string|null $path File or directory path base for the storage. The file MUST be without dot and extension and directories MUST end with '/'
+   * @param string      $base The base of the path
    */
-  public function __construct( $path ) {
+  public function __construct( $path, $base = _PATH_BASE ) {
     $this->_path = $path;
+    $this->_base = (string) $base;
 
     parent::__construct( null, $this->isMulti() ? 'default' : null, self::CACHE_NONE );
   }
@@ -146,11 +155,11 @@ class File extends Permanent {
     $path  = $this->getFile( $namespace, null, $exist );
 
     $meta = new Helper\ConverterMeta( $this->format );
-    if( !$exist || !is_file( _PATH_BASE . $path ) ) return null;
+    if( !$exist || !is_file( $this->_base . $path ) ) return null;
     else {
 
       $result = $this->readFile( $path );
-      $meta = new Helper\ConverterMeta( pathinfo( $path, PATHINFO_EXTENSION ) );
+      $meta   = new Helper\ConverterMeta( pathinfo( $path, PATHINFO_EXTENSION ) );
 
       return $result;
     }
@@ -191,12 +200,12 @@ class File extends Permanent {
       if( $format ) $file = $path . $format;
       else {
 
-        $file = glob( _PATH_BASE . $path . '*' );
+        $file = glob( $this->_base . $path . '*' );
         if( !count( $file ) ) $file = null;
-        else $file = str_replace( _PATH_BASE, '', array_shift( $file ) );
+        else $file = str_replace( $this->_base, '', array_shift( $file ) );
       }
 
-      $exist = $file && is_file( _PATH_BASE . $file );
+      $exist = $file && is_file( $this->_base . $file );
       return $file;
     }
   }
@@ -204,7 +213,7 @@ class File extends Permanent {
   /**
    * Write a content to a file
    *
-   * @param string $path       The path to the file without the _PATH_BASE
+   * @param string $path       The path to the file without the _PATH_BASE_PATH_BASE
    * @param string $content    The content to write
    * @param int    $permission Default permissions for the created directories
    *
@@ -213,19 +222,19 @@ class File extends Permanent {
   protected function writeFile( $path, $content, $permission = 0777 ) {
 
     // check directory and file existance and writeability
-    $directory = pathinfo( _PATH_BASE . $path, PATHINFO_DIRNAME ) . '/';
+    $directory = pathinfo( $this->_base . $path, PATHINFO_DIRNAME ) . '/';
     if( !is_dir( $directory ) && @!mkdir( $directory, $permission, true ) ) {
 
       throw new Exception\System( self::EXCEPTION_INVALID_WRITE, [ 'path' => $path, 'error' => error_get_last() ] );
 
-    } else if( ( !is_file( _PATH_BASE . $path ) && @!touch( _PATH_BASE . $path ) ) || !is_writeable( _PATH_BASE . $path ) ) {
+    } else if( ( !is_file( $this->_base . $path ) && @!touch( $this->_base . $path ) ) || !is_writeable( $this->_base . $path ) ) {
 
       throw new Exception\System( self::EXCEPTION_INVALID_WRITE, [ 'path' => $path, 'error' => error_get_last() ] );
 
     } else {
 
       // try to write the file
-      $result = @file_put_contents( _PATH_BASE . $path, $content );
+      $result = @file_put_contents( $this->_base . $path, $content );
       if( $result === false ) throw new Exception\System( self::EXCEPTION_FAIL_WRITE, [ 'path' => $path, 'error' => error_get_last() ] );
     }
   }
@@ -239,12 +248,12 @@ class File extends Permanent {
    */
   protected function readFile( $path ) {
 
-    if( !is_readable( _PATH_BASE . $path ) ) throw new Exception\System( self::EXCEPTION_INVALID_READ, [ 'path' => $path ] );
+    if( !is_readable( $this->_base . $path ) ) throw new Exception\System( self::EXCEPTION_INVALID_READ, [ 'path' => $path ] );
     else {
 
       // FIXME do not read large files! (or check for the memory)
 
-      $content = @file_get_contents( _PATH_BASE . $path );
+      $content = @file_get_contents( $this->_base . $path );
       if( $content === false ) throw new Exception\System( self::EXCEPTION_FAIL_READ, [ 'path' => $path, 'error' => error_get_last() ] );
       else return $content;
     }
@@ -259,11 +268,11 @@ class File extends Permanent {
   protected function destroyFile( $path ) {
 
     // check writeability
-    if( !is_writeable( _PATH_BASE . $path ) ) throw new Exception\System( self::EXCEPTION_INVALID_DESTROY, [ 'path' => $path ] );
+    if( !is_writeable( $this->_base . $path ) ) throw new Exception\System( self::EXCEPTION_INVALID_DESTROY, [ 'path' => $path ] );
     else {
 
       // unlink the file
-      $result = @unlink( _PATH_BASE . $path );
+      $result = @unlink( $this->_base . $path );
       if( !$result ) throw new Exception\System( self::EXCEPTION_FAIL_DESTROY, [ 'path' => $path, 'error' => error_get_last() ] );
     }
   }
@@ -281,5 +290,23 @@ class File extends Permanent {
    */
   public function getPath() {
     return $this->_path;
+  }
+
+  /**
+   * @since 0.6.4
+   * @return string
+   */
+  public function getBase() {
+    return $this->_base;
+  }
+  /**
+   * @param string $value
+   *
+   * @since 0.6.4
+   * @return File
+   */
+  public function setBase( $value ) {
+    $this->_base = (string) $value;
+    return $this;
   }
 }

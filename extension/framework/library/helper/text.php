@@ -70,43 +70,50 @@ abstract class Text {
    * @param string   $prefix Custom prefix that helps the uniqueness
    * @param bool     $secure Add unpredictable random values (from available sources) to the raw data or not
    * @param string   $hash   The hashing method name
+   * @param int      $seeds  The minimum length of the secure random seeds (only used when the $secure param is true)
    *
    * @return string The unique string
    * @throws Strict Throws ::EXCEPTION_ERROR_HASH_INVALID_ALGORITHM when the hashing algorithm is invalid
    */
-  public static function unique( $length = null, $prefix = '', $secure = true, $hash = 'sha256' ) {
+  public static function unique( $length = null, $prefix = '', $secure = true, $hash = 'sha256', $seeds = 64 ) {
 
-    // add a basic random id with predictable random number prefix for more uniqueness
-    $raw = $prefix . uniqid( mt_rand(), true );
+    $result = '';
+    do {
 
-    // add some unpredictable random strings for available sources
-    if( $secure ) {
+      // add a basic random id with predictable random number prefix for more uniqueness
+      $raw = $prefix . uniqid( mt_rand(), true );
 
-      // try ssl first
-      if( !function_exists( 'openssl_random_pseudo_bytes' ) ) {
+      // add some unpredictable random strings for available sources
+      if( $secure ) {
 
-        // log: warning
-        Request::getLog()->warning( 'Cannot use OpenSSL random, `openssl_random_pseudo_bytes()` doesn\'t exists.', [ ], '\Framework\Helper\String' );
+        // try ssl first
+        if( !function_exists( 'openssl_random_pseudo_bytes' ) ) {
 
-      } else {
-        $tmp = openssl_random_pseudo_bytes( 64, $strong );
+          // log: warning
+          Request::getLog()->warning( 'Cannot use OpenSSL random, `openssl_random_pseudo_bytes()` doesn\'t exists.', [ ], '\Framework\Helper\String' );
 
-        // skip ssl since it wasn't using the strong algo
-        if( $strong === true ) $raw .= $tmp;
-        else Request::getLog()->notice( 'Generated OpenSSL random value is not strong, what next?', [ ], '\Framework\Helper\String' ); // log: notice
+        } else {
+          $tmp = openssl_random_pseudo_bytes( $seeds, $strong );
+
+          // skip ssl since it wasn't using the strong algo
+          if( $strong === true ) $raw .= $tmp;
+          else Request::getLog()->notice( 'Generated OpenSSL random value is not strong, what next?', [ ], '\Framework\Helper\String' ); // log: notice
+        }
+
+        // try to read from the unix RNG
+        if( is_readable( '/dev/urandom' ) ) {
+          $tmp = fopen( '/dev/urandom', 'rb' );
+          $raw .= fread( $tmp, $seeds );
+          fclose( $tmp );
+        }
       }
 
-      // try to read from the unix RNG
-      if( is_readable( '/dev/urandom' ) ) {
-        $tmp = fopen( '/dev/urandom', 'rb' );
-        $raw .= fread( $tmp, 64 );
-        fclose( $tmp );
-      }
-    }
+      // hash the generated string
+      $result .= self::hash( $raw, $hash );
 
-    // hash the generated string
-    $raw = self::hash( $raw, $hash );
-    return $length ? substr( $raw, 0, $length ) : $raw;
+    } while( $length && strlen( $result ) < $length );
+
+    return $length ? substr( $result, 0, $length ) : $result;
   }
   /**
    * Generates hash with the basic PHP hash() function but handle the errors with exception
@@ -120,7 +127,7 @@ abstract class Text {
   public static function hash( $raw, $algorithm = 'sha256' ) {
 
     $tmp = @hash( $algorithm, $raw );
-    if( !$tmp ) throw new Strict( self::EXCEPTION_ERROR_HASH_INVALID_ALGORITHM, [ 'algorithm' => $algorithm, 'available' => hash_algos() ] );
+    if( empty( $tmp ) ) throw new Strict( self::EXCEPTION_ERROR_HASH_INVALID_ALGORITHM, [ 'algorithm' => $algorithm, 'available' => hash_algos() ] );
     else return $tmp;
   }
 

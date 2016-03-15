@@ -76,7 +76,7 @@ abstract class Enumerable {
     // collect encoding and version from xml data
     $dom    = new \DOMDocument();
     $object = [ ];
-    
+
     if( !$dom->loadXML( $xml ) ) Request::getLog()->notice( 'Failed XML decode', [ 'xml' => $xml ], '\Framework\Helper\Enumerable' ); // log: notice
     else {
 
@@ -295,6 +295,7 @@ abstract class Enumerable {
    *
    * @param mixed $test
    *
+   * @since 0.6.4
    * @return bool
    */
   public static function isArrayLike( $test ) {
@@ -323,7 +324,7 @@ abstract class Enumerable {
 
       if( !($input instanceof \stdClass) ) $input = clone $input;
       else {
-        
+
         $tmp = new \stdClass();
         foreach( $input as $k => $e ) {
           $tmp->{$k} = self::is( $e ) ? self::copy( $e ) : $e;
@@ -359,7 +360,7 @@ abstract class Enumerable {
           if( $build ) $result->container = [ ];
           else return $result;
         }
-        
+
         // handle new key check for two different data type
         $key = $tokens[ $i ];
         if( is_array( $result->container ) ) { // handle like an array
@@ -387,7 +388,7 @@ abstract class Enumerable {
       }
 
       // select key if container exist
-      $key = implode( '.', array_slice( $tokens, $i ) );
+      $key = implode( StorageInterface::SEPARATOR_KEY, array_slice( $tokens, $i ) );
       if( self::is( $result->container ) ) {
 
         if( is_array( $result->container ) ) {
