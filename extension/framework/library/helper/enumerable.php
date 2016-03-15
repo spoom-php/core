@@ -1,6 +1,7 @@
 <?php namespace Framework\Helper;
 
 use Framework\Request;
+use Framework\StorageInterface;
 
 /**
  * Class Enumerable
@@ -75,7 +76,7 @@ abstract class Enumerable {
     // collect encoding and version from xml data
     $dom    = new \DOMDocument();
     $object = [ ];
-    
+
     if( !$dom->loadXML( $xml ) ) Request::getLog()->notice( 'Failed XML decode', [ 'xml' => $xml ], '\Framework\Helper\Enumerable' ); // log: notice
     else {
 
@@ -175,7 +176,7 @@ abstract class Enumerable {
       $element = $object->element;
 
       // handle xml "leaf"
-      if( !is_object( $object->data ) && !is_array( $object->data ) ) {
+      if( !self::is( $object->data ) ) {
 
         if( $object->data === null ) $value = 'NULL';
         else if( $object->data === true ) $value = 'TRUE';
@@ -261,23 +262,43 @@ abstract class Enumerable {
   }
 
   /**
+   * Test if the variable is an enumerable (array or object)
+   *
+   * @param mixed $test
+   *
+   * @return bool True if the test is an enumerable
+   */
+  public static function is( $test ) {
+    return self::isArrayLike( $test ) || is_object( $test );
+  }
+  /**
    * Check for the input is a real numeric array
    *
-   * @param mixed $data
+   * @param mixed $test
    * @param bool  $ordered it will check the index ordering, not just the type
    *
    * @return bool true, if the $data was a real array with numeric indexes
    */
-  public static function isArray( $data, $ordered = true ) {
+  public static function isArray( $test, $ordered = true ) {
 
-    if( !is_array( $data ) ) return false;
-    else if( $ordered ) for( $i = 0; $i < count( $data ); ++$i ) {
-      if( !isset( $data[ $i ] ) ) return false;
-    } else foreach( $data as $i => $value ) {
+    if( !is_array( $test ) ) return false;
+    else if( $ordered ) for( $i = 0; $i < count( $test ); ++$i ) {
+      if( !isset( $test[ $i ] ) ) return false;
+    } else foreach( $test as $i => $value ) {
       if( !is_numeric( $i ) ) return false;
     }
 
     return true;
+  }
+  /**
+   * Extended array test that includes objects with the \ArrayAccess interface
+   *
+   * @param mixed $test
+   *
+   * @return bool
+   */
+  public static function isArrayLike( $test ) {
+    return is_array( $test ) || $test instanceof \ArrayAccess;
   }
 
   /**
@@ -302,7 +323,7 @@ abstract class Enumerable {
 
       if( !($input instanceof \stdClass) ) $input = clone $input;
       else {
-        
+
         $tmp = new \stdClass();
         foreach( $input as $k => $e ) {
           $tmp->{$k} = self::is( $e ) ? self::copy( $e ) : $e;
@@ -314,16 +335,6 @@ abstract class Enumerable {
     return $input;
   }
 
-  /**
-   * Test if the variable is an enumerable (array or object)
-   *
-   * @param mixed $test
-   *
-   * @return bool True if the test is an enumerable
-   */
-  public static function is( $test ) {
-    return is_array( $test ) || is_object( $test );
-  }
   /**
    * Search trough an enumerable and return the result
    *
@@ -348,7 +359,7 @@ abstract class Enumerable {
           if( $build ) $result->container = [ ];
           else return $result;
         }
-        
+
         // handle new key check for two different data type
         $key = $tokens[ $i ];
         if( is_array( $result->container ) ) { // handle like an array
@@ -362,25 +373,29 @@ abstract class Enumerable {
 
         } else if( is_object( $result->container ) ) {   // handle like an object
 
-          if( !isset( $result->container->{$key} ) ) {
-            if( $build ) $result->container->{$key} = [ ];
-            else return $result;
-          }
+          if( $result->container instanceof StorageInterface ) break;
+          else {
 
-          $result->container = &$result->container->{$key};
+            if( !isset( $result->container->{$key} ) ) {
+              if( $build ) $result->container->{$key} = [ ];
+              else return $result;
+            }
+
+            $result->container = &$result->container->{$key};
+          }
         }
       }
 
       // select key if container exist
+      $key = implode( StorageInterface::SEPARATOR_KEY, array_slice( $tokens, $i ) );
       if( self::is( $result->container ) ) {
 
-        $key = $tokens[ $count - 1 ];
         if( is_array( $result->container ) ) {
           if( !isset( $result->container[ $key ] ) ) {
             if( $build ) $result->container[ $key ] = null;
             else return $result;
           }
-        } else {
+        } else if( !( $result->container instanceof StorageInterface ) ) {
           if( !isset( $result->container->{$key} ) ) {
             if( $build ) $result->container->{$key} = null;
             else return $result;
