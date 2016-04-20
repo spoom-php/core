@@ -22,7 +22,7 @@ class Request {
   /**
    * Trying to set invalid environment
    */
-  const EXCEPTION_WARNING_INVALID_ENVIRONMENT = 'framework#0W';
+  const EXCEPTION_WARNING_INVALID_ENVIRONMENT = 'framework#26W';
 
   /**
    * Production environment
