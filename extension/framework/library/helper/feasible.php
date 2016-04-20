@@ -78,7 +78,7 @@ trait Feasible {
    */
   protected function method( $name, $instance = false ) {
 
-    $name = String::toName( $name, [ '.', ':', '-' ] );
+    $name = Text::toName( $name, [ '.', ':', '-' ] );
     if( !$instance ) return $name;
     else if( !is_callable( [ $this, $name ] ) ) return null;
     else {

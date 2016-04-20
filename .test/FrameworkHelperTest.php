@@ -14,7 +14,7 @@ class FrameworkHelperTest extends PHPUnit_Framework_TestCase {
   public function testString() {
 
     // test unqiue string generation length
-    $this->assertEquals( 542, strlen( Framework\Helper\String::unique( 542 ) ) );
+    $this->assertEquals( 542, strlen( Framework\Helper\Text::unique( 542 ) ) );
     
     // TODO test uncovered String and File method
   }
