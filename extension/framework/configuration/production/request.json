@@ -1,9 +1,8 @@
 {
   "level": {
-    "log": "none",
-    "report": "warning"
+    "log": "notice",
+    "report": "none"
   },
-
   "import": {},
   
   "localization": "en",

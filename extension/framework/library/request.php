@@ -25,6 +25,15 @@ class Request {
   const EXCEPTION_WARNING_INVALID_ENVIRONMENT = 'framework#0W';
 
   /**
+   * Production environment
+   */
+  const ENVIRONMENT_PRODUCTION = 'production';
+  /**
+   * Main development environment
+   */
+  const ENVIRONMENT_DEVELOPMENT = 'development';
+
+  /**
    * Runs right before the Request::start() method finished. No argument
    */
   const EVENT_START = 'request.start';
@@ -91,24 +100,24 @@ class Request {
     $extension = Extension::instance( 'framework' );
 
     // setup the reporting levels
-    \Framework::reportLevel( $extension->option( 'default:level.report', null ) );
-    \Framework::logLevel( $extension->option( 'default:level.log', null ) );
+    \Framework::reportLevel( $extension->option( 'request:level.report', null ) );
+    \Framework::logLevel( $extension->option( 'request:level.log', null ) );
 
     // add custom namespaces from configuration
-    $import = $extension->option( 'default:import!array' );
+    $import = $extension->option( 'request:import!array' );
     if( !empty( $import ) ) foreach( $import as $namespace => $path ) {
       \Framework::connect( $namespace, $path );
     }
 
-    self::$localization = $extension->option( 'default:localization', $extension->manifest->getString( 'localization', 'en' ) );
-    setlocale( LC_ALL, $extension->option( 'default:locale', null ) );
+    self::$localization = $extension->option( 'request:localization', $extension->manifest->getString( 'localization', 'en' ) );
+    setlocale( LC_ALL, $extension->option( 'request:locale', null ) );
 
     // setup encoding
-    mb_internal_encoding( $extension->option( 'default:encoding', 'utf8' ) );
-    mb_http_output( $extension->option( 'default:encoding', 'utf8' ) );
+    mb_internal_encoding( $extension->option( 'request:encoding', 'utf8' ) );
+    mb_http_output( $extension->option( 'request:encoding', 'utf8' ) );
 
     // setup timezones
-    date_default_timezone_set( $extension->option( 'default:timezone', date_default_timezone_get() ) );
+    date_default_timezone_set( $extension->option( 'request:timezone', date_default_timezone_get() ) );
 
     // Call initialise event
     $extension->trigger( self::EVENT_START );
