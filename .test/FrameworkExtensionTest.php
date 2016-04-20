@@ -21,12 +21,19 @@ class FrameworkExtensionTest extends PHPUnit_Framework_TestCase {
     $this->assertFalse( new \Framework\Extension( 'framework' ) === $extension );
 
     // configuration and localization access check
-    $this->assertEquals( 'en', $extension->option( 'default:localization' ) );
+    $this->assertEquals( 'en', $extension->option( 'request:localization' ) );
     $this->assertEquals( 'Unknown exception', $extension->text( 'framework-exception:#0' ) );
 
     // check cloning
     $extension2 = clone $extension;
     $this->assertFalse( $extension2->configuration === $extension );
+
+    // environment specific configuration check
+    $this->assertEquals( 'debug', $extension2->option( 'request:level.log' ) );
+    $extension2->configuration->setEnvironment( 'production' );
+    $this->assertEquals( 'notice', $extension2->option( 'request:level.log' ) );
+    $extension2->configuration->setEnvironment( 'development' );
+    $this->assertEquals( 'debug', $extension2->option( 'request:level.log', 2 ) );
   }
   /**
    * @param \Framework\Extension $extension
@@ -36,8 +43,8 @@ class FrameworkExtensionTest extends PHPUnit_Framework_TestCase {
   public function testAdvance( \Framework\Extension $extension ) {
 
     // check file access
-    $this->assertEquals( 'extension/framework/configuration/default.json', $extension->file( 'default.json', 'configuration' ) );
-    $this->assertEquals( [ 'extension/framework/configuration/default.json' ], $extension->file( '|^default|', 'configuration' ) );
+    $this->assertEquals( 'extension/framework/configuration/request.json', $extension->file( 'request.json', 'configuration' ) );
+    $this->assertEquals( [ 'extension/framework/configuration/request.json' ], $extension->file( '|^request|', 'configuration' ) );
 
     // check class searching and creating
     $this->assertEquals( '\Framework\Storage', $extension->library( [ 'test1', 'storage', 'request' ] ) );

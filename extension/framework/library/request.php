@@ -19,6 +19,19 @@ class Request {
    * Trying to set invalid localization
    */
   const EXCEPTION_WARNING_INVALID_LOCALIZATION = 'framework#10W';
+  /**
+   * Trying to set invalid environment
+   */
+  const EXCEPTION_WARNING_INVALID_ENVIRONMENT = 'framework#26W';
+
+  /**
+   * Production environment
+   */
+  const ENVIRONMENT_PRODUCTION = 'production';
+  /**
+   * Main development environment
+   */
+  const ENVIRONMENT_DEVELOPMENT = 'development';
 
   /**
    * Runs right before the Request::start() method finished. No argument
@@ -46,18 +59,24 @@ class Request {
    * @var string
    */
   private static $localization = null;
+  /**
+   * @var string
+   */
+  private static $environment = '';
 
   /**
    * Execute the page method in the right order (start -> run -> stop). This is the proper (and complete)
    * way to execute the framework. This method handle output buffering before the stop, exception handling after
    * the start and argument passing between run and stop methods
+   *
+   * @param string $environment
    */
-  public static function execute() {
+  public static function execute( $environment = '' ) {
 
     $report = \Framework::reportLevel();
     if( $report != \Framework::LEVEL_DEBUG ) ob_start();
 
-    self::start();
+    self::start( $environment );
     try {
       $content = self::run();
     } catch( \Exception $e ) {
@@ -71,31 +90,34 @@ class Request {
 
   /**
    * Trigger page start event and initialise some basics for the Request. This should be called once and before the run
+   *
+   * @param string $environment
    */
-  public static function start() {
+  public static function start( $environment = '' ) {
 
-    // setup localization options
+    //
+    self::setEnvironment( $environment );
     $extension = Extension::instance( 'framework' );
 
     // setup the reporting levels
-    \Framework::reportLevel( $extension->option( 'default:level.report', null ) );
-    \Framework::logLevel( $extension->option( 'default:level.log', null ) );
+    \Framework::reportLevel( $extension->option( 'request:level.report', null ) );
+    \Framework::logLevel( $extension->option( 'request:level.log', null ) );
 
     // add custom namespaces from configuration
-    $import = $extension->option( 'default:import!array' );
+    $import = $extension->option( 'request:import!array' );
     if( !empty( $import ) ) foreach( $import as $namespace => $path ) {
       \Framework::connect( $namespace, $path );
     }
 
-    self::$localization = $extension->option( 'default:localization', $extension->manifest->getString( 'localization', 'en' ) );
-    setlocale( LC_ALL, $extension->option( 'default:locale', null ) );
+    self::$localization = $extension->option( 'request:localization', $extension->manifest->getString( 'localization', 'en' ) );
+    setlocale( LC_ALL, $extension->option( 'request:locale', null ) );
 
     // setup encoding
-    mb_internal_encoding( $extension->option( 'default:encoding', 'utf8' ) );
-    mb_http_output( $extension->option( 'default:encoding', 'utf8' ) );
+    mb_internal_encoding( $extension->option( 'request:encoding', 'utf8' ) );
+    mb_http_output( $extension->option( 'request:encoding', 'utf8' ) );
 
     // setup timezones
-    date_default_timezone_set( $extension->option( 'default:timezone', date_default_timezone_get() ) );
+    date_default_timezone_set( $extension->option( 'request:timezone', date_default_timezone_get() ) );
 
     // Call initialise event
     $extension->trigger( self::EVENT_START );
@@ -196,16 +218,36 @@ class Request {
     return self::$localization;
   }
   /**
-   * Set page localization
+   * Set request localization
    *
-   * @param string $new_localization
+   * @param string $value
    *
-   * @throws Strict ::EXCEPTION_WARNING_INVALID_LOCALIZATION
+   * @throws Exception\Strict ::EXCEPTION_WARNING_INVALID_LOCALIZATION
    */
-  public static function setLocalization( $new_localization ) {
+  public static function setLocalization( $value ) {
 
-    $new_localization = trim( mb_strtolower( $new_localization ) );
-    if( preg_match( '/[a-z_-]/', $new_localization ) > 0 ) self::$localization = $new_localization;
-    else throw new Strict( self::EXCEPTION_WARNING_INVALID_LOCALIZATION, [ 'localization' => $new_localization ] );
+    $value = trim( mb_strtolower( $value ) );
+    if( preg_match( '/^[a-z_-]+$/', $value ) < 1 ) throw new Exception\Strict( self::EXCEPTION_WARNING_INVALID_LOCALIZATION, [ 'localization' => $value ] );
+    else self::$localization = $value;
+  }
+
+  /**
+   * @return string
+   */
+  public static function getEnvironment() {
+    return self::$environment;
+  }
+  /**
+   * Set the request environment
+   *
+   * @param string $value
+   *
+   * @throws Exception\Strict ::EXCEPTION_WARNING_INVALID_ENVIRONMENT
+   */
+  private static function setEnvironment( $value ) {
+
+    $value = trim( mb_strtolower( $value ) );
+    if( preg_match( '/^[a-z_-]*$/', $value ) < 1 ) throw new Exception\Strict( self::EXCEPTION_WARNING_INVALID_ENVIRONMENT, [ 'value' => $value ] );
+    else self::$environment = $value;
   }
 }

@@ -1,6 +1,7 @@
 <?php namespace Framework\Extension;
 
 use Framework\Extension;
+use Framework\Request;
 use Framework\Storage;
 
 /**
@@ -22,13 +23,22 @@ interface ConfigurationInterface extends Storage\PermanentInterface {
    * @return Extension
    */
   public function getExtension();
+  /**
+   * @return string
+   */
+  public function getEnvironment();
+  /**
+   * @param string $value
+   */
+  public function setEnvironment( $value );
 }
 
 /**
  * Class Configuration
  * @package Framework\Extension
  *
- * @property-read Extension $extension The extension source of the configuration
+ * @property-read Extension $extension   The extension source of the configuration
+ * @property      string    $environment The actual environment
  */
 class Configuration extends Storage\File implements ConfigurationInterface {
 
@@ -38,6 +48,12 @@ class Configuration extends Storage\File implements ConfigurationInterface {
    * @var Extension
    */
   private $_extension = null;
+  /**
+   * Currently loaded environment
+   *
+   * @var string|null
+   */
+  private $_environment = null;
 
   /**
    * Set defaults and init the FileStorage
@@ -51,9 +67,81 @@ class Configuration extends Storage\File implements ConfigurationInterface {
   }
 
   /**
+   * Check if the given environment' directory exists
+   *
+   * @param string $name The environment name
+   *
+   * @return bool
+   */
+  protected function validate( $name ) {
+    return is_string( $name ) && is_dir( _PATH_BASE . $this->_path . $name . '/' );
+  }
+  /**
+   * @param string      $namespace
+   * @param string|null $format
+   * @param bool        $exist
+   *
+   * @return mixed
+   */
+  protected function getFile( $namespace, $format = null, &$exist = false ) {
+
+    // change the directory temporary then search for the path
+    $tmp = $this->_path;
+    if( !empty( $this->environment ) ) $this->_path .= $this->environment . '/';
+
+    $result      = parent::getFile( $namespace, $format, $exist );
+    $this->_path = $tmp;
+
+    return $result;
+  }
+
+  /**
    * @return Extension
    */
   public function getExtension() {
     return $this->_extension;
+  }
+  /**
+   * @return string
+   */
+  public function getEnvironment() {
+
+    // load the first environment
+    if( !isset( $this->_environment ) ) {
+      $this->setEnvironment( Request::getEnvironment() );
+    }
+
+    return $this->_environment;
+  }
+  /**
+   * @param string $value
+   */
+  public function setEnvironment( $value ) {
+
+    // save the original environment for later compare
+    $tmp = $this->_environment;
+
+    // set the new environment
+    $global = Request::getEnvironment();
+    if( $this->validate( $value ) ) $this->_environment = $value;
+    else if( $this->validate( $global ) ) $this->_environment = $global;
+    else {
+
+      $this->_environment = '';
+
+      // log: notice
+      Request::getLog()->notice( 'Configuration: Missing environment ({environment}), in \'{extension}\'', [
+        'environment' => $value,
+        'extension'   => $this->extension->id
+      ], 'framwork-extension' );
+    }
+
+    // clear meta/cache/storage when the environment has changed
+    if( $this->_environment != $tmp ) {
+
+      $this->_source = [ ];
+      $this->meta    = [ ];
+      $this->clean();
+    }
   }
 }
