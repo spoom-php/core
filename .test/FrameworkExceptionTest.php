@@ -3,7 +3,7 @@
 class FrameworkExceptionTest extends PHPUnit_Framework_TestCase {
 
   public function __construct( $name = null, array $data = [ ], $dataName = '' ) {
-    \Framework::setup( function () {
+    \Framework::execute( function () {
     } );
 
     parent::__construct( $name, $data, $dataName );

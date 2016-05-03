@@ -28,6 +28,29 @@ abstract class Helper {
   const REGEXP_ID = '/^([a-z0-9_\\-]+)#([0-9]+)([NWEC])$/';
 
   /**
+   * Map the types to the corresponding level
+   *
+   * @var int[string]
+   */
+  private static $LEVEL = [
+    Exception::TYPE_CRITICAL => \Framework::LEVEL_CRITICAL,
+    Exception::TYPE_ERROR    => \Framework::LEVEL_ERROR,
+    Exception::TYPE_WARNING  => \Framework::LEVEL_WARNING,
+    Exception::TYPE_NOTICE   => \Framework::LEVEL_NOTICE
+  ];
+  /**
+   * Map the levels to the corresponding type
+   *
+   * @var int[string]
+   */
+  private static $TYPE = [
+    \Framework::LEVEL_CRITICAL => Exception::TYPE_CRITICAL,
+    \Framework::LEVEL_ERROR    => Exception::TYPE_ERROR,
+    \Framework::LEVEL_WARNING  => Exception::TYPE_WARNING,
+    \Framework::LEVEL_NOTICE   => Exception::TYPE_NOTICE
+  ];
+
+  /**
    * Test the given object instance is \Exception or Collector and has \Exception
    *
    * @param mixed $object
@@ -109,6 +132,31 @@ abstract class Helper {
       'message' => $exception->getMessage(),
       'code'    => $exception->getCode()
     ], $exception );
+  }
+
+  /**
+   * Get Exception type postfix character from the level number
+   *
+   * @since ?
+   *
+   * @param int $level Framework::LEVEL_* constant
+   *
+   * @return string|null
+   */
+  public static function getType( $level ) {
+    return isset( self::$TYPE[ $level ] ) ? self::$TYPE[ $level ] : null;
+  }
+  /**
+   * Get the level number from the given Exception type character
+   *
+   * @since ?
+   *
+   * @param string $type Exception::TYPE_* contant
+   *
+   * @return int|null
+   */
+  public static function getLevel( $type ) {
+    return isset( self::$LEVEL[ $type ] ) ? self::$LEVEL[ $type ] : null;
   }
 
   /**

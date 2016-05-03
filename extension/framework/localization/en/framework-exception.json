@@ -28,5 +28,7 @@
   "#24E": "Listener' library is missing: {value}",
   "#25E": "Invalid listener. Must implement the Listener::CLASS_LIBRARY interface",
 
-  "#26W": "Invalid environment name ('{value}'). The name can contains only lowercase letters, dash and underscore."
+  "#26W": "Invalid environment name ('{value}'). The name can contains only lowercase letters, dash and underscore.",
+
+  "#27": "Failure: #{code} with '{message}', at '{file}'"
 }

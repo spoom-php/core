@@ -20,8 +20,16 @@ abstract class Enumerable {
    */
   public static function toJson( $object, $options = 0 ) {
 
+    // FIXME clear resource types from the json
+
     $result = json_encode( $object, $options );
-    if( $result === false ) Request::getLog()->notice( 'Failed JSON encode', [ 'object' => $object ], '\Framework\Helper\Enumerable' ); // log: notice
+    if( $result === false ) Request::getLog()->notice( 'JSON encode failed: #{error.code} with \'{error.message}\' message', [
+      'error' => [
+        'message' => json_last_error_msg(),
+        'code'    => json_last_error()
+      ],
+      'trace' => debug_backtrace()
+    ], 'framework:helper.enumerable' ); // log: notice
 
     return $result;
   }
@@ -42,13 +50,13 @@ abstract class Enumerable {
     else $json = json_decode( $json, $assoc );
 
     // log: notice
-    if( json_last_error() != JSON_ERROR_NONE ) Request::getLog()->notice( 'Failed JSON decode: #{error.code} {error.message}', [
-      'string' => $json,
+    if( json_last_error() != JSON_ERROR_NONE ) Request::getLog()->notice( 'JSON decode failed: #{error.code} with \'{error.message}\' message', [
       'error'  => [
         'message' => json_last_error_msg(),
         'code'    => json_last_error()
-      ]
-    ], '\Framework\Helper\Enumerable' );
+      ],
+      'trace'  => debug_backtrace()
+    ], 'framework:helper.enumerable' );
 
     return $json;
   }
@@ -77,8 +85,15 @@ abstract class Enumerable {
     $dom    = new \DOMDocument();
     $object = [ ];
 
-    if( !$dom->loadXML( $xml ) ) Request::getLog()->notice( 'Failed XML decode', [ 'xml' => $xml ], '\Framework\Helper\Enumerable' ); // log: notice
-    else {
+    if( !$dom->loadXML( $xml ) ) {
+
+      // log: notice
+      Request::getLog()->notice( 'XML decode failed: \'{error.message}\'', [
+        'error' => error_get_last(),
+        'trace' => debug_backtrace()
+      ], 'framework:helper.enumerable' );
+
+    } else {
 
       $version  = $dom->xmlVersion;
       $encoding = $dom->xmlEncoding;
@@ -240,8 +255,13 @@ abstract class Enumerable {
 
     $result = [ ];
     $ini    = parse_ini_string( $content, false );
-    if( !is_array( $ini ) ) Request::getLog()->notice( 'Invalid INI file', [ 'content' => $content ], '\Framework\Helper\Enumerable' ); // log: notice
-    else foreach( $ini as $key => $value ) {
+    if( !is_array( $ini ) ) {
+
+      // log: notice
+      Request::getLog()->notice( 'INI decode failed: \'Invalid content\'', [
+        'trace' => debug_backtrace()
+      ], 'framework:helper.enumerable' );
+    } else foreach( $ini as $key => $value ) {
 
       $keys = explode( '.', $key );
       $tmp  = &$result;

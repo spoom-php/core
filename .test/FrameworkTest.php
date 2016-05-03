@@ -3,7 +3,7 @@
 class FrameworkTest extends PHPUnit_Framework_TestCase {
 
   public function testInit() {
-    \Framework::setup( function () {
+    \Framework::execute( function () {
     } );
   }
 

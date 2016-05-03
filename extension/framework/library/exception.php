@@ -37,18 +37,6 @@ abstract class Exception extends \Exception implements \JsonSerializable, Librar
   const TYPE_NOTICE = 'N';
 
   /**
-   * Map the types to the corresponding level
-   *
-   * @var int[string]
-   */
-  private static $LEVEL = [
-    self::TYPE_CRITICAL => \Framework::LEVEL_CRITICAL,
-    self::TYPE_ERROR    => \Framework::LEVEL_ERROR,
-    self::TYPE_WARNING  => \Framework::LEVEL_WARNING,
-    self::TYPE_NOTICE   => \Framework::LEVEL_NOTICE
-  ];
-
-  /**
    * The unique identifier of the exception
    *
    * @var string
@@ -95,7 +83,7 @@ abstract class Exception extends \Exception implements \JsonSerializable, Librar
     $tmp              = Exception\Helper::parse( $id );
     $this->_extension = Extension::instance( $tmp->extension );
     $this->_type      = $tmp->type;
-    $this->_level     = self::$LEVEL[ $this->_type ];
+    $this->_level     = Exception\Helper::getLevel( $this->_type );
     
     // save data
     $this->_data = $data;
@@ -166,6 +154,8 @@ abstract class Exception extends \Exception implements \JsonSerializable, Librar
 
       // create a new log entry
       $data[ 'exception' ] = $this->toArray( true );
+
+      // TODO make the 'namespace' value more "searchable"
       $instance->create( $this->message, $this->_data + $data, $this->id, $this->level );
     }
 

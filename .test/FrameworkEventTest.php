@@ -3,7 +3,7 @@
 class FrameworkEventTest extends PHPUnit_Framework_TestCase {
 
   public function __construct( $name = null, array $data = [ ], $dataName = '' ) {
-    \Framework::setup( function () {
+    \Framework::execute( function () {
     } );
 
     $source    = \Framework::PATH_BASE . '.test/FrameworkEventTest/';
