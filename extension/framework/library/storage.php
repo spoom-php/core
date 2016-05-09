@@ -767,6 +767,7 @@ class Storage extends Library implements StorageInterface {
         break;
 
       // force numeric type
+      case 'num':
       case self::TYPE_NUMBER:
 
         $result = $tmp->exist && Number::is( $result ) ? Number::read( $result ) : $default;
@@ -780,6 +781,7 @@ class Storage extends Library implements StorageInterface {
         break;
 
       // force float type
+      case 'double':
       case self::TYPE_FLOAT:
 
         $result = $tmp->exist && Number::is( $result ) ? ( (float) Number::read( $result ) ) : $default;
@@ -788,16 +790,17 @@ class Storage extends Library implements StorageInterface {
       // force array type
       case self::TYPE_ARRAY:
 
-        $result = $tmp->exist && Enumerable::is( $result ) ? (array) $result : $default;
+        $result = $tmp->exist && Enumerable::is( $result ) ? Enumerable::cast( $result ) : $default;
         break;
 
       // force object type
       case self::TYPE_OBJECT:
 
-        $result = $tmp->exist && Enumerable::is( $result ) ? (object) $result : $default;
+        $result = $tmp->exist && Enumerable::is( $result ) ? Enumerable::cast( $result, true ) : $default;
         break;
 
       // force boolean type
+      case 'bool':
       case self::TYPE_BOOLEAN:
 
         $result = $tmp->exist && ( is_bool( $result ) || in_array( $result, [ 1, 0, '1', '0' ], true ) ) ? (bool) $result : $default;

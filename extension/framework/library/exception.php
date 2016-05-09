@@ -2,6 +2,7 @@
 
 use Framework\Exception\Helper;
 use Framework\Extension;
+use Framework\Helper\Enumerable;
 use Framework\Helper\Library;
 use Framework\Helper\LibraryInterface;
 use Framework\Helper\Log;
@@ -74,19 +75,17 @@ abstract class Exception extends \Exception implements \JsonSerializable, Librar
    * Initialise the custom Exception object, with extension and code specified message or a simple string message
    *
    * @param string|\Exception $id
-   * @param array             $data
+   * @param array|object      $data
    * @param \Exception        $previous
    */
-  public function __construct( $id, array $data = [ ], \Exception $previous = null ) {
+  public function __construct( $id, $data = [ ], \Exception $previous = null ) {
 
     // parse id to "properties"
     $tmp              = Exception\Helper::parse( $id );
     $this->_extension = Extension::instance( $tmp->extension );
     $this->_type      = $tmp->type;
     $this->_level     = Exception\Helper::getLevel( $this->_type );
-    
-    // save data
-    $this->_data = $data;
+    $this->_data      = Enumerable::cast( $data );
 
     // init the parent object with custom data
     parent::__construct( Exception\Helper::build( $this->_extension, $tmp->code . $this->_type, $this->_data ), $tmp->code, $previous );
@@ -150,9 +149,7 @@ abstract class Exception extends \Exception implements \JsonSerializable, Librar
     if( $instance ) {
 
       // extend data
-      $data = $data instanceof Storage ? $data->getArray( '' ) : (array) $data;
-
-      // create a new log entry
+      $data                = Enumerable::cast( $data );
       $data[ 'exception' ] = $this->toArray( true );
 
       // TODO make the 'namespace' value more "searchable"

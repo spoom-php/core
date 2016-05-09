@@ -3,7 +3,7 @@
 use Framework\Exception;
 
 /**
- * Exception for developers and indicates errors that can be fixed with coding
+ * Exception for developers and indicates problems that can be fixed with coding
  *
  * @package Framework\Exception
  */

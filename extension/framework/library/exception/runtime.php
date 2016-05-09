@@ -4,7 +4,7 @@ use Framework\Exception;
 
 /**
  * Exception for public display, usually for the user. This can be a missfilled form field warning, bad request
- * parameter or a deeper exception (Runtime or System) public version
+ * parameter or a deeper exception (Strict or System) public version
  *
  * @package Framework\Exception
  */

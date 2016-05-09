@@ -51,11 +51,11 @@ abstract class Enumerable {
 
     // log: notice
     if( json_last_error() != JSON_ERROR_NONE ) Request::getLog()->notice( 'JSON decode failed: #{error.code} with \'{error.message}\' message', [
-      'error'  => [
+      'error' => [
         'message' => json_last_error_msg(),
         'code'    => json_last_error()
       ],
-      'trace'  => debug_backtrace()
+      'trace' => debug_backtrace()
     ], 'framework:helper.enumerable' );
 
     return $json;
@@ -127,10 +127,10 @@ abstract class Enumerable {
         // handle item attributes
         foreach( $element->attributes() as $index => $value ) {
           $container[ $index ] = [ ];
-          $elements[ ]         = [ &$container[ $index ], $value, $key . '.' . $index ];
+          $elements[]          = [ &$container[ $index ], $value, $key . '.' . $index ];
 
           // save to meta for proper write back
-          $attribute[ ] = $key . '.' . $index;
+          $attribute[] = $key . '.' . $index;
         }
 
         // collect children names and values (it's for find the arrays before add to the queue)
@@ -143,7 +143,7 @@ abstract class Enumerable {
           else {
 
             if( !is_array( $tmp[ $index ] ) ) $tmp[ $index ] = [ $tmp[ $index ] ];
-            $tmp[ $index ][ ] = $value;
+            $tmp[ $index ][] = $value;
           }
         }
 
@@ -151,12 +151,12 @@ abstract class Enumerable {
         foreach( $tmp as $index => $value ) {
           $container[ $index ] = null;
 
-          if( !is_array( $value ) ) $elements[ ] = [ &$container[ $index ], $value, $key . '.' . $index ];
+          if( !is_array( $value ) ) $elements[] = [ &$container[ $index ], $value, $key . '.' . $index ];
           else {
 
             // handle arrays
             $container[ $index ] = [ ];
-            foreach( $value as $i => $v ) $elements[ ] = [ &$container[ $index ][ $i ], $v, $key . '.' . $index . '.' . $i ];
+            foreach( $value as $i => $v ) $elements[] = [ &$container[ $index ][ $i ], $v, $key . '.' . $index . '.' . $i ];
           }
         }
       }
@@ -206,14 +206,14 @@ abstract class Enumerable {
 
         // handle attributes, arrays and properties (in this order)
         if( in_array( $object->key . '.' . $index, $attribute ) ) {
-          $objects[ ] = (object) [ 'element' => $element, 'data' => $value, 'name' => $index, 'key' => $object->key . '.' . $index ];
+          $objects[] = (object) [ 'element' => $element, 'data' => $value, 'name' => $index, 'key' => $object->key . '.' . $index ];
         } else if( self::isArray( $value, false ) ) {
-          $objects[ ] = (object) [ 'element' => $element, 'data' => $value, 'name' => $index, 'key' => $object->key . '.' . $index ];
+          $objects[] = (object) [ 'element' => $element, 'data' => $value, 'name' => $index, 'key' => $object->key . '.' . $index ];
         } else {
           $child = $dom->createElement( is_numeric( $index ) ? $object->name : $index );
 
           $element->appendChild( $child );
-          $objects[ ] = (object) [ 'element' => $child, 'data' => $value, 'name' => $child->tagName, 'key' => $object->key . '.' . $index ];
+          $objects[] = (object) [ 'element' => $child, 'data' => $value, 'name' => $child->tagName, 'key' => $object->key . '.' . $index ];
         }
       }
     }
@@ -235,11 +235,11 @@ abstract class Enumerable {
     $iterator = new \RecursiveIteratorIterator( new \RecursiveArrayIterator( (array) $enumerable ) );
     foreach( $iterator as $value ) {
       $keys = [ ];
-      foreach( range( 0, $iterator->getDepth() ) as $depth ) $keys[ ] = $iterator->getSubIterator( $depth )->key();
+      foreach( range( 0, $iterator->getDepth() ) as $depth ) $keys[] = $iterator->getSubIterator( $depth )->key();
 
-      $print     = is_bool( $value ) ? ( $value ? 'true' : 'false' ) : $value;
-      $quote     = is_numeric( $value ) || is_bool( $value ) ? '' : ( !mb_strpos( $value, '"' ) ? '"' : "'" );
-      $result[ ] = join( '.', $keys ) . "={$quote}{$print}{$quote}";
+      $print    = is_bool( $value ) ? ( $value ? 'true' : 'false' ) : $value;
+      $quote    = is_numeric( $value ) || is_bool( $value ) ? '' : ( !mb_strpos( $value, '"' ) ? '"' : "'" );
+      $result[] = join( '.', $keys ) . "={$quote}{$print}{$quote}";
     }
 
     return implode( "\n", $result );
@@ -342,7 +342,7 @@ abstract class Enumerable {
 
     } else if( is_object( $input ) ) {
 
-      if( !($input instanceof \stdClass) ) $input = clone $input;
+      if( !( $input instanceof \stdClass ) ) $input = clone $input;
       else {
 
         $tmp = new \stdClass();
@@ -354,6 +354,23 @@ abstract class Enumerable {
     }
 
     return $input;
+  }
+  /**
+   * Cast anything into array (or object). This can handle storages, and non-enumerable variables
+   *
+   * note: Empty object will be null!
+   *
+   * @since ?
+   *
+   * @param mixed $input
+   * @param bool  $object Cast to object or array
+   *
+   * @return array|object|null
+   */
+  public static function cast( $input, $object = false ) {
+
+    $input = $input instanceof StorageInterface ? $input->getArray( '' ) : $input;
+    return empty( $input ) || !self::is( $input ) ? ( $object ? null : [ ] ) : ( $object ? (object) $input : (array) $input );
   }
 
   /**
