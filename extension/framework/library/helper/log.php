@@ -130,7 +130,7 @@ class Log extends Library {
         ] ), FILE_APPEND );
       }
 
-      return !$event->collector->contains();
+      return !$event->collector->exist();
     }
   }
 

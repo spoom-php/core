@@ -12,20 +12,20 @@ abstract class Helper {
   /**
    * Id for unknown exception
    */
-  const EXCEPTION_ERROR_UNKNOWN = 'framework#0E';
+  const EXCEPTION_UNKNOWN = 'framework#0E';
   /**
    * Id for wrap the native \Exception instances
    */
-  const EXCEPTION_ERROR_WRAP = 'framework#1E';
+  const EXCEPTION_WRAP = 'framework#1E';
   /**
    * Exception when the extension id is not like ::REGEXP_ID
    */
-  const EXCEPTION_NOTICE_INVALID_ID = 'framework#3N';
+  const EXCEPTION_INVALID_ID = 'framework#3N';
 
   /**
    * Exception id format
    */
-  const REGEXP_ID = '/^([a-z0-9_\\-]+)#([0-9]+)([NWEC])$/';
+  const REGEXP_ID = '/^([a-z0-9_\\-]+)(#([0-9]+)([NWEC]?))?$/';
 
   /**
    * Map the types to the corresponding level
@@ -53,12 +53,48 @@ abstract class Helper {
   /**
    * Test the given object instance is \Exception or Collector and has \Exception
    *
-   * @param mixed $object
+   * @param mixed $input
    *
    * @return boolean
    */
-  public static function is( $object ) {
-    return $object instanceof \Exception || ( $object instanceof Collector && $object->contains() );
+  public static function is( $input ) {
+    return $input instanceof \Exception || ( $input instanceof Collector && $input->exist() );
+  }
+  /**
+   * Warp native \Exceptions with ::EXCEPTION_WRAP id. This will leave \Framework\Exception classes untouched
+   *
+   * @param \Exception $exception
+   *
+   * @return Runtime
+   */
+  public static function wrap( \Exception $exception ) {
+    return $exception instanceof Exception ? $exception : new Runtime( self::EXCEPTION_WRAP, [
+      'message' => $exception->getMessage(),
+      'code'    => $exception->getCode()
+    ], $exception );
+  }
+  /**
+   * Compare and exception' id to a valid exception id
+   *
+   * @param \Exception $exception
+   * @param string     $id
+   *
+   * @return bool
+   */
+  public static function match( \Exception $exception, $id ) {
+
+    $raw = $exception instanceof Exception ? (object) [
+      'extension' => $exception->extension->id,
+      'code'      => $exception->getCode(),
+      'type'      => $exception->type
+    ] : self::parse( static::EXCEPTION_WRAP );
+
+    $id = self::parse( $id );
+    if( empty( $id ) ) return true;
+    else if( $raw->extension != $id->extension ) return false;
+    else if( $raw->code != $id->code ) return false;
+    else if( !empty( $id->type ) && $raw->type != $id->type ) return false;
+    else return true;
   }
 
   /**
@@ -67,18 +103,20 @@ abstract class Helper {
    * @param string $id ::REGEXP_ID formatted string
    *
    * @return object { extension: string, code: int, type: char }
-   * @throws Strict ::EXCEPTION_INVALID_ID when the ID format is wrong
    */
   public static function parse( $id ) {
 
-    // validate the id
-    $matches = [ ];
-    if( !preg_match( self::REGEXP_ID, $id, $matches ) ) throw new Strict( self::EXCEPTION_NOTICE_INVALID_ID, [ 'id' => $id ] );
-    else return (object) [
-      'extension' => $matches[ 1 ],
-      'code'      => (int) $matches[ 2 ],
-      'type'      => $matches[ 3 ],
-    ];
+    if( empty( $id ) ) return null;
+    else {
+
+      $matches = [ ];
+      if( !preg_match( self::REGEXP_ID, $id, $matches ) ) return null;
+      else return (object) [
+        'extension' => $matches[ 1 ],
+        'code'      => empty( $matches[ 3 ] ) ? 0 : (int) $matches[ 3 ],
+        'type'      => empty( $matches[ 4 ] ) ? '' : $matches[ 4 ],
+      ];
+    }
   }
   /**
    * Build the exception message
@@ -118,20 +156,6 @@ abstract class Helper {
 
       return $tmp;
     }
-  }
-
-  /**
-   * Warp native \Exceptions with ::EXCEPTION_ERROR_WRAP id. This will leave \Framework\Exception classes untouched
-   *
-   * @param \Exception $exception
-   *
-   * @return Runtime
-   */
-  public static function wrap( \Exception $exception ) {
-    return $exception instanceof Exception ? $exception : new Runtime( self::EXCEPTION_ERROR_WRAP, [
-      'message' => $exception->getMessage(),
-      'code'    => $exception->getCode()
-    ], $exception );
   }
 
   /**

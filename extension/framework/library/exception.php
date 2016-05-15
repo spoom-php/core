@@ -77,20 +77,26 @@ abstract class Exception extends \Exception implements \JsonSerializable, Librar
    * @param string|\Exception $id
    * @param array|object      $data
    * @param \Exception        $previous
+   *
+   * @throws Exception\Strict ::EXCEPTION_INVALID_ID when the ID format is wrong
    */
   public function __construct( $id, $data = [ ], \Exception $previous = null ) {
 
     // parse id to "properties"
-    $tmp              = Exception\Helper::parse( $id );
-    $this->_extension = Extension::instance( $tmp->extension );
-    $this->_type      = $tmp->type;
-    $this->_level     = Exception\Helper::getLevel( $this->_type );
-    $this->_data      = Enumerable::cast( $data );
+    $tmp = Exception\Helper::parse( $id );
+    if( empty( $tmp ) ) throw new Exception\Strict( Helper::EXCEPTION_INVALID_ID, [ 'id' => $id ] );
+    else {
 
-    // init the parent object with custom data
-    parent::__construct( Exception\Helper::build( $this->_extension, $tmp->code . $this->_type, $this->_data ), $tmp->code, $previous );
+      $this->_extension = Extension::instance( $tmp->extension );
+      $this->_type      = empty( $tmp->type ) ? static::TYPE_ERROR : $tmp->type;
+      $this->_level     = Exception\Helper::getLevel( $this->_type );
+      $this->_data      = Enumerable::cast( $data );
 
-    $this->_id = ( $this->_extension ? $this->_extension->id : '' ) . '#' . $this->getCode() . $this->_type;
+      // init the parent object with custom data
+      parent::__construct( Exception\Helper::build( $this->_extension, $tmp->code . $this->_type, $this->_data ), $tmp->code, $previous );
+
+      $this->_id = ( $this->_extension ? $this->_extension->id : '' ) . '#' . $this->getCode() . $this->_type;
+    }
   }
 
   /**
