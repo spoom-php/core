@@ -114,26 +114,12 @@ abstract class Exception extends \Exception implements \JsonSerializable, Librar
   }
   /**
    * @param $index
-   * @param $value
-   *
-   * @return mixed
-   * @throws Exception\Strict
-   */
-  public function __set( $index, $value ) {
-
-    $method = Library::searchSetter( $index, $this );
-    if( !$method ) throw new Exception\Strict( Library::EXCEPTION_MISSING_PROPERTY, [ 'property' => $index ] );
-    else return $this->{$method}( $value );
-  }
-  /**
-   * @param $index
    *
    * @return bool
    */
   public function __isset( $index ) {
     return Library::searchGetter( $index, $this ) !== null;
   }
-
   /**
    * @return string
    */
@@ -141,6 +127,16 @@ abstract class Exception extends \Exception implements \JsonSerializable, Librar
     return $this->id . ": '" . $this->getMessage() . "'";
   }
 
+  /**
+   * Compare and exception' id to a valid exception id
+   *
+   * @param string|null $filter
+   *
+   * @return bool
+   */
+  public function match( $filter ) {
+    return Exception\Helper::match( $this, $filter );
+  }
   /**
    * Log the exception
    *

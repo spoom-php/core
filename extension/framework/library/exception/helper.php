@@ -77,11 +77,11 @@ abstract class Helper {
    * Compare and exception' id to a valid exception id
    *
    * @param \Exception $exception
-   * @param string     $id
+   * @param string     $filter The id, or a part of an id
    *
    * @return bool
    */
-  public static function match( \Exception $exception, $id ) {
+  public static function match( \Exception $exception, $filter ) {
 
     $raw = $exception instanceof Exception ? (object) [
       'extension' => $exception->extension->id,
@@ -89,14 +89,14 @@ abstract class Helper {
       'type'      => $exception->type
     ] : self::parse( static::EXCEPTION_WRAP );
 
-    if( empty( $id ) ) return true;
+    if( empty( $filter ) ) return true;
     else {
 
-      $id = self::parse( $id );
-      if( empty( $id ) ) return false;
-      if( $raw->extension != $id->extension ) return false;
-      else if( $id->code >= 0 && $raw->code != $id->code ) return false;
-      else if( !empty( $id->type ) && $raw->type != $id->type ) return false;
+      $filter = self::parse( $filter );
+      if( empty( $filter ) ) return false;
+      if( $raw->extension != $filter->extension ) return false;
+      else if( $filter->code >= 0 && $raw->code != $filter->code ) return false;
+      else if( !empty( $filter->type ) && $raw->type != $filter->type ) return false;
       else return true;
     }
   }
