@@ -89,12 +89,16 @@ abstract class Helper {
       'type'      => $exception->type
     ] : self::parse( static::EXCEPTION_WRAP );
 
-    $id = self::parse( $id );
     if( empty( $id ) ) return true;
-    else if( $raw->extension != $id->extension ) return false;
-    else if( $raw->code != $id->code ) return false;
-    else if( !empty( $id->type ) && $raw->type != $id->type ) return false;
-    else return true;
+    else {
+
+      $id = self::parse( $id );
+      if( empty( $id ) ) return false;
+      if( $raw->extension != $id->extension ) return false;
+      else if( $id->code >= 0 && $raw->code != $id->code ) return false;
+      else if( !empty( $id->type ) && $raw->type != $id->type ) return false;
+      else return true;
+    }
   }
 
   /**
@@ -113,7 +117,7 @@ abstract class Helper {
       if( !preg_match( self::REGEXP_ID, $id, $matches ) ) return null;
       else return (object) [
         'extension' => $matches[ 1 ],
-        'code'      => empty( $matches[ 3 ] ) ? 0 : (int) $matches[ 3 ],
+        'code'      => !isset( $matches[ 3 ] ) ? -1 : (int) $matches[ 3 ],
         'type'      => empty( $matches[ 4 ] ) ? '' : $matches[ 4 ],
       ];
     }

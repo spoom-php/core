@@ -91,6 +91,7 @@ abstract class Exception extends \Exception implements \JsonSerializable, Librar
       $this->_type      = empty( $tmp->type ) ? static::TYPE_ERROR : $tmp->type;
       $this->_level     = Exception\Helper::getLevel( $this->_type );
       $this->_data      = Enumerable::cast( $data );
+      $tmp->code        = $tmp->code < 0 ? Helper::EXCEPTION_UNKNOWN : $tmp->code;
 
       // init the parent object with custom data
       parent::__construct( Exception\Helper::build( $this->_extension, $tmp->code . $this->_type, $this->_data ), $tmp->code, $previous );
@@ -137,7 +138,7 @@ abstract class Exception extends \Exception implements \JsonSerializable, Librar
    * @return string
    */
   public function __toString() {
-    return $this->id . ': ' . $this->getMessage();
+    return $this->id . ": '" . $this->getMessage() . "'";
   }
 
   /**

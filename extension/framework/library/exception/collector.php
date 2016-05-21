@@ -76,7 +76,7 @@ class Collector extends Library implements \Iterator, \Countable {
       $count     = count( $this->storage );
       $exception = $this->storage[ $count - 1 ];
       if( $top ) for( $i = $count - 2; $i >= 0; --$i ) {
-        if( $exception->level < $this->storage[ $i ]->level ) {
+        if( $exception->level > $this->storage[ $i ]->level ) {
           $exception = $this->storage[ $i ];
         }
       }
@@ -115,13 +115,13 @@ class Collector extends Library implements \Iterator, \Countable {
    * @return Exception
    */
   public function current() {
-    return $this->get( $this->cursor );
+    return $this->storage[ $this->cursor ];
   }
   /**
    * @inheritdoc
    */
   public function next() {
-    $this->cursor++;
+    ++$this->cursor;
   }
   /**
    * @inheritdoc
@@ -137,7 +137,7 @@ class Collector extends Library implements \Iterator, \Countable {
    * @return bool
    */
   public function valid() {
-    return $this->get( $this->cursor ) !== null;
+    return isset( $this->storage[ $this->cursor ] );
   }
   /**
    * @inheritdoc
