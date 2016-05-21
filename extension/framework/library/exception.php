@@ -2,6 +2,7 @@
 
 use Framework\Exception\Helper;
 use Framework\Extension;
+use Framework\Helper\Enumerable;
 use Framework\Helper\Library;
 use Framework\Helper\LibraryInterface;
 use Framework\Helper\Log;
@@ -35,18 +36,6 @@ abstract class Exception extends \Exception implements \JsonSerializable, Librar
    * Type for impactless exception
    */
   const TYPE_NOTICE = 'N';
-
-  /**
-   * Map the types to the corresponding level
-   *
-   * @var int[string]
-   */
-  private static $LEVEL = [
-    self::TYPE_CRITICAL => \Framework::LEVEL_CRITICAL,
-    self::TYPE_ERROR    => \Framework::LEVEL_ERROR,
-    self::TYPE_WARNING  => \Framework::LEVEL_WARNING,
-    self::TYPE_NOTICE   => \Framework::LEVEL_NOTICE
-  ];
 
   /**
    * The unique identifier of the exception
@@ -86,24 +75,29 @@ abstract class Exception extends \Exception implements \JsonSerializable, Librar
    * Initialise the custom Exception object, with extension and code specified message or a simple string message
    *
    * @param string|\Exception $id
-   * @param array             $data
+   * @param array|object      $data
    * @param \Exception        $previous
+   *
+   * @throws Exception\Strict ::EXCEPTION_INVALID_ID when the ID format is wrong
    */
-  public function __construct( $id, array $data = [ ], \Exception $previous = null ) {
+  public function __construct( $id, $data = [ ], \Exception $previous = null ) {
 
     // parse id to "properties"
-    $tmp              = Exception\Helper::parse( $id );
-    $this->_extension = Extension::instance( $tmp->extension );
-    $this->_type      = $tmp->type;
-    $this->_level     = self::$LEVEL[ $this->_type ];
-    
-    // save data
-    $this->_data = $data;
+    $tmp = Exception\Helper::parse( $id );
+    if( empty( $tmp ) ) throw new Exception\Strict( Helper::EXCEPTION_INVALID_ID, [ 'id' => $id ] );
+    else {
 
-    // init the parent object with custom data
-    parent::__construct( Exception\Helper::build( $this->_extension, $tmp->code . $this->_type, $this->_data ), $tmp->code, $previous );
+      $this->_extension = Extension::instance( $tmp->extension );
+      $this->_type      = empty( $tmp->type ) ? static::TYPE_ERROR : $tmp->type;
+      $this->_level     = Exception\Helper::getLevel( $this->_type );
+      $this->_data      = Enumerable::cast( $data );
+      $tmp->code        = $tmp->code < 0 ? Helper::EXCEPTION_UNKNOWN : $tmp->code;
 
-    $this->_id = ( $this->_extension ? $this->_extension->id : '' ) . '#' . $this->getCode() . $this->_type;
+      // init the parent object with custom data
+      parent::__construct( Exception\Helper::build( $this->_extension, $tmp->code . $this->_type, $this->_data ), $tmp->code, $previous );
+
+      $this->_id = ( $this->_extension ? $this->_extension->id : '' ) . '#' . $this->getCode() . $this->_type;
+    }
   }
 
   /**
@@ -120,33 +114,29 @@ abstract class Exception extends \Exception implements \JsonSerializable, Librar
   }
   /**
    * @param $index
-   * @param $value
-   *
-   * @return mixed
-   * @throws Exception\Strict
-   */
-  public function __set( $index, $value ) {
-
-    $method = Library::searchSetter( $index, $this );
-    if( !$method ) throw new Exception\Strict( Library::EXCEPTION_MISSING_PROPERTY, [ 'property' => $index ] );
-    else return $this->{$method}( $value );
-  }
-  /**
-   * @param $index
    *
    * @return bool
    */
   public function __isset( $index ) {
     return Library::searchGetter( $index, $this ) !== null;
   }
-
   /**
    * @return string
    */
   public function __toString() {
-    return $this->id . ': ' . $this->getMessage();
+    return $this->id . ": '" . $this->getMessage() . "'";
   }
 
+  /**
+   * Compare and exception' id to a valid exception id
+   *
+   * @param string|null $filter
+   *
+   * @return bool
+   */
+  public function match( $filter ) {
+    return Exception\Helper::match( $this, $filter );
+  }
   /**
    * Log the exception
    *
@@ -162,10 +152,10 @@ abstract class Exception extends \Exception implements \JsonSerializable, Librar
     if( $instance ) {
 
       // extend data
-      $data = $data instanceof Storage ? $data->getArray( '' ) : (array) $data;
-
-      // create a new log entry
+      $data                = Enumerable::cast( $data );
       $data[ 'exception' ] = $this->toArray( true );
+
+      // TODO make the 'namespace' value more "searchable"
       $instance->create( $this->message, $this->_data + $data, $this->id, $this->level );
     }
 

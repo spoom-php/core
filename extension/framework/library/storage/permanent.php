@@ -210,7 +210,7 @@ abstract class Permanent extends Storage implements PermanentInterface {
       ] );
 
       // check the event result
-      if( $event->collector->contains() ) throw $event->collector->get();
+      if( $event->collector->exist() ) throw $event->collector->get();
       else if( !$event->isPrevented() ) {
 
         // do the native saving
@@ -249,7 +249,7 @@ abstract class Permanent extends Storage implements PermanentInterface {
       ] );
 
       // check the event result
-      if( $event->collector->contains() ) throw $event->collector->get();
+      if( $event->collector->exist() ) throw $event->collector->get();
       else if( !$event->isPrevented() ) $content = $this->read( $namespace, $meta );
       else {
 
@@ -301,7 +301,7 @@ abstract class Permanent extends Storage implements PermanentInterface {
       ] );
 
       // check the event result
-      if( $event->collector->contains() ) throw $event->collector->get();
+      if( $event->collector->exist() ) throw $event->collector->get();
       else {
 
         // call the native destroy if not prevented
@@ -336,7 +336,7 @@ abstract class Permanent extends Storage implements PermanentInterface {
     if( $this->isAuto() && empty( $this->meta[ $index->namespace ] ) ) {
 
       $this->load( $index->namespace );
-      
+
       // clean any cache for this index to follow the change
       $this->clean( $index );
     }

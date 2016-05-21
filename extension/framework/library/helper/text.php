@@ -90,14 +90,16 @@ abstract class Text {
         if( !function_exists( 'openssl_random_pseudo_bytes' ) ) {
 
           // log: warning
-          Request::getLog()->warning( 'Cannot use OpenSSL random, `openssl_random_pseudo_bytes()` doesn\'t exists.', [ ], '\Framework\Helper\String' );
+          Request::getLog()->warning( 'Cannot use OpenSSL random, `openssl_random_pseudo_bytes()` doesn\'t exists.', [ ], 'framework:helper.string' );
 
         } else {
           $tmp = openssl_random_pseudo_bytes( $seeds, $strong );
 
           // skip ssl since it wasn't using the strong algo
           if( $strong === true ) $raw .= $tmp;
-          else Request::getLog()->notice( 'Generated OpenSSL random value is not strong, what next?', [ ], '\Framework\Helper\String' ); // log: notice
+          else Request::getLog()->notice( 'Generated OpenSSL random value is not strong, what next?', [
+            'trace' => debug_backtrace()
+          ], 'framework:helper.string' ); // log: notice
         }
 
         // try to read from the unix RNG

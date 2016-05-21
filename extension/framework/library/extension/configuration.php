@@ -130,10 +130,10 @@ class Configuration extends Storage\File implements ConfigurationInterface {
       $this->_environment = '';
 
       // log: notice
-      Request::getLog()->notice( 'Configuration: Missing environment ({environment}), in \'{extension}\'', [
+      Request::getLog()->notice( 'Missing environment ({environment}), in \'{extension}\'', [
         'environment' => $value,
         'extension'   => $this->extension->id
-      ], 'framwork-extension' );
+      ], 'framework:extension.configuration' );
     }
 
     // clear meta/cache/storage when the environment has changed

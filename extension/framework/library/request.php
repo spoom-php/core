@@ -3,13 +3,14 @@
 use Framework\Exception\Collector;
 use Framework\Exception\Strict;
 use Framework\Extension;
+use Framework\Helper\Library;
 use Framework\Helper\Log;
 
 /**
  * Class Request
  * @package Framework
  */
-class Request {
+class Request extends Library {
 
   /**
    * Header already sent when try to redirect the page
@@ -23,6 +24,14 @@ class Request {
    * Trying to set invalid environment
    */
   const EXCEPTION_WARNING_INVALID_ENVIRONMENT = 'framework#26W';
+  /**
+   * Prevented request start
+   */
+  const EXCEPTION_FAIL_START = 'framework#0C';
+  /**
+   * Exception based on non-fatal failure (with multiple type, defined later)
+   */
+  const EXCEPTION_FAIL = 'framework#27';
 
   /**
    * Production environment
@@ -47,6 +56,11 @@ class Request {
    *  - buffer [string]: Some output "trash" or empty
    */
   const EVENT_STOP = 'request.stop';
+  /**
+   * Runs in the Request::terminate() method before the request was ended. Arguments:
+   *  - exception [\Exception]: The reason of the termination
+   */
+  const EVENT_TERMINATE = 'request.terminate';
 
   /**
    * Exception collector, for runtime error collect
@@ -65,33 +79,20 @@ class Request {
   private static $environment = '';
 
   /**
-   * Execute the page method in the right order (start -> run -> stop). This is the proper (and complete)
-   * way to execute the framework. This method handle output buffering before the stop, exception handling after
-   * the start and argument passing between run and stop methods
+   * Execute the request
    *
    * @param string $environment
    */
   public static function execute( $environment = '' ) {
-
-    $report = \Framework::reportLevel();
-    if( $report != \Framework::LEVEL_DEBUG ) ob_start();
-
-    self::start( $environment );
-    try {
-      $content = self::run();
-    } catch( \Exception $e ) {
-      self::$collector->add( $e );
-      $content = [ ];
-    }
-
-    $buffer = $report != \Framework::LEVEL_DEBUG ? ob_get_clean() : null;
-    self::stop( $content, $buffer );
+    self::start( $environment ) && self::stop( self::run() );
   }
 
   /**
-   * Trigger page start event and initialise some basics for the Request. This should be called once and before the run
+   * Initialise some basics for the Request and triggers start event. This should be called once and before the run
    *
    * @param string $environment
+   *
+   * @throws \Exception
    */
   public static function start( $environment = '' ) {
 
@@ -119,38 +120,100 @@ class Request {
     // setup timezones
     date_default_timezone_set( $extension->option( 'request:timezone', date_default_timezone_get() ) );
 
-    // Call initialise event
-    $extension->trigger( self::EVENT_START );
+    // call initialise event
+    $event = $extension->trigger( self::EVENT_START );
+    if( $event->collector->count() ) throw $event->collector->get();
+    else if( $event->prevented ) throw new Exception\Strict( self::EXCEPTION_FAIL_START );
   }
   /**
-   * Trigger page run event and return the result array. The page contents (for the render) should be in
-   * the event results
+   * Trigger run event and return the result. The request result (for the render) should be in the event result
    *
-   * @return array|null The collected page contents
+   * @return mixed The run event result
+   * @throws \Exception
    */
   public static function run() {
 
     $extension = Extension::instance( 'framework' );
 
     // call display event to let extensions render the content
-    $result = $extension->trigger( self::EVENT_RUN );
-    return $result->getArray( '' );
+    $event = $extension->trigger( self::EVENT_RUN );
+
+    if( $event->collector->count() ) throw $event->collector->get();
+    else return !$event->prevented ? $event->get( '' ) : null;
   }
   /**
-   * Trigger the page stop event with the given arguments. In this method the page should be rendered to
-   * the output, based on the content (and maybe the buffer)
+   * Trigger the stop event. In this event the request result should be rendered to the output, based on the content
    *
-   * @param array       $content the page content array
-   * @param string|null $buffer  additional but probably trash or error information
+   * @param string $content
+   *
+   * @return mixed|null
+   * @throws \Exception
    */
-  public static function stop( array $content = [ ], $buffer = null ) {
+  public static function stop( $content = '' ) {
 
     // call display end event ( the render )
     $extension = Extension::instance( 'framework' );
-    $extension->trigger( self::EVENT_STOP, [
-      'content' => $content,
-      'buffer'  => $buffer
+    $event     = $extension->trigger( self::EVENT_STOP, [
+      'content' => $content
     ] );
+
+    if( $event->collector->count() ) throw $event->collector->get();
+    else return !$event->prevented ? $event->get( '' ) : null;
+  }
+
+  /**
+   * Request termination after a fatal exception
+   *
+   * TODO define \Throwable param type after PHP7
+   *
+   * @param \Exception $exception
+   */
+  public static function terminate( $exception ) {
+
+    // log the exception
+    Exception\Helper::wrap( $exception )->log();
+
+    // trigger the terminate event
+    $extension = Extension::instance( 'framework' );
+    $extension->trigger( self::EVENT_TERMINATE, [
+      'exception' => $exception
+    ] );
+
+    // TODO maybe this should return the event 'result'
+  }
+  /**
+   * Non-fatal error handler (notice, warning, error, ...)
+   *
+   * @param int    $level
+   * @param int    $code    The PHP error code
+   * @param string $message The original message
+   * @param string $file    The file with line number postfix
+   * @param array  $trace   Stack trace
+   *
+   * @return bool
+   * @throws Exception
+   */
+  public static function failure( $level, $code, $message, $file, $trace ) {
+
+    // log the fail
+    self::getLog()->create( 'Unexpected code failing: #{code} with \'{message}\' message, at \'{file}\'', [
+      'code'    => $code,
+      'message' => $message,
+      'file'    => $file,
+      'trace'   => $trace
+    ], 'framework:request', $level );
+
+    // throw an exception that match the fail level
+    // TODO this should affected by the Framework::reportLevel()?!
+    $type = Exception\Helper::getType( $level );
+    if( $type ) throw new Exception\Strict( self::EXCEPTION_FAIL . $type, [
+      'code'    => $code,
+      'message' => $message,
+      'file'    => $file,
+      'trace'   => $trace
+    ] );
+
+    return false;
   }
 
   /**

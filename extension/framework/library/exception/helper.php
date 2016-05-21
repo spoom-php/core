@@ -12,30 +12,93 @@ abstract class Helper {
   /**
    * Id for unknown exception
    */
-  const EXCEPTION_ERROR_UNKNOWN = 'framework#0E';
+  const EXCEPTION_UNKNOWN = 'framework#0E';
   /**
    * Id for wrap the native \Exception instances
    */
-  const EXCEPTION_ERROR_WRAP = 'framework#1E';
+  const EXCEPTION_WRAP = 'framework#1E';
   /**
    * Exception when the extension id is not like ::REGEXP_ID
    */
-  const EXCEPTION_NOTICE_INVALID_ID = 'framework#3N';
+  const EXCEPTION_INVALID_ID = 'framework#3N';
 
   /**
    * Exception id format
    */
-  const REGEXP_ID = '/^([a-z0-9_\\-]+)#([0-9]+)([NWEC])$/';
+  const REGEXP_ID = '/^([a-z0-9_\\-]+)(#([0-9]+)([NWEC]?))?$/';
+
+  /**
+   * Map the types to the corresponding level
+   *
+   * @var int[string]
+   */
+  private static $LEVEL = [
+    Exception::TYPE_CRITICAL => \Framework::LEVEL_CRITICAL,
+    Exception::TYPE_ERROR    => \Framework::LEVEL_ERROR,
+    Exception::TYPE_WARNING  => \Framework::LEVEL_WARNING,
+    Exception::TYPE_NOTICE   => \Framework::LEVEL_NOTICE
+  ];
+  /**
+   * Map the levels to the corresponding type
+   *
+   * @var int[string]
+   */
+  private static $TYPE = [
+    \Framework::LEVEL_CRITICAL => Exception::TYPE_CRITICAL,
+    \Framework::LEVEL_ERROR    => Exception::TYPE_ERROR,
+    \Framework::LEVEL_WARNING  => Exception::TYPE_WARNING,
+    \Framework::LEVEL_NOTICE   => Exception::TYPE_NOTICE
+  ];
 
   /**
    * Test the given object instance is \Exception or Collector and has \Exception
    *
-   * @param mixed $object
+   * @param mixed $input
    *
    * @return boolean
    */
-  public static function is( $object ) {
-    return $object instanceof \Exception || ( $object instanceof Collector && $object->contains() );
+  public static function is( $input ) {
+    return $input instanceof \Exception || ( $input instanceof Collector && $input->exist() );
+  }
+  /**
+   * Warp native \Exceptions with ::EXCEPTION_WRAP id. This will leave \Framework\Exception classes untouched
+   *
+   * @param \Exception $exception
+   *
+   * @return Runtime
+   */
+  public static function wrap( \Exception $exception ) {
+    return $exception instanceof Exception ? $exception : new Runtime( self::EXCEPTION_WRAP, [
+      'message' => $exception->getMessage(),
+      'code'    => $exception->getCode()
+    ], $exception );
+  }
+  /**
+   * Compare and exception' id to a valid exception id
+   *
+   * @param \Exception $exception
+   * @param string     $filter The id, or a part of an id
+   *
+   * @return bool
+   */
+  public static function match( \Exception $exception, $filter ) {
+
+    $raw = $exception instanceof Exception ? (object) [
+      'extension' => $exception->extension->id,
+      'code'      => $exception->getCode(),
+      'type'      => $exception->type
+    ] : self::parse( static::EXCEPTION_WRAP );
+
+    if( empty( $filter ) ) return true;
+    else {
+
+      $filter = self::parse( $filter );
+      if( empty( $filter ) ) return false;
+      if( $raw->extension != $filter->extension ) return false;
+      else if( $filter->code >= 0 && $raw->code != $filter->code ) return false;
+      else if( !empty( $filter->type ) && $raw->type != $filter->type ) return false;
+      else return true;
+    }
   }
 
   /**
@@ -44,18 +107,20 @@ abstract class Helper {
    * @param string $id ::REGEXP_ID formatted string
    *
    * @return object { extension: string, code: int, type: char }
-   * @throws Strict ::EXCEPTION_INVALID_ID when the ID format is wrong
    */
   public static function parse( $id ) {
 
-    // validate the id
-    $matches = [ ];
-    if( !preg_match( self::REGEXP_ID, $id, $matches ) ) throw new Strict( self::EXCEPTION_NOTICE_INVALID_ID, [ 'id' => $id ] );
-    else return (object) [
-      'extension' => $matches[ 1 ],
-      'code'      => (int) $matches[ 2 ],
-      'type'      => $matches[ 3 ],
-    ];
+    if( empty( $id ) ) return null;
+    else {
+
+      $matches = [ ];
+      if( !preg_match( self::REGEXP_ID, $id, $matches ) ) return null;
+      else return (object) [
+        'extension' => $matches[ 1 ],
+        'code'      => !isset( $matches[ 3 ] ) ? -1 : (int) $matches[ 3 ],
+        'type'      => empty( $matches[ 4 ] ) ? '' : $matches[ 4 ],
+      ];
+    }
   }
   /**
    * Build the exception message
@@ -98,17 +163,28 @@ abstract class Helper {
   }
 
   /**
-   * Warp native \Exceptions with ::EXCEPTION_ERROR_WRAP id. This will leave \Framework\Exception classes untouched
+   * Get Exception type postfix character from the level number
    *
-   * @param \Exception $exception
+   * @since ?
    *
-   * @return Runtime
+   * @param int $level Framework::LEVEL_* constant
+   *
+   * @return string|null
    */
-  public static function wrap( \Exception $exception ) {
-    return $exception instanceof Exception ? $exception : new Runtime( self::EXCEPTION_ERROR_WRAP, [
-      'message' => $exception->getMessage(),
-      'code'    => $exception->getCode()
-    ], $exception );
+  public static function getType( $level ) {
+    return isset( self::$TYPE[ $level ] ) ? self::$TYPE[ $level ] : null;
+  }
+  /**
+   * Get the level number from the given Exception type character
+   *
+   * @since ?
+   *
+   * @param string $type Exception::TYPE_* contant
+   *
+   * @return int|null
+   */
+  public static function getLevel( $type ) {
+    return isset( self::$LEVEL[ $type ] ) ? self::$LEVEL[ $type ] : null;
   }
 
   /**

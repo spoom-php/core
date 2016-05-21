@@ -147,11 +147,5 @@ class Localization extends Storage\File implements LocalizationInterface {
       $this->meta    = [ ];
       $this->clean();
     }
-
-    // log: debug
-    Request::getLog()->debug( 'The \'{localization}\' localization selected', [
-      'localization' => $this->_localization,
-      'directory'    => $this->_path
-    ], '\Framework\Extension\Localization' );
   }
 }

@@ -4,26 +4,17 @@ use Framework\Exception;
 use Framework\Helper\Library;
 
 /**
- * This class can collect \Exception-s and return the collected exceptions
- *
+ * Class Collector
  * @package Framework\Exception
  */
 class Collector extends Library implements \Iterator, \Countable {
 
   /**
-   * The last saved \Exception
+   * Exception storage
    *
-   * @var \Exception
-   */
-  private $last = null;
-
-  /**
-   * \Exception storage
-   *
-   * @var array
+   * @var Exception[]
    */
   private $storage = [ ];
-
   /**
    * Cursor for the iterator implementation
    *
@@ -32,160 +23,135 @@ class Collector extends Library implements \Iterator, \Countable {
   private $cursor = 0;
 
   /**
-   * Store an \Exception or Collector objects ( if it is )
+   * Store an exception or every exception from a Collector object
    *
-   * @param mixed $object
+   * @param mixed $input
    *
-   * @return boolean true, if at least one \Exception is stored
+   * @return bool True if at least one Exception is stored
    */
-  public function add( $object ) {
+  public function add( $input ) {
 
-    if( !Helper::is( $object ) ) return false;
+    if( !Helper::is( $input ) ) return false;
     else {
 
-      $this->store( $object );
+      if( $input instanceof \Exception ) $input = [ Helper::wrap( $input ) ];
+      foreach( $input as $exception ) {
+        $this->storage[] = $exception;
+      }
+
       return true;
     }
   }
   /**
-   * Return true if instance contains at least one \Exception
+   * Check if contains any exception that match with the filters
    *
-   * @param number|null $filter the filtered error code
+   * @param string|null $id    The exception's id filter
+   * @param int         $level The exception's minimum level
    *
    * @return bool
    */
-  public function contains( $filter = null ) {
+  public function exist( $id = null, $level = \Framework::LEVEL_NOTICE ) {
 
-    if( $filter > 0 ) {
-      foreach( $this->storage as $e ) if( $e instanceof Exception && $e->id == $filter ) return true;
+    // check for simple matches
+    if( empty( $id ) && $level >= \Framework::LEVEL_NOTICE ) return !empty( $this->storage );
+    else foreach( $this->storage as $exception ) {
+      if( Helper::match( $exception, $id ) && $exception->level <= $level ) {
+        return true;
+      }
+    }
 
-      return false;
-    } else return isset( $this->last );
-
+    return false;
   }
 
   /**
-   * Get last ( or the indexed ) \Exception
-   *
-   * @param number $index
+   * @param bool $top Return based on the level or the storage order
    *
    * @return \Exception
    */
-  public function get( $index = null ) {
+  public function get( $top = false ) {
 
-    // handle last getter
-    if( $index === null ) return $this->last;
+    if( !$this->exist() ) return null;
+    else {
 
-    // check and return index
-    return is_numeric( $index ) && isset( $this->storage[ $index ] ) ? $this->storage[ $index ] : null;
+      $count     = count( $this->storage );
+      $exception = $this->storage[ $count - 1 ];
+      if( $top ) for( $i = $count - 2; $i >= 0; --$i ) {
+        if( $exception->level > $this->storage[ $i ]->level ) {
+          $exception = $this->storage[ $i ];
+        }
+      }
+
+      return $exception;
+    }
   }
   /**
-   * Get \Exception list from the collector within the offset and limit
+   * Get stored exception list from the collector
    *
-   * @param number $offset
-   * @param number $limit
+   * @param string|null $id    The exception's id filter
+   * @param int         $level The exception's minimum level
    *
    * @return Exception[]
    */
-  public function getList( $offset = null, $limit = null ) {
-    $storage = &$this->storage;
+  public function getList( $id = null, $level = \Framework::LEVEL_NOTICE ) {
 
-    // if limit not set, return the whole array
-    if( !is_numeric( $offset ) ) return $storage;
+    // check for simple matches
+    if( empty( $id ) && $level >= \Framework::LEVEL_NOTICE ) return $this->storage;
+    else {
 
-    $return = [ ];
-    $count  = count( $storage );
-
-    if( !is_numeric( $limit ) ) {
-
-      // list from zero to limit
-      for( $i = 0; $i < $offset && $i < $count; ++$i ) {
-        $return[ ] = $storage[ $i ];
+      $list = [ ];
+      foreach( $this->storage as $exception ) {
+        if( Helper::match( $exception, $id ) && $exception->level <= $level ) {
+          $list[] = $exception;
+        }
       }
 
-    } else {
-
-      // list from limit to max
-      for( $i = $offset; $i < $limit && $i < $count; ++$i ) {
-        $return[ ] = $storage[ $i ];
-      }
+      return $list;
     }
-
-    return $return;
   }
 
   /**
-   * Store \Exception object or Collector contained objects
+   * @inheritdoc
    *
-   * @param \Exception|Collector $exception
-   *
-   * @return self
-   */
-  private function store( $exception ) {
-
-    if( $exception instanceof \Exception ) $exception = [ $exception ];
-    foreach( $exception as $e ) {
-      $this->storage[ ] = $e;
-      $this->last       = $e;
-    }
-
-    // keep chain
-    return $this;
-  }
-
-  /**
-   * Return the current element
-   * @link http://php.net/manual/en/iterator.current.php
-   *
-   * @return mixed Can return any type.
+   * @return Exception
    */
   public function current() {
-    return $this->get( $this->cursor );
+    return $this->storage[ $this->cursor ];
   }
   /**
-   * Move forward to next element
-   * @link http://php.net/manual/en/iterator.next.php
-   *
-   * @return void Any returned value is ignored.
+   * @inheritdoc
    */
   public function next() {
-    $this->cursor++;
+    ++$this->cursor;
   }
   /**
-   * Return the key of the current element
-   * @link http://php.net/manual/en/iterator.key.php
+   * @inheritdoc
    *
-   * @return mixed scalar on success, or null on failure.
+   * @return int
    */
   public function key() {
     return $this->cursor;
   }
   /**
-   * Checks if current position is valid
-   * @link http://php.net/manual/en/iterator.valid.php
+   * @inheritdoc
    *
-   * @return boolean The return value will be casted to boolean and then evaluated.
-   * Returns true on success or false on failure.
+   * @return bool
    */
   public function valid() {
-    return $this->get( $this->cursor ) !== null;
+    return isset( $this->storage[ $this->cursor ] );
   }
   /**
-   * Rewind the Iterator to the first element
-   * @link http://php.net/manual/en/iterator.rewind.php
-   *
-   * @return void Any returned value is ignored.
+   * @inheritdoc
    */
   public function rewind() {
     $this->cursor = 0;
   }
+
   /**
-   * Count elements of an object
-   * @link http://php.net/manual/en/countable.count.php
+   * @inheritdoc
    *
-   * @return int The custom count as an integer. The return value is cast to an integer.
+   * @return int
    */
   public function count() {
-    return count( $this->getList() );
+    return count( $this->storage );
   }
 }

@@ -4,7 +4,7 @@
  * Directory base of the framework.
  * Can be used to include files in php without worry the correct include path
  *
- * FIXME This can be replaced with the \Framework::PATH_BASE after PHP5.6
+ * FIXME This can be replaced with the Framework::PATH_BASE after PHP5.6
  */
 define( '_PATH_BASE', rtrim( dirname( __FILE__ ), '\\/' ) . '/' );
 
@@ -109,31 +109,76 @@ class Framework {
   private static $connection = [ ];
 
   /**
-   * Run the framework setup (autoloader, log and report configuration...etc)
+   * Run the framework
    *
-   * @param callable $main A runnable that will be called after the framework setup
+   * @param callable $main      Callback to run the main program after the Framework setup
+   * @param callable $terminate Callback( \Exception $e ) for terminated (with exception) runs
+   * @param callable $failure   Callback( int $level, int $code, string $message, string $file, array $trace ) for non-fatal PHP errors
    *
    * @throws Exception
    */
-  public static function setup( callable $main ) {
+  public static function execute( callable $main, $terminate = null, $failure = null ) {
 
     // check php version to avoid syntax and other ugly error messages
     if( version_compare( PHP_VERSION, self::DEPENDENCY_PHP ) < 0 ) {
       throw new \Exception( 'You need at least PHP ' . self::DEPENDENCY_PHP . ', but you only have ' . PHP_VERSION . '.' );
     }
 
-    // register the autoloader
-    try {
-      spl_autoload_register( function ( $class ) {
-        \Framework::import( $class );
-      } );
-    } catch( \Exception $e ) {
-      throw new \Exception( "Can't register the autoload function." );
-    }
-
     // setup log and report levels
     self::logLevel( self::logLevel() );
     self::reportLevel( self::reportLevel() );
+
+    try {
+
+      // register the autoloader
+      spl_autoload_register( function ( $class ) { Framework::import( $class ); } );
+
+      // register the terminate process(es)
+      set_exception_handler( function ( $exception ) use ( $terminate ) {
+        if( $exception && is_callable( $terminate ) ) {
+
+          // register shutdown function if there was any exception
+          register_shutdown_function( function () use ( $terminate, $exception ) {
+            call_user_func( $terminate, $exception );
+          } );
+        }
+      } );
+
+      // override the PHP error handler
+      set_error_handler( function ( $code, $message, $file, $line ) use ( $failure ) {
+
+        if( !is_callable( $failure ) ) return false;
+        else {
+
+          // process the input into standard values
+          $file .= ':' . $line;
+          if( !error_reporting() ) $level = self::LEVEL_NONE;
+          else switch( true ) {
+            case ( E_STRICT | E_DEPRECATED | E_USER_DEPRECATED ) & $code:
+              $level = self::LEVEL_INFO;
+              break;
+            case ( E_NOTICE | E_USER_NOTICE ) & $code:
+              $level = self::LEVEL_NOTICE;
+              break;
+            case ( E_WARNING | E_COMPILE_WARNING | E_CORE_WARNING | E_USER_WARNING ) & $code:
+              $level = self::LEVEL_WARNING;
+              break;
+            case ( E_ERROR | E_CORE_ERROR | E_USER_ERROR | E_RECOVERABLE_ERROR ) & $code:
+              $level = self::LEVEL_ERROR;
+              break;
+            case ( E_COMPILE_ERROR | E_PARSE ) & $code:
+            default:
+              $level = self::LEVEL_ERROR;
+              break;
+          }
+
+          return call_user_func( $failure, $level, $code, $message, $file, debug_backtrace() );
+        }
+      } );
+
+    } catch( Exception $e ) {
+      throw new Exception( 'Fatal exception in the Framework startup: #' . $e->getCode() . ', ' . $e->getMessage(), 0, $e );
+    }
 
     // call the main function
     $main();
@@ -256,7 +301,7 @@ class Framework {
         $extension = self::search( $path );
         if( empty( $extension ) ) break;
         else {
-          
+
           $root = self::PATH_BASE . self::PATH_EXTENSION . $extension . '/' . self::EXTENSION_LIBRARY;
           if( self::find( $name, $path, $root ) && class_exists( $class, false ) ) {
             return true;
@@ -389,9 +434,9 @@ class Framework {
   /**
    * Split the class name into subclassnames through the camel or TitleCase. The full classname is not included in the result array
    *
-   * @example `\Framework::tokenize( 'Pop3MailerClass' ) // [ 'Pop3', 'Pop3Mailer' ]`
-   * @example `\Framework::tokenize( 'POP3MailerClass' ) // [ 'POP3', 'POP3Mailer' ]`
-   * @example `\Framework::tokenize( 'POP3Mailer' ) // [ 'POP3' ]`
+   * @example `Framework::tokenize( 'Pop3MailerClass' ) // [ 'Pop3', 'Pop3Mailer' ]`
+   * @example `Framework::tokenize( 'POP3MailerClass' ) // [ 'POP3', 'POP3Mailer' ]`
+   * @example `Framework::tokenize( 'POP3Mailer' ) // [ 'POP3' ]`
    *
    * @param string $name The original classname
    *

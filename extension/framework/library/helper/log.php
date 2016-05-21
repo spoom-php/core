@@ -3,6 +3,7 @@
 use Framework\Exception\Strict;
 use Framework\Extension;
 use Framework\Storage;
+use Framework\StorageInterface;
 
 /**
  * Class Log
@@ -103,7 +104,7 @@ class Log extends Library {
     else {
 
       // define local variables and trigger event for external loggers
-      $data        = $data instanceof Storage ? $data : new Storage( $data );
+      $data        = $data instanceof StorageInterface ? $data : new Storage( $data );
       $namespace   = empty( $namespace ) ? $this->_namespace : $namespace;
       $description = Text::insert( $message, $data, Text::TYPE_INSERT_LEAVE );
       $event       = $this->extension->trigger( self::EVENT_CREATE, [
@@ -129,7 +130,7 @@ class Log extends Library {
         ] ), FILE_APPEND );
       }
 
-      return !$event->collector->contains();
+      return !$event->collector->exist();
     }
   }
 

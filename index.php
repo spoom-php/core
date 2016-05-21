@@ -1,15 +1,9 @@
 <?php require 'framework.php';
 
-try {
+// execute the framework with the callbacks
+Framework::execute( function () {
 
-  // setup the framework and define the main function
-  \Framework::setup( function () {
+  // execute the 'framework' extension's request handler
+  Framework\Request::execute( \Framework\Request::ENVIRONMENT_PRODUCTION );
 
-    // execute the 'framework' extension's request handler
-    \Framework\Request::execute( \Framework\Request::ENVIRONMENT_PRODUCTION );
-
-  } );
-
-} catch( \Exception $e ) {
-  die( \Framework::reportLevel() < \Framework::LEVEL_CRITICAL ? '' : $e->getMessage() );
-}
+}, '\Framework\Request::terminate', '\Framework\Request::failure' );

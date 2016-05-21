@@ -3,7 +3,7 @@
 use Framework\Exception;
 
 /**
- * Exception for unfixable errors. An offline database, missing file...something like that
+ * Exception for unfixable problems. An offline database, missing file...something like that
  *
  * @package Framework\Exception
  */

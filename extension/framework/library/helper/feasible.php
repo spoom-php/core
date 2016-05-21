@@ -42,13 +42,14 @@ trait Feasible {
       $method = $this->method( $name, true );
       if( $method ) return $method->invokeArgs( $this, is_array( $arguments ) ? $arguments : ( $arguments === null ? [ ] : [ $arguments ] ) );
       else {
-        
+
         // log: warning
         Request::getLog()->warning( 'Missing \'{name}\' executeable', [
           'name'      => $name,
           'arguments' => $arguments,
-          'method'    => $method
-        ], '\Framework\Helper\Feasible' );
+          'method'    => $method,
+          'trace'     => debug_backtrace()
+        ], 'framework:helper.feasible' );
 
       }
     }

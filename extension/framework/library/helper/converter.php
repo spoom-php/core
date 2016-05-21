@@ -80,8 +80,9 @@ class Converter extends Library implements FeasibleInterface {
       Request::getLog()->warning( 'Missing serializer for \'{format}\'', [
         'content' => $content,
         'format'  => $meta->format,
-        'meta'    => $meta
-      ], '\Framework\Helper\Converter' );
+        'meta'    => $meta,
+        'trace'   => debug_backtrace()
+      ], 'framework:helper.converter' );
 
       return null;
     }
@@ -118,8 +119,9 @@ class Converter extends Library implements FeasibleInterface {
       Request::getLog()->warning( 'Missing unserializer for \'{format}\' permanent storages', [
         'content' => $content,
         'format'  => $meta->format,
-        'meta'    => $meta
-      ], '\Framework\Storage\PermanentConverter' );
+        'meta'    => $meta,
+        'trace'   => debug_backtrace()
+      ], 'framework:helper.converter' );
 
       return null;
     }

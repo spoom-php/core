@@ -236,9 +236,6 @@ class Extension extends Library {
       if( class_exists( $class, true ) ) return $class;
     }
 
-    // log: debug
-    Request::getLog()->debug( 'Missing (class) library: {classnames}', [ 'classnames' => implode( ',', $class_name ) ], '\Framework\Extension' );
-
     return false;
   }
   /**
@@ -258,9 +255,6 @@ class Extension extends Library {
       $instance = isset( $param ) ? new $class( $param ) : new $class();
       return $instance;
     }
-
-    // log: debug
-    Request::getLog()->debug( 'Missing (class) instance: {classname}', [ 'classname' => $class_name ], '\Framework\Extension' );
 
     return null;
   }
