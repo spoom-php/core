@@ -24,9 +24,9 @@ class FrameworkEventTest extends PHPUnit_Framework_TestCase {
   }
 
   public function testBasic() {
-        
+
     // static event handler registration and execute
-    $event = \Framework\Event::instance( 'framework', 'test.simple' );
+    $event  = \Framework\Event::instance( 'framework', 'test.simple' );
     $result = $event->execute( [ 'test' => 1 ] );
     $this->assertEquals( [ 1, 'simple' ], $result->get( 'output' ) );
 
@@ -34,7 +34,7 @@ class FrameworkEventTest extends PHPUnit_Framework_TestCase {
     $result = $event->execute( [ 'test' => 2 ] );
     $this->assertEquals( [ 'stopped', 'prevented' ], $result->get( 'output' ) );
   }
-  
+
   public function testAdvanced() {
 
     $event = \Framework\Event::instance( 'framework', 'test.advance' );
@@ -56,7 +56,7 @@ class FrameworkEventTest extends PHPUnit_Framework_TestCase {
     }
     $result = $event->execute( [ 'test' => 2 ] );
     $this->assertEquals( [ 2, 'advance' ], $result->get( 'output' ) );
-    
+
     // listener removal
     $storage->clear();
     $storage->add( new \Framework\Event\Listener( 'framework:test2' ) );
@@ -69,5 +69,21 @@ class FrameworkEventTest extends PHPUnit_Framework_TestCase {
     }
     $result = $event->execute( [ 'test' => 2 ] );
     $this->assertEquals( [ 2, 'advance' ], $result->get( 'output' ) );
+  }
+
+  public function testCustom() {
+
+    $event = \Framework\Event::instance( 'test', 'custom' );
+    $event->getStorage()->add( new \Framework\Event\Listener( [ $this, 'custom1' ] ) );
+    $event->getStorage()->add( new \Framework\Event\Listener( function ( \Framework\EventData $e ) {
+      $e->extend( 'result:', [ 'test:custom2' ] );
+    } ) );
+
+    $result = $event->execute( [ ] );
+    $this->assertEquals( [ 'test:custom1', 'test:custom2' ], $result->get( 'result:' ) );
+  }
+
+  public function custom1( \Framework\EventData $e ) {
+    $e->extend( 'result:', [ 'test:custom1' ] );
   }
 }

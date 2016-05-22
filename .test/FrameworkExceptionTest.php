@@ -111,6 +111,4 @@ class FrameworkExceptionTest extends PHPUnit_Framework_TestCase {
     $this->assertEquals( [ $list[ 0 ] ], $collector->getList( 'test#1' ) );
     $this->assertEquals( [ $list[ 2 ], $list[ 3 ] ], $collector->getList( null, \Framework::LEVEL_ERROR ) );
   }
-
-  // TODO test uncovered `Exception\Collector` and `Exception\Helper` methods
 }

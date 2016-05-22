@@ -40,11 +40,8 @@ class Library implements LibraryInterface {
    */
   public function __get( $index ) {
 
-    // FIXME remove the legacy '_...' getters
-
     $method = static::searchGetter( $index, $this );
     if( $method ) return $this->{$method}();
-    else if( property_exists( $this, '_' . $index ) ) return $this->{'_' . $index};
     else throw new Exception\Strict( self::EXCEPTION_MISSING_PROPERTY, [ 'property' => $index ] );
   }
   /**
@@ -68,10 +65,7 @@ class Library implements LibraryInterface {
    * @return bool
    */
   public function __isset( $index ) {
-
-    // FIXME remove the legacy '_...' getters
-
-    return property_exists( $this, '_' . $index ) || static::searchGetter( $index, $this ) !== null;
+    return static::searchGetter( $index, $this ) !== null;
   }
 
   /**
@@ -102,21 +96,15 @@ class Library implements LibraryInterface {
 
       self::$cache[ $cache ] = null;
 
-      $reflection = null;
       $property = str_replace( ' ', '', ucwords( str_replace( '_', ' ', $field ) ) );
       $getters  = [ 'get', 'is', 'has' ];
       foreach( $getters as $getter ) {
-                
+
         $method = $getter . $property;
         if( is_callable( [ $instance, $method ] ) ) {
 
-          // FIXME optimalize this reflection stuff (or just remove it?)
-          
-          $reflection = !$reflection ? new \ReflectionClass( $instance ) : $reflection;
-          if( $reflection->getMethod( $method )->getNumberOfRequiredParameters() == 0 ) {
-            self::$cache[ $cache ] = $method;
-            break;
-          }
+          self::$cache[ $cache ] = $method;
+          break;
         }
       }
     }
@@ -142,10 +130,8 @@ class Library implements LibraryInterface {
 
       $property = str_replace( ' ', '', ucwords( str_replace( '_', ' ', $field ) ) );
       $method   = 'set' . $property;
-      
-      // FIXME optimalize this reflection stuff (or just remove it?)
-      
-      if( is_callable( [ $instance, $method ] ) && ( new \ReflectionClass( $instance ) )->getMethod( $method )->getNumberOfRequiredParameters() <= 1 ) {
+
+      if( is_callable( [ $instance, $method ] ) ) {
         self::$cache[ $cache ] = $method;
       }
     }

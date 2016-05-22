@@ -51,7 +51,7 @@ class FrameworkExtensionTest extends PHPUnit_Framework_TestCase {
     $this->assertEquals( 'Framework\Storage', get_class( $extension->create( [ 'test1', 'storage', 'request' ] ) ) );
   }
 
-  // TODO test uncovered `Exception\Event` and `Exception\Helper` methods
+  // TODO test `Extension\Helper` methods
 
   /**
    * @return array

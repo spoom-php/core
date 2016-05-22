@@ -155,8 +155,7 @@ abstract class Exception extends \Exception implements \JsonSerializable, Librar
       $data                = Enumerable::cast( $data );
       $data[ 'exception' ] = $this->toArray( true );
 
-      // TODO make the 'namespace' value more "searchable"
-      $instance->create( $this->message, $this->_data + $data, $this->id, $this->level );
+      $instance->create( $this->message, $this->_data + $data, 'framework:exception!' . $this->id, $this->level );
     }
 
     return $this;

@@ -40,6 +40,13 @@ class Listener extends Library {
   private static $instance;
 
   /**
+   * The library is a callable, or a CLASS_LIBRARY
+   *
+   * @var bool
+   */
+  private $simple = true;
+
+  /**
    * Executable class "path"
    *
    * @var string
@@ -57,7 +64,7 @@ class Listener extends Library {
   protected $_enable;
 
   /**
-   * @param string                           $library Fully qualified class name or extension library index of the handler class
+   * @param callable|string                  $library Valid callable name, fully qualified class name or extension library index of the handler class
    * @param array|Framework\StorageInterface $data    Provided data on execute
    * @param bool                             $enable  Allow execute or not
    *
@@ -78,6 +85,7 @@ class Listener extends Library {
   public function execute( EventData $data ) {
 
     if( !$this->isEnable() ) return null;
+    else if( $this->simple ) return call_user_func_array( $this->_library, [ $data, $this->_data ] );
     else {
 
       // create library instance only once
@@ -94,23 +102,31 @@ class Listener extends Library {
   }
 
   /**
-   * @return string
+   * @return callable|string
    */
   public function getLibrary() {
     return $this->_library;
 
   }
   /**
-   * @param string $value
+   * @param callable|string $value
    *
    * @throws Exception
    */
   public function setLibrary( $value ) {
 
-    $value = \Framework::library( $value );
-    if( !isset( $value ) ) throw new Exception\Strict( self::EXCEPTION_MISSING_LIBRARY, [ 'value' => $value ] );
-    else if( !is_subclass_of( $value, self::CLASS_LIBRARY ) ) throw new Exception\Strict( self::EXCEPTION_INVALID_LIBRARY, [ 'value' => $value ] );
-    else $this->_library = $value;
+    if( is_callable( $value ) ) $this->_library = $value;
+    else {
+
+      $value = \Framework::library( $value );
+      if( !isset( $value ) ) throw new Exception\Strict( self::EXCEPTION_MISSING_LIBRARY, [ 'value' => $value ] );
+      else if( !is_subclass_of( $value, self::CLASS_LIBRARY ) ) throw new Exception\Strict( self::EXCEPTION_INVALID_LIBRARY, [ 'value' => $value ] );
+      else {
+
+        $this->simple   = false;
+        $this->_library = $value;
+      }
+    }
   }
   /**
    * @return bool
