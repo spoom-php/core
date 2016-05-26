@@ -34,15 +34,6 @@ class Request extends Library {
   const EXCEPTION_FAIL = 'framework#27';
 
   /**
-   * Production environment
-   */
-  const ENVIRONMENT_PRODUCTION = 'production';
-  /**
-   * Main development environment
-   */
-  const ENVIRONMENT_DEVELOPMENT = 'development';
-
-  /**
    * Runs right before the Request::start() method finished. No argument
    */
   const EVENT_START = 'request.start';
@@ -73,41 +64,31 @@ class Request extends Library {
    * @var string
    */
   private static $localization = null;
-  /**
-   * @var string
-   */
-  private static $environment = '';
 
   /**
    * Execute the request
-   *
-   * @param string $environment
    */
-  public static function execute( $environment = '' ) {
-    self::start( $environment ) && self::stop( self::run() );
+  public static function execute() {
+    self::start() && self::stop( self::run() );
   }
 
   /**
    * Initialise some basics for the Request and triggers start event. This should be called once and before the run
    *
-   * @param string $environment
-   *
+   * @return true
    * @throws \Exception
    */
-  public static function start( $environment = '' ) {
-
-    //
-    self::setEnvironment( $environment );
+  public static function start() {
     $extension = Extension::instance( 'framework' );
 
     // setup the reporting levels
-    \Framework::reportLevel( $extension->option( 'request:level.report', null ) );
-    \Framework::logLevel( $extension->option( 'request:level.log', null ) );
+    \Framework::setReport( $extension->option( 'request:level.report', null ) );
+    \Framework::setLog( $extension->option( 'request:level.log', null ) );
 
     // add custom namespaces from configuration
     $import = $extension->option( 'request:import!array' );
     if( !empty( $import ) ) foreach( $import as $namespace => $path ) {
-      \Framework::connect( $namespace, $path );
+      \FrameworkImport::define( $namespace, $path );
     }
 
     self::$localization = $extension->option( 'request:localization', $extension->manifest->getString( 'localization', 'en' ) );
@@ -124,6 +105,8 @@ class Request extends Library {
     $event = $extension->trigger( self::EVENT_START );
     if( $event->collector->count() ) throw $event->collector->get();
     else if( $event->prevented ) throw new Exception\Strict( self::EXCEPTION_FAIL_START );
+
+    return true;
   }
   /**
    * Trigger run event and return the result. The request result (for the render) should be in the event result
@@ -292,25 +275,5 @@ class Request extends Library {
     $value = trim( mb_strtolower( $value ) );
     if( preg_match( '/^[a-z_-]+$/', $value ) < 1 ) throw new Exception\Strict( self::EXCEPTION_WARNING_INVALID_LOCALIZATION, [ 'localization' => $value ] );
     else self::$localization = $value;
-  }
-
-  /**
-   * @return string
-   */
-  public static function getEnvironment() {
-    return self::$environment;
-  }
-  /**
-   * Set the request environment
-   *
-   * @param string $value
-   *
-   * @throws Exception\Strict ::EXCEPTION_WARNING_INVALID_ENVIRONMENT
-   */
-  private static function setEnvironment( $value ) {
-
-    $value = trim( mb_strtolower( $value ) );
-    if( preg_match( '/^[a-z_-]*$/', $value ) < 1 ) throw new Exception\Strict( self::EXCEPTION_WARNING_INVALID_ENVIRONMENT, [ 'value' => $value ] );
-    else self::$environment = $value;
   }
 }

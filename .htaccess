@@ -1,6 +1,10 @@
-<IfModule mod_rewrite.c>
+# setup the framework' environment
+setEnv ENVIRONMENT_TYPE   production
+setEnv ENVIRONMENT_REPORT none
+setEnv ENVIRONMENT_LOG    warning
 
-  # setup the rewrite engine
+# setup the rewrite engine
+<IfModule mod_rewrite.c>
   RewriteEngine on
   RewriteBase /
     
@@ -12,5 +16,4 @@
   RewriteCond %{REQUEST_FILENAME} !-f
   RewriteCond %{REQUEST_FILENAME} !-d
   RewriteRule .* index.php [L]
-
 </IfModule>

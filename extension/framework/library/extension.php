@@ -103,12 +103,6 @@ class Extension extends Library {
    * @var Extension\LocalizationInterface
    */
   private $_localization = null;
-  /**
-   * The logger instance for the extension (the log name is the extension id)
-   *
-   * @var Log
-   */
-  private $_log = null;
 
   /**
    * Object constructor. Define directory of the object
@@ -336,12 +330,7 @@ class Extension extends Library {
    * @return Log
    */
   public function getLog() {
-
-    if( !$this->_log ) {
-      $this->_log = Log::instance( $this->_id );
-    }
-
-    return $this->_log;
+    return Log::instance( $this->_id );
   }
 
   /**

@@ -3,6 +3,7 @@
 use Framework\Exception\Strict;
 use Framework\Request;
 use Framework\Storage;
+use Framework\StorageInterface;
 
 /**
  * Class Text
@@ -38,7 +39,7 @@ abstract class Text {
   public static function insert( $text, $insertion, $type = self::TYPE_INSERT_EMPTY ) {
 
     // every insertion converted to data
-    if( !( $insertion instanceof Storage ) ) $insertion = new Storage( $insertion );
+    if( !( $insertion instanceof StorageInterface ) ) $insertion = new Storage( $insertion );
 
     // find patterns iterate trough the matches
     preg_match_all( self::REGEXP_INSERT_REPLACE, $text, $matches, PREG_SET_ORDER );

@@ -3,9 +3,8 @@
 class FrameworkStoragePermanentTest extends PHPUnit_Framework_TestCase {
 
   public function __construct( $name = null, array $data = [ ], $dataName = '' ) {
-    \Framework::execute( function () {
-    } );
-
+    \Framework::setup( \Framework::ENVIRONMENT_DEVELOPMENT ) && \Framework::execute( function () { } );
+    
     // create test files
     @copy(
       \Framework::PATH_BASE . '.test/FrameworkStoragePermanentTest/test/sample.xml',

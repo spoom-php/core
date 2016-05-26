@@ -99,7 +99,7 @@ class Log extends Library {
   public function create( $message, $data = [ ], $namespace = '', $level = \Framework::LEVEL_DEBUG ) {
 
     // check type against reporting level
-    if( \Framework::logLevel() < $level ) return true;
+    if( \Framework::getLog() < $level ) return true;
     else if( !\Framework::getLevel( $level ) ) throw new Strict( self::EXCEPTION_NOTICE_INVALID_LEVEL, [ 'level' => $level ] );
     else {
 

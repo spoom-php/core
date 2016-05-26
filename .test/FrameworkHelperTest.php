@@ -5,9 +5,8 @@ use Framework\Helper\Number;
 class FrameworkHelperTest extends PHPUnit_Framework_TestCase {
 
   public function __construct( $name = null, array $data = [ ], $dataName = '' ) {
-    \Framework::execute( function () {
-    } );
-
+    \Framework::setup( \Framework::ENVIRONMENT_DEVELOPMENT ) && \Framework::execute( function () { } );
+    
     parent::__construct( $name, $data, $dataName );
   }
 

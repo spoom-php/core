@@ -3,9 +3,8 @@
 class FrameworkEventTest extends PHPUnit_Framework_TestCase {
 
   public function __construct( $name = null, array $data = [ ], $dataName = '' ) {
-    \Framework::execute( function () {
-    } );
-
+    \Framework::setup( \Framework::ENVIRONMENT_DEVELOPMENT ) && \Framework::execute( function () { } );
+    
     $source    = \Framework::PATH_BASE . '.test/FrameworkEventTest/';
     $directory = \Framework::PATH_BASE . 'extension/framework/asset/event/';
     ( is_dir( $directory ) || mkdir( $directory, 0777, true ) ) && copy( $source . 'framework.json', $directory . 'framework.json' );

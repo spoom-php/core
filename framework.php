@@ -3,8 +3,6 @@
 /**
  * Directory base of the framework.
  * Can be used to include files in php without worry the correct include path
- *
- * FIXME This can be replaced with the Framework::PATH_BASE after PHP5.6
  */
 define( '_PATH_BASE', rtrim( dirname( __FILE__ ), '\\/' ) . '/' );
 
@@ -18,7 +16,16 @@ class Framework {
   /**
    * The minimum PHP version for the framework
    */
-  const DEPENDENCY_PHP = '5.4.0';
+  const DEPENDENCY = '5.6.0';
+
+  /**
+   * Production environment
+   */
+  const ENVIRONMENT_PRODUCTION = 'production';
+  /**
+   * Main development environment
+   */
+  const ENVIRONMENT_DEVELOPMENT = 'development';
 
   /**
    * The level of silence
@@ -50,8 +57,7 @@ class Framework {
   const LEVEL_DEBUG = 6;
 
   /**
-   * Directory base of the framework.
-   * Can be used to include files in php without worry the correct include path
+   * Directory base of the framework
    */
   const PATH_BASE = _PATH_BASE;
   /**
@@ -79,6 +85,8 @@ class Framework {
   /**
    * Link level names to their numeric representation
    *
+   * TODO change to constant after PHP7
+   *
    * @var array[string]int
    */
   private static $LEVEL_NAME = [
@@ -92,22 +100,55 @@ class Framework {
   ];
 
   /**
+   * @var string
+   */
+  private static $environment;
+  /**
    * The framework log level
    *
    * @var int
    */
-  private static $level = [
-    'log'    => self::LEVEL_WARNING,
-    'report' => self::LEVEL_NONE
-  ];
+  private static $log;
+  /**
+   * The framework report level
+   *
+   * @var int
+   */
+  private static $report;
 
   /**
-   * Store the custom namespace connections to their root paths
+   * @param string|null     $environment
+   * @param string|int|null $report
+   * @param string|int|null $log
    *
-   * @var array[string]string
+   * @return true
+   * @throws \Exception
    */
-  private static $connection = [ ];
+  public static function setup( $environment = null, $report = null, $log = null ) {
 
+    // check the php version
+    if( version_compare( PHP_VERSION, self::DEPENDENCY ) < 0 ) {
+      throw new \Exception( 'Fatal exception at the startup: PHP' . PHP_VERSION . ' (<' . \Framework::DEPENDENCY . ') isn\'t enough to run the framework' );
+    }
+
+    // check for the environment
+    self::$environment = $environment ?: getenv( 'ENVIRONMENT_TYPE' );
+    if( empty( self::$environment ) ) throw new \Exception( 'Fatal exception at the startup: Invalid or missing environment definition' );
+    else {
+
+      $development = self::$environment == \Framework::ENVIRONMENT_DEVELOPMENT;
+
+      // set the report level
+      $report = $report ?: getenv( 'ENVIRONMENT_REPORT' );
+      self::setReport( $report ?: ( $development ? \Framework::LEVEL_DEBUG : \Framework::LEVEL_NONE ) );
+
+      // set the log level
+      $log = $log ?: getenv( 'ENVIRONMENT_LOG' );
+      self::setLog( $log ?: ( $development ? \Framework::LEVEL_DEBUG : \Framework::LEVEL_WARNING ) );
+
+      return true;
+    }
+  }
   /**
    * Run the framework
    *
@@ -119,19 +160,12 @@ class Framework {
    */
   public static function execute( callable $main, $terminate = null, $failure = null ) {
 
-    // check php version to avoid syntax and other ugly error messages
-    if( version_compare( PHP_VERSION, self::DEPENDENCY_PHP ) < 0 ) {
-      throw new \Exception( 'You need at least PHP ' . self::DEPENDENCY_PHP . ', but you only have ' . PHP_VERSION . '.' );
-    }
-
-    // setup log and report levels
-    self::logLevel( self::logLevel() );
-    self::reportLevel( self::reportLevel() );
-
     try {
 
       // register the autoloader
-      spl_autoload_register( function ( $class ) { Framework::import( $class ); } );
+      spl_autoload_register( function ( $class ) {
+        FrameworkImport::load( $class );
+      } );
 
       // register the terminate process(es)
       set_exception_handler( function ( $exception ) use ( $terminate ) {
@@ -176,12 +210,12 @@ class Framework {
         }
       } );
 
-    } catch( Exception $e ) {
-      throw new Exception( 'Fatal exception in the Framework startup: #' . $e->getCode() . ', ' . $e->getMessage(), 0, $e );
-    }
+      // call the main function
+      $main();
 
-    // call the main function
-    $main();
+    } catch( Exception $e ) {
+      throw new Exception( 'Fatal exception at the startup: #' . $e->getCode() . ', ' . $e->getMessage(), 0, $e );
+    }
   }
 
   /**
@@ -236,8 +270,106 @@ class Framework {
       $class = '\\' . str_replace( ' ', '\\', $class );
     }
 
-    return !$validate || self::import( $class ) ? $class : null;
+    return !$validate || FrameworkImport::load( $class ) ? $class : null;
   }
+
+  /**
+   * @return string
+   */
+  public static function getEnvironment() {
+    return self::$environment;
+  }
+
+  /**
+   * @return int
+   */
+  public static function getReport() {
+    return self::$report;
+  }
+  /**
+   * @param string|int $value
+   */
+  public static function setReport( $value ) {
+    self::$report = self::getLevel( $value, false );
+
+    // setup error reporting in PHP
+    $reporting = 0;
+    switch( self::$report ) {
+      case self::LEVEL_NONE:
+
+        error_reporting( -1 );
+        ini_set( 'display_errors', 0 );
+
+        break;
+
+      /** @noinspection PhpMissingBreakStatementInspection */
+      case self::LEVEL_DEBUG:
+        $reporting = E_ALL;
+      /** @noinspection PhpMissingBreakStatementInspection */
+      case self::LEVEL_INFO:
+        $reporting |= E_STRICT | E_DEPRECATED | E_USER_DEPRECATED;
+      /** @noinspection PhpMissingBreakStatementInspection */
+      case self::LEVEL_NOTICE:
+        $reporting |= E_NOTICE | E_USER_NOTICE;
+      /** @noinspection PhpMissingBreakStatementInspection */
+      case self::LEVEL_WARNING:
+        $reporting |= E_WARNING | E_COMPILE_WARNING | E_CORE_WARNING | E_USER_WARNING;
+      /** @noinspection PhpMissingBreakStatementInspection */
+      case self::LEVEL_ERROR:
+        $reporting |= E_ERROR | E_CORE_ERROR | E_USER_ERROR | E_RECOVERABLE_ERROR;
+      /** @noinspection PhpMissingBreakStatementInspection */
+      case self::LEVEL_CRITICAL:
+        $reporting |= E_COMPILE_ERROR | E_PARSE;
+      /** @noinspection PhpMissingBreakStatementInspection */
+      default:
+
+        ini_set( 'display_errors', 1 );
+        error_reporting( $reporting );
+    }
+  }
+
+  /**
+   * @return int
+   */
+  public static function getLog() {
+    return self::$log;
+  }
+  /**
+   * @param string|int $value
+   */
+  public static function setLog( $value = null ) {
+    self::$log = self::getLevel( $value, false );
+  }
+
+  /**
+   * Get the level from the name or the name from the level
+   *
+   * @param int|string $input   The level or the name
+   * @param bool       $numeric Return the level or the name
+   *
+   * @return int|string|null Null, if the input is invalid
+   */
+  public static function getLevel( $input, $numeric = false ) {
+
+    if( is_string( $input ) ) return isset( self::$LEVEL_NAME[ $input ] ) ? ( $numeric ? $input : self::$LEVEL_NAME[ $input ] ) : null;
+    else {
+
+      $tmp = array_search( $input, self::$LEVEL_NAME );
+      return $tmp === false ? null : ( $numeric ? $tmp : (int) $input );
+    }
+  }
+}
+/**
+ * Class FrameworkImport
+ */
+class FrameworkImport {
+
+  /**
+   * Store the custom namespace connections to their root paths
+   *
+   * @var array[string]string
+   */
+  private static $definition = [ ];
 
   /**
    * Add custom namespace root directory for the importer
@@ -245,9 +377,9 @@ class Framework {
    * @param string $namespace The namespace definition
    * @param string $path      The path for the namespace
    */
-  public static function connect( $namespace, $path ) {
-    self::$connection[ $namespace ] = $path;
-    uksort( self::$connection, function ( $a, $b ) {
+  public static function define( $namespace, $path ) {
+    self::$definition[ trim( $namespace, '\\' ) . '\\' ] = rtrim( $path, '/' ) . '/';
+    uksort( self::$definition, function ( $a, $b ) {
       return strlen( $b ) - strlen( $a );
     } );
   }
@@ -256,9 +388,10 @@ class Framework {
    *
    * @param string $namespace The namespace to remove
    */
-  public static function disconnect( $namespace ) {
-    unset( self::$connection[ $namespace ] );
+  public static function undefine( $namespace ) {
+    unset( self::$definition[ trim( $namespace, '\\' ) . '\\' ] );
   }
+
   /**
    * Import class files based on the class name and the namespace
    *
@@ -266,44 +399,42 @@ class Framework {
    *
    * @return bool True only if the class is exists after the import
    */
-  public static function import( $class ) {
+  public static function load( $class ) {
 
     // do not import class that is exists already
     if( class_exists( $class, false ) ) return true;
     else {
 
       // fix for absolute class definitions
-      $class = trim( $class, '\\' );
+      $class = ltrim( $class, '\\' );
 
       // try first the custom paths (custom autoload path support)
-      foreach( self::$connection as $namespace => $directory ) {
-
-        $namespace = trim( $namespace, '\\' ) . '\\';
+      foreach( static::$definition as $namespace => $directory ) {
         if( strpos( $class, $namespace ) === 0 ) {
 
-          $path = explode( '\\', trim( substr( $class, strlen( $namespace ) ), '\\' ) );
+          $path = explode( '\\', substr( $class, strlen( $namespace ) ) );
           $name = array_pop( $path );
 
           // return when the loader find a perfect match, and the class really exist
-          if( self::find( $name, $path, rtrim( $directory, '/' ) . '/' ) && class_exists( $class, false ) ) {
+          if( self::search( $name, $path, $directory ) && class_exists( $class, false ) ) {
             return true;
           }
         }
       }
 
       // try to find an extension library
-      $depth = self::EXTENSION_DEPTH;
+      $depth = Framework::EXTENSION_DEPTH;
       for( $i = $depth; $i > 0; --$i ) {
 
-        $path = explode( '\\', trim( $class, '\\' ) );
+        $path = explode( '\\', $class );
         $name = array_pop( $path );
 
-        $extension = self::search( $path );
+        $extension = Framework::search( $path );
         if( empty( $extension ) ) break;
         else {
 
-          $root = self::PATH_BASE . self::PATH_EXTENSION . $extension . '/' . self::EXTENSION_LIBRARY;
-          if( self::find( $name, $path, $root ) && class_exists( $class, false ) ) {
+          $root = Framework::PATH_BASE . Framework::PATH_EXTENSION . $extension . '/' . Framework::EXTENSION_LIBRARY;
+          if( self::search( $name, $path, $root ) && class_exists( $class, false ) ) {
             return true;
           }
         }
@@ -314,91 +445,32 @@ class Framework {
   }
 
   /**
-   * Get the level from the name or the name from the level
+   * Find the class file and load it
    *
-   * @param int|string $input The level or the name
-   * @param bool       $name  Return the name or the level
+   * @param string $name The class name
+   * @param string $path The file path
+   * @param string $root The path's root
    *
-   * @return int|string|null Null, if the input is invalid
+   * @return bool True if the file was successfully loaded
    */
-  public static function getLevel( $input, $name = true ) {
+  protected static function search( $name, $path, $root ) {
 
-    if( is_string( $input ) ) return isset( self::$LEVEL_NAME[ $input ] ) ? ( $name ? $input : self::$LEVEL_NAME[ $input ] ) : null;
+    // check root existance and then try to find the original full named class file
+    $path = ltrim( implode( '/', $path ) . '/', '/' );
+    if( self::read( $name, $path, $root ) ) return true;
     else {
 
-      $tmp = array_search( $input, self::$LEVEL_NAME );
-      return $tmp === false ? null : ( $name ? $tmp : (int) $input );
-    }
-  }
-  /**
-   * Get or set the log level
-   *
-   * @param int|string|null $value The new log level
-   *
-   * @return int
-   */
-  public static function logLevel( $value = null ) {
-
-    if( $value !== null ) {
-      self::$level[ 'log' ] = self::getLevel( $value, false );
-    }
-
-    return self::$level[ 'log' ];
-  }
-  /**
-   * Get or set the report level
-   *
-   * @param int|string|null $value The new report level
-   *
-   * @return int
-   */
-  public static function reportLevel( $value = null ) {
-
-    if( $value !== null ) {
-
-      self::$level[ 'report' ] = self::getLevel( $value, false );
-
-      // setup error reporting in PHP
-      $reporting = 0;
-      switch( self::$level[ 'report' ] ) {
-        case self::LEVEL_NONE:
-
-          error_reporting( -1 );
-          ini_set( 'display_errors', 0 );
-
-          break;
-
-        /** @noinspection PhpMissingBreakStatementInspection */
-        case self::LEVEL_DEBUG:
-          $reporting = E_ALL;
-        /** @noinspection PhpMissingBreakStatementInspection */
-        case self::LEVEL_INFO:
-          $reporting |= E_STRICT | E_DEPRECATED | E_USER_DEPRECATED;
-        /** @noinspection PhpMissingBreakStatementInspection */
-        case self::LEVEL_NOTICE:
-          $reporting |= E_NOTICE | E_USER_NOTICE;
-        /** @noinspection PhpMissingBreakStatementInspection */
-        case self::LEVEL_WARNING:
-          $reporting |= E_WARNING | E_COMPILE_WARNING | E_CORE_WARNING | E_USER_WARNING;
-        /** @noinspection PhpMissingBreakStatementInspection */
-        case self::LEVEL_ERROR:
-          $reporting |= E_ERROR | E_CORE_ERROR | E_USER_ERROR | E_RECOVERABLE_ERROR;
-        /** @noinspection PhpMissingBreakStatementInspection */
-        case self::LEVEL_CRITICAL:
-          $reporting |= E_COMPILE_ERROR | E_PARSE;
-        /** @noinspection PhpMissingBreakStatementInspection */
-        default:
-
-          ini_set( 'display_errors', 1 );
-          error_reporting( $reporting );
+      // try to tokenize the class name (based on camel or TitleCase) to support for nested classes
+      $tmp = self::explode( $name );
+      foreach( $tmp as $name ) if( self::read( $name, $path, $root ) ) {
+        return true;
       }
+
+      return false;
     }
-
-    return self::$level[ 'report' ];
   }
-
   /**
-   * Find and read library files. This will check several case scenario of the name/path
+   * Read library files. This will check several case scenario of the name/path
    *
    * @param string $name The file name
    * @param string $path The path to the file from the root
@@ -442,7 +514,7 @@ class Framework {
    *
    * @return string[] desc ordered classname "tokens"
    */
-  protected static function tokenize( $name ) {
+  protected static function explode( $name ) {
 
     $result  = [ ];
     $buffer  = '';
@@ -451,8 +523,7 @@ class Framework {
 
       $character = $name{$i};
       if( $character == '_' ) return [ ];
-
-      if( !is_numeric( $character ) ) {
+      else if( !is_numeric( $character ) ) {
 
         $uppercase_now = ctype_upper( $character );
         if( $uppercase_now != $uppercase && $counter > 1 ) {
@@ -468,31 +539,6 @@ class Framework {
     }
 
     return array_reverse( $result );
-  }
-  /**
-   * Find the class file and load it
-   *
-   * @param string $name The class name
-   * @param string $path The file path
-   * @param string $root The path's root
-   *
-   * @return bool True if the file was successfully loaded
-   */
-  protected static function find( $name, $path, $root ) {
-
-    // check root existance and then try to find the original full named class file
-    $path = ltrim( implode( '/', $path ) . '/', '/' );
-    if( self::read( $name, $path, $root ) ) return true;
-    else {
-
-      // try to tokenize the class name (based on camel or TitleCase) to support for nested classes
-      $tmp = self::tokenize( $name );
-      foreach( $tmp as $name ) if( self::read( $name, $path, $root ) ) {
-        return true;
-      }
-
-      return false;
-    }
   }
 }
 

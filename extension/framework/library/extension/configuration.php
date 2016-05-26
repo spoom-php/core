@@ -108,7 +108,7 @@ class Configuration extends Storage\File implements ConfigurationInterface {
 
     // load the first environment
     if( !isset( $this->_environment ) ) {
-      $this->setEnvironment( Request::getEnvironment() );
+      $this->setEnvironment( \Framework::getEnvironment() );
     }
 
     return $this->_environment;
@@ -122,7 +122,7 @@ class Configuration extends Storage\File implements ConfigurationInterface {
     $tmp = $this->_environment;
 
     // set the new environment
-    $global = Request::getEnvironment();
+    $global = \Framework::getEnvironment();
     if( $this->validate( $value ) ) $this->_environment = $value;
     else if( $this->validate( $global ) ) $this->_environment = $global;
     else {

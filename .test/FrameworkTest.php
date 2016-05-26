@@ -3,8 +3,7 @@
 class FrameworkTest extends PHPUnit_Framework_TestCase {
 
   public function testInit() {
-    \Framework::execute( function () {
-    } );
+    \Framework::setup( \Framework::ENVIRONMENT_DEVELOPMENT ) && \Framework::execute( function () { } );
   }
 
   /**
@@ -26,22 +25,22 @@ class FrameworkTest extends PHPUnit_Framework_TestCase {
   public function testAutoloadCustom() {
 
     // add custom namespace path
-    \Framework::connect( 'Custom\NS', \Framework::PATH_BASE . '.test/FrameworkTest/' );
+    \FrameworkImport::define( 'Custom\\NS', \Framework::PATH_BASE . '.test/FrameworkTest/' );
 
     // try complex named nested class loading from the custom namespace
     $this->assertEquals( '\Custom\NS\POP3MailerClAsS', \Framework::library( 'Custom\NS\POP3MailerClAsS' ) );
     $this->assertEquals( '\Custom\NS\SMTPMailer_Class', \Framework::library( 'Custom\NS\SMTPMailer_Class' ) );
 
     // try "nested" custom namespace support
-    \Framework::connect( 'Custom\NS\Mailer', \Framework::PATH_BASE . '.test/FrameworkTest/m4iler' );
+    \FrameworkImport::define( 'Custom\NS\Mailer', \Framework::PATH_BASE . '.test/FrameworkTest/m4iler' );
     $this->assertEquals( '\Custom\NS\Mailer\HTML5', \Framework::library( 'Custom\NS\Mailer\HTML5' ) );
 
     // remove the custom path
-    \Framework::disconnect( 'Custom\NS' );
+    \FrameworkImport::undefine( 'Custom\NS' );
     $this->assertEquals( null, \Framework::library( 'Custom\NS\Invalid' ) );
     
     // test the extension class override
-    \Framework::connect( 'Framework\Exception', \Framework::PATH_BASE . '.test/src/CusTom/framework/exception' );
+    \FrameworkImport::define( 'Framework\Exception', \Framework::PATH_BASE . '.test/src/CusTom/framework/exception' );
     $this->assertEquals( 'test', Framework\Exception\System::test() );
   }
 
@@ -59,7 +58,7 @@ class FrameworkTest extends PHPUnit_Framework_TestCase {
     $this->assertEquals( null, \Framework::getLevel( 'csoki', true ) );
 
     // reporting setup check
-    \Framework::reportLevel( \Framework::LEVEL_CRITICAL );
+    \Framework::setReport( \Framework::LEVEL_CRITICAL );
     $this->assertEquals( E_COMPILE_ERROR | E_PARSE, error_reporting() );
   }
 }
