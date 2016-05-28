@@ -53,7 +53,7 @@ abstract class Helper {
    * @return bool
    */
   public static function exist( $id, $validate = false ) {
-    return ( !$validate || self::validate( $id ) ) && is_dir( _PATH_BASE . self::directory( $id, false ) );
+    return ( !$validate || self::validate( $id ) ) && is_dir( \Framework::PATH_BASE . self::directory( $id, false ) );
   }
 
   /**

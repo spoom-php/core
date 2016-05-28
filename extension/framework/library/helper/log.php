@@ -9,8 +9,9 @@ use Framework\StorageInterface;
  * Class Log
  * @package Framework\Helper
  *
- * @property-read string namespace The default namespace for log entries
- * @property-read string name      The instance identifier
+ * @property-read string $namespace The default namespace for log entries
+ * @property-read string $name      The instance identifier
+ * @property-read string $file      The default log file
  */
 class Log extends Library {
 
@@ -24,7 +25,8 @@ class Log extends Library {
    * Event called before every new log entry. This can prevent the default file log. Arguments:
    *  - instance [Log]: The Log instance that call this event
    *  - namespace [string]: The log entry namespace
-   *  - type [int]: The log entry type (level)
+   *  - level [int]: The log entry type
+   *  - datetime [string]: 'Y-m-d\TH:i:s.uO' format
    *  - description [string]: The message with the inserted data
    *  - &message [string]: The raw message
    *  - &data [Storage]: The raw data
@@ -65,7 +67,7 @@ class Log extends Library {
    *
    * @var string
    */
-  private $_file;
+  private $_file = null;
 
   /**
    * @param string $name      The instance identifier
@@ -78,13 +80,6 @@ class Log extends Library {
     // save instance properties
     $this->_name      = $name;
     $this->_namespace = empty( $namespace ) ? (string) $this->extension : $namespace;
-
-    // define the default log file
-    if( is_dir( _PATH_BASE . \Framework::PATH_TMP ) || @mkdir( _PATH_BASE . \Framework::PATH_TMP, 0777, true ) ) {
-
-      $date        = date( 'Ymd' );
-      $this->_file = _PATH_BASE . \Framework::PATH_TMP . "{$name}-{$date}.log";
-    }
   }
 
   /**
@@ -99,11 +94,12 @@ class Log extends Library {
   public function create( $message, $data = [ ], $namespace = '', $level = \Framework::LEVEL_DEBUG ) {
 
     // check type against reporting level
-    if( \Framework::getLog() < $level ) return true;
-    else if( !\Framework::getLevel( $level ) ) throw new Strict( self::EXCEPTION_NOTICE_INVALID_LEVEL, [ 'level' => $level ] );
+    if( $level <= \Framework::LEVEL_NONE || $level > \Framework::getLog() ) return true;
     else {
 
       // define local variables and trigger event for external loggers
+      list( $usec, $sec ) = explode( ' ', microtime() );
+      $time        = date( 'Y-m-d\TH:i:s', $sec ) . '.' . substr( $usec, 2, 4 ) . date( 'O', $sec );
       $data        = $data instanceof StorageInterface ? $data : new Storage( $data );
       $namespace   = empty( $namespace ) ? $this->_namespace : $namespace;
       $description = Text::insert( $message, $data, Text::TYPE_INSERT_LEAVE );
@@ -111,22 +107,21 @@ class Log extends Library {
         'instance'    => $this,
         'namespace'   => $namespace,
         'level'       => $level,
+        'datetime'    => $time,
         'description' => $description,
         'message'     => &$message,
         'data'        => &$data
       ] );
 
       // check if the external loggers done the work
-      if( !$event->prevented && $this->_file ) {
-
-        list( $usec, $sec ) = explode( ' ', microtime() );
-        file_put_contents( $this->_file, Text::insert( self::PATTERN_MESSAGE, [
-          'time'        => date( 'Y-m-d\TH:i:s.', $sec ) . substr( $usec, 2 ),
+      if( !$event->prevented && $this->file ) {
+        file_put_contents( $this->file, Text::insert( self::PATTERN_MESSAGE, [
+          'time'        => $time,
           'level'       => \Framework::getLevel( $level ),
-          'namespace'   => str_replace( ';', ',', $namespace ),
-          'message'     => str_replace( ';', ',', $message ),
-          'data'        => str_replace( ';', ',', json_encode( $data ) ),
-          'description' => str_replace( ';', ',', Text::insert( $message, $data, Text::TYPE_INSERT_LEAVE ) )
+          'namespace'   => str_replace( [ ';', "\n" ], [ ',', '' ], $namespace ),
+          'message'     => str_replace( [ ';', "\n" ], [ ',', '' ], $message ),
+          'data'        => str_replace( [ ';', "\n" ], [ ',', '' ], json_encode( $data ) ),
+          'description' => str_replace( [ ';', "\n" ], [ ',', '' ], Text::insert( $message, $data, Text::TYPE_INSERT_LEAVE ) )
         ] ), FILE_APPEND );
       }
 
@@ -217,6 +212,16 @@ class Log extends Library {
    * @return string
    */
   public function getFile() {
+
+    // define the default log file
+    if( $this->_file === null ) {
+
+      $this->_file = false;
+      if( is_dir( \Framework::PATH_BASE . \Framework::PATH_TMP ) || @mkdir( \Framework::PATH_BASE . \Framework::PATH_TMP, 0755, true ) ) {
+        $this->_file = \Framework::PATH_BASE . \Framework::PATH_TMP . date( 'Ymd' ) . '-' . $this->_name . '.log';
+      }
+    }
+
     return $this->_file;
   }
 

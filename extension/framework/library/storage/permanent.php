@@ -13,7 +13,7 @@ use Framework\StorageInterface;
  *
  * @since   0.6.0
  */
-interface PermanentInterface extends StorageInterface {
+interface PermanentInterface extends StorageInterface, Helper\FailableInterface {
 
   /**
    * Save the namespace's actual storage data in the given (or the default) format
@@ -41,12 +41,6 @@ interface PermanentInterface extends StorageInterface {
    */
   public function remove( $namespace = null );
 
-  /**
-   * Get the latest exception object
-   *
-   * @return Exception|null
-   */
-  public function getException();
   /**
    * Get the converter object that parse and build the input and output object/string
    *

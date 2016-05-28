@@ -3,6 +3,8 @@
 /**
  * Directory base of the framework.
  * Can be used to include files in php without worry the correct include path
+ *
+ * @deprecated Use \Framework::PATH_BASE
  */
 define( '_PATH_BASE', rtrim( dirname( __FILE__ ), '\\/' ) . '/' );
 
@@ -344,18 +346,18 @@ class Framework {
   /**
    * Get the level from the name or the name from the level
    *
-   * @param int|string $input   The level or the name
-   * @param bool       $numeric Return the level or the name
+   * @param int|string $input The level or the name
+   * @param bool       $human Return a name (readable by humans) or the level
    *
    * @return int|string|null Null, if the input is invalid
    */
-  public static function getLevel( $input, $numeric = false ) {
+  public static function getLevel( $input, $human = true ) {
 
-    if( is_string( $input ) ) return isset( self::$LEVEL_NAME[ $input ] ) ? ( $numeric ? $input : self::$LEVEL_NAME[ $input ] ) : null;
+    if( is_string( $input ) ) return isset( self::$LEVEL_NAME[ $input ] ) ? ( $human ? $input : self::$LEVEL_NAME[ $input ] ) : null;
     else {
 
       $tmp = array_search( $input, self::$LEVEL_NAME );
-      return $tmp === false ? null : ( $numeric ? $tmp : (int) $input );
+      return $tmp === false ? null : ( $human ? $tmp : (int) $input );
     }
   }
 }

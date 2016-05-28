@@ -6,6 +6,7 @@ use Framework\Helper\Enumerable;
 use Framework\Helper\Library;
 use Framework\Helper\LibraryInterface;
 use Framework\Helper\Log;
+use Framework\Helper\LogableInterface;
 
 /**
  * Extend simple PHP \Exception with the power of code base text with language and insertion support
@@ -18,7 +19,7 @@ use Framework\Helper\Log;
  * @property-read int       $level     The exception's level based on the type
  * @property-read string    $id        The unique identifier. The format is '<extension>#<code><type>'
  */
-abstract class Exception extends \Exception implements \JsonSerializable, LibraryInterface {
+abstract class Exception extends \Exception implements \JsonSerializable, LibraryInterface, LogableInterface {
 
   /**
    * Type for exception that MUST break the execution
@@ -43,14 +44,12 @@ abstract class Exception extends \Exception implements \JsonSerializable, Librar
    * @var string
    */
   private $_id;
-
   /**
    * Insertion data
    *
    * @var array
    */
   private $_data = [ ];
-
   /**
    * The exception's "danger level"
    *

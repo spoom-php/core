@@ -186,7 +186,7 @@ class Extension extends Library {
    */
   public function directory( $path = '', $root = false ) {
 
-    $base = $root === true ? _PATH_BASE : ( is_string( $root ) ? $root : '' );
+    $base = $root === true ? \Framework::PATH_BASE : ( is_string( $root ) ? $root : '' );
     return $base . rtrim( $this->_directory . ltrim( $path, '/' ), '/' ) . '/';
   }
   /**

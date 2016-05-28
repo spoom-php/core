@@ -82,7 +82,7 @@ class File extends Permanent {
    * @param string|null $path File or directory path base for the storage. The file MUST be without dot and extension and directories MUST end with '/'
    * @param string      $base The base of the path
    */
-  public function __construct( $path, $base = _PATH_BASE ) {
+  public function __construct( $path, $base = \Framework::PATH_BASE ) {
     $this->_path = $path;
     $this->_base = (string) $base;
 

@@ -74,7 +74,7 @@ class Configuration extends Storage\File implements ConfigurationInterface {
    * @return bool
    */
   protected function validate( $name ) {
-    return is_string( $name ) && is_dir( _PATH_BASE . $this->_path . $name . '/' );
+    return is_string( $name ) && is_dir( \Framework::PATH_BASE . $this->_path . $name . '/' );
   }
   /**
    * @param string      $namespace
@@ -130,7 +130,7 @@ class Configuration extends Storage\File implements ConfigurationInterface {
       $this->_environment = '';
 
       // log: notice
-      Request::getLog()->notice( 'Missing environment ({environment}), in \'{extension}\'', [
+      Request::getLog()->notice( 'Missing environment ({environment}) in \'{extension}\'', [
         'environment' => $value,
         'extension'   => $this->extension->id
       ], 'framework:extension.configuration' );

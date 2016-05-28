@@ -1,7 +1,7 @@
 # setup the framework' environment
-setEnv ENVIRONMENT_TYPE   production
-setEnv ENVIRONMENT_REPORT none
-setEnv ENVIRONMENT_LOG    warning
+SetEnv ENVIRONMENT_TYPE   production
+SetEnv ENVIRONMENT_REPORT none
+SetEnv ENVIRONMENT_LOG    warning
 
 # setup the rewrite engine
 <IfModule mod_rewrite.c>

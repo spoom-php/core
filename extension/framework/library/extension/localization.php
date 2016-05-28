@@ -79,7 +79,7 @@ class Localization extends Storage\File implements LocalizationInterface {
    * @return bool
    */
   protected function validate( $name ) {
-    return is_string( $name ) && is_dir( _PATH_BASE . $this->_path . $name . '/' );
+    return is_string( $name ) && is_dir( \Framework::PATH_BASE . $this->_path . $name . '/' );
   }
   /**
    * @param string      $namespace
