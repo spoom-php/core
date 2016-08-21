@@ -669,14 +669,13 @@ class Storage extends Library implements StorageInterface {
    */
   private function index( $index ) {
 
-    if( is_string( $index ) && isset( $this->cache[ 'index' ][ $index ] ) ) return $this->cache[ 'index' ][ $index ];
-    else {
+    if( !is_string( $index ) || !isset( $this->cache[ 'index' ][ $index ] ) ) {
 
       $result                           = $this->parse( $index );
-      $this->cache[ 'index' ][ $index ] = &$result;
-
-      return $result;
+      $this->cache[ 'index' ][ $index ] = $result;
     }
+
+    return clone $this->cache[ 'index' ][ $index ];
   }
   /**
    * Process the storage getter result. This will convert the result to the right type
