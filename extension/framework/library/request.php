@@ -2,7 +2,6 @@
 
 use Framework\Exception\Collector;
 use Framework\Exception\Strict;
-use Framework\Extension;
 use Framework\Helper\Library;
 use Framework\Helper\Log;
 
@@ -179,7 +178,7 @@ class Request extends Library {
   public static function failure( $level, $code, $message, $file, $trace ) {
 
     // log the fail
-    self::getLog()->create( 'Unexpected code failing: #{code} with \'{message}\' message, at \'{file}\'', [
+    self::getLog()->create( 'Unexpected code failure: #{code} with \'{message}\' message, at \'{file}\'', [
       'code'    => $code,
       'message' => $message,
       'file'    => $file,
@@ -187,14 +186,16 @@ class Request extends Library {
     ], 'framework:request', $level );
 
     // throw an exception that match the fail level
-    // TODO this should affected by the Framework::reportLevel()?!
-    $type = Exception\Helper::getType( $level );
-    if( $type ) throw new Exception\Strict( self::EXCEPTION_FAIL . $type, [
-      'code'    => $code,
-      'message' => $message,
-      'file'    => $file,
-      'trace'   => $trace
-    ] );
+    if( $level <= \Framework::getReport() ) {
+
+      $type = Exception\Helper::getType( $level );
+      if( $type ) throw new Exception\Strict( self::EXCEPTION_FAIL . $type, [
+        'code'    => $code,
+        'message' => $message,
+        'file'    => $file,
+        'trace'   => $trace
+      ] );
+    }
 
     return false;
   }
