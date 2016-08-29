@@ -1,295 +1,124 @@
 <?php namespace Framework\Helper;
 
-use Framework\Extension;
-use Framework\Request;
-use Framework\Storage;
+use Framework\Exception;
 
 /**
- * Class Converter
+ * Interface ConverterInterface
+ *
+ * TODO handle errors (failable interface?!)
+ *
  * @package Framework\Helper
- *
- * @since   0.6.0
- *
- * @property bool $native Use only the native converters, do not trigger the event
  */
-class Converter extends Library implements FeasibleInterface {
-  use Feasible {
-    execute as executeFeasible;
-  }
+interface ConverterInterface extends LibraryInterface {
+
+  const EXCEPTION_INVALID_META = 'framework#0E';
 
   /**
-   * Event triggered when a content is being serialized. The result MAY contains string values, and the last result will be used if any. The serialize can
-   * be prevented. Arguments:
-   *  - content [mixed]: The content to serialize
-   *  - meta [ConverterMeta]: The meta for the content
-   */
-  const EVENT_SERIALIZE = 'helper.converter.serialize';
-  /**
-   * Event triggered when a string content is being unserialized. The result MAY contains values, and the last result will be used if any. The unserialize can
-   * be prevented. Arguments:
-   *  - content [string]: The content to unserialize
-   *  - meta [ConverterMeta]: The meta for the content
-   */
-  const EVENT_UNSERIALIZE = 'helper.converter.unserialize';
-
-  /**
-   * Use only the native converters, do not trigger the event
+   * Serialize the content to a formatted (based on the meta property) string
    *
-   * @var bool
-   */
-  protected $_native = false;
-
-  /**
-   * @inheritDoc
-   *
-   * @return mixed
-   */
-  public function execute( $name, $arguments = null ) {
-    return $this->executeFeasible( $name, $arguments );
-  }
-
-  /**
-   * Serialize any content to a formatted (the output format specified by the meta property) string
-   *
-   * @param mixed         $content The content to serialize
-   * @param ConverterMeta $meta    The meta for the serialization
+   * @param mixed $content The content to serialize
    *
    * @return string|null
    */
-  public function serialize( $content, ConverterMeta $meta ) {
-
-    // try to call a converter event
-    if( !$this->_native ) {
-
-      $extension = Extension::instance( 'framework' );
-      $event     = $extension->trigger( self::EVENT_SERIALIZE, [
-        'content' => $content,
-        'meta'    => $meta
-      ] );
-      if( $event->prevented || !empty( $event->result ) ) {
-        return !empty( $event->result ) ? (string) array_pop( $event->result ) : null;
-      }
-    }
-
-    // if the event wasn't successfull, try to call the native converters
-    $method = 'serialize.' . mb_strtolower( $meta->format );
-    if( $this->method( $method, true ) ) return $this->execute( $method, [ 'content' => $content, 'meta' => $meta ] );
-    else {
-
-      // log: warning
-      Request::getLog()->warning( 'Missing serializer for \'{format}\'', [
-        'content' => $content,
-        'format'  => $meta->format,
-        'meta'    => $meta,
-        'trace'   => debug_backtrace()
-      ], 'framework:helper.converter' );
-
-      return null;
-    }
-  }
+  public function serialize( $content );
   /**
-   * Unserialize string that in a (meta defined) format into a php value
+   * Unserialize string into a php value
    *
-   * @param string        $content The content to unserialize
-   * @param ConverterMeta $meta    The meta data for the unserialization
+   * @param string $content The content to unserialize
    *
    * @return mixed
    */
-  public function unserialize( $content, ConverterMeta $meta ) {
-
-    // try to call a converter event
-    if( !$this->_native ) {
-
-      $extension = Extension::instance( 'framework' );
-      $event     = $extension->trigger( self::EVENT_UNSERIALIZE, [
-        'content' => $content,
-        'meta'    => $meta
-      ] );
-      if( $event->prevented || !empty( $event->result ) ) {
-        return !empty( $event->result ) ? (string) array_pop( $event->result ) : null;
-      }
-    }
-
-    // if the event wasn't successfull, try to call the native converters
-    $method = 'unserialize.' . mb_strtolower( $meta->format );
-    if( $this->method( $method, true ) ) return $this->execute( $method, [ 'content' => $content, 'meta' => $meta ] );
-    else {
-
-      // log: warning
-      Request::getLog()->warning( 'Missing unserializer for \'{format}\' permanent storages', [
-        'content' => $content,
-        'format'  => $meta->format,
-        'meta'    => $meta,
-        'trace'   => debug_backtrace()
-      ], 'framework:helper.converter' );
-
-      return null;
-    }
-  }
+  public function unserialize( $content );
 
   /**
-   * Php is a typesecure storage type. What type comes to write out, it will came back as the same type. Other
-   * advantage is the data security: No one can see the contents from outside the server, even if the server
-   * missconfigured for other storage types. Major disadvantage of this file type is the human read/write ability.
-   *
-   * @param mixed $content Content to serialize
-   *
-   * @return string
-   *
-   */
-  protected function serializePhp( $content ) {
-    return '<?php /*{' . serialize( $content ) . '}*/';
-  }
-  /**
-   * Unserializer for the PHP format
-   *
-   * @param string $content Content to unseraialize
-   *
    * @return mixed
    */
-  protected function unserializePhp( $content ) {
-    return unserialize( preg_replace( '/^(<\\?php\\s*\\/\\*{)/i', '', preg_replace( '/(}\\s*\\*\\/)$/i', '', $content ) ) );
-  }
+  public function getMeta();
+  /**
+   * @param mixed $value
+   *
+   * @return $this
+   * @throws Exception\Strict
+   */
+  public function setMeta( $value );
 
   /**
-   * A really oldschool format and it is exists only for compatibility reasons, new systems SHOULD NOT be stored in this type. Multi array structure converted
-   * ( and parsed back ) into dot separated keys but there is no support for sections ( can't convert it back easily so don't bother with it anyway )
-   *
-   * @see \Framework\Helper\Enumerable::toIni()
-   *
-   * @param mixed $content Content to serialize
-   *
-   * @return string
+   * @return string The name of the format that the converter use
    */
-  protected function serializeIni( $content ) {
-    return Enumerable::toIni( $content );
-  }
+  public function getFormat();
   /**
-   * Unserializer for INI format
-   *
-   * @see \Framework\Helper\Enumerable::fromIni()
-   *
-   * @param string $content Content to unserialize
-   *
-   * @return mixed
+   * @return string The unique name of the converter
    */
-  protected function unserializeIni( $content ) {
-    return Enumerable::fromIni( $content );
-  }
-
-  /**
-   * Json format serializer. It will write out the json in human readable format, but don't support any comment type. Maybe in the next releases. This is the
-   * default and prefered format
-   *
-   * @see \Framework\Helper\Enumerable::toJson()
-   *
-   * @param mixed $content Content to serialize
-   *
-   * @return string
-   */
-  protected function serializeJson( $content ) {
-    return Enumerable::toJson( $content, JSON_PRETTY_PRINT );
-  }
-  /**
-   * Unserializer for JSON format
-   *
-   * @see \Framework\Helper\Enumerable::fromJson()
-   *
-   * @param string $content Content to unserialize
-   *
-   * @return mixed
-   */
-  protected function unserializeJson( $content ) {
-
-    $json = Enumerable::fromJson( $content, false );
-    return $json ? (array) $json : $json;
-  }
-
-  /**
-   * XML converter based on the Enumberable class xml related methods
-   *
-   * @see      \Framework\Helper\Enumerable::toXml()
-   *
-   * @param mixed         $content Content to serialize
-   * @param ConverterMeta $meta    Custom meta storage that allow proper serialization (back) of the xml properties
-   *
-   * @return string
-   */
-  protected function serializeXml( $content, ConverterMeta $meta ) {
-    return Enumerable::toXml(
-      $content,
-      $meta->getArray( 'attribute' ),
-      'storage',
-      $meta->getString( 'version', '1.0' ),
-      $meta->getString( 'encoding', 'UTF-8' )
-    )->asXML();
-  }
-  /**
-   * XML converter based on the Enumberable class xml related methods
-   *
-   * @see      \Framework\Helper\Enumerable::fromXml()
-   *
-   * @param string        $content Content to unserialize
-   * @param ConverterMeta $meta    Custom meta storage that allow proper serialization (back) of the xml properties
-   *
-   * @return mixed
-   */
-  protected function unserializeXml( $content, ConverterMeta $meta ) {
-
-    $attribute = [ ];
-    $version   = null;
-    $encoding  = null;
-
-    $tmp = Enumerable::fromXml( $content, $attribute, $version, $encoding );
-    $meta->set( '', [ 'attribute' => $attribute, 'version' => $version, 'encoding' => $encoding ] );
-
-    return $tmp;
-  }
-
-  /**
-   * @return boolean
-   */
-  public function isNative() {
-    return $this->_native;
-  }
-  /**
-   * @param boolean $value
-   */
-  public function setNative( $value ) {
-    $this->_native = (bool) $value;
-  }
+  public function getName();
 }
 /**
- * Class ConverterMeta
+ * Class ConverterCollection
  * @package Framework\Helper
  *
  * @since   0.6.0
- *
- * @property-read string $format The format of the storage
  */
-class ConverterMeta extends Storage {
+class ConverterCollection extends Library {
 
   /**
-   * The storage format
+   * Try to add a non-ConverterInterface instance
+   */
+  const EXCEPTION_INVALID_CONVERTER = 'framework#0E';
+
+  /**
+   * Available converters
    *
-   * @var string
+   * @var ConverterInterface[]
    */
-  protected $_format;
+  private $_list = [];
 
   /**
-   * @param string $format The format of the storage
-   * @param array  $data   The initial data
+   * @param ConverterInterface[] $list
    */
-  public function __construct( $format, $data = [ ] ) {
-    parent::__construct( $data, null, self::CACHE_NONE );
-
-    $this->_format = $format;
+  public function __construct( $list = [] ) {
+    foreach( $list as $converter ) {
+      $this->add( $converter );
+    }
   }
 
   /**
-   * @return string
+   * Add a new converter to the collection
+   *
+   * @param ConverterInterface $converter
+   * @param bool               $overwrite Overwrite the exists converter with the same name
+   *
+   * @return $this
+   * @throws Exception\Strict
    */
-  public function getFormat() {
-    return $this->_format;
+  public function add( $converter, $overwrite = true ) {
+
+    if( !( $converter instanceof ConverterInterface ) ) throw new Exception\Strict( static::EXCEPTION_INVALID_CONVERTER );
+    else {
+
+      $format = $converter->getFormat();
+      $tmp    = isset( $this->_list[ $format ] ) ? $this->_list[ $format ] : null;
+      if( empty( $tmp ) || $overwrite ) $this->_list[ $format ] = $converter;
+
+      return $this;
+    }
+  }
+  /**
+   * Remove a converter (or all converter) from the list, based on the format
+   *
+   * @param string|null $format The format of the converter, or null for remove all
+   */
+  public function remove( $format = null ) {
+
+    if( empty( $format ) ) $this->_list = [];
+    else unset( $this->_list[ (string) $format ] );
+  }
+  /**
+   * Get a converter (or all converter) from the collection, based on the format
+   *
+   * @param string|null $format The name of the converter, or empty for all
+   *
+   * @return ConverterInterface|ConverterInterface[]|null
+   */
+  public function get( $format = null ) {
+    return empty( $format ) ? $this->_list : ( isset( $this->_list[ $format ] ) ? $this->_list[ $format ] : null );
   }
 }

@@ -1,7 +1,5 @@
 <?php namespace Framework\Extension;
 
-use Framework\Extension;
-
 /**
  * Class Helper
  * @package Framework\Extension

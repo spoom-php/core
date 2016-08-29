@@ -1,6 +1,5 @@
 <?php namespace Framework\Helper;
 
-use Framework\Extension;
 use Framework\Request;
 
 /**

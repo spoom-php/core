@@ -3,6 +3,7 @@
 use Framework\Extension;
 use Framework\Request;
 use Framework\Storage;
+use Framework\Helper\Converter;
 
 /**
  * Interface ConfigurationInterface
@@ -61,7 +62,11 @@ class Configuration extends Storage\File implements ConfigurationInterface {
    * @param Extension $source
    */
   public function __construct( Extension $source ) {
-    parent::__construct( $source->directory( '' ) . Extension::DIRECTORY_CONFIGURATION );
+    parent::__construct( $source->directory( '' ) . Extension::DIRECTORY_CONFIGURATION, [
+      new Converter\Json( JSON_PRETTY_PRINT ),
+      new Converter\Xml(),
+      new Converter\Ini()
+    ] );
 
     $this->_extension = $source;
   }
@@ -139,8 +144,8 @@ class Configuration extends Storage\File implements ConfigurationInterface {
     // clear meta/cache/storage when the environment has changed
     if( $this->_environment != $tmp ) {
 
-      $this->_source = [ ];
-      $this->meta    = [ ];
+      $this->_source         = [];
+      $this->converter_cache = [];
       $this->clean();
     }
   }

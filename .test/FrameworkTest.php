@@ -15,8 +15,8 @@ class FrameworkTest extends PHPUnit_Framework_TestCase {
     $this->assertEquals( '\Framework\Storage', \Framework::library( 'framework:storage' ) );
 
     // nested extension class loading
-    $this->assertEquals( '\Framework\Helper\ConverterMeta', \Framework::library( 'Framework\Helper\ConverterMeta' ) );
-    $this->assertEquals( '\framework\helper\ConverterMeta', \Framework::library( 'framework:helper.ConverterMeta' ) );
+    $this->assertEquals( '\Framework\Helper\ConverterCollection', \Framework::library( 'Framework\Helper\ConverterCollection' ) );
+    $this->assertEquals( '\framework\helper\ConverterCollection', \Framework::library( 'framework:helper.ConverterCollection' ) );
   }
 
   /**

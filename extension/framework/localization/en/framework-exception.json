@@ -23,7 +23,7 @@
   "#20N": "Missing class property ({property})",
   "#21C": "Invalid or missing configuration storage ({class}) for the '{extension}' extension",
   "#22C": "Invalid or missing localization storage ({class}) for the '{extension}' extension",
-  "#23W": "There is no meta data for the '{namespace}' namespace",
+  "#23W": "There is no converter for the '{namespace}' namespace",
 
   "#24E": "Listener' library is missing: {value}",
   "#25E": "Invalid listener. Must implement the Listener::CLASS_LIBRARY interface",

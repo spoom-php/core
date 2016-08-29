@@ -1,7 +1,6 @@
 <?php namespace Framework;
 
 use Framework\Exception\Helper;
-use Framework\Extension;
 use Framework\Helper\Enumerable;
 use Framework\Helper\Library;
 use Framework\Helper\LibraryInterface;
