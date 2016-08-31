@@ -28,6 +28,11 @@ class FrameworkTest extends PHPUnit_Framework_TestCase {
     // add custom namespace path
     \Framework::connect( 'Custom\NS', \Framework::PATH_BASE . '.test/FrameworkTest/' );
 
+    // test every definition type 
+    $this->assertEquals( '\Custom\NS\TestClass', \Framework::library( 'Custom\NS\TestClass' ) );
+    $this->assertEquals( '\Custom\NS\TestInterface', \Framework::library( 'Custom\NS\TestInterface' ) );
+    $this->assertEquals( '\Custom\NS\TestTrait', \Framework::library( 'Custom\NS\TestTrait' ) );
+    
     // try complex named nested class loading from the custom namespace
     $this->assertEquals( '\Custom\NS\POP3MailerClAsS', \Framework::library( 'Custom\NS\POP3MailerClAsS' ) );
     $this->assertEquals( '\Custom\NS\SMTPMailer_Class', \Framework::library( 'Custom\NS\SMTPMailer_Class' ) );
