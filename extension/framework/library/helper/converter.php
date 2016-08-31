@@ -9,9 +9,11 @@ use Framework\Exception;
  *
  * @package Framework\Helper
  */
-interface ConverterInterface extends LibraryInterface {
+interface ConverterInterface extends LibraryInterface, FailableInterface {
 
-  const EXCEPTION_INVALID_META = 'framework#0E';
+  const EXCEPTION_INVALID_META     = 'framework#0E';
+  const EXCEPTION_FAIL_SERIALIZE   = 'framework#0E';
+  const EXCEPTION_FAIL_UNSERIALIZE = 'framework#0E';
 
   /**
    * Serialize the content to a formatted (based on the meta property) string
@@ -52,12 +54,10 @@ interface ConverterInterface extends LibraryInterface {
   public function getName();
 }
 /**
- * Class ConverterCollection
+ * Class Converter
  * @package Framework\Helper
- *
- * @since   0.6.0
  */
-class ConverterCollection extends Library {
+class Converter extends Library {
 
   /**
    * Try to add a non-ConverterInterface instance
@@ -78,6 +78,12 @@ class ConverterCollection extends Library {
     foreach( $list as $converter ) {
       $this->add( $converter );
     }
+  }
+  /**
+   *
+   */
+  function __clone() {
+    $this->_list = Enumerable::copy( $this->_list );
   }
 
   /**

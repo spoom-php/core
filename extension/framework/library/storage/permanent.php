@@ -44,7 +44,7 @@ interface PermanentInterface extends StorageInterface, Helper\FailableInterface 
   /**
    * Get the converter object that parse and build the input and output object/string
    *
-   * @return Helper\ConverterCollection
+   * @return Helper\Converter
    */
   public function getConverter();
   /**
@@ -82,12 +82,13 @@ interface PermanentInterface extends StorageInterface, Helper\FailableInterface 
  * TODO add write- and readable feature
  * TODO add support for full index save/load/remove?!
  *
- * @property-read Exception|null             $exception The latest exception object
- * @property-read Helper\ConverterCollection $converter The converter object that parse and build the input and output object/string
- * @property      bool                       $auto      Autoload the namespaces or not
- * @property      string                     $format    The default format for saving
+ * @property-read Exception|null   $exception The latest exception object
+ * @property-read Helper\Converter $converter The converter object that parse and build the input and output object/string
+ * @property      bool             $auto      Autoload the namespaces or not
+ * @property      string           $format    The default format for saving
  */
 abstract class Permanent extends Storage implements PermanentInterface {
+  use Helper\Failable;
 
   /**
    * There is no converter for a namespace to able to read/write the data. Data:
@@ -125,15 +126,9 @@ abstract class Permanent extends Storage implements PermanentInterface {
    */
   protected $converter_cache = [];
   /**
-   * Store the latest exception
-   *
-   * @var Exception|null
-   */
-  protected $_exception;
-  /**
    * The converter list. Store the available converters
    *
-   * @var Helper\ConverterCollection
+   * @var Helper\Converter
    */
   protected $_converter;
   /**
@@ -159,7 +154,7 @@ abstract class Permanent extends Storage implements PermanentInterface {
     parent::__construct( $data, $namespace, $caching );
 
     // setup the converters
-    $this->_converter = new Helper\ConverterCollection( $converters );
+    $this->_converter = new Helper\Converter( $converters );
     if( count( $converters ) ) $this->setFormat( $converters[ 0 ]->getFormat() );
   }
 
@@ -182,7 +177,7 @@ abstract class Permanent extends Storage implements PermanentInterface {
    * @return $this
    */
   public function save( $namespace = null, $format = null ) {
-    $this->reset();
+    $this->setException();
 
     try {
 
@@ -214,8 +209,9 @@ abstract class Permanent extends Storage implements PermanentInterface {
         else if( !$event->isPrevented() ) {
 
           // save and perform the conversion
-          $content                             = $converter->serialize( $content );
-          $this->converter_cache[ $namespace ] = $converter;
+          $content = $converter->serialize( $content );
+          if( $converter->getException() ) throw $converter->getException();
+          else $this->converter_cache[ $namespace ] = $converter;
 
           // do the native saving
           $this->write( $content, $namespace );
@@ -223,7 +219,7 @@ abstract class Permanent extends Storage implements PermanentInterface {
       }
 
     } catch( \Exception $e ) {
-      $this->_exception = Exception\Helper::wrap( $e )->log();
+      $this->setException( $e );
     }
 
     return $this;
@@ -236,7 +232,7 @@ abstract class Permanent extends Storage implements PermanentInterface {
    * @return $this
    */
   public function load( $namespace = null ) {
-    $this->reset();
+    $this->setException();
 
     try {
 
@@ -271,8 +267,10 @@ abstract class Permanent extends Storage implements PermanentInterface {
 
           // convert and set the namespace's data
           if( !empty( $content ) ) {
-            $this->converter_cache[ $namespace ] = $converter;
-            $content                             = $converter->unserialize( $content );
+
+            $content = $converter->unserialize( $content );
+            if( $converter->getException() ) throw $converter->getException();
+            else $this->converter_cache[ $namespace ] = $converter;
           }
 
           $index = $namespace ? ( $namespace . self::SEPARATOR_NAMESPACE ) : '';
@@ -281,7 +279,7 @@ abstract class Permanent extends Storage implements PermanentInterface {
       }
 
     } catch( \Exception $e ) {
-      $this->_exception = Exception\Helper::wrap( $e )->log();
+      $this->setException( $e );
     }
 
     return $this;
@@ -294,7 +292,7 @@ abstract class Permanent extends Storage implements PermanentInterface {
    * @return $this
    */
   public function remove( $namespace = null ) {
-    $this->reset();
+    $this->setException();
 
     try {
 
@@ -321,18 +319,12 @@ abstract class Permanent extends Storage implements PermanentInterface {
       }
 
     } catch( \Exception $e ) {
-      $this->_exception = Exception\Helper::wrap( $e )->log();
+      $this->setException( $e );
     }
 
     return $this;
   }
 
-  /**
-   * Reset the exception state
-   */
-  protected function reset() {
-    $this->_exception = null;
-  }
   /**
    * @inheritdoc. Setup the autoloader for namespaces
    */
@@ -340,7 +332,13 @@ abstract class Permanent extends Storage implements PermanentInterface {
 
     // try to load the storage data if there is no already
     if( $this->isAuto() && !array_key_exists( $index->namespace, $this->converter_cache ) ) {
+
       $this->load( $index->namespace );
+      if( $this->getException() ) {
+
+        // log exceptions for autoloading
+        Exception\Helper::wrap( $this->getException() )->log();
+      }
     }
 
     // delegate problem to the parent
@@ -348,13 +346,7 @@ abstract class Permanent extends Storage implements PermanentInterface {
   }
 
   /**
-   * @return Exception|null
-   */
-  public function getException() {
-    return $this->_exception;
-  }
-  /**
-   * @return Helper\ConverterCollection
+   * @return Helper\Converter
    */
   public function getConverter() {
     return $this->_converter;

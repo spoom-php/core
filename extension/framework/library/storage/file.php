@@ -97,7 +97,6 @@ class File extends Permanent {
    * @throws Exception
    */
   public function save( $namespace = null, $format = null ) {
-    $this->reset();
 
     // save previous file data for later
     $previous = null;
@@ -110,23 +109,25 @@ class File extends Permanent {
       $previous->path = $this->getFile( $namespace, $previous->meta->getName(), $previous->exist );
 
     } catch( \Exception $e ) {
-      $this->_exception = Exception\Helper::wrap( $e );
-      $this->_exception->log();
+      Exception\Helper::wrap( $e )->log();
     }
 
     // do the saving like normal
     parent::save( $namespace, $format );
+    if( !$this->getException() ) {
 
-    // clean the previous file, if there is no need for it
-    if( isset( $this->converter_cache[ $namespace ] ) && !empty( $previous->exist ) && $previous->meta != $this->converter_cache[ $namespace ] ) try {
+      // clean the previous file, if there is no need for it
+      if( isset( $this->converter_cache[ $namespace ] ) && !empty( $previous->exist ) && $previous->meta != $this->converter_cache[ $namespace ] ) try {
 
-      $this->destroyFile( $previous->path );
+        $this->destroyFile( $previous->path );
 
-    } catch( \Exception $e ) {
-      $this->_exception = new Exception\System( self::EXCEPTION_FAIL_CLEAN, [ 'path' => $previous->path, 'meta' => $previous->meta ], $e );
-      $this->_exception->log();
+      } catch( \Exception $e ) {
+        $this->setException( new Exception\System( self::EXCEPTION_FAIL_CLEAN, [
+          'path' => $previous->path,
+          'meta' => $previous->meta
+        ], $e ) );
+      }
     }
-
     return $this;
   }
 

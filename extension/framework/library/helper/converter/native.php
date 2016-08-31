@@ -2,6 +2,7 @@
 
 use Framework\Exception;
 use Framework\Helper\ConverterInterface;
+use Framework\Helper\Failable;
 use Framework\Helper\Library;
 
 /**
@@ -9,7 +10,8 @@ use Framework\Helper\Library;
  * @package Framework\Helper\Converter
  */
 class Native extends Library implements ConverterInterface {
-
+  use Failable;
+  
   const FORMAT = 'pser';
   const NAME   = 'native';
 
@@ -19,7 +21,15 @@ class Native extends Library implements ConverterInterface {
    * @return string
    */
   public function serialize( $content ) {
-    return serialize( $content );
+    $this->setException();
+
+    try {
+      return serialize( $content );
+    } catch( \Exception $e ) {
+      $this->setException( $e );
+    }
+
+    return null;
   }
   /**
    * @param string $content Content to unseraialize
@@ -27,7 +37,15 @@ class Native extends Library implements ConverterInterface {
    * @return mixed
    */
   public function unserialize( $content ) {
-    return unserialize( $content );
+    $this->setException();
+
+    try {
+      return unserialize( $content );
+    } catch( \Exception $e ) {
+      $this->setException( $e );
+    }
+
+    return null;
   }
 
   /**

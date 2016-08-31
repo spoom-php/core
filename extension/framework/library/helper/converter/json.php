@@ -2,6 +2,7 @@
 
 use Framework\Exception;
 use Framework\Helper\ConverterInterface;
+use Framework\Helper\Failable;
 use Framework\Helper\Library;
 
 /**
@@ -9,6 +10,7 @@ use Framework\Helper\Library;
  * @package Framework\Helper\Converter
  */
 class Json extends Library implements ConverterInterface {
+  use Failable;
 
   const FORMAT = 'json';
   const NAME   = 'json';
@@ -26,7 +28,9 @@ class Json extends Library implements ConverterInterface {
   public function __construct( $options = 0, $depth = 512, $associative = false ) {
     $this->_meta = $options instanceof JsonMeta ? $options : new JsonMeta( $options, $depth, $associative );
   }
-
+  /**
+   *
+   */
   function __clone() {
     $this->_meta = clone $this->_meta;
   }
@@ -37,11 +41,28 @@ class Json extends Library implements ConverterInterface {
    * @return string
    */
   public function serialize( $content ) {
+    $this->setException();
 
     // FIXME clear resource types from the json (use JSON_PARTIAL_OUTPUT_ON_ERROR after PHP5.5)
 
-    $result = json_encode( $content, $this->_meta->options );
-    return json_last_error() == JSON_ERROR_NONE ? $result : null;
+    $result = null;
+    try {
+
+      $result = json_encode( $content, $this->_meta->options );
+      if( json_last_error() != JSON_ERROR_NONE ) {
+        $result = null;
+        throw new Exception\Strict( static::EXCEPTION_FAIL_SERIALIZE, [
+          'instance' => $this,
+          'content'  => $content,
+          'error'    => [ json_last_error(), json_last_error_msg() ]
+        ] );
+      }
+
+    } catch( \Exception $e ) {
+      $this->setException( $e );
+    }
+
+    return $result;
   }
   /**
    * @param string $content Content to unserialize
@@ -49,9 +70,26 @@ class Json extends Library implements ConverterInterface {
    * @return mixed
    */
   public function unserialize( $content ) {
+    $this->setException();
 
-    $tmp = json_decode( $content, $this->_meta->associative, $this->_meta->depth, $this->_meta->options );
-    return json_last_error() == JSON_ERROR_NONE ? $tmp : null;
+    $result = null;
+    try {
+
+      $result = json_decode( $content, $this->_meta->associative, $this->_meta->depth, $this->_meta->options );
+      if( json_last_error() != JSON_ERROR_NONE ) {
+        $result = null;
+        throw new Exception\Strict( static::EXCEPTION_FAIL_UNSERIALIZE, [
+          'instance' => $this,
+          'content'  => $content,
+          'error'    => [ json_last_error(), json_last_error_msg() ]
+        ] );
+      }
+
+    } catch( \Exception $e ) {
+      $this->setException( $e );
+    }
+
+    return $result;
   }
 
   /**

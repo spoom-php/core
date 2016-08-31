@@ -3,6 +3,7 @@
 use Framework\Exception;
 use Framework\Helper\ConverterInterface;
 use Framework\Helper\Enumerable;
+use Framework\Helper\Failable;
 use Framework\Helper\Library;
 
 /**
@@ -10,7 +11,8 @@ use Framework\Helper\Library;
  * @package Framework\Helper\Converter
  */
 class Xml extends Library implements ConverterInterface {
-
+  use Failable;
+  
   const FORMAT = 'xml';
   const NAME   = 'xml';
 
@@ -26,7 +28,9 @@ class Xml extends Library implements ConverterInterface {
   public function __construct( $version = '1.0', $encoding = 'UTF-8' ) {
     $this->_meta = $version instanceof XmlMeta ? $version : ( new XmlMeta( $version, $encoding ) );
   }
-
+  /**
+   *
+   */
   function __clone() {
     $this->_meta = clone $this->_meta;
   }
@@ -37,12 +41,13 @@ class Xml extends Library implements ConverterInterface {
    * @return string
    */
   public function serialize( $content ) {
-
+    $this->setException();
+    
     // create dom and the root element
     $dom = new \DOMDocument( $this->_meta->version, $this->_meta->encoding );
     $dom->appendChild( $root = $dom->createElement( $this->_meta->root ) );
 
-    // walk trought the enumerable and build the xml
+    // walk trough the enumerable and build the xml
     $objects = [ (object) [ 'element' => &$root, 'data' => $content, 'name' => $this->_meta->root, 'key' => '' ] ];
     while( $object = array_shift( $objects ) ) {
       /** @var \DOMElement $element */
@@ -85,7 +90,8 @@ class Xml extends Library implements ConverterInterface {
    * @return mixed
    */
   public function unserialize( $content ) {
-
+    $this->setException();
+    
     $this->_meta->attributes = [];
 
     // collect encoding and version from xml data
@@ -94,7 +100,11 @@ class Xml extends Library implements ConverterInterface {
 
     if( !$dom->loadXML( $content ) ) {
 
-      // TODO log: notice
+      $this->setException( new Exception\Strict( static::EXCEPTION_FAIL_UNSERIALIZE, [
+        'instance' => $this,
+        'content'  => $content,
+        'error'    => libxml_get_last_error()
+      ] ) );
 
     } else {
 
