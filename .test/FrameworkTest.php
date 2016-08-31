@@ -15,8 +15,8 @@ class FrameworkTest extends PHPUnit_Framework_TestCase {
     $this->assertEquals( '\Framework\Storage', \Framework::library( 'framework:storage' ) );
 
     // nested extension class loading
-    $this->assertEquals( '\Framework\Helper\ConverterCollection', \Framework::library( 'Framework\Helper\ConverterCollection' ) );
-    $this->assertEquals( '\framework\helper\ConverterCollection', \Framework::library( 'framework:helper.ConverterCollection' ) );
+    $this->assertEquals( '\Framework\Storage\PermanentInterface', \Framework::library( 'Framework\Storage\PermanentInterface' ) );
+    $this->assertEquals( '\framework\storage\PermanentInterface', \Framework::library( 'framework:storage.PermanentInterface' ) );
   }
 
   /**
@@ -26,6 +26,11 @@ class FrameworkTest extends PHPUnit_Framework_TestCase {
 
     // add custom namespace path
     \FrameworkImport::define( 'Custom\\NS', \Framework::PATH_BASE . '.test/FrameworkTest/' );
+
+    // test every definition type 
+    $this->assertEquals( '\Custom\NS\TestClass', \Framework::library( 'Custom\NS\TestClass' ) );
+    $this->assertEquals( '\Custom\NS\TestInterface', \Framework::library( 'Custom\NS\TestInterface' ) );
+    $this->assertEquals( '\Custom\NS\TestTrait', \Framework::library( 'Custom\NS\TestTrait' ) );
 
     // try complex named nested class loading from the custom namespace
     $this->assertEquals( '\Custom\NS\POP3MailerClAsS', \Framework::library( 'Custom\NS\POP3MailerClAsS' ) );

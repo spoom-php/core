@@ -371,7 +371,7 @@ class FrameworkImport {
    *
    * @var array[string]string
    */
-  private static $definition = [ ];
+  private static $definition = [];
 
   /**
    * Add custom namespace root directory for the importer
@@ -404,7 +404,7 @@ class FrameworkImport {
   public static function load( $class ) {
 
     // do not import class that is exists already
-    if( class_exists( $class, false ) ) return true;
+    if( self::exist( $class ) ) return true;
     else {
 
       // fix for absolute class definitions
@@ -418,7 +418,7 @@ class FrameworkImport {
           $name = array_pop( $path );
 
           // return when the loader find a perfect match, and the class really exist
-          if( self::search( $name, $path, $directory ) && class_exists( $class, false ) ) {
+          if( self::search( $name, $path, $directory ) && self::exist( $class ) ) {
             return true;
           }
         }
@@ -436,7 +436,7 @@ class FrameworkImport {
         else {
 
           $root = Framework::PATH_BASE . Framework::PATH_EXTENSION . $extension . '/' . Framework::EXTENSION_LIBRARY;
-          if( self::search( $name, $path, $root ) && class_exists( $class, false ) ) {
+          if( self::search( $name, $path, $root ) && self::exist( $class ) ) {
             return true;
           }
         }
@@ -444,6 +444,16 @@ class FrameworkImport {
 
       return false;
     }
+  }
+  /**
+   * Check for class, interface or trait existance
+   *
+   * @param string $name The fully qualified name (with namespace)
+   *
+   * @return bool True, if already loaded
+   */
+  public static function exist( $name ) {
+    return class_exists( $name, false ) || interface_exists( $name, false ) || trait_exists( $name );
   }
 
   /**
@@ -518,13 +528,13 @@ class FrameworkImport {
    */
   protected static function explode( $name ) {
 
-    $result  = [ ];
+    $result  = [];
     $buffer  = '';
     $counter = 0;
     for( $uppercase = ctype_upper( $name{0} ), $count = strlen( $name ), $i = 0; $i < $count; ++$i ) {
 
       $character = $name{$i};
-      if( $character == '_' ) return [ ];
+      if( $character == '_' ) return [];
       else if( !is_numeric( $character ) ) {
 
         $uppercase_now = ctype_upper( $character );

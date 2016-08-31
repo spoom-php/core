@@ -229,7 +229,7 @@ class Extension extends Library {
     foreach( $class_name as $name ) {
 
       $class = \Framework::library( $this->_id . ':' . $name );
-      if( class_exists( $class, true ) ) return $class;
+      if( $class ) return $class;
     }
 
     return false;
