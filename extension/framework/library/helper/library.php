@@ -1,7 +1,6 @@
 <?php namespace Framework\Helper;
 
 use Framework\Exception;
-use Framework\Extension;
 
 /**
  * Interface LibraryInterface
@@ -22,7 +21,7 @@ class Library implements LibraryInterface {
    *
    * @var string[string]
    */
-  private static $cache = [ ];
+  private static $cache = [];
 
   /**
    * There is no getter or setter for the requested property. Argument:

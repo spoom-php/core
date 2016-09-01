@@ -1,7 +1,7 @@
 <?php namespace Framework\Storage;
 
 use Framework\Exception;
-use Framework\Helper;
+use Framework\Helper\ConverterInterface;
 
 /**
  * Class File
@@ -79,14 +79,15 @@ class File extends Permanent {
   protected $_path;
 
   /**
-   * @param string|null $path File or directory path base for the storage. The file MUST be without dot and extension and directories MUST end with '/'
-   * @param string      $base The base of the path
+   * @param string|null          $path       File or directory path base for the storage. The file MUST be without dot and extension and directories MUST end with '/'
+   * @param ConverterInterface[] $converters Default converters for the permanent storage. The first converter will be the default format
+   * @param int|string           $base       The base of the path
    */
-  public function __construct( $path, $base = \Framework::PATH_BASE ) {
+  public function __construct( $path, $converters = [], $base = \Framework::PATH_BASE ) {
     $this->_path = $path;
     $this->_base = (string) $base;
 
-    parent::__construct( null, $this->isMulti() ? 'default' : null, self::CACHE_NONE );
+    parent::__construct( null, $this->isMulti() ? 'default' : null, self::CACHE_NONE, $converters );
   }
 
   /**
@@ -95,32 +96,39 @@ class File extends Permanent {
    * @return $this
    * @throws Exception
    */
-  public function save( $format = null, $namespace = null ) {
+  public function save( $namespace = null, $format = null ) {
 
     // save previous file data for later
     $previous = null;
-    if( isset( $this->meta[ $namespace ] ) ) {
+    if( isset( $this->converter_cache[ $namespace ] ) ) try {
 
       $previous       = (object) [
         'exist' => false,
-        'meta'  => $this->meta[ $namespace ]
+        'meta'  => $this->converter_cache[ $namespace ]
       ];
-      $previous->path = $this->getFile( $namespace, $previous->meta->format, $previous->exist );
+      $previous->path = $this->getFile( $namespace, $previous->meta->getName(), $previous->exist );
+
+    } catch( \Exception $e ) {
+      Exception\Helper::wrap( $e )->log();
     }
 
     // do the saving like normal
-    $result = parent::save( $format, $namespace );
+    parent::save( $namespace, $format );
+    if( !$this->getException() ) {
 
-    // clean the previous file, if there is no need for it
-    if( isset( $this->meta[ $namespace ] ) && isset( $previous->exist ) && $previous->meta->format != $this->meta[ $namespace ]->format ) try {
+      // clean the previous file, if there is no need for it
+      if( isset( $this->converter_cache[ $namespace ] ) && !empty( $previous->exist ) && $previous->meta != $this->converter_cache[ $namespace ] ) try {
 
-      $this->destroyFile( $previous->path );
+        $this->destroyFile( $previous->path );
 
-    } catch( \Exception $e ) {
-      throw new Exception\System( self::EXCEPTION_FAIL_CLEAN, [ 'path' => $previous->path, 'meta' => $previous->meta ], $e );
+      } catch( \Exception $e ) {
+        $this->setException( new Exception\System( self::EXCEPTION_FAIL_CLEAN, [
+          'path' => $previous->path,
+          'meta' => $previous->meta
+        ], $e ) );
+      }
     }
-
-    return $result;
+    return $this;
   }
 
   /**
@@ -133,33 +141,29 @@ class File extends Permanent {
    */
   protected function write( $content, $namespace = null ) {
 
-    $exist = false;
-    $meta  = $this->meta[ $namespace ];
-    $path  = $this->getFile( $namespace, $meta->format, $exist );
+    $exist     = false;
+    $converter = $this->converter_cache[ $namespace ];
+    $path      = $this->getFile( $namespace, $converter->getFormat(), $exist );
 
-    $this->writeFile( $path, $content, $meta->get( 'permission', 0777 ) );
+    $this->writeFile( $path, $content, 0755 );
   }
   /**
    * Read the namespace file resource
    *
    * @param string|null $namespace
-   * @param null        $meta
    *
    * @return null|string
-   * @throws Exception\Strict
-   * @throws Exception\System
+   * @throws Exception
    */
-  protected function read( $namespace = null, &$meta = null ) {
+  protected function read( $namespace = null ) {
 
     $exist = false;
     $path  = $this->getFile( $namespace, null, $exist );
-
-    $meta = new Helper\ConverterMeta( $this->format );
     if( !$exist || !is_file( $this->_base . $path ) ) return null;
     else {
 
-      $result = $this->readFile( $path );
-      $meta   = new Helper\ConverterMeta( pathinfo( $path, PATHINFO_EXTENSION ) );
+      $result                              = $this->readFile( $path );
+      $this->converter_cache[ $namespace ] = $this->getConverter()->get( mb_strtolower( pathinfo( $path, PATHINFO_EXTENSION ) ) );
 
       return $result;
     }

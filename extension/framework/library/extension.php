@@ -25,7 +25,7 @@ class Extension extends Library {
    *
    * @var array[string]Extension
    */
-  private static $instance = [ ];
+  private static $instance = [];
 
   /**
    * Exception code for invalid manifest data. This mostly indicates the extension package and name
@@ -135,7 +135,9 @@ class Extension extends Library {
       else {
 
         $this->_directory = $directory;
-        $this->_manifest = new Storage\File( $this->_directory . 'manifest' );
+        $this->_manifest  = new Storage\File( $this->_directory . 'manifest', [
+          new Helper\Converter\Json( JSON_PRETTY_PRINT )
+        ] );
       }
     }
   }
@@ -195,7 +197,7 @@ class Extension extends Library {
    *
    * @param string  $file_name The file name ( use | and | for regexp file filter or * for directory listing )
    * @param string  $path      Path from the extension root
-   * @param boolean $root Add _PATH_BASE constant or another prefix for the path ( or nothing )
+   * @param boolean $root      Add _PATH_BASE constant or another prefix for the path ( or nothing )
    *
    * @return bool|string
    */
@@ -222,12 +224,12 @@ class Extension extends Library {
    * @return string|false
    */
   public function library( $class_name ) {
-    
+
     if( !is_array( $class_name ) ) $class_name = [ $class_name ];
     foreach( $class_name as $name ) {
 
       $class = \Framework::library( $this->_id . ':' . $name );
-      if( class_exists( $class, true ) ) return $class;
+      if( $class ) return $class;
     }
 
     return false;
@@ -261,7 +263,7 @@ class Extension extends Library {
    *
    * @return Framework\EventData
    */
-  public function trigger( $event, $arguments = [ ] ) {
+  public function trigger( $event, $arguments = [] ) {
 
     $event = Framework\Event::instance( $this->_id, $event );
     return $event->execute( $arguments );

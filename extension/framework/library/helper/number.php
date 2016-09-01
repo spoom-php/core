@@ -1,7 +1,5 @@
 <?php namespace Framework\Helper;
 
-use Framework\Exception;
-
 /**
  * Class Number
  * @package Framework\Helper

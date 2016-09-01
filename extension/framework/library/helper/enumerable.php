@@ -1,6 +1,7 @@
 <?php namespace Framework\Helper;
 
-use Framework\Request;
+use Framework\Helper\Converter\Json;
+use Framework\Helper\Converter\XmlMeta;
 use Framework\StorageInterface;
 
 /**
@@ -13,52 +14,29 @@ abstract class Enumerable {
    * Encode array or object to string ( json ). This is now just a proxy but maybe some improvement will be
    * added in future versions
    *
-   * @param object|array $object
+   * @param object|array $content
    * @param int          $options JSON_* constant flags
    *
+   * @deprecated Use the Framework\Helper\Converter\Json class
    * @return string|boolean The JSON string or false on failure
    */
-  public static function toJson( $object, $options = 0 ) {
-
-    // FIXME clear resource types from the json
-
-    $result = json_encode( $object, $options );
-    if( $result === false ) Request::getLog()->notice( 'JSON encode failed: #{error.code} with \'{error.message}\' message', [
-      'error' => [
-        'message' => json_last_error_msg(),
-        'code'    => json_last_error()
-      ],
-      'trace' => debug_backtrace()
-    ], 'framework:helper.enumerable' ); // log: notice
-
-    return $result;
+  public static function toJson( $content, $options = 0 ) {
+    return ( new Converter\Json( $options ) )->serialize( $content );
   }
   /**
    * Converts JSON string into object or array like the normal json_encode but this one may do
    * some pre/post process operation on the string/object in the future
    *
-   * @param string $json
+   * @param string $content
    * @param bool   $assoc
    * @param int    $depth
    * @param int    $options
    *
+   * @deprecated Use the Framework\Helper\Converter\Json class
    * @return mixed
    */
-  public static function fromJson( $json, $assoc = false, $depth = 512, $options = 0 ) {
-    if( version_compare( phpversion(), '5.4.0', '>=' ) ) $json = json_decode( $json, $assoc, $depth, $options );
-    else if( version_compare( phpversion(), '5.3.0', '>=' ) ) $json = json_decode( $json, $assoc, $depth );
-    else $json = json_decode( $json, $assoc );
-
-    // log: notice
-    if( json_last_error() != JSON_ERROR_NONE ) Request::getLog()->notice( 'JSON decode failed: #{error.code} with \'{error.message}\' message', [
-      'error' => [
-        'message' => json_last_error_msg(),
-        'code'    => json_last_error()
-      ],
-      'trace' => debug_backtrace()
-    ], 'framework:helper.enumerable' );
-
-    return $json;
+  public static function fromJson( $content, $assoc = false, $depth = 512, $options = 0 ) {
+    return ( new Converter\Json( $options, $depth, $assoc ) )->unserialize( $content );
   }
 
   /**
@@ -75,92 +53,20 @@ abstract class Enumerable {
    * @param string $version   The xml version number
    * @param string $encoding  The xml encoding
    *
+   * @deprecated Use the Framework\Helper\Converter\Xml class
    * @return array
    */
-  public static function fromXml( $xml, array &$attribute = [ ], &$version = '1.0', &$encoding = 'UTF-8' ) {
+  public static function fromXml( $xml, array &$attribute = [], &$version = '1.0', &$encoding = 'UTF-8' ) {
+    $meta             = new XmlMeta( $version, $encoding );
+    $meta->attributes = $attribute;
 
-    // collect encoding and version from xml data
-    $dom    = new \DOMDocument();
-    $object = [ ];
+    $result = ( new Converter\Xml( $meta ) )->unserialize( $xml );
 
-    if( !$dom->loadXML( $xml ) ) {
+    $attribute = $meta->attributes;
+    $version   = $meta->version;
+    $encoding  = $meta->encoding;
 
-      // log: notice
-      Request::getLog()->notice( 'XML decode failed: \'{error.message}\'', [
-        'error' => error_get_last(),
-        'trace' => debug_backtrace()
-      ], 'framework:helper.enumerable' );
-
-    } else {
-
-      $version  = $dom->xmlVersion;
-      $encoding = $dom->xmlEncoding;
-
-      // create root element and start the parsing
-      $root     = simplexml_load_string( $xml );
-      $elements = [ [ &$object, $root, '' ] ];
-      while( $next = array_shift( $elements ) ) {
-        $container = &$next[ 0 ];
-        $element   = $next[ 1 ];
-        $key       = $next[ 2 ];
-
-        // handle "recursion" end, and set simple data to the container
-        if( !is_object( $element ) || !( $element instanceof \SimpleXMLElement ) || ( !$element->children()->count() && !$element->attributes()->count() ) ) {
-          switch( (string) $element ) {
-            case 'NULL':
-              $container = null;
-              continue;
-            case 'TRUE':
-              $container = true;
-              continue;
-            case 'FALSE':
-              $container = false;
-              continue;
-            default:
-              $container = (string) $element;
-              continue;
-          }
-        }
-
-        // handle item attributes
-        foreach( $element->attributes() as $index => $value ) {
-          $container[ $index ] = [ ];
-          $elements[]          = [ &$container[ $index ], $value, $key . '.' . $index ];
-
-          // save to meta for proper write back
-          $attribute[] = $key . '.' . $index;
-        }
-
-        // collect children names and values (it's for find the arrays before add to the queue)
-        $tmp = [ ];
-        foreach( $element->children() as $value ) {
-
-          /** @var \SimpleXMLElement $value */
-          $index = (string) $value->getName();
-          if( !isset( $tmp[ $index ] ) ) $tmp[ $index ] = $value;
-          else {
-
-            if( !is_array( $tmp[ $index ] ) ) $tmp[ $index ] = [ $tmp[ $index ] ];
-            $tmp[ $index ][] = $value;
-          }
-        }
-
-        // walk trough all children data and add them to the queue
-        foreach( $tmp as $index => $value ) {
-          $container[ $index ] = null;
-
-          if( !is_array( $value ) ) $elements[] = [ &$container[ $index ], $value, $key . '.' . $index ];
-          else {
-
-            // handle arrays
-            $container[ $index ] = [ ];
-            foreach( $value as $i => $v ) $elements[] = [ &$container[ $index ][ $i ], $v, $key . '.' . $index . '.' . $i ];
-          }
-        }
-      }
-    }
-
-    return $object;
+    return $result;
   }
   /**
    * Parse objects, arrays or strings into an xml object. You can pass an array that contains dot separated routes
@@ -174,109 +80,39 @@ abstract class Enumerable {
    * @param string $version    Xml version number
    * @param string $encoding   Xml encoding
    *
+   * @deprecated Use the Framework\Helper\Converter\Xml class
    * @return \SimpleXMLElement
    */
-  public static function toXml( $enumerable, array $attribute = [ ], $root_name = 'xml', $version = '1.0', $encoding = 'UTF-8' ) {
+  public static function toXml( $enumerable, array $attribute = [], $root_name = 'xml', $version = '1.0', $encoding = 'UTF-8' ) {
+    $meta             = new XmlMeta( $version, $encoding );
+    $meta->root       = $root_name;
+    $meta->attributes = $attribute;
 
-    // create dom and the root element
-    $dom = new \DOMDocument( $version, $encoding );
-    $dom->appendChild( $root = $dom->createElement( $root_name ) );
-
-    // walk trought the enumerable and build the xml
-    $objects = [ (object) [ 'element' => &$root, 'data' => $enumerable, 'name' => $root_name, 'key' => '' ] ];
-    while( $object = array_shift( $objects ) ) {
-      /** @var \DOMElement $element */
-      $element = $object->element;
-
-      // handle xml "leaf"
-      if( !self::is( $object->data ) ) {
-
-        if( $object->data === null ) $value = 'NULL';
-        else if( $object->data === true ) $value = 'TRUE';
-        else if( $object->data === false ) $value = 'FALSE';
-        else $value = (string) $object->data;
-
-        if( in_array( $object->key, $attribute ) ) $element->setAttribute( $object->name, $value );
-        else $element->appendChild( $dom->createTextNode( $value ) );
-
-        // handle objects and arrays
-      } else foreach( $object->data as $index => $value ) {
-
-        // handle attributes, arrays and properties (in this order)
-        if( in_array( $object->key . '.' . $index, $attribute ) ) {
-          $objects[] = (object) [ 'element' => $element, 'data' => $value, 'name' => $index, 'key' => $object->key . '.' . $index ];
-        } else if( self::isArray( $value, false ) ) {
-          $objects[] = (object) [ 'element' => $element, 'data' => $value, 'name' => $index, 'key' => $object->key . '.' . $index ];
-        } else {
-          $child = $dom->createElement( is_numeric( $index ) ? $object->name : $index );
-
-          $element->appendChild( $child );
-          $objects[] = (object) [ 'element' => $child, 'data' => $value, 'name' => $child->tagName, 'key' => $object->key . '.' . $index ];
-        }
-      }
-    }
-
-    // create xml from dom
-    return simplexml_import_dom( $dom );
+    $result = ( new Converter\Xml( $meta ) )->serialize( $enumerable );
+    return simplexml_load_string( $result );
   }
 
   /**
    * Convert enumerable (object or array) into ini formatted string
    *
-   * @param object|array $enumerable The input enumerable
+   * @param object|array $content The input enumerable
    *
+   * @deprecated Use the Framework\Helper\Converter\Ini class
    * @return string
    */
-  public static function toIni( $enumerable ) {
-
-    $result   = [ ];
-    $iterator = new \RecursiveIteratorIterator( new \RecursiveArrayIterator( (array) $enumerable ) );
-    foreach( $iterator as $value ) {
-      $keys = [ ];
-      foreach( range( 0, $iterator->getDepth() ) as $depth ) $keys[] = $iterator->getSubIterator( $depth )->key();
-
-      $print    = is_bool( $value ) ? ( $value ? 'true' : 'false' ) : $value;
-      $quote    = is_numeric( $value ) || is_bool( $value ) ? '' : ( !mb_strpos( $value, '"' ) ? '"' : "'" );
-      $result[] = join( '.', $keys ) . "={$quote}{$print}{$quote}";
-    }
-
-    return implode( "\n", $result );
+  public static function toIni( $content ) {
+    return ( new Converter\Ini() )->serialize( $content );
   }
   /**
    * Convert INI formatted string into object
    *
    * @param string $content An ini formatted string
    *
+   * @deprecated Use the Framework\Helper\Converter\Ini class
    * @return object
    */
   public static function fromIni( $content ) {
-
-    $result = [ ];
-    $ini    = parse_ini_string( $content, false );
-    if( !is_array( $ini ) ) {
-
-      // log: notice
-      Request::getLog()->notice( 'INI decode failed: \'Invalid content\'', [
-        'trace' => debug_backtrace()
-      ], 'framework:helper.enumerable' );
-    } else foreach( $ini as $key => $value ) {
-
-      $keys = explode( '.', $key );
-      $tmp  = &$result;
-
-      while( $key = array_shift( $keys ) ) {
-
-        if( empty( $keys ) ) break;
-        else {
-
-          if( !isset( $tmp[ $key ] ) ) $tmp[ $key ] = [ ];
-          $tmp = &$tmp[ $key ];
-        }
-      }
-      $tmp[ $key ] = $value;
-    }
-
-    return (object) $result;
+    return ( new Converter\Ini() )->unserialize( $content );
   }
 
   /**
@@ -331,7 +167,7 @@ abstract class Enumerable {
 
     if( is_array( $input ) ) {
 
-      $tmp = [ ];
+      $tmp = [];
       foreach( $input as $k => $e ) {
         $tmp[ $k ] = self::is( $e ) ? self::copy( $e ) : $e;
       }
@@ -368,7 +204,7 @@ abstract class Enumerable {
   public static function cast( $input, $object = false ) {
 
     $input = $input instanceof StorageInterface ? $input->getArray( '' ) : $input;
-    return empty( $input ) || !self::is( $input ) ? ( $object ? null : [ ] ) : ( $object ? (object) $input : (array) $input );
+    return empty( $input ) || !self::is( $input ) ? ( $object ? null : [] ) : ( $object ? (object) $input : (array) $input );
   }
 
   /**
@@ -392,7 +228,7 @@ abstract class Enumerable {
         // check the container type
         if( !Enumerable::is( $result->container ) ) {
 
-          if( $build ) $result->container = [ ];
+          if( $build ) $result->container = [];
           else return $result;
         }
 
@@ -401,7 +237,7 @@ abstract class Enumerable {
         if( is_array( $result->container ) ) { // handle like an array
 
           if( !isset( $result->container[ $key ] ) ) {
-            if( $build ) $result->container[ $key ] = [ ];
+            if( $build ) $result->container[ $key ] = [];
             else return $result;
           }
 
@@ -413,7 +249,7 @@ abstract class Enumerable {
           else {
 
             if( !isset( $result->container->{$key} ) ) {
-              if( $build ) $result->container->{$key} = [ ];
+              if( $build ) $result->container->{$key} = [];
               else return $result;
             }
 

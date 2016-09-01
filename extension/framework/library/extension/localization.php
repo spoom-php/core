@@ -3,6 +3,7 @@
 use Framework\Extension;
 use Framework\Request;
 use Framework\Storage;
+use Framework\Helper\Converter;
 
 /**
  * Interface LocalizationInterface
@@ -66,7 +67,10 @@ class Localization extends Storage\File implements LocalizationInterface {
    * @param Extension $source
    */
   public function __construct( Extension $source ) {
-    parent::__construct( $source->directory( '' ) . Extension::DIRECTORY_LOCALIZATION );
+    parent::__construct( $source->directory( '' ) . Extension::DIRECTORY_LOCALIZATION, [
+      new Converter\Json( JSON_PRETTY_PRINT ),
+      new Converter\Ini()
+    ] );
 
     $this->_extension = $source;
   }
@@ -143,8 +147,8 @@ class Localization extends Storage\File implements LocalizationInterface {
     // clear meta/cache/storage when the localization has changed
     if( $this->_localization != $tmp ) {
 
-      $this->_source = [ ];
-      $this->meta    = [ ];
+      $this->_source         = [];
+      $this->converter_cache = [];
       $this->clean();
     }
   }

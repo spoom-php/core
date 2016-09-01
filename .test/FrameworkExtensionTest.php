@@ -2,9 +2,9 @@
 
 class FrameworkExtensionTest extends PHPUnit_Framework_TestCase {
 
-  public function __construct( $name = null, array $data = [ ], $dataName = '' ) {
+  public function __construct( $name = null, array $data = [], $dataName = '' ) {
     \Framework::setup( \Framework::ENVIRONMENT_DEVELOPMENT ) && \Framework::execute( function () { } );
-    
+
     parent::__construct( $name, $data, $dataName );
   }
 
@@ -33,6 +33,9 @@ class FrameworkExtensionTest extends PHPUnit_Framework_TestCase {
     $this->assertEquals( 'notice', $extension2->option( 'request:level.log' ) );
     $extension2->configuration->setEnvironment( 'development' );
     $this->assertEquals( 'debug', $extension2->option( 'request:level.log', 2 ) );
+
+    // test for manifest file
+    $this->assertNotEmpty( $extension->getManifest()->getString( 'version' ) );
   }
   /**
    * @param \Framework\Extension $extension

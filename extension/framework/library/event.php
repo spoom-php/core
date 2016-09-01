@@ -2,9 +2,7 @@
 
 use Framework\Exception;
 use Framework\Exception\Collector;
-use Framework\Extension;
 use Framework\Helper\Library;
-use Framework\Storage;
 
 /**
  * Class Event

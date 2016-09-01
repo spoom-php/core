@@ -65,7 +65,7 @@ abstract class Helper {
    *
    * @param \Exception $exception
    *
-   * @return Runtime
+   * @return Exception
    */
   public static function wrap( \Exception $exception ) {
     return $exception instanceof Exception ? $exception : new Runtime( self::EXCEPTION_WRAP, [

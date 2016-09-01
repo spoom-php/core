@@ -23,12 +23,17 @@
   "#20N": "Missing class property ({property})",
   "#21C": "Invalid or missing configuration storage ({class}) for the '{extension}' extension",
   "#22C": "Invalid or missing localization storage ({class}) for the '{extension}' extension",
-  "#23W": "There is no meta data for the '{namespace}' namespace",
+  "#23W": "There is no converter for the '{namespace}' namespace",
 
   "#24E": "Listener' library is missing: {value}",
   "#25E": "Invalid listener. Must implement the Listener::CLASS_LIBRARY interface",
 
   "#26W": "Invalid environment name ('{value}'). The name can contains only lowercase letters, dash and underscore.",
 
-  "#27": "Failure: #{code} with '{message}', at '{file}'"
+  "#27": "Failure: #{code} with '{message}', at '{file}'",
+
+  "#28": "The meta must be a(n) {class} instance",
+  "#29": "Can't serialize the content",
+  "#30": "Can't de-serialize the content",
+  "#31": "The converter must be a \\Framework\\Helper\\ConverterInterface instance"
 }

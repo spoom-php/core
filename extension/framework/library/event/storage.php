@@ -5,6 +5,7 @@ use Framework\Exception;
 use Framework\Extension;
 use Framework\Helper\Library;
 use Framework\Storage\File as StorageFile;
+use Framework\Helper\Converter;
 
 /**
  * Class Storage
@@ -103,9 +104,10 @@ class Storage extends Library implements \Countable, \Iterator {
       if( !isset( self::$source ) ) {
 
         $extension    = Extension::instance( 'framework' );
-        self::$source = new StorageFile( $extension->directory( self::DIRECTORY_SOURCE ) );
-
-        self::$source->getConverter()->native = true;
+        self::$source = new StorageFile( $extension->directory( self::DIRECTORY_SOURCE ), [
+          new Converter\Json( JSON_PRETTY_PRINT ),
+          new Converter\Xml()
+        ] );
       }
 
       // try to create the listeners (the reverse order is for the unshifting)
