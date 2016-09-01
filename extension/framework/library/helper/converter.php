@@ -110,6 +110,8 @@ class Converter extends Library {
   /**
    * Remove a converter (or all converter) from the list, based on the format
    *
+   * TODO remove by converter instance or name
+   * 
    * @param string|null $format The format of the converter, or null for remove all
    */
   public function remove( $format = null ) {

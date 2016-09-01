@@ -58,7 +58,7 @@ class Ini extends Library implements ConverterInterface {
   public function unserialize( $content ) {
     $this->setException();
 
-    $result = [];
+    $result = (object) [];
     $ini    = parse_ini_string( $content, false );
     if( !is_array( $ini ) ) {
 
@@ -77,15 +77,15 @@ class Ini extends Library implements ConverterInterface {
         if( empty( $keys ) ) break;
         else {
 
-          if( !isset( $tmp[ $key ] ) ) $tmp[ $key ] = [];
-          $tmp = &$tmp[ $key ];
+          if( !isset( $tmp->{$key} ) ) $tmp->{$key} = (object) [];
+          $tmp = &$tmp->{$key};
         }
       }
 
-      $tmp[ $key ] = $value;
+      $tmp->{$key} = $value;
     }
 
-    return (object) $result;
+    return $result;
   }
 
   /**

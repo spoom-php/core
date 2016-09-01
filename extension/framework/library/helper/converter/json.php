@@ -26,7 +26,7 @@ class Json extends Library implements ConverterInterface {
    * @param bool         $associative
    */
   public function __construct( $options = 0, $depth = 512, $associative = false ) {
-    $this->_meta = $options instanceof JsonMeta ? $options : new JsonMeta( $options, $depth, $associative );
+    $this->_meta = $options instanceof JsonMeta ? $options : new JsonMeta( $options | JSON_PARTIAL_OUTPUT_ON_ERROR, $depth, $associative );
   }
   /**
    *
@@ -42,8 +42,6 @@ class Json extends Library implements ConverterInterface {
    */
   public function serialize( $content ) {
     $this->setException();
-
-    // FIXME clear resource types from the json (use JSON_PARTIAL_OUTPUT_ON_ERROR after PHP5.5)
 
     $result = null;
     try {
@@ -151,7 +149,7 @@ class JsonMeta {
    *
    * @var int
    */
-  public $options = 0;
+  public $options = JSON_PARTIAL_OUTPUT_ON_ERROR;
 
   /**
    * @param int  $options

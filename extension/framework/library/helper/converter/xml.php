@@ -96,7 +96,7 @@ class Xml extends Library implements ConverterInterface {
 
     // collect encoding and version from xml data
     $dom    = new \DOMDocument();
-    $result = [];
+    $result = (object) [];
 
     if( !$dom->loadXML( $content ) ) {
 
@@ -139,8 +139,8 @@ class Xml extends Library implements ConverterInterface {
 
         // handle item attributes
         foreach( $element->attributes() as $index => $value ) {
-          $container[ $index ] = [];
-          $elements[]          = [ &$container[ $index ], $value, $key . '.' . $index ];
+          $container->{$index} = (object) [];
+          $elements[]          = [ &$container->{$index}, $value, $key . '.' . $index ];
 
           // save to meta for proper write back
           $this->_meta->attributes[] = $key . '.' . $index;
@@ -162,14 +162,14 @@ class Xml extends Library implements ConverterInterface {
 
         // walk trough all children data and add them to the queue
         foreach( $tmp as $index => $value ) {
-          $container[ $index ] = null;
+          $container->{$index} = (object) [];
 
-          if( !is_array( $value ) ) $elements[] = [ &$container[ $index ], $value, $key . '.' . $index ];
+          if( !is_array( $value ) ) $elements[] = [ &$container->{$index}, $value, $key . '.' . $index ];
           else {
 
             // handle arrays
-            $container[ $index ] = [];
-            foreach( $value as $i => $v ) $elements[] = [ &$container[ $index ][ $i ], $v, $key . '.' . $index . '.' . $i ];
+            $container->{$index} = [];
+            foreach( $value as $i => $v ) $elements[] = [ &$container->{$index}[ $i ], $v, $key . '.' . $index . '.' . $i ];
           }
         }
       }
