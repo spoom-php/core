@@ -11,9 +11,29 @@ use Framework\Exception;
  */
 interface ConverterInterface extends LibraryInterface, FailableInterface {
 
-  const EXCEPTION_INVALID_META     = 'framework#0E';
-  const EXCEPTION_FAIL_SERIALIZE   = 'framework#0E';
-  const EXCEPTION_FAIL_UNSERIALIZE = 'framework#0E';
+  /**
+   * Try to set a wrong type of meta class
+   *
+   * @param string $class The necessary meta class name
+   * @param mixed  $value The wrong meta
+   */
+  const EXCEPTION_INVALID_META = 'framework#28E';
+  /**
+   * Failed serialization
+   *
+   * @param ConverterInterface $instance The converter
+   * @param mixed              $content  The content to serialize
+   * @param mixed              $error    The error description, if any
+   */
+  const EXCEPTION_FAIL_SERIALIZE = 'framework#29E';
+  /**
+   * Failed de-serialization
+   *
+   * @param ConverterInterface $instance The converter
+   * @param string             $content  The content to unserialize
+   * @param mixed              $error    The error description, if any
+   */
+  const EXCEPTION_FAIL_UNSERIALIZE = 'framework#30E';
 
   /**
    * Serialize the content to a formatted (based on the meta property) string
@@ -62,7 +82,7 @@ class Converter extends Library {
   /**
    * Try to add a non-ConverterInterface instance
    */
-  const EXCEPTION_INVALID_CONVERTER = 'framework#0E';
+  const EXCEPTION_INVALID_CONVERTER = 'framework#31E';
 
   /**
    * Available converters
@@ -111,7 +131,7 @@ class Converter extends Library {
    * Remove a converter (or all converter) from the list, based on the format
    *
    * TODO remove by converter instance or name
-   * 
+   *
    * @param string|null $format The format of the converter, or null for remove all
    */
   public function remove( $format = null ) {

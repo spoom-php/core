@@ -48,6 +48,7 @@ class Json extends Library implements ConverterInterface {
 
       $result = json_encode( $content, $this->_meta->options );
       if( json_last_error() != JSON_ERROR_NONE ) {
+
         $result = null;
         throw new Exception\Strict( static::EXCEPTION_FAIL_SERIALIZE, [
           'instance' => $this,
@@ -103,7 +104,7 @@ class Json extends Library implements ConverterInterface {
    * @throws Exception\Strict
    */
   public function setMeta( $value ) {
-    if( !( $value instanceof JsonMeta ) ) throw new Exception\Strict( static::EXCEPTION_INVALID_META );
+    if( !( $value instanceof JsonMeta ) ) throw new Exception\Strict( static::EXCEPTION_INVALID_META, [ 'meta' => JsonMeta::class, 'value' => $value ] );
     else $this->_meta = $value;
 
     return $this;

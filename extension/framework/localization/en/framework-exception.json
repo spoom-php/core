@@ -30,5 +30,10 @@
 
   "#26W": "Invalid environment name ('{value}'). The name can contains only lowercase letters, dash and underscore.",
 
-  "#27": "Failure: #{code} with '{message}', at '{file}'"
+  "#27": "Failure: #{code} with '{message}', at '{file}'",
+
+  "#28": "The meta must be a(n) {class} instance",
+  "#29": "Can't serialize the content",
+  "#30": "Can't de-serialize the content",
+  "#31": "The converter must be a \\Framework\\Helper\\ConverterInterface instance"
 }

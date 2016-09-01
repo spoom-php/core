@@ -191,7 +191,7 @@ class Xml extends Library implements ConverterInterface {
    * @throws Exception\Strict
    */
   public function setMeta( $value ) {
-    if( !( $value instanceof XmlMeta ) ) throw new Exception\Strict( static::EXCEPTION_INVALID_META );
+    if( !( $value instanceof XmlMeta ) ) throw new Exception\Strict( static::EXCEPTION_INVALID_META, [ 'meta' => XmlMeta::class, 'value' => $value ] );
     else $this->_meta = $value;
 
     return $this;
