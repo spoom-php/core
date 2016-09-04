@@ -16,12 +16,6 @@ use Framework\StorageInterface;
 class Log extends Library {
 
   /**
-   * Exception throwed when an invalid type of log try to be created. Data:
-   *  - type [int]: The invalid type
-   */
-  const EXCEPTION_NOTICE_INVALID_LEVEL = 'framework#7N';
-
-  /**
    * Event called before every new log entry. This can prevent the default file log. Arguments:
    *  - instance [Log]: The Log instance that call this event
    *  - namespace [string]: The log entry namespace
@@ -233,11 +227,6 @@ class Log extends Library {
    * @return static
    */
   public static function instance( $name ) {
-
-    if( !isset( self::$instance[ $name ] ) ) {
-      self::$instance[ $name ] = new static( $name );
-    }
-
-    return self::$instance[ $name ];
+    return isset( self::$instance[ $name ] ) ? self::$instance[ $name ] : ( self::$instance[ $name ] = new static( $name ) );
   }
 }

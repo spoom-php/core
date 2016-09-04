@@ -4,6 +4,6 @@
 Framework::setup() && Framework::execute( function () {
 
   // execute the 'framework' extension's request handler
-  Framework\Request::execute();
+  Framework\Application::execute();
 
-}, '\Framework\Request::terminate', '\Framework\Request::failure' );
+}, '\Framework\Application::terminate', '\Framework\Application::failure' );

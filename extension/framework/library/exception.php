@@ -139,14 +139,14 @@ abstract class Exception extends \Exception implements \JsonSerializable, Librar
    * Log the exception
    *
    * @param array    $data     Additional data to the log
-   * @param Log|null $instance The logger instance use to create the log. If null, the Request::getLog() used
+   * @param Log|null $instance The logger instance use to create the log. If null, the Application::getLog() used
    *
    * @return $this
    * @throws Exception\Strict
    */
   public function log( $data = [ ], Log $instance = null ) {
 
-    $instance = $instance ?: Request::getLog();
+    $instance = $instance ?: Application::getLog();
     if( $instance ) {
 
       // extend data

@@ -6,23 +6,19 @@ use Framework\Helper\Library;
 use Framework\Helper\Log;
 
 /**
- * Class Request
+ * Class Application
  * @package Framework
  */
-class Request extends Library {
+class Application extends Library {
 
   /**
    * Header already sent when try to redirect the page
    */
-  const EXCEPTION_ERROR_FAIL_REDIRECT = 'framework#9E';
+  const EXCEPTION_FAIL_REDIRECT = 'framework#9E';
   /**
    * Trying to set invalid localization
    */
-  const EXCEPTION_WARNING_INVALID_LOCALIZATION = 'framework#10W';
-  /**
-   * Trying to set invalid environment
-   */
-  const EXCEPTION_WARNING_INVALID_ENVIRONMENT = 'framework#26W';
+  const EXCEPTION_INVALID_LOCALIZATION = 'framework#10W';
   /**
    * Prevented request start
    */
@@ -33,24 +29,26 @@ class Request extends Library {
   const EXCEPTION_FAIL = 'framework#27';
 
   /**
-   * Runs right before the Request::start() method finished. No argument
+   * Runs right before the Application::start() method finished
    */
-  const EVENT_START = 'request.start';
+  const EVENT_START = 'application.start';
   /**
-   * Runs in the Request::run() method, and this method returns this event result. No argument
+   * Runs in the Application::run() method, and this method returns this event result
    */
-  const EVENT_RUN = 'request.run';
+  const EVENT_RUN = 'application.run';
   /**
-   * Runs in the Request::stop() method after enable output buffering. Arguments:
-   *  - content [string[]]: The contents to render
-   *  - buffer [string]: Some output "trash" or empty
+   * Runs in the Application::stop() method after enable output buffering
+   *
+   * @param string[] $content The contents to render
+   * @param string   $buffer  Some output "trash" or empty
    */
-  const EVENT_STOP = 'request.stop';
+  const EVENT_STOP = 'application.stop';
   /**
-   * Runs in the Request::terminate() method before the request was ended. Arguments:
-   *  - exception [\Exception]: The reason of the termination
+   * Runs in the Application::terminate() method before the request was ended
+   *
+   * @param \Exception $exception The reason of the termination
    */
-  const EVENT_TERMINATE = 'request.terminate';
+  const EVENT_TERMINATE = 'application.terminate';
 
   /**
    * Exception collector, for runtime error collect
@@ -72,7 +70,7 @@ class Request extends Library {
   }
 
   /**
-   * Initialise some basics for the Request and triggers start event. This should be called once and before the run
+   * Initialise some basics for the Application and triggers start event. This should be called once and before the run
    *
    * @return true
    * @throws \Exception
@@ -81,24 +79,24 @@ class Request extends Library {
     $extension = Extension::instance( 'framework' );
 
     // setup the reporting levels
-    \Framework::setReport( $extension->option( 'request:level.report', null ) );
-    \Framework::setLog( $extension->option( 'request:level.log', null ) );
+    \Framework::setReport( $extension->option( 'application:level.report', \Framework::getReport() ) );
+    \Framework::setLog( $extension->option( 'application:level.log', \Framework::getLog() ) );
 
     // add custom namespaces from configuration
-    $import = $extension->option( 'request:import!array' );
+    $import = $extension->option( 'application:import!array' );
     if( !empty( $import ) ) foreach( $import as $namespace => $path ) {
       \FrameworkImport::define( $namespace, $path );
     }
 
-    self::$localization = $extension->option( 'request:localization', $extension->manifest->getString( 'localization', 'en' ) );
-    setlocale( LC_ALL, $extension->option( 'request:locale', null ) );
+    self::$localization = $extension->option( 'application:localization', $extension->manifest->getString( 'localization', 'en' ) );
+    setlocale( LC_ALL, $extension->option( 'application:locale', null ) );
 
     // setup encoding
-    mb_internal_encoding( $extension->option( 'request:encoding', 'utf8' ) );
-    mb_http_output( $extension->option( 'request:encoding', 'utf8' ) );
+    mb_internal_encoding( $extension->option( 'application:encoding', mb_internal_encoding() ) );
+    mb_http_output( $extension->option( 'application:encoding', mb_internal_encoding() ) );
 
     // setup timezones
-    date_default_timezone_set( $extension->option( 'request:timezone', date_default_timezone_get() ) );
+    date_default_timezone_set( $extension->option( 'application:timezone', date_default_timezone_get() ) );
 
     // call initialise event
     $event = $extension->trigger( self::EVENT_START );
@@ -144,7 +142,7 @@ class Request extends Library {
   }
 
   /**
-   * Request termination after a fatal exception
+   * Application termination after a fatal exception
    *
    * TODO define \Throwable param type after PHP7
    *
@@ -183,7 +181,7 @@ class Request extends Library {
       'message' => $message,
       'file'    => $file,
       'trace'   => $trace
-    ], 'framework:request', $level );
+    ], 'framework:application', $level );
 
     // throw an exception that match the fail level
     if( $level <= \Framework::getReport() ) {
@@ -209,7 +207,7 @@ class Request extends Library {
    * @param int   $code HTTP Redirect type respsonse code. This number added to 300 to make 30x status code
    * @param bool  $stop Call the page stop() method ot not
    *
-   * @throws Strict ::EXCEPTION_ERROR_FAIL_REDIRECT
+   * @throws Strict ::EXCEPTION_FAIL_REDIRECT
    */
   public static function redirect( $url, $code = 3, $stop = false ) {
     $url = ltrim( trim( $url, ' ' ), '/' );
@@ -218,7 +216,7 @@ class Request extends Library {
     if( !preg_match( '#^[a-z]+\://#i', $url ) ) $url = _URL_BASE . $url;
 
     // check the header state
-    if( headers_sent() ) throw new Strict( self::EXCEPTION_ERROR_FAIL_REDIRECT, [ 'url' => $url ] );
+    if( headers_sent() ) throw new Strict( self::EXCEPTION_FAIL_REDIRECT, [ 'url' => $url ] );
     else {
 
       // add status code and redirect
@@ -269,12 +267,12 @@ class Request extends Library {
    *
    * @param string $value
    *
-   * @throws Exception\Strict ::EXCEPTION_WARNING_INVALID_LOCALIZATION
+   * @throws Exception\Strict ::EXCEPTION_INVALID_LOCALIZATION
    */
   public static function setLocalization( $value ) {
 
     $value = trim( mb_strtolower( $value ) );
-    if( preg_match( '/^[a-z_-]+$/', $value ) < 1 ) throw new Exception\Strict( self::EXCEPTION_WARNING_INVALID_LOCALIZATION, [ 'localization' => $value ] );
+    if( preg_match( '/^[a-z_-]+$/', $value ) < 1 ) throw new Exception\Strict( self::EXCEPTION_INVALID_LOCALIZATION, [ 'localization' => $value ] );
     else self::$localization = $value;
   }
 }

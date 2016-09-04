@@ -1,7 +1,7 @@
 <?php namespace Framework\Extension;
 
 use Framework\Extension;
-use Framework\Request;
+use Framework\Application;
 use Framework\Storage;
 use Framework\Helper\Converter;
 
@@ -95,7 +95,7 @@ class Localization extends Storage\File implements LocalizationInterface {
   protected function getFile( $namespace, $format = null, &$exist = false ) {
 
     // define the localization of not already
-    if( !isset( $this->_localization ) ) $this->localization = Request::getLocalization();
+    if( !isset( $this->_localization ) ) $this->localization = Application::getLocalization();
 
     // change the directory temporary then search for the path
     $tmp = $this->_path;
@@ -122,7 +122,7 @@ class Localization extends Storage\File implements LocalizationInterface {
    */
   public function getLocalization() {
 
-    if( !isset( $this->_localization ) ) $this->setLocalization( Request::getLocalization() );
+    if( !isset( $this->_localization ) ) $this->setLocalization( Application::getLocalization() );
 
     return $this->_localization;
   }
@@ -137,7 +137,7 @@ class Localization extends Storage\File implements LocalizationInterface {
     $tmp = $this->_localization;
 
     // set the new localization
-    $global = Request::getLocalization();
+    $global = Application::getLocalization();
     if( $this->validate( $value ) ) $this->_localization = $value;
     else if( $global != $value && $this->validate( $global ) ) $this->_localization = $global;
     else if( $this->validate( $this->_extension->manifest->getString( 'localization' ) ) ) {

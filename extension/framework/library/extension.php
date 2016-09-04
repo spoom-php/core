@@ -28,16 +28,10 @@ class Extension extends Library {
   private static $instance = [];
 
   /**
-   * Exception code for invalid manifest data. This mostly indicates the extension package and name
-   * missmatch in the manifest and the extension path. One data will be passed:
-   *  - id [string]: Extension id
-   */
-  const EXCEPTION_CRITICAL_INVALID_MANIFEST = 'framework#4C';
-  /**
    * Exception code for missing extension directory. One data will be passed:
    *  - id [string]: Extension id
    */
-  const EXCEPTION_CRITICAL_MISSING_EXTENSION = 'framework#5C';
+  const EXCEPTION_MISSING_EXTENSION = 'framework#5C';
   /**
    * The configuration class definition invalid. Data:
    *  - extension [string]: The extension id
@@ -58,7 +52,7 @@ class Extension extends Library {
   /**
    * Exception code for invalid extension id
    */
-  const EXCEPTION_NOTICE_INVALID_ID = 'framework#6N';
+  const EXCEPTION_INVALID_ID = 'framework#6N';
 
   /**
    * Default directory for localization files
@@ -126,12 +120,12 @@ class Extension extends Library {
       $this->_id = \Framework::search( $class );
     }
 
-    if( !Extension\Helper::validate( $this->_id ) ) throw new Exception\Strict( self::EXCEPTION_NOTICE_INVALID_ID, [ 'id' => $this->_id ] );
+    if( !Extension\Helper::validate( $this->_id ) ) throw new Exception\Strict( self::EXCEPTION_INVALID_ID, [ 'id' => $this->_id ] );
     else {
 
       // define directory
       $directory = Extension\Helper::directory( $this->_id, false );
-      if( !$directory ) throw new Exception\System( self::EXCEPTION_CRITICAL_MISSING_EXTENSION, [ 'id' => $this->_id ] );
+      if( !$directory ) throw new Exception\System( self::EXCEPTION_MISSING_EXTENSION, [ 'id' => $this->_id ] );
       else {
 
         $this->_directory = $directory;
@@ -343,11 +337,6 @@ class Extension extends Library {
    * @return static
    */
   public static function instance( $id ) {
-
-    if( !isset( self::$instance[ $id ] ) ) {
-      self::$instance[ $id ] = new static( $id );
-    }
-
-    return self::$instance[ $id ];
+    return isset( self::$instance[ $id ] ) ? self::$instance[ $id ] : ( self::$instance[ $id ] = new static( $id ) );
   }
 }

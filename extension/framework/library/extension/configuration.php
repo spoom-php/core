@@ -1,7 +1,6 @@
 <?php namespace Framework\Extension;
 
 use Framework\Extension;
-use Framework\Request;
 use Framework\Storage;
 use Framework\Helper\Converter;
 
@@ -130,16 +129,7 @@ class Configuration extends Storage\File implements ConfigurationInterface {
     $global = \Framework::getEnvironment();
     if( $this->validate( $value ) ) $this->_environment = $value;
     else if( $this->validate( $global ) ) $this->_environment = $global;
-    else {
-
-      $this->_environment = '';
-
-      // log: notice
-      Request::getLog()->notice( 'Missing environment ({environment}) in \'{extension}\'', [
-        'environment' => $value,
-        'extension'   => $this->extension->id
-      ], 'framework:extension.configuration' );
-    }
+    else $this->_environment = '';
 
     // clear meta/cache/storage when the environment has changed
     if( $this->_environment != $tmp ) {

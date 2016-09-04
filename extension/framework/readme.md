@@ -1,23 +1,23 @@
 The framework extension
 ======
 
-# Request management
-Store basic data for the request and can generate the request's response. It stores a basic log(`\Framework\Request::getLog()`), exception collector 
-(`\Framework\Request::getCollector()`), as well as the default localization (`\Framework\Request::getLocalization()`). It's enough to call the
-`\Framework\Request::execute()` method to generate the response. It basically calls three methods `\Framework\Request::start()`, `\Framework\Request::run()`,
-`\Framework\Request::stop()` in this order.
+# Application management
+Store basic data for the request and can generate the request's response. It stores a basic log(`\Framework\Application::getLog()`), exception collector 
+(`\Framework\Application::getCollector()`), as well as the default localization (`\Framework\Application::getLocalization()`). It's enough to call the
+`\Framework\Application::execute()` method to generate the response. It basically calls three methods `\Framework\Application::start()`, `\Framework\Application::run()`,
+`\Framework\Application::stop()` in this order.
 
-The `::start()` initializes some settings and the attributes of the static class, and then triggers the `\Framework\Request::EVENT_REQUEST_START` event to make
+The `::start()` initializes some settings and the attributes of the static class, and then triggers the `\Framework\Application::EVENT_REQUEST_START` event to make
 different kinds of registered handlers to be able to initialize their own code. The `::run()` is basically a method responsible for triggering the
-`\Framework\Request::EVENT_REQUEST_RUN` event, where the registered handlers are able to generate the response and to give it (or them) back as the result of
+`\Framework\Application::EVENT_REQUEST_RUN` event, where the registered handlers are able to generate the response and to give it (or them) back as the result of
 the event. This return value (or values) will be the `::run()`'s result (or results), in array format. The `::stop()` method is to make the `::run()`'s result
-displayable with the trigger of the `\Framework\Request::EVENT_REQUEST_STOP` event. In this event the registered handlers are able to send the final content to
+displayable with the trigger of the `\Framework\Application::EVENT_REQUEST_STOP` event. In this event the registered handlers are able to send the final content to
 the output based on the event's arguments. These three sections are completely independent from format and application, and in themselves don't generate any
 kind of output. It's just a frame, which defines the content generation extensions (for example the 'http'), general process. 
 
 # Event management
 The event's function is to make other codes (so called handlers) to be able to react to particular extensions' operations, and through the event result even be
-able to modify its result. The generation of the request is also based on this, with the `\Framework\Request::EVENT_*` events. To run an event,
+able to modify its result. The generation of the request is also based on this, with the `\Framework\Application::EVENT_*` events. To run an event,
 `\Framework\Extension\Event` instance has to be created. After this the event can execute with the `->execute()` method (mostly only once, but running it more
 times is also available). For the extension-based call, use the `\Framework\Extension->trigger()`, which gives the extension's identifier as the event's
 namespace.
@@ -106,7 +106,7 @@ echo $exception->getMessage() // 'this is a wonderful exception's message'
 `````
 
 Every exception can be written in a log with the `->log()` method, where a log manager can be added trough the first parameter, but the default is the
-`\Framework\Request::getLog()`.
+`\Framework\Application::getLog()`.
 
 # Extension
 The function of the framework can be extended by creating extensions. All of the extensions have an identifier, which consists of three parts,
@@ -155,7 +155,7 @@ configuration file name should be *'admin-install'* in the extensions' configura
 In the */extension/\<id\>/localization/* directory, you can define localization files under directory named as the language code. The language code can be
 anything, but the standard is the two or three letter code of the language. For example the english files SHOULD be defined in
 */extension/\<id\>/localization/en/* directory (for the default localization handler class). The system localization code determined from the
-`Request::getLocalization()` method, or (if this is not supported by the extension) the manifest **localization** index of the extension.
+`Application::getLocalization()` method, or (if this is not supported by the extension) the manifest **localization** index of the extension.
 
 The localization files content is available through the `\Framework\Extension->localization` property (it's a `\Framework\Extension\LocalizationInterface`).
 There is a helper method in the `\Framework\Extension` class (`->text()`) which is a proxy for the `\Framework\Extension->localization->getPattern()` method.

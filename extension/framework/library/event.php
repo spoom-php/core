@@ -107,12 +107,7 @@ class Event extends Library {
   public static function instance( $namespace, $name ) {
 
     $index = $namespace . ':' . $name;
-    if( !isset( self::$instance[ $index ] ) ) {
-
-      self::$instance[ $index ] = new Event( $namespace, $name );
-    }
-
-    return self::$instance[ $index ];
+    return isset( self::$instance[ $index ] ) ? self::$instance[ $index ] : ( self::$instance[ $index ] = new static( $namespace, $name ) );
   }
 }
 /**

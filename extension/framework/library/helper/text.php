@@ -1,7 +1,7 @@
 <?php namespace Framework\Helper;
 
 use Framework\Exception\Strict;
-use Framework\Request;
+use Framework\Application;
 use Framework\Storage;
 use Framework\StorageInterface;
 
@@ -11,7 +11,7 @@ use Framework\StorageInterface;
  */
 abstract class Text {
 
-  const EXCEPTION_ERROR_HASH_INVALID_ALGORITHM = 'framework#8E';
+  const EXCEPTION_INVALID_ALGORITHM = 'framework#8E';
 
   /**
    * Regexp for string insertion
@@ -74,7 +74,7 @@ abstract class Text {
    * @param int      $seeds  The minimum length of the secure random seeds (only used when the $secure param is true)
    *
    * @return string The unique string
-   * @throws Strict Throws ::EXCEPTION_ERROR_HASH_INVALID_ALGORITHM when the hashing algorithm is invalid
+   * @throws Strict Throws ::EXCEPTION_HASH_INVALID_ALGORITHM when the hashing algorithm is invalid
    */
   public static function unique( $length = null, $prefix = '', $secure = true, $hash = 'sha256', $seeds = 64 ) {
 
@@ -91,14 +91,14 @@ abstract class Text {
         if( !function_exists( 'openssl_random_pseudo_bytes' ) ) {
 
           // log: warning
-          Request::getLog()->warning( 'Cannot use OpenSSL random, `openssl_random_pseudo_bytes()` doesn\'t exists.', [ ], 'framework:helper.string' );
+          Application::getLog()->warning( 'Cannot use OpenSSL random, `openssl_random_pseudo_bytes()` doesn\'t exists.', [], 'framework:helper.string' );
 
         } else {
           $tmp = openssl_random_pseudo_bytes( $seeds, $strong );
 
           // skip ssl since it wasn't using the strong algo
           if( $strong === true ) $raw .= $tmp;
-          else Request::getLog()->notice( 'Generated OpenSSL random value is not strong, what next?', [
+          else Application::getLog()->notice( 'Generated OpenSSL random value is not strong, what next?', [
             'trace' => debug_backtrace()
           ], 'framework:helper.string' ); // log: notice
         }
@@ -125,12 +125,12 @@ abstract class Text {
    * @param string $algorithm The hashing algorithm name
    *
    * @return string The hashed string
-   * @throws Strict Throws ::EXCEPTION_ERROR_HASH_INVALID_ALGORITHM when the hashing algorithm is invalid
+   * @throws Strict Throws ::EXCEPTION_HASH_INVALID_ALGORITHM when the hashing algorithm is invalid
    */
   public static function hash( $raw, $algorithm = 'sha256' ) {
 
     $tmp = @hash( $algorithm, $raw );
-    if( empty( $tmp ) ) throw new Strict( self::EXCEPTION_ERROR_HASH_INVALID_ALGORITHM, [ 'algorithm' => $algorithm, 'available' => hash_algos() ] );
+    if( empty( $tmp ) ) throw new Strict( self::EXCEPTION_INVALID_ALGORITHM, [ 'algorithm' => $algorithm, 'available' => hash_algos() ] );
     else return $tmp;
   }
 

@@ -1,6 +1,6 @@
 <?php namespace Framework\Helper;
 
-use Framework\Request;
+use Framework\Application;
 
 /**
  * Interface FeasibleInterface
@@ -43,7 +43,7 @@ trait Feasible {
       else {
 
         // log: warning
-        Request::getLog()->warning( 'Missing \'{name}\' executeable', [
+        Application::getLog()->warning( 'Missing \'{name}\' executeable', [
           'name'      => $name,
           'arguments' => $arguments,
           'method'    => $method,
