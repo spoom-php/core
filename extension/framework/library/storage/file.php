@@ -106,7 +106,7 @@ class File extends Permanent {
         'exist' => false,
         'meta'  => $this->converter_cache[ $namespace ]
       ];
-      $previous->path = $this->getFile( $namespace, $previous->meta->getName(), $previous->exist );
+      $previous->path = $this->getFile( $namespace, $previous->meta->getFormat(), $previous->exist );
 
     } catch( \Exception $e ) {
       Exception\Helper::wrap( $e )->log();
@@ -117,7 +117,7 @@ class File extends Permanent {
     if( !$this->getException() ) {
 
       // clean the previous file, if there is no need for it
-      if( isset( $this->converter_cache[ $namespace ] ) && !empty( $previous->exist ) && $previous->meta != $this->converter_cache[ $namespace ] ) try {
+      if( !empty( $previous->exist ) && $previous->meta != $this->converter_cache[ $namespace ] ) try {
 
         $this->destroyFile( $previous->path );
 

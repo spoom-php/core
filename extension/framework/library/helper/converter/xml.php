@@ -36,11 +36,14 @@ class Xml extends Library implements ConverterInterface {
   }
 
   /**
-   * @param mixed $content Content to serialize
+   * @inheritDoc
    *
-   * @return string
+   * @param mixed    $content The content to serialize
+   * @param resource $stream  Optional output stream
+   *
+   * @return string|null
    */
-  public function serialize( $content ) {
+  public function serialize( $content, $stream = null ) {
     $this->setException();
     
     // create dom and the root element
@@ -82,16 +85,29 @@ class Xml extends Library implements ConverterInterface {
     }
 
     // create xml from dom
-    return simplexml_import_dom( $dom )->asXML();
+    $result = simplexml_import_dom( $dom );
+    if( !$stream ) return $result->asXML();
+    else {
+
+      fwrite( $stream, $result->asXML() );
+      return null;
+    }
   }
   /**
-   * @param string $content Content to unserialize
+   * @inheritDoc
+   *
+   * @param string|resource $content The content (can be a stream) to unserialize
    *
    * @return mixed
    */
   public function unserialize( $content ) {
     $this->setException();
-    
+
+    // handle stream input
+    if( is_resource( $content ) ) {
+      $content = stream_get_contents( $content );
+    }
+
     $this->_meta->attributes = [];
 
     // collect encoding and version from xml data

@@ -87,8 +87,17 @@ class FrameworkHelperTest extends PHPUnit_Framework_TestCase {
    */
   public function testConverterType( Helper\ConverterInterface $converter ) {
 
-    $content = (object) [ "test1" => (object) [ "test2" => (object) [ "test3" => 3 ], "test4" => 4 ] ];
+    $content = (object) [ 'test1' => (object) [ 'test2' => (object) [ 'test3' => 3 ], 'test4' => 4 ] ];
     $tmp     = $converter->serialize( $content );
+    $this->assertNull( $converter->getException() );
+    $this->assertEquals( $content, $converter->unserialize( $tmp ) );
+
+    // check for stream support
+    $content = (object) [ 'test1' => (object) [ 'test2' => (object) [ 'test3' => 3 ], 'test4' => 4 ] ];
+    $tmp     = fopen( 'php://memory', 'w+' );
+
+    $converter->serialize( $content, $tmp );
+    fseek( $tmp, 0 );
     $this->assertNull( $converter->getException() );
     $this->assertEquals( $content, $converter->unserialize( $tmp ) );
   }

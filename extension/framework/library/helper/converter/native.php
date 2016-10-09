@@ -16,15 +16,26 @@ class Native extends Library implements ConverterInterface {
   const NAME   = 'native';
 
   /**
-   * @param mixed $content Content to serialize
+   * @inheritDoc
    *
-   * @return string
+   * @param mixed    $content The content to serialize
+   * @param resource $stream  Optional output stream
+   *
+   * @return string|null
    */
-  public function serialize( $content ) {
+  public function serialize( $content, $stream = null ) {
     $this->setException();
 
     try {
-      return serialize( $content );
+
+      $result = serialize( $content );
+      if( !$stream ) return $result;
+      else {
+
+        fwrite( $stream, $result );
+        return null;
+      }
+      
     } catch( \Exception $e ) {
       $this->setException( $e );
     }
@@ -32,12 +43,19 @@ class Native extends Library implements ConverterInterface {
     return null;
   }
   /**
-   * @param string $content Content to unseraialize
+   * @inheritDoc
+   *
+   * @param string|resource $content The content (can be a stream) to unserialize
    *
    * @return mixed
    */
   public function unserialize( $content ) {
     $this->setException();
+
+    // handle stream input
+    if( is_resource( $content ) ) {
+      $content = stream_get_contents( $content );
+    }
 
     try {
       return unserialize( $content );

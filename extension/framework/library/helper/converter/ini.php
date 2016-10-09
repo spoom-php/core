@@ -17,11 +17,14 @@ class Ini extends Library implements ConverterInterface {
   const NAME   = 'ini';
 
   /**
-   * @param mixed $content Content to serialize
+   * @inheritDoc
    *
-   * @return string
+   * @param mixed    $content The content to serialize
+   * @param resource $stream  Optional output stream
+   *
+   * @return string|null
    */
-  public function serialize( $content ) {
+  public function serialize( $content, $stream = null ) {
     $this->setException();
 
     $result = [];
@@ -48,15 +51,28 @@ class Ini extends Library implements ConverterInterface {
       }
     }
 
-    return implode( "\n", $result );
+    $result = implode( "\n", $result );
+    if( !$stream ) return $result;
+    else {
+
+      fwrite( $stream, $result );
+      return null;
+    }
   }
   /**
-   * @param string $content Content to unserialize
+   * @inheritDoc
+   *
+   * @param string|resource $content The content (can be a stream) to unserialize
    *
    * @return mixed
    */
   public function unserialize( $content ) {
     $this->setException();
+
+    // handle stream input
+    if( is_resource( $content ) ) {
+      $content = stream_get_contents( $content );
+    }
 
     $result = (object) [];
     $ini    = parse_ini_string( $content, false );

@@ -4,9 +4,6 @@ use Framework\Exception;
 
 /**
  * Interface ConverterInterface
- *
- * TODO handle errors (failable interface?!)
- *
  * @package Framework\Helper
  */
 interface ConverterInterface extends LibraryInterface, FailableInterface {
@@ -38,15 +35,16 @@ interface ConverterInterface extends LibraryInterface, FailableInterface {
   /**
    * Serialize the content to a formatted (based on the meta property) string
    *
-   * @param mixed $content The content to serialize
+   * @param mixed    $content The content to serialize
+   * @param resource $stream  Optional output stream
    *
    * @return string|null
    */
-  public function serialize( $content );
+  public function serialize( $content, $stream = null );
   /**
    * Unserialize string into a php value
    *
-   * @param string $content The content to unserialize
+   * @param string|resource $content The content (can be a stream) to unserialize
    *
    * @return mixed
    */

@@ -225,9 +225,9 @@ abstract class Permanent extends Storage implements PermanentInterface {
     return $this;
   }
   /**
+   * Load the given namespace into the storage
    *
-   * @param string|null   * Load the given namespace into the storage
-   * $namespace The namespace to load
+   * @param string|null $namespace The namespace to load
    *
    * @return $this
    */
