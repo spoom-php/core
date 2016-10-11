@@ -21,7 +21,7 @@ class Listener extends Library {
    * Library for the listener is missing. Data:
    *  - value [string]: The library path/name
    */
-  const EXCEPTION_MISSING_LIBRARY = 'framework#24E';
+  const EXCEPTION_MISSING_LIBRARY = 'framework#24W';
   /**
    * Library for the listener isn't implement the self::CLASS_LIBRARY
    */

@@ -17,37 +17,22 @@ abstract class Helper {
    * Id for wrap the native \Exception instances
    */
   const EXCEPTION_WRAP = 'framework#1E';
-  /**
-   * Exception when the extension id is not like ::REGEXP_ID
-   */
-  const EXCEPTION_INVALID_ID = 'framework#3N';
 
   /**
    * Exception id format
    */
-  const REGEXP_ID = '/^([a-z0-9_\\-]+)(#([0-9]+)([NWEC]?))?$/';
+  const REGEXP_ID = '/^([a-z0-9_\\-]+)#([0-9]+)([NWEC]?)$/';
 
   /**
    * Map the types to the corresponding level
    *
-   * @var int[string]
+   * @var array[string]int
    */
   private static $LEVEL = [
-    Exception::TYPE_CRITICAL => \Framework::LEVEL_CRITICAL,
-    Exception::TYPE_ERROR    => \Framework::LEVEL_ERROR,
-    Exception::TYPE_WARNING  => \Framework::LEVEL_WARNING,
-    Exception::TYPE_NOTICE   => \Framework::LEVEL_NOTICE
-  ];
-  /**
-   * Map the levels to the corresponding type
-   *
-   * @var int[string]
-   */
-  private static $TYPE = [
-    \Framework::LEVEL_CRITICAL => Exception::TYPE_CRITICAL,
-    \Framework::LEVEL_ERROR    => Exception::TYPE_ERROR,
-    \Framework::LEVEL_WARNING  => Exception::TYPE_WARNING,
-    \Framework::LEVEL_NOTICE   => Exception::TYPE_NOTICE
+    'C' => \Framework::LEVEL_CRITICAL,
+    'E' => \Framework::LEVEL_ERROR,
+    'W' => \Framework::LEVEL_WARNING,
+    'N' => \Framework::LEVEL_NOTICE
   ];
 
   /**
@@ -77,27 +62,22 @@ abstract class Helper {
    * Compare and exception' id to a valid exception id
    *
    * @param \Exception $exception
-   * @param string     $filter The id, or a part of an id
+   * @param string     $id The id, or just the extension part of an id
    *
    * @return bool
    */
-  public static function match( \Exception $exception, $filter ) {
+  public static function match( \Exception $exception, $id ) {
 
     $raw = $exception instanceof Exception ? (object) [
       'extension' => $exception->extension->id,
-      'code'      => $exception->getCode(),
-      'type'      => $exception->type
+      'code'      => $exception->getCode()
     ] : self::parse( static::EXCEPTION_WRAP );
 
-    if( empty( $filter ) ) return true;
+    if( empty( $id ) ) return true;
     else {
 
-      $filter = self::parse( $filter );
-      if( empty( $filter ) ) return false;
-      if( $raw->extension != $filter->extension ) return false;
-      else if( $filter->code >= 0 && $raw->code != $filter->code ) return false;
-      else if( !empty( $filter->type ) && $raw->type != $filter->type ) return false;
-      else return true;
+      list( $extension, $code ) = strpos( $id, '#' ) === false ? [ $id, -1 ] : explode( '#', $id );
+      return $raw->extension == $extension && ( $code < 0 || $raw->code == $code );
     }
   }
 
@@ -106,19 +86,19 @@ abstract class Helper {
    *
    * @param string $id ::REGEXP_ID formatted string
    *
-   * @return object { extension: string, code: int, type: char }
+   * @return object { extension: string, code: int, level: int|null }
    */
   public static function parse( $id ) {
 
     if( empty( $id ) ) return null;
     else {
 
-      $matches = [ ];
+      $matches = [];
       if( !preg_match( self::REGEXP_ID, $id, $matches ) ) return null;
       else return (object) [
         'extension' => $matches[ 1 ],
-        'code'      => !isset( $matches[ 3 ] ) ? -1 : (int) $matches[ 3 ],
-        'type'      => empty( $matches[ 4 ] ) ? '' : $matches[ 4 ],
+        'code'      => (int) $matches[ 2 ],
+        'level'     => isset( $matches[ 3 ] ) ? self::getLevel( $matches[ 3 ] ) : null
       ];
     }
   }
@@ -126,15 +106,13 @@ abstract class Helper {
    * Build the exception message
    *
    * @param Extension $extension The exception message source
-   * @param string    $code      The exception code (with the type postix)
+   * @param string    $code      The exception code
    * @param array     $data      The insertion data to the message
    *
    * @return string
    */
-  public static function build( Extension $extension, $code, array $data = [ ] ) {
-
-    $tmp = $extension->text( 'framework-exception:#' . $code, $data, null );
-    return $tmp ? $tmp : $extension->text( 'framework-exception:#' . ( (int) $code ), $data );
+  public static function build( Extension $extension, $code, array $data = [] ) {
+    return $extension->text( 'framework-exception:#' . $code, $data, null );
   }
   /**
    * Extract exception data into array format
@@ -163,7 +141,7 @@ abstract class Helper {
   }
 
   /**
-   * Get Exception type postfix character from the level number
+   * Get Exception postfix character from the level number
    *
    * @since ?
    *
@@ -171,20 +149,22 @@ abstract class Helper {
    *
    * @return string|null
    */
-  public static function getType( $level ) {
-    return isset( self::$TYPE[ $level ] ) ? self::$TYPE[ $level ] : null;
+  public static function getPostfix( $level ) {
+
+    $tmp = array_flip( self::$LEVEL );
+    return isset( $tmp[ $level ] ) ? $tmp[ $level ] : null;
   }
   /**
    * Get the level number from the given Exception type character
    *
    * @since ?
    *
-   * @param string $type Exception::TYPE_* contant
+   * @param string $input Exception's log level char. Values: C, E, W, N
    *
    * @return int|null
    */
-  public static function getLevel( $type ) {
-    return isset( self::$LEVEL[ $type ] ) ? self::$LEVEL[ $type ] : null;
+  public static function getLevel( $input ) {
+    return isset( self::$LEVEL[ $input ] ) ? self::$LEVEL[ $input ] : null;
   }
 
   /**

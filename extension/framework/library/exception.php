@@ -6,6 +6,7 @@ use Framework\Helper\Library;
 use Framework\Helper\LibraryInterface;
 use Framework\Helper\Log;
 use Framework\Helper\LogableInterface;
+use Framework\Helper\Text;
 
 /**
  * Extend simple PHP \Exception with the power of code base text with language and insertion support
@@ -14,28 +15,17 @@ use Framework\Helper\LogableInterface;
  *
  * @property-read array     $data      The data attached to the exception
  * @property-read Extension $extension The message localization source
- * @property-read string    $type      The "danger level". This can only be a self::TYPE_* constants
- * @property-read int       $level     The exception's level based on the type
- * @property-read string    $id        The unique identifier. The format is '<extension>#<code><type>'
+ * @property-read int       $level     The log level
+ * @property-read string    $id        The unique identifier. The format is '<extension>#<code>'
  */
 abstract class Exception extends \Exception implements \JsonSerializable, LibraryInterface, LogableInterface {
 
   /**
-   * Type for exception that MUST break the execution
+   * The level of the exception based on the exception's type
+   *
+   * @var int
    */
-  const TYPE_CRITICAL = 'C';
-  /**
-   * Type for exception that MAY break the execution
-   */
-  const TYPE_ERROR = 'E';
-  /**
-   * Type for exception that SHOULD NOT break the execution
-   */
-  const TYPE_WARNING = 'W';
-  /**
-   * Type for impactless exception
-   */
-  const TYPE_NOTICE = 'N';
+  private $_level;
 
   /**
    * The unique identifier of the exception
@@ -48,20 +38,7 @@ abstract class Exception extends \Exception implements \JsonSerializable, Librar
    *
    * @var array
    */
-  private $_data = [ ];
-  /**
-   * The exception's "danger level"
-   *
-   * @var string
-   */
-  private $_type = self::TYPE_ERROR;
-  /**
-   * The level of the exception based on the exception's type
-   *
-   * @var int
-   */
-  private $_level;
-
+  private $_data = [];
   /**
    * Source of the error message if not null
    *
@@ -74,28 +51,24 @@ abstract class Exception extends \Exception implements \JsonSerializable, Librar
    *
    * @param string|\Exception $id
    * @param array|object      $data
-   * @param \Exception        $previous
-   *
-   * @throws Exception\Strict ::EXCEPTION_INVALID_ID when the ID format is wrong
+   * @param \Exception        $exception
    */
-  public function __construct( $id, $data = [ ], \Exception $previous = null ) {
+  public function __construct( $id, $data = [], \Exception $exception = null ) {
 
-    // parse id to "properties"
     $tmp = Exception\Helper::parse( $id );
-    if( empty( $tmp ) ) throw new Exception\Strict( Helper::EXCEPTION_INVALID_ID, [ 'id' => $id ] );
+    if( $tmp ) $message = Exception\Helper::build( Extension::instance( $tmp->extension ), $tmp->code, $data );
     else {
 
-      $this->_extension = Extension::instance( $tmp->extension );
-      $this->_type      = empty( $tmp->type ) ? static::TYPE_ERROR : $tmp->type;
-      $this->_level     = Exception\Helper::getLevel( $this->_type );
-      $this->_data      = Enumerable::cast( $data );
-      $tmp->code        = $tmp->code < 0 ? Helper::EXCEPTION_UNKNOWN : $tmp->code;
-
-      // init the parent object with custom data
-      parent::__construct( Exception\Helper::build( $this->_extension, $tmp->code . $this->_type, $this->_data ), $tmp->code, $previous );
-
-      $this->_id = ( $this->_extension ? $this->_extension->id : '' ) . '#' . $this->getCode() . $this->_type;
+      $message = Text::insert( $id, $data );
+      $tmp     = Exception\Helper::parse( Helper::EXCEPTION_UNKNOWN );
     }
+
+    $this->_id        = $tmp->extension . '#' . $tmp->code;
+    $this->_extension = Extension::instance( $tmp->extension );
+    $this->_data      = Enumerable::cast( $data );
+    $this->_level     = $tmp->level ?: \Framework::LEVEL_ERROR;
+
+    parent::__construct( $message, $tmp->code, $exception );
   }
 
   /**
@@ -128,12 +101,12 @@ abstract class Exception extends \Exception implements \JsonSerializable, Librar
   /**
    * Compare and exception' id to a valid exception id
    *
-   * @param string|null $filter
+   * @param string|null $input
    *
    * @return bool
    */
-  public function match( $filter ) {
-    return Exception\Helper::match( $this, $filter );
+  public function match( $input ) {
+    return Exception\Helper::match( $this, $input );
   }
   /**
    * Log the exception
@@ -144,7 +117,7 @@ abstract class Exception extends \Exception implements \JsonSerializable, Librar
    * @return $this
    * @throws Exception\Strict
    */
-  public function log( $data = [ ], Log $instance = null ) {
+  public function log( $data = [], Log $instance = null ) {
 
     $instance = $instance ?: Application::getLog();
     if( $instance ) {
@@ -153,7 +126,7 @@ abstract class Exception extends \Exception implements \JsonSerializable, Librar
       $data                = Enumerable::cast( $data );
       $data[ 'exception' ] = $this->toArray( true );
 
-      $instance->create( $this->message, $this->_data + $data, 'framework:exception!' . $this->id, $this->level );
+      $instance->create( $this->message, $this->_data + $data, 'framework:exception!' . $this->id, $this->_level );
     }
 
     return $this;
@@ -184,16 +157,6 @@ abstract class Exception extends \Exception implements \JsonSerializable, Librar
 
     return $tmp;
   }
-  /**
-   * Like toArray() just object
-   *
-   * @param bool $more Append additional data to the result
-   *
-   * @return object
-   */
-  public function toObject( $more = false ) {
-    return (object) $this->toArray( $more );
-  }
 
   /**
    * @since 0.6.0
@@ -212,21 +175,12 @@ abstract class Exception extends \Exception implements \JsonSerializable, Librar
     return $this->_data;
   }
   /**
-   * @since 0.6.0
-   *
-   * @return string
-   */
-  public function getType() {
-    return $this->_type;
-  }
-  /**
-   * @since 0.6.0
-   *
    * @return int
    */
   public function getLevel() {
     return $this->_level;
   }
+
   /**
    * @since 0.6.0
    *
@@ -243,6 +197,6 @@ abstract class Exception extends \Exception implements \JsonSerializable, Librar
    * which is a value of any type other than a resource.
    */
   public function jsonSerialize() {
-    return $this->toObject();
+    return (object) $this->toArray();
   }
 }

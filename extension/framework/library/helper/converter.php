@@ -22,7 +22,7 @@ interface ConverterInterface extends LibraryInterface, FailableInterface {
    * @param mixed              $content  The content to serialize
    * @param mixed              $error    The error description, if any
    */
-  const EXCEPTION_FAIL_SERIALIZE = 'framework#29E';
+  const EXCEPTION_FAIL_SERIALIZE = 'framework#29N';
   /**
    * Failed de-serialization
    *
@@ -30,7 +30,7 @@ interface ConverterInterface extends LibraryInterface, FailableInterface {
    * @param string             $content  The content to unserialize
    * @param mixed              $error    The error description, if any
    */
-  const EXCEPTION_FAIL_UNSERIALIZE = 'framework#30E';
+  const EXCEPTION_FAIL_UNSERIALIZE = 'framework#30N';
 
   /**
    * Serialize the content to a formatted (based on the meta property) string

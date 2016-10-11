@@ -14,7 +14,7 @@ class Application extends Library {
   /**
    * Header already sent when try to redirect the page
    */
-  const EXCEPTION_FAIL_REDIRECT = 'framework#9E';
+  const EXCEPTION_FAIL_REDIRECT = 'framework#9N';
   /**
    * Trying to set invalid localization
    */
@@ -186,7 +186,7 @@ class Application extends Library {
     // throw an exception that match the fail level
     if( $level <= \Framework::getReport() ) {
 
-      $type = Exception\Helper::getType( $level );
+      $type = Exception\Helper::getPostfix( $level );
       if( $type ) throw new Exception\Strict( self::EXCEPTION_FAIL . $type, [
         'code'    => $code,
         'message' => $message,

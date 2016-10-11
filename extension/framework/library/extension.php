@@ -52,7 +52,7 @@ class Extension extends Library {
   /**
    * Exception code for invalid extension id
    */
-  const EXCEPTION_INVALID_ID = 'framework#6N';
+  const EXCEPTION_INVALID_ID = 'framework#6W';
 
   /**
    * Default directory for localization files

@@ -6,9 +6,9 @@ use Framework\Exception\Collector;
 
 class FrameworkExceptionTest extends PHPUnit_Framework_TestCase {
 
-  public function __construct( $name = null, array $data = [ ], $dataName = '' ) {
+  public function __construct( $name = null, array $data = [], $dataName = '' ) {
     \Framework::setup( \Framework::ENVIRONMENT_DEVELOPMENT ) && \Framework::execute( function () { } );
-    
+
     parent::__construct( $name, $data, $dataName );
   }
 
@@ -21,20 +21,18 @@ class FrameworkExceptionTest extends PHPUnit_Framework_TestCase {
     ], $previous );
 
     $this->assertEquals( 'framework', $exception->extension->id );
-    $this->assertEquals( 'framework#1E', $exception->id );
-    $this->assertEquals( \Framework::LEVEL_ERROR, $exception->level );
+    $this->assertEquals( 'framework#1', $exception->id );
     $this->assertEquals( '#1: test1', $exception->getMessage() );
     $this->assertEquals( 1, $exception->getCode() );
-    $this->assertEquals( 'E', $exception->type );
     $this->assertEquals( [
       'code'    => 1,
       'message' => 'test1'
     ], $exception->data );
-    $this->assertEquals( "framework#1E: '#1: test1'", (string) $exception );
+    $this->assertEquals( "framework#1: '#1: test1'", (string) $exception );
 
     // test conversion
-    $this->assertEquals( (object) [
-      'id'        => 'framework#1E',
+    $this->assertEquals( [
+      'id'        => 'framework#1',
       'code'      => 1,
       'extension' => 'framework',
       'message'   => '#1: test1',
@@ -42,7 +40,13 @@ class FrameworkExceptionTest extends PHPUnit_Framework_TestCase {
         'code'    => 1,
         'message' => 'test1'
       ]
-    ], $exception->toObject() );
+    ], $exception->toArray() );
+
+    // test custom message
+    $exception = new Exception\Runtime( 'Custom test message: {a}', [ 'a' => 'test0' ] );
+    $this->assertEquals( 'framework#0', $exception->id );
+    $this->assertTrue( $exception->match( Exception\Helper::EXCEPTION_UNKNOWN ) );
+    $this->assertEquals( 'Custom test message: test0', $exception->getMessage() );
   }
 
   public function testHelper() {
@@ -60,12 +64,8 @@ class FrameworkExceptionTest extends PHPUnit_Framework_TestCase {
     // test for id matching
     $this->assertTrue( Helper::match( $exception, 'framework' ) );
     $this->assertTrue( Helper::match( $exception, 'framework#1' ) );
-    $this->assertTrue( Helper::match( $exception, 'framework#1E' ) );
-
     $this->assertFalse( Helper::match( $exception, 'otherextension' ) );
     $this->assertFalse( Helper::match( $exception, 'framework#2' ) );
-    $this->assertFalse( Helper::match( $exception, '#2' ) );
-    $this->assertFalse( Helper::match( $exception, 'framework#1N' ) );
   }
 
   public function testCollector() {

@@ -46,7 +46,7 @@ class Collector extends Library implements \Iterator, \Countable {
    * Check if contains any exception that match with the filters
    *
    * @param string|null $id    The exception's id filter
-   * @param int         $level The exception's minimum level
+   * @param int         $level The exception's minimum log level
    *
    * @return bool
    */
