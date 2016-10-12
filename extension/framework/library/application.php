@@ -4,6 +4,7 @@ use Framework\Exception\Collector;
 use Framework\Exception\Strict;
 use Framework\Helper\Library;
 use Framework\Helper\Log;
+use Framework\Helper\LogInterface;
 
 /**
  * Class Application
@@ -242,7 +243,7 @@ class Application extends Library {
   /**
    * Getter for log. It is just a wrapper for `Log::instance('framework');`
    *
-   * @return Log
+   * @return LogInterface
    */
   public static function getLog() {
     return Log::instance( 'framework' );

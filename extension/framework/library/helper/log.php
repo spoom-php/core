@@ -1,31 +1,111 @@
 <?php namespace Framework\Helper;
 
-use Framework\Exception\Strict;
 use Framework\Extension;
 use Framework\Storage;
 use Framework\StorageInterface;
 
 /**
- * Class Log
+ * Interface LogInterface
  * @package Framework\Helper
  *
  * @property-read string $namespace The default namespace for log entries
- * @property-read string $name      The instance identifier
- * @property-read string $file      The default log file
+ * @property-read string $name      The name of the logger
  */
-class Log extends Library {
+interface LogInterface extends LibraryInterface {
 
   /**
-   * Event called before every new log entry. This can prevent the default file log. Arguments:
-   *  - instance [Log]: The Log instance that call this event
-   *  - namespace [string]: The log entry namespace
-   *  - level [int]: The log entry type
-   *  - datetime [string]: 'Y-m-d\TH:i:s.uO' format
-   *  - description [string]: The message with the inserted data
-   *  - &message [string]: The raw message
-   *  - &data [Storage]: The raw data
+   * This event MUST be called before every new log entry. This can prevent the log
+   *
+   * @param LogInterface     $instance    The Log instance that call this event
+   * @param string           $namespace   *The log entry namespace
+   * @param int              $level       The log entry type
+   * @param string           $datetime    *'Y-m-d\TH:i:s.uO' format
+   * @param string           $description *The message with the inserted data
+   * @param string           $message     *The raw message
+   * @param StorageInterface $data        *The raw data
    */
   const EVENT_CREATE = 'log.create';
+
+  /**
+   * @param string               $message   The log message pattern
+   * @param array|object|Storage $data      The pattern insertion or additional data
+   * @param string               $namespace The namespace for the log entry
+   * @param int                  $level     The log level
+   *
+   * @return bool
+   */
+  public function create( $message, $data = [], $namespace = '', $level = \Framework::LEVEL_DEBUG );
+
+  /**
+   * @param string               $message   The log message pattern
+   * @param array|object|Storage $data      The pattern insertion or additional data
+   * @param string               $namespace The namespace for the log entry
+   *
+   * @return bool
+   */
+  public function debug( $message, $data = [], $namespace = '' );
+  /**
+   * @param string               $message   The log message pattern
+   * @param array|object|Storage $data      The pattern insertion or additional data
+   * @param string               $namespace The namespace for the log entry
+   *
+   * @return bool
+   */
+  public function info( $message, $data = [], $namespace = '' );
+  /**
+   * @param string               $message   The log message pattern
+   * @param array|object|Storage $data      The pattern insertion or additional data
+   * @param string               $namespace The namespace for the log entry
+   *
+   * @return bool
+   */
+  public function notice( $message, $data = [], $namespace = '' );
+  /**
+   * @param string               $message   The log message pattern
+   * @param array|object|Storage $data      The pattern insertion or additional data
+   * @param string               $namespace The namespace for the log entry
+   *
+   * @return bool
+   */
+  public function warning( $message, $data = [], $namespace = '' );
+  /**
+   * @param string               $message   The log message pattern
+   * @param array|object|Storage $data      The pattern insertion or additional data
+   * @param string               $namespace The namespace for the log entry
+   *
+   * @return bool
+   */
+  public function error( $message, $data = [], $namespace = '' );
+  /**
+   * @param string               $message   The log message pattern
+   * @param array|object|Storage $data      The pattern insertion or additional data
+   * @param string               $namespace The namespace for the log entry
+   *
+   * @return bool
+   */
+  public function critical( $message, $data = [], $namespace = '' );
+
+  /**
+   * The default namespace for the log entry
+   *
+   * @return string
+   */
+  public function getNamespace();
+  /**
+   * The name of the logger
+   *
+   * @return string
+   */
+  public function getName();
+}
+
+/**
+ * Class Log
+ * @package Framework\Helper
+ *
+ * @property-read string $file      The default log file
+ */
+class Log extends Library implements LogInterface {
 
   /**
    * Pattern for one log entry for file based logging. This can be processed as a csv row
@@ -35,9 +115,9 @@ class Log extends Library {
   /**
    * Holds the instanced loggers by $name
    *
-   * @var Log[]
+   * @var LogInterface[]
    */
-  private static $instance = [ ];
+  private static $instance = [];
 
   /**
    * @var Extension
@@ -83,9 +163,8 @@ class Log extends Library {
    * @param int                  $level     The log level
    *
    * @return bool
-   * @throws Strict ::EXCEPTION_NOTICE_INVALID_TYPE on invalid type
    */
-  public function create( $message, $data = [ ], $namespace = '', $level = \Framework::LEVEL_DEBUG ) {
+  public function create( $message, $data = [], $namespace = '', $level = \Framework::LEVEL_DEBUG ) {
 
     // check type against reporting level
     if( $level <= \Framework::LEVEL_NONE || $level > \Framework::getLog() ) return true;
@@ -93,29 +172,34 @@ class Log extends Library {
 
       // define local variables and trigger event for external loggers
       list( $usec, $sec ) = explode( ' ', microtime() );
-      $time        = date( 'Y-m-d\TH:i:s', $sec ) . '.' . substr( $usec, 2, 4 ) . date( 'O', $sec );
+      $datetime    = date( 'Y-m-d\TH:i:s', $sec ) . '.' . substr( $usec, 2, 4 ) . date( 'O', $sec );
       $data        = $data instanceof StorageInterface ? $data : new Storage( $data );
       $namespace   = empty( $namespace ) ? $this->_namespace : $namespace;
       $description = Text::insert( $message, $data, Text::TYPE_INSERT_LEAVE );
-      $event       = $this->extension->trigger( self::EVENT_CREATE, [
+      $event       = $this->extension->trigger( static::EVENT_CREATE, [
         'instance'    => $this,
         'namespace'   => $namespace,
         'level'       => $level,
-        'datetime'    => $time,
+        'datetime'    => $datetime,
         'description' => $description,
-        'message'     => &$message,
-        'data'        => &$data
+        'message'     => $message,
+        'data'        => $data
       ] );
 
       // check if the external loggers done the work
       if( !$event->prevented && $this->file ) {
-        file_put_contents( $this->file, Text::insert( self::PATTERN_MESSAGE, [
-          'time'        => $time,
+
+        $message     = $event->getString( 'message', $message );
+        $data        = $event->get( 'data', $data );
+        $description = $event->getString( 'description', Text::insert( $message, $data, Text::TYPE_INSERT_LEAVE ) );
+
+        file_put_contents( $this->file, Text::insert( static::PATTERN_MESSAGE, [
+          'time'        => $event->getString( 'datetime', $datetime ),
           'level'       => \Framework::getLevel( $level ),
-          'namespace'   => str_replace( [ ';', "\n" ], [ ',', '' ], $namespace ),
+          'namespace'   => str_replace( [ ';', "\n" ], [ ',', '' ], $event->getString( 'namespace', $namespace ) ),
           'message'     => str_replace( [ ';', "\n" ], [ ',', '' ], $message ),
           'data'        => str_replace( [ ';', "\n" ], [ ',', '' ], json_encode( $data ) ),
-          'description' => str_replace( [ ';', "\n" ], [ ',', '' ], Text::insert( $message, $data, Text::TYPE_INSERT_LEAVE ) )
+          'description' => str_replace( [ ';', "\n" ], [ ',', '' ], $description )
         ] ), FILE_APPEND );
       }
 
@@ -130,7 +214,7 @@ class Log extends Library {
    *
    * @return bool
    */
-  public function debug( $message, $data = [ ], $namespace = '' ) {
+  public function debug( $message, $data = [], $namespace = '' ) {
     return $this->create( $message, $data, $namespace, \Framework::LEVEL_DEBUG );
   }
   /**
@@ -140,7 +224,7 @@ class Log extends Library {
    *
    * @return bool
    */
-  public function info( $message, $data = [ ], $namespace = '' ) {
+  public function info( $message, $data = [], $namespace = '' ) {
     return $this->create( $message, $data, $namespace, \Framework::LEVEL_INFO );
   }
   /**
@@ -150,7 +234,7 @@ class Log extends Library {
    *
    * @return bool
    */
-  public function notice( $message, $data = [ ], $namespace = '' ) {
+  public function notice( $message, $data = [], $namespace = '' ) {
     return $this->create( $message, $data, $namespace, \Framework::LEVEL_NOTICE );
   }
   /**
@@ -160,7 +244,7 @@ class Log extends Library {
    *
    * @return bool
    */
-  public function warning( $message, $data = [ ], $namespace = '' ) {
+  public function warning( $message, $data = [], $namespace = '' ) {
     return $this->create( $message, $data, $namespace, \Framework::LEVEL_WARNING );
   }
   /**
@@ -170,7 +254,7 @@ class Log extends Library {
    *
    * @return bool
    */
-  public function error( $message, $data = [ ], $namespace = '' ) {
+  public function error( $message, $data = [], $namespace = '' ) {
     return $this->create( $message, $data, $namespace, \Framework::LEVEL_ERROR );
   }
   /**
@@ -180,7 +264,7 @@ class Log extends Library {
    *
    * @return bool
    */
-  public function critical( $message, $data = [ ], $namespace = '' ) {
+  public function critical( $message, $data = [], $namespace = '' ) {
     return $this->create( $message, $data, $namespace, \Framework::LEVEL_CRITICAL );
   }
 
@@ -210,9 +294,10 @@ class Log extends Library {
     // define the default log file
     if( $this->_file === null ) {
 
+      $directory   = \Framework::PATH_BASE . \Framework::PATH_TMP;
       $this->_file = false;
-      if( is_dir( \Framework::PATH_BASE . \Framework::PATH_TMP ) || @mkdir( \Framework::PATH_BASE . \Framework::PATH_TMP, 0755, true ) ) {
-        $this->_file = \Framework::PATH_BASE . \Framework::PATH_TMP . date( 'Ymd' ) . '-' . $this->_name . '.log';
+      if( is_dir( $directory ) || @mkdir( $directory, 0755, true ) ) {
+        $this->_file = $directory . date( 'Ymd' ) . '-' . $this->_name . '.log';
       }
     }
 
@@ -224,7 +309,7 @@ class Log extends Library {
    *
    * @param string $name The logger unique name
    *
-   * @return static
+   * @return LogInterface
    */
   public static function instance( $name ) {
     return isset( self::$instance[ $name ] ) ? self::$instance[ $name ] : ( self::$instance[ $name ] = new static( $name ) );

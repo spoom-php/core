@@ -4,6 +4,7 @@ use Framework;
 use Framework\Helper\File;
 use Framework\Helper\Library;
 use Framework\Helper\Log;
+use Framework\Helper\LogInterface;
 
 /**
  * One of the most important class in the framework. Handle all extension
@@ -16,7 +17,7 @@ use Framework\Helper\Log;
  * @property-read Storage\File                     $manifest      The manifest storage
  * @property-read Extension\ConfigurationInterface $configuration The configuration storage object
  * @property-read Extension\LocalizationInterface  $localization  The localization storage object
- * @property-read Log                              $log           The default extension logger instance
+ * @property-read LogInterface                     $log           The default extension logger instance
  */
 class Extension extends Library {
 
@@ -323,7 +324,7 @@ class Extension extends Library {
   /**
    * @since 0.6.0
    *
-   * @return Log
+   * @return LogInterface
    */
   public function getLog() {
     return Log::instance( $this->_id );

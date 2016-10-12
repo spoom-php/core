@@ -4,8 +4,8 @@ use Framework\Exception\Helper;
 use Framework\Helper\Enumerable;
 use Framework\Helper\Library;
 use Framework\Helper\LibraryInterface;
-use Framework\Helper\Log;
 use Framework\Helper\LogableInterface;
+use Framework\Helper\LogInterface;
 use Framework\Helper\Text;
 
 /**
@@ -111,13 +111,13 @@ abstract class Exception extends \Exception implements \JsonSerializable, Librar
   /**
    * Log the exception
    *
-   * @param array    $data     Additional data to the log
-   * @param Log|null $instance The logger instance use to create the log. If null, the Application::getLog() used
+   * @param array             $data     Additional data to the log
+   * @param LogInterface|null $instance The logger instance use to create the log. If null, the Application::getLog() used
    *
    * @return $this
    * @throws Exception\Strict
    */
-  public function log( $data = [], Log $instance = null ) {
+  public function log( $data = [], LogInterface $instance = null ) {
 
     $instance = $instance ?: Application::getLog();
     if( $instance ) {

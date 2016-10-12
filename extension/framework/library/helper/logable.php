@@ -10,9 +10,9 @@ interface LogableInterface {
 
   /**
    * @param array|object|StorageInterface $data
-   * @param Log|null                      $log
+   * @param LogInterface|null             $log
    *
    * @return boolean
    */
-  public function log( $data = [ ], Log $log = null );
+  public function log( $data = [], LogInterface $log = null );
 }
