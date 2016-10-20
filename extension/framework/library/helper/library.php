@@ -24,10 +24,11 @@ class Library implements LibraryInterface {
   private static $cache = [];
 
   /**
-   * There is no getter or setter for the requested property. Argument:
-   *  - property [string]: The requested property name
+   * There is no getter or setter for the requested property
    *
    * @since 0.6.0
+   *
+   * @param string $property The requested property name
    */
   const EXCEPTION_MISSING_PROPERTY = 'framework#20N';
 

@@ -5,6 +5,7 @@ use Framework\Helper\ConverterInterface;
 use Framework\Helper\Enumerable;
 use Framework\Helper\Failable;
 use Framework\Helper\Library;
+use Framework\Helper\Number;
 
 /**
  * Class Ini
@@ -37,7 +38,7 @@ class Ini extends Library implements ConverterInterface {
 
     } else {
 
-      $iterator = new \RecursiveIteratorIterator( new \RecursiveArrayIterator( Enumerable::cast( $content ) ) );
+      $iterator = new \RecursiveIteratorIterator( new \RecursiveArrayIterator( Enumerable::read( $content, false, [] ) ) );
       foreach( $iterator as $value ) {
 
         $keys = [];
@@ -46,7 +47,7 @@ class Ini extends Library implements ConverterInterface {
         }
 
         $print    = is_bool( $value ) ? ( $value ? 'true' : 'false' ) : $value;
-        $quote    = is_numeric( $value ) || is_bool( $value ) ? '' : ( !mb_strpos( $value, '"' ) ? '"' : "'" );
+        $quote    = Number::is( $value ) || is_bool( $value ) ? '' : ( !mb_strpos( $value, '"' ) ? '"' : "'" );
         $result[] = join( '.', $keys ) . "={$quote}{$print}{$quote}";
       }
     }

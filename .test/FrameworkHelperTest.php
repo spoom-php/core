@@ -45,12 +45,12 @@ class FrameworkHelperTest extends PHPUnit_Framework_TestCase {
     $this->assertEquals( "1.23456789", Number::write( 1.23456789 ) );
     $this->assertEquals( "123456789.000", Number::write( 123456789, 3 ) );
     $this->assertEquals( "1.2346", Number::write( 1.23456789, 4 ) );
-    $this->assertEquals( [ 'a' ], Number::write( [ 'a' ] ) );
+    $this->assertEquals( [ 'a' ], Number::write( [ 'a' ], null, [ 'a' ] ) );
 
     $this->assertEquals( 123456789, Number::read( "123456789" ) );
     $this->assertEquals( 1.23456789, Number::read( "1.23456789" ) );
     $this->assertEquals( 1.23456789, Number::read( "1,23456789" ) );
-    $this->assertEquals( 'a', Number::read( [ 'a' ], 'a' ) );
+    $this->assertEquals( -1, Number::read( [ 'a' ], -1 ) );
 
     $this->assertTrue( Number::equal( "123456789", 123456789 ) );
     $this->assertTrue( Number::equal( "123.456789", 123.4568, 4 ) );
@@ -61,8 +61,8 @@ class FrameworkHelperTest extends PHPUnit_Framework_TestCase {
   public function testConverter() {
 
     $list = new Helper\Converter( [
-      new Helper\Converter\Json(),
-      new Helper\Converter\Ini()
+      $converter_json = new Helper\Converter\Json(),
+      $converter_ini = new Helper\Converter\Ini()
     ] );
 
     // basic converter tests
@@ -79,6 +79,17 @@ class FrameworkHelperTest extends PHPUnit_Framework_TestCase {
     // test converter remove
     $list->remove( Helper\Converter\Json::FORMAT );
     $this->assertNull( $list->get( Helper\Converter\Json::FORMAT ) );
+
+    // test for format mapping
+    $list->add( $converter_json );
+    $list->setMap( [
+      'format-test0' => Helper\Converter\Json::FORMAT,
+      'format-test1' => Helper\Converter\Json::FORMAT
+    ] );
+
+    $this->assertEquals( $converter_json, $list->get( 'format-test0' ) );
+    $this->assertEquals( $converter_json, $list->get( Helper\Converter\Json::FORMAT ) );
+    $this->assertNull( $list->get( 'format-test2' ) );
   }
   /**
    * @dataProvider providerConverter

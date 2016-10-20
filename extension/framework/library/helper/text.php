@@ -1,6 +1,6 @@
 <?php namespace Framework\Helper;
 
-use Framework\Exception\Strict;
+use Framework\Exception;
 use Framework\Application;
 use Framework\Storage;
 use Framework\StorageInterface;
@@ -11,56 +11,57 @@ use Framework\StorageInterface;
  */
 abstract class Text {
 
+  /**
+   * Missing hash algorithm
+   *
+   * @param string $algorithm The wrong algorithm name
+   * @param string $list      The available algorithms list (separated by commas)
+   */
   const EXCEPTION_INVALID_ALGORITHM = 'framework#8E';
 
   /**
    * Regexp for string insertion
    */
-  const REGEXP_INSERT_REPLACE = '/\{([a-z0-9_.-]+)\}/i';
+  const INSERT_REGEXP = '/\{([a-z0-9_.-]+)\}/i';
 
   /**
-   *  Leave the pattern itself when no data exist for it
-   */
-  const TYPE_INSERT_LEAVE = 0;
-  /**
-   * Change the pattern to empty string when no data exist for it
-   */
-  const TYPE_INSERT_EMPTY = 1;
-
-  /**
-   * Insert variables to the input from insertion array used the regexp constant of class
+   * Check if the input is string, or can be a string. Valid strings is:
+   *  - numbers (with $simple == false)
+   *  - objects with __toString() method (with $simple == false)
    *
-   * @param string        $text      input string to insert
-   * @param array|Storage $insertion the insertion variables
-   * @param int           $type
+   * @param mixed   $input
+   * @param boolean $simple True strings or converted
    *
-   * @return array|string
+   * @return boolean
    */
-  public static function insert( $text, $insertion, $type = self::TYPE_INSERT_EMPTY ) {
+  public static function is( $input, $simple = false ) {
+    if( is_string( $input ) ) return true;
+    else if( !$simple ) return Number::is( $input, true ) || ( is_object( $input ) && method_exists( $input, '__toString' ) );
+    else return false;
+  }
 
-    // every insertion converted to data
-    if( !( $insertion instanceof StorageInterface ) ) $insertion = new Storage( $insertion );
-
-    // find patterns iterate trough the matches
-    preg_match_all( self::REGEXP_INSERT_REPLACE, $text, $matches, PREG_SET_ORDER );
-    foreach( $matches as $value ) {
-
-      // define the default value
-      switch( $type ) {
-        case self::TYPE_INSERT_EMPTY:
-          $ifnull = '';
-          break;
-        case self::TYPE_INSERT_LEAVE:
-        default:
-          $ifnull = $value[ 0 ];
-          break;
-      }
-
-      // replace the pattern
-      $text = str_replace( $value[ 0 ], $insertion->getString( $value[ 1 ], $ifnull ), $text );
+  /**
+   * Convert the input into string value. On error/invalid input returns the $default parameter
+   *
+   * @param mixed       $input
+   * @param string|null $default
+   *
+   * @return string|null
+   */
+  public static function read( $input, $default = null ) {
+    switch( true ) {
+      case is_string( $input ):
+        return $input;
+      case Number::is( $input, true ):
+        return Number::write( $input );
+      case is_object( $input ) && method_exists( $input, '__toString' ):
+        return (string) $input;
+      case is_resource( $input ):
+        $tmp = stream_get_contents( $input );
+        if( $tmp !== false ) return $tmp;
     }
 
-    return $text;
+    return $default;
   }
 
   /**
@@ -74,7 +75,7 @@ abstract class Text {
    * @param int      $seeds  The minimum length of the secure random seeds (only used when the $secure param is true)
    *
    * @return string The unique string
-   * @throws Strict Throws ::EXCEPTION_HASH_INVALID_ALGORITHM when the hashing algorithm is invalid
+   * @throws Exception\Strict Throws ::EXCEPTION_INVALID_ALGORITHM when the hashing algorithm is invalid
    */
   public static function unique( $length = null, $prefix = '', $secure = true, $hash = 'sha256', $seeds = 64 ) {
 
@@ -119,21 +120,50 @@ abstract class Text {
     return $length ? substr( $result, 0, $length ) : $result;
   }
   /**
-   * Generates hash with the basic PHP hash() function but handle the errors with exception
+   * Generates hash with the basic PHP hash() function but handles the error with exception
    *
    * @param string $raw       The input for the hash
    * @param string $algorithm The hashing algorithm name
    *
    * @return string The hashed string
-   * @throws Strict Throws ::EXCEPTION_HASH_INVALID_ALGORITHM when the hashing algorithm is invalid
+   * @throws Exception\Strict Throws ::EXCEPTION_INVALID_ALGORITHM when the hashing algorithm is invalid
    */
   public static function hash( $raw, $algorithm = 'sha256' ) {
 
     $tmp = @hash( $algorithm, $raw );
-    if( empty( $tmp ) ) throw new Strict( self::EXCEPTION_INVALID_ALGORITHM, [ 'algorithm' => $algorithm, 'available' => hash_algos() ] );
-    else return $tmp;
+    if( !empty( $tmp ) ) return $tmp;
+    else throw new Exception\Strict( self::EXCEPTION_INVALID_ALGORITHM, [
+      'algorithm' => $algorithm,
+      'list'      => implode( ',', hash_algos() )
+    ] );
   }
 
+  /**
+   * Insert variables to the input from insertion array used the regexp constant of class
+   *
+   * @param string                        $text      Input string to insert
+   * @param array|object|StorageInterface $insertion The insertion variables
+   * @param boolean                       $keep      Keep the missing insertions, or replace them with empty string
+   *
+   * @return array|string
+   */
+  public static function insert( $text, $insertion, $keep = false ) {
+
+    // every insertion converted to data
+    if( !( $insertion instanceof StorageInterface ) ) {
+      $insertion = new Storage( $insertion );
+    }
+
+    // find patterns iterate trough the matches
+    preg_match_all( self::INSERT_REGEXP, $text, $matches, PREG_SET_ORDER );
+    foreach( $matches as $value ) {
+
+      // replace the pattern
+      $text = str_replace( $value[ 0 ], $insertion->getString( $value[ 1 ], $keep ? $value[ 0 ] : '' ), $text );
+    }
+
+    return $text;
+  }
   /**
    * Clear multiply occurance of chars from text and leave only one
    *
@@ -144,9 +174,9 @@ abstract class Text {
    */
   public static function reduce( $text, $chars = ' ' ) {
     $text = preg_replace( '/[' . $chars . ']{2,}/', ' ', $text );
-
     return $text;
   }
+
   /**
    * Create camelCase version of the input string along the separator(s)
    *

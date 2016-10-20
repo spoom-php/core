@@ -359,13 +359,13 @@ class Storage extends Library implements StorageInterface {
 
     // handle data manipulation
     if( !isset( $value ) ) $value = $data;
-    else if( is_numeric( $data ) && is_numeric( $value ) ) $value += $data;
-    else if( is_string( $data ) && is_string( $value ) ) $value .= $data;
+    else if( Number::is( $data, true ) && Number::is( $value, true ) ) $value += $data;
+    else if( Text::is( $data, true ) && Text::is( $value, true ) ) $value .= $data;
     else if( Enumerable::is( $data ) && Enumerable::is( $value ) ) {
 
       $convert = is_object( $value );
-      $data    = is_object( $data ) && $data instanceof \JsonSerializable ? (array) $data->jsonSerialize() : (array) $data;
-      $value   = is_object( $value ) && $value instanceof \JsonSerializable ? (array) $value->jsonSerialize() : (array) $value;
+      $data    = Enumerable::read( $data, false, [] );
+      $value   = Enumerable::read( $value, false, [] );
 
       $value = $recursive ? array_merge_recursive( $value, $data ) : array_merge( $value, $data );
       if( $convert ) $value = (object) $value;
@@ -761,7 +761,7 @@ class Storage extends Library implements StorageInterface {
       // force string type
       case self::TYPE_STRING:
 
-        if( $tmp->exist && ( is_string( $result ) || Number::is( $result, false ) || is_null( $result ) ) ) $result = (string) $result;
+        if( $tmp->exist && ( Text::is( $result ) || is_null( $result ) ) ) $result = Text::read( $result );
         else $result = $default;
 
         break;
@@ -770,7 +770,7 @@ class Storage extends Library implements StorageInterface {
       case 'num':
       case self::TYPE_NUMBER:
 
-        $result = $tmp->exist && Number::is( $result ) ? Number::read( $result ) : $default;
+        $result = $tmp->exist ? Number::read( $result, $default ) : $default;
         break;
 
       // force integer type
@@ -782,6 +782,7 @@ class Storage extends Library implements StorageInterface {
 
       // force float type
       case 'double':
+      case 'real':
       case self::TYPE_FLOAT:
 
         $result = $tmp->exist && Number::is( $result ) ? ( (float) Number::read( $result ) ) : $default;
@@ -790,13 +791,13 @@ class Storage extends Library implements StorageInterface {
       // force array type
       case self::TYPE_ARRAY:
 
-        $result = $tmp->exist && Enumerable::is( $result ) ? Enumerable::cast( $result ) : $default;
+        $result = $tmp->exist ? Enumerable::read( $result, false, $default ) : $default;
         break;
 
       // force object type
       case self::TYPE_OBJECT:
 
-        $result = $tmp->exist && Enumerable::is( $result ) ? Enumerable::cast( $result, true ) : $default;
+        $result = $tmp->exist ? Enumerable::read( $result, true, $default ) : $default;
         break;
 
       // force boolean type

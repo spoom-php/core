@@ -65,7 +65,7 @@ abstract class Exception extends \Exception implements \JsonSerializable, Librar
 
     $this->_id        = $tmp->extension . '#' . $tmp->code;
     $this->_extension = Extension::instance( $tmp->extension );
-    $this->_data      = Enumerable::cast( $data );
+    $this->_data      = Enumerable::read( $data, false, [] );
     $this->_level     = $tmp->level ?: \Framework::LEVEL_ERROR;
 
     parent::__construct( $message, $tmp->code, $exception );
@@ -123,7 +123,7 @@ abstract class Exception extends \Exception implements \JsonSerializable, Librar
     if( $instance ) {
 
       // extend data
-      $data                = Enumerable::cast( $data );
+      $data                = Enumerable::read( $data, false, [] );
       $data[ 'exception' ] = $this->toArray( true );
 
       $instance->create( $this->message, $this->_data + $data, 'framework:exception!' . $this->id, $this->_level );

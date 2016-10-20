@@ -139,7 +139,7 @@ abstract class Enumerable {
     else if( $ordered ) for( $i = 0; $i < count( $test ); ++$i ) {
       if( !isset( $test[ $i ] ) ) return false;
     } else foreach( $test as $i => $value ) {
-      if( !is_numeric( $i ) ) return false;
+      if( !is_integer( $i ) ) return false;
     }
 
     return true;
@@ -190,21 +190,36 @@ abstract class Enumerable {
     return $input;
   }
   /**
-   * Cast anything into array (or object). This can handle storages, and non-enumerable variables
-   *
-   * note: Empty object will be null!
+   * Convert the input into array or object value. On error/invalid input returns the $default parameter
    *
    * @since ?
    *
-   * @param mixed $input
-   * @param bool  $object Cast to object or array
+   * @param mixed             $input
+   * @param boolean           $object Result casted to object or array
+   * @param array|object|null $default
    *
    * @return array|object|null
    */
-  public static function cast( $input, $object = false ) {
+  public static function read( $input, $object = true, $default = null ) {
 
-    $input = $input instanceof StorageInterface ? $input->getArray( '' ) : $input;
-    return empty( $input ) || !self::is( $input ) ? ( $object ? null : [] ) : ( $object ? (object) $input : (array) $input );
+    if( is_object( $input ) ) {
+
+      // support storages
+      if( $input instanceof StorageInterface ) $input = $input->getArray( '' );
+
+      // support arrayaccess
+      if( $input instanceof \ArrayAccess ) {
+
+        $tmp = [];
+        foreach( $input as $k => $t ) $tmp[ $k ] = $t;
+        $input = $tmp;
+      }
+
+      // support json seriable objects (at last)
+      if( $input instanceof \JsonSerializable ) $input = $input->jsonSerialize();
+    }
+
+    return self::is( $input ) ? ( $object ? (object) $input : (array) $input ) : $default;
   }
 
   /**

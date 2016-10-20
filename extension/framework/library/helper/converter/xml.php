@@ -76,7 +76,7 @@ class Xml extends Library implements ConverterInterface {
         } else if( Enumerable::isArray( $value, false ) ) {
           $objects[] = (object) [ 'element' => $element, 'data' => $value, 'name' => $index, 'key' => $object->key . '.' . $index ];
         } else {
-          $child = $dom->createElement( is_numeric( $index ) ? $object->name : $index );
+          $child = $dom->createElement( is_integer( $index ) ? $object->name : $index );
 
           $element->appendChild( $child );
           $objects[] = (object) [ 'element' => $child, 'data' => $value, 'name' => $child->tagName, 'key' => $object->key . '.' . $index ];

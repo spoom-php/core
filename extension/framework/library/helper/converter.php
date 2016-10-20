@@ -88,6 +88,12 @@ class Converter extends Library {
    * @var ConverterInterface[]
    */
   private $_list = [];
+  /**
+   * Map custom format names (key) to converter formats (value)
+   *
+   * @var array
+   */
+  private $_map = [];
 
   /**
    * @param ConverterInterface[] $list
@@ -102,6 +108,46 @@ class Converter extends Library {
    */
   function __clone() {
     $this->_list = Enumerable::copy( $this->_list );
+  }
+
+  /**
+   * Add custom format and map it to an original converter format. This will override the `->get()` parameter
+   * if a map exists
+   *
+   * @param string|array $custom An array of custom definitions, or custom defined format name to map with
+   * @param string|null  $format Original converter format name
+   *
+   * @return static
+   */
+  public function setMap( $custom, $format = null ) {
+    if( is_array( $custom ) ) $this->_map = $custom;
+    else $this->_map[ $custom ] = $format;
+
+    return $this;
+  }
+  /**
+   * Remove a previously defined mapping
+   *
+   * @param string $custom
+   *
+   * @return static
+   */
+  public function removeMap( $custom = null ) {
+    if( $custom === null ) $this->_map = [];
+    else unset( $this->_map[ $custom ] );
+
+    return $this;
+  }
+  /**
+   * Get a custom format mapped format name, or all maps
+   *
+   * @param string|null $custom
+   *
+   * @return array|string|null
+   */
+  public function getMap( $custom = null ) {
+    if( $custom === null ) return $this->_map;
+    else return isset( $this->_map[ $custom ] ) ? $this->_map[ $custom ] : null;
   }
 
   /**
@@ -145,6 +191,13 @@ class Converter extends Library {
    * @return ConverterInterface|ConverterInterface[]|null
    */
   public function get( $format = null ) {
-    return empty( $format ) ? $this->_list : ( isset( $this->_list[ $format ] ) ? $this->_list[ $format ] : null );
+    if( $format === null ) return $this->_list;
+    else {
+
+      $tmp = $this->getMap( $format );
+      if( $tmp ) $format = $tmp;
+
+      return ( isset( $this->_list[ $format ] ) ? $this->_list[ $format ] : null );
+    }
   }
 }
