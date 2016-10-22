@@ -2,15 +2,12 @@
 
 use Framework\Exception\Collector;
 use Framework\Exception\Strict;
-use Framework\Helper\Library;
-use Framework\Helper\Log;
-use Framework\Helper\LogInterface;
 
 /**
  * Class Application
  * @package Framework
  */
-class Application extends Library {
+abstract class Application {
 
   /**
    * Header already sent when try to redirect the page

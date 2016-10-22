@@ -2,7 +2,7 @@
 
 use Framework\Exception;
 use Framework\Exception\Collector;
-use Framework\Helper\Library;
+use Framework\Helper;
 
 /**
  * Class Event
@@ -12,12 +12,13 @@ use Framework\Helper\Library;
  * @property-read string        $namespace
  * @property-read Event\Storage $storage
  */
-class Event extends Library {
+class Event implements Helper\AccessableInterface {
+  use Helper\Accessable;
 
   /**
    * @var array[string]Event
    */
-  private static $instance = [ ];
+  private static $instance = [];
 
   /**
    * @var string
@@ -60,7 +61,7 @@ class Event extends Library {
    *
    * @return EventData The event result
    */
-  public function execute( $arguments = [ ] ) {
+  public function execute( $arguments = [] ) {
 
     $data = new EventData( $this, $arguments );
     $list = $this->_storage->getList();
@@ -117,8 +118,8 @@ class Event extends Library {
  *
  * @property-read Event     $event
  * @property-read Collector $collector
- * @property bool           $stopped This flag doesn't stop the listener calls, but the listeners MUST respect it internally
- * @property bool           $prevented
+ * @property      bool      $stopped This flag doesn't stop the listener calls, but the listeners MUST respect it internally
+ * @property      bool      $prevented
  */
 class EventData extends Storage {
 
@@ -148,8 +149,8 @@ class EventData extends Storage {
    * @param Event        $event
    * @param array|object $argument
    */
-  public function __construct( Event $event, $argument = [ ] ) {
-    parent::__construct( [ ], self::NAMESPACE_RESULT );
+  public function __construct( Event $event, $argument = [] ) {
+    parent::__construct( [], self::NAMESPACE_RESULT );
 
     $this->_event     = $event;
     $this->_collector = new Exception\Collector();
@@ -183,7 +184,7 @@ class EventData extends Storage {
     $this->_stopped = (bool) $value;
   }
   /**
-   * @return boolean
+   * @return bool
    */
   public function isPrevented() {
     return $this->_prevented;

@@ -1,9 +1,10 @@
 <?php namespace Framework\Helper;
 
+use Framework\LogInterface;
 use Framework\StorageInterface;
 
 /**
- * Interface LogableInterface
+ * Interface Helper\LogableInterface
  * @package Framework\Helper
  */
 interface LogableInterface {
@@ -12,7 +13,7 @@ interface LogableInterface {
    * @param array|object|StorageInterface $data
    * @param LogInterface|null             $log
    *
-   * @return boolean
+   * @return bool
    */
   public function log( $data = [], LogInterface $log = null );
 }

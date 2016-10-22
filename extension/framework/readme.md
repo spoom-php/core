@@ -207,7 +207,7 @@ operations. The `\Framework\Helper\File` static class contains file and director
 generation.
 
 ## Log
-The `\Framework\Helper\Log` class is used for runtime logging. The entries has level of importance, and the values is from the `\Framework::LEVEL_*` constants:
+The `\Framework\Log` class is used for runtime logging. The entries has level of importance, and the values is from the `\Framework::LEVEL_*` constants:
 
  - `\Framework::LEVEL_NONE`
  - `\Framework::LEVEL_CRITICAL`
@@ -224,13 +224,13 @@ list above the none is the highest (0) and the debug is the lowest (6) level, th
 is 4, then the`\Framework::LEVEL_NOTICE` ... `\Framework::LEVEL_CRITICAL` interval will be logged, the entries with `\Framework::LEVEL_INFO` and
 `\Framework::LEVEL_DEBUG` level will be ignored. The `\Framework::LEVEL_DEBUG` value means all, the `\Framework::LEVEL_NONE` is the none.
  
-In the `\Framework\Helper\Log` construct, you can pass the log name, which is the log file name by default (but every day starts a new file). When creating the
+In the `\Framework\Log` construct, you can pass the log name, which is the log file name by default (but every day starts a new file). When creating the
 entries, you can pass a message (`$message` argument), whicg can contain object insertion, which values can be passed with the `$data` argument. The last
 argument on creation is a custom namespace for that entry which can be helpful in the log processing later.
 
 The default storage is file based (the logs goes to the */tmp/* directory), but an extension can override this behavior with a custom handler for the 
-`\Framework\Helper\Log::EVENT_CREATE` event. In the event handler you can set the `->prevented` flag for the event object to prevent the file based storing. The
-default file is a csv, and the format is defined in the `\Framework\Helper\Log::PATTERN_MESSAGE` constant. 
+`\Framework\Log::EVENT_CREATE` event. In the event handler you can set the `->prevented` flag for the event object to prevent the file based storing. The
+default file is a csv, and the format is defined in the `\Framework\Log::PATTERN_MESSAGE` constant. 
 
 ## Other
 The `\Framework\Helper\Library` trait and the `\Framework\Helper\LibraryInterface` interface purpose is to create a common base to every library in the

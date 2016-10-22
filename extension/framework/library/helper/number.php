@@ -9,13 +9,13 @@ abstract class Number {
   /**
    * Check if the input is a true number (real or integer) or can be a number
    *
-   * @param mixed   $input
-   * @param boolean $simple True numbers or converted
+   * @param mixed $input
+   * @param bool  $simple True numbers or converted
    *
-   * @return boolean
+   * @return bool
    */
   public static function is( $input, $simple = false ) {
-    if( is_integer( $input ) || is_real( $input ) ) return true;
+    if( is_int( $input ) || is_float( $input ) ) return true;
     else if( !$simple ) {
 
       if( is_bool( $input ) ) return true;
@@ -29,7 +29,7 @@ abstract class Number {
    *
    * @param mixed $input
    *
-   * @return boolean
+   * @return bool
    */
   public static function isInteger( $input ) {
     return self::is( $input ) && (string) (int) $input === (string) $input;
@@ -39,23 +39,23 @@ abstract class Number {
    *
    * @param mixed $input
    *
-   * @return boolean
+   * @return bool
    */
   public static function isReal( $input ) {
-    return is_real( self::read( $input ) );
+    return is_float( self::read( $input ) );
   }
 
   /**
    * Convert the input into integer or real value. On error/invalid input returns the $default parameter
    *
-   * @param mixed       $input
-   * @param number|null $default Return value on error/invalid input
+   * @param mixed          $input
+   * @param int|float|null $default Return value on error/invalid input
    *
-   * @return number|null
+   * @return int|float|null
    */
   public static function read( $input, $default = null ) {
     switch( true ) {
-      case is_integer( $input ) || is_real( $input ):
+      case is_int( $input ) || is_float( $input ):
         return $input;
       case is_bool( $input ):
         return $input ? 1 : 0;
@@ -80,8 +80,8 @@ abstract class Number {
     else {
 
       $input = self::read( $input );
-      if( is_integer( $precision ) ) return number_format( $input, $precision, '.', '' );
-      else if( is_integer( $input ) ) return (string) $input;
+      if( is_int( $precision ) ) return number_format( $input, $precision, '.', '' );
+      else if( is_int( $input ) ) return (string) $input;
       else return str_replace( ',', '.', (string) $input );
     }
   }

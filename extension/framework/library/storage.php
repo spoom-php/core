@@ -1,7 +1,7 @@
 <?php namespace Framework;
 
 use Framework\Helper\Enumerable;
-use Framework\Helper\Library;
+use Framework\Helper;
 use Framework\Helper\Number;
 use Framework\Helper\Text;
 
@@ -93,7 +93,7 @@ interface StorageInterface extends \ArrayAccess, \JsonSerializable {
    * @param string $index   The index in the storage
    * @param mixed  $default The returned value if index not found
    *
-   * @return number|mixed
+   * @return int|float|mixed
    */
   public function getNumber( $index, $default = 0 );
   /**
@@ -125,7 +125,7 @@ interface StorageInterface extends \ArrayAccess, \JsonSerializable {
    *
    * @return array|mixed
    */
-  public function getArray( $index, $default = [ ] );
+  public function getArray( $index, $default = [] );
   /**
    * Get indexed (only object type) value from the storage, or the second parameter if index not exist or not
    * enumerable. Arrays will be typecasted to object
@@ -137,7 +137,7 @@ interface StorageInterface extends \ArrayAccess, \JsonSerializable {
    */
   public function getObject( $index, $default = null );
   /**
-   * Get indexed (only boolean type) value from the storage, or the second parameter if index not exist, not boolean
+   * Get indexed (only bool type) value from the storage, or the second parameter if index not exist, not bool
    * or not 1/0 value
    *
    * @param string $index   The index in the storage
@@ -254,7 +254,8 @@ interface StorageInterface extends \ArrayAccess, \JsonSerializable {
  * @property-read mixed       $source    The storage source variable
  * @property      string|null $namespace The default namespace if not provided. If null, no default namespace is added to the index
  */
-class Storage extends Library implements StorageInterface {
+class Storage implements StorageInterface, Helper\AccessableInterface {
+  use Helper\Accessable;
 
   /**
    * Cache for indexes and search results
@@ -262,8 +263,8 @@ class Storage extends Library implements StorageInterface {
    * @var array
    */
   private $cache = [
-    'index'  => [ ],
-    'search' => [ ]
+    'index'  => [],
+    'search' => []
   ];
   /**
    * Cache type
@@ -285,7 +286,7 @@ class Storage extends Library implements StorageInterface {
    *
    * @var array
    */
-  protected $_source = [ ];
+  protected $_source = [];
 
   /**
    * @param mixed|null  $data
@@ -306,8 +307,8 @@ class Storage extends Library implements StorageInterface {
 
     $this->_source = Enumerable::copy( $this->_source );
     $this->cache   = [
-      'index'  => [ ],
-      'search' => [ ]
+      'index'  => [],
+      'search' => []
     ];
   }
 
@@ -321,7 +322,7 @@ class Storage extends Library implements StorageInterface {
    * @return $this
    */
   public function set( $index, $value ) {
-    
+
     $result = $this->search( $index = $this->index( $index ), true, false );
     if( $result->exist ) {
 
@@ -394,7 +395,7 @@ class Storage extends Library implements StorageInterface {
     $result = $this->search( $index = $this->index( $index ), false, false );
     if( $result->exist ) {
 
-      if( $result->key === null ) $result->container = [ ];
+      if( $result->key === null ) $result->container = [];
       else if( Enumerable::isArrayLike( $result->container ) ) unset( $result->container[ $result->key ] );
       else unset( $result->container->{$result->key} );
 
@@ -490,7 +491,7 @@ class Storage extends Library implements StorageInterface {
    * @param string $index   The index in the storage
    * @param mixed  $default The returned value if index not found
    *
-   * @return number|mixed
+   * @return int|float|mixed
    */
   public function getNumber( $index, $default = 0 ) {
 
@@ -540,7 +541,7 @@ class Storage extends Library implements StorageInterface {
    *
    * @return array|mixed
    */
-  public function getArray( $index, $default = [ ] ) {
+  public function getArray( $index, $default = [] ) {
 
     $index       = $this->index( $index );
     $index->type = self::TYPE_ARRAY;
@@ -564,7 +565,7 @@ class Storage extends Library implements StorageInterface {
     return $this->process( $index, $default );
   }
   /**
-   * Get indexed (only boolean type) value from the storage, or the second parameter if index not exist, not boolean
+   * Get indexed (only bool type) value from the storage, or the second parameter if index not exist, not bool
    * or not 1/0 value
    *
    * @param string $index   The index in the storage
@@ -676,7 +677,7 @@ class Storage extends Library implements StorageInterface {
     if( !is_string( $index ) ) return null;
     else {
 
-      $result = (object) [ 'id' => '', 'key' => '', 'token' => [ ], 'type' => null, 'namespace' => null ];
+      $result = (object) [ 'id' => '', 'key' => '', 'token' => [], 'type' => null, 'namespace' => null ];
       $tmp    = explode( self::SEPARATOR_NAMESPACE, trim( $index, ' ' . self::SEPARATOR_KEY ), 2 );
 
       // normalize the index to id
@@ -689,7 +690,7 @@ class Storage extends Library implements StorageInterface {
       $result->type = empty( $part_main[ 1 ] ) ? null : $part_main[ 1 ];
 
       // explode key into tokens
-      $result->token = $result->key === '' ? [ ] : explode( self::SEPARATOR_KEY, $result->key );
+      $result->token = $result->key === '' ? [] : explode( self::SEPARATOR_KEY, $result->key );
 
       // define the namespace and add it to the token list for the search
       $result->namespace = array_pop( $tmp ) ?: $this->_namespace;
@@ -712,7 +713,7 @@ class Storage extends Library implements StorageInterface {
     }
 
     // clear the cache
-    if( !$index || empty( $index->token ) ) $this->cache[ 'search' ] = [ ];
+    if( !$index || empty( $index->token ) ) $this->cache[ 'search' ] = [];
     else foreach( $this->cache[ 'search' ] as $i => $_ ) {
 
       if( empty( $i ) || $i == $index->token[ 0 ] || strpos( $i, $index->token[ 0 ] ) === 0 ) {
@@ -787,7 +788,7 @@ class Storage extends Library implements StorageInterface {
 
         $result = $tmp->exist && Number::is( $result ) ? ( (float) Number::read( $result ) ) : $default;
         break;
-      
+
       // force array type
       case self::TYPE_ARRAY:
 
@@ -843,7 +844,7 @@ class Storage extends Library implements StorageInterface {
     $this->_namespace = !empty( $value ) ? (string) $value : null;
 
     // clear the index cache to avoid invalid index matches
-    $this->cache[ 'index' ] = [ ];
+    $this->cache[ 'index' ] = [];
   }
   /**
    * @return array

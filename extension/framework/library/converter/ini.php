@@ -1,24 +1,27 @@
-<?php namespace Framework\Helper\Converter;
+<?php namespace Framework\Converter;
 
 use Framework\Exception;
-use Framework\Helper\ConverterInterface;
+use Framework\Helper;
 use Framework\Helper\Enumerable;
-use Framework\Helper\Failable;
-use Framework\Helper\Library;
 use Framework\Helper\Number;
+use Framework\ConverterInterface;
 
 /**
  * Class Ini
- * @package Framework\Helper\Converter
+ * @package Framework\Converter
+ *
+ * @property-read string $format Used format name
+ * @property-read string $name   The converter name
  */
-class Ini extends Library implements ConverterInterface {
-  use Failable;
+class Ini implements ConverterInterface, Helper\AccessableInterface {
+  use Helper\Accessable;
+  use Helper\Failable;
 
   const FORMAT = 'ini';
   const NAME   = 'ini';
 
   /**
-   * @inheritDoc
+   * @inheritdoc
    *
    * @param mixed    $content The content to serialize
    * @param resource $stream  Optional output stream
@@ -61,7 +64,7 @@ class Ini extends Library implements ConverterInterface {
     }
   }
   /**
-   * @inheritDoc
+   * @inheritdoc
    *
    * @param string|resource $content The content (can be a stream) to unserialize
    *

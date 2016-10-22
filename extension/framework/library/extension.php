@@ -2,9 +2,7 @@
 
 use Framework;
 use Framework\Helper\File;
-use Framework\Helper\Library;
-use Framework\Helper\Log;
-use Framework\Helper\LogInterface;
+use Framework\Helper;
 
 /**
  * One of the most important class in the framework. Handle all extension
@@ -19,7 +17,8 @@ use Framework\Helper\LogInterface;
  * @property-read Extension\LocalizationInterface  $localization  The localization storage object
  * @property-read LogInterface                     $log           The default extension logger instance
  */
-class Extension extends Library {
+class Extension implements Helper\AccessableInterface {
+  use Helper\Accessable;
 
   /**
    * Extension instance cache
@@ -131,7 +130,7 @@ class Extension extends Library {
 
         $this->_directory = $directory;
         $this->_manifest  = new Storage\File( $this->_directory . 'manifest', [
-          new Helper\Converter\Json( JSON_PRETTY_PRINT )
+          new Converter\Json( JSON_PRETTY_PRINT )
         ] );
       }
     }
@@ -190,9 +189,9 @@ class Extension extends Library {
    * Return an extension file ( or file list ). The return file path is relative to the extension directory by default
    * (it can be modified with the $root parameter)
    *
-   * @param string  $file_name The file name ( use | and | for regexp file filter or * for directory listing )
-   * @param string  $path      Path from the extension root
-   * @param boolean $root      Add _PATH_BASE constant or another prefix for the path ( or nothing )
+   * @param string $file_name The file name ( use | and | for regexp file filter or * for directory listing )
+   * @param string $path      Path from the extension root
+   * @param bool   $root      Add _PATH_BASE constant or another prefix for the path ( or nothing )
    *
    * @return bool|string
    */

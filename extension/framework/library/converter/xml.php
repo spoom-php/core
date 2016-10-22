@@ -1,18 +1,21 @@
-<?php namespace Framework\Helper\Converter;
+<?php namespace Framework\Converter;
 
 use Framework\Exception;
-use Framework\Helper\ConverterInterface;
-use Framework\Helper\Enumerable;
-use Framework\Helper\Failable;
-use Framework\Helper\Library;
+use Framework\Helper;
+use Framework;
 
 /**
  * Class Xml
- * @package Framework\Helper\Converter
+ * @package Framework\Converter
+ *
+ * @property XmlMeta     $meta
+ * @property-read string $format Used format name
+ * @property-read string $name   The converter name
  */
-class Xml extends Library implements ConverterInterface {
-  use Failable;
-  
+class Xml implements Framework\ConverterInterface, Helper\AccessableInterface {
+  use Helper\Accessable;
+  use Helper\Failable;
+
   const FORMAT = 'xml';
   const NAME   = 'xml';
 
@@ -36,7 +39,7 @@ class Xml extends Library implements ConverterInterface {
   }
 
   /**
-   * @inheritDoc
+   * @inheritdoc
    *
    * @param mixed    $content The content to serialize
    * @param resource $stream  Optional output stream
@@ -45,7 +48,7 @@ class Xml extends Library implements ConverterInterface {
    */
   public function serialize( $content, $stream = null ) {
     $this->setException();
-    
+
     // create dom and the root element
     $dom = new \DOMDocument( $this->_meta->version, $this->_meta->encoding );
     $dom->appendChild( $root = $dom->createElement( $this->_meta->root ) );
@@ -57,7 +60,7 @@ class Xml extends Library implements ConverterInterface {
       $element = $object->element;
 
       // handle xml "leaf"
-      if( !Enumerable::is( $object->data ) ) {
+      if( !Helper\Enumerable::is( $object->data ) ) {
 
         if( $object->data === null ) $value = 'NULL';
         else if( $object->data === true ) $value = 'TRUE';
@@ -73,10 +76,10 @@ class Xml extends Library implements ConverterInterface {
         // handle attributes, arrays and properties (in this order)
         if( in_array( $object->key . '.' . $index, $this->_meta->attributes ) ) {
           $objects[] = (object) [ 'element' => $element, 'data' => $value, 'name' => $index, 'key' => $object->key . '.' . $index ];
-        } else if( Enumerable::isArray( $value, false ) ) {
+        } else if( Helper\Enumerable::isArray( $value, false ) ) {
           $objects[] = (object) [ 'element' => $element, 'data' => $value, 'name' => $index, 'key' => $object->key . '.' . $index ];
         } else {
-          $child = $dom->createElement( is_integer( $index ) ? $object->name : $index );
+          $child = $dom->createElement( is_int( $index ) ? $object->name : $index );
 
           $element->appendChild( $child );
           $objects[] = (object) [ 'element' => $child, 'data' => $value, 'name' => $child->tagName, 'key' => $object->key . '.' . $index ];
@@ -94,7 +97,7 @@ class Xml extends Library implements ConverterInterface {
     }
   }
   /**
-   * @inheritDoc
+   * @inheritdoc
    *
    * @param string|resource $content The content (can be a stream) to unserialize
    *
@@ -228,7 +231,7 @@ class Xml extends Library implements ConverterInterface {
 }
 /**
  * Class XmlMeta
- * @package Framework\Helper\Converter
+ * @package Framework\Converter
  */
 class XmlMeta {
 

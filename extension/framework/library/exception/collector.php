@@ -1,20 +1,23 @@
 <?php namespace Framework\Exception;
 
 use Framework\Exception;
-use Framework\Helper\Library;
+use Framework\Helper;
 
 /**
  * Class Collector
  * @package Framework\Exception
+ *
+ * @property-read Exception[] $list Stored exceptions
  */
-class Collector extends Library implements \Iterator, \Countable {
+class Collector implements \Iterator, \Countable, Helper\AccessableInterface {
+  use Helper\Accessable;
 
   /**
    * Exception storage
    *
    * @var Exception[]
    */
-  private $storage = [ ];
+  private $_list = [];
   /**
    * Cursor for the iterator implementation
    *
@@ -31,12 +34,12 @@ class Collector extends Library implements \Iterator, \Countable {
    */
   public function add( $input ) {
 
-    if( !Helper::is( $input ) ) return false;
+    if( !Exception\Helper::is( $input ) ) return false;
     else {
 
-      if( $input instanceof \Exception ) $input = [ Helper::wrap( $input ) ];
+      if( $input instanceof \Exception ) $input = [ Exception\Helper::wrap( $input ) ];
       foreach( $input as $exception ) {
-        $this->storage[] = $exception;
+        $this->_list[] = $exception;
       }
 
       return true;
@@ -53,9 +56,9 @@ class Collector extends Library implements \Iterator, \Countable {
   public function exist( $id = null, $level = \Framework::LEVEL_NOTICE ) {
 
     // check for simple matches
-    if( empty( $id ) && $level >= \Framework::LEVEL_NOTICE ) return !empty( $this->storage );
-    else foreach( $this->storage as $exception ) {
-      if( Helper::match( $exception, $id ) && $exception->level <= $level ) {
+    if( empty( $id ) && $level >= \Framework::LEVEL_NOTICE ) return !empty( $this->_list );
+    else foreach( $this->_list as $exception ) {
+      if( Exception\Helper::match( $exception, $id ) && $exception->level <= $level ) {
         return true;
       }
     }
@@ -73,11 +76,11 @@ class Collector extends Library implements \Iterator, \Countable {
     if( !$this->exist() ) return null;
     else {
 
-      $count     = count( $this->storage );
-      $exception = $this->storage[ $count - 1 ];
+      $count     = count( $this->_list );
+      $exception = $this->_list[ $count - 1 ];
       if( $top ) for( $i = $count - 2; $i >= 0; --$i ) {
-        if( $exception->level > $this->storage[ $i ]->level ) {
-          $exception = $this->storage[ $i ];
+        if( $exception->level > $this->_list[ $i ]->level ) {
+          $exception = $this->_list[ $i ];
         }
       }
 
@@ -95,12 +98,12 @@ class Collector extends Library implements \Iterator, \Countable {
   public function getList( $id = null, $level = \Framework::LEVEL_NOTICE ) {
 
     // check for simple matches
-    if( empty( $id ) && $level >= \Framework::LEVEL_NOTICE ) return $this->storage;
+    if( empty( $id ) && $level >= \Framework::LEVEL_NOTICE ) return $this->_list;
     else {
 
-      $list = [ ];
-      foreach( $this->storage as $exception ) {
-        if( Helper::match( $exception, $id ) && $exception->level <= $level ) {
+      $list = [];
+      foreach( $this->_list as $exception ) {
+        if( Exception\Helper::match( $exception, $id ) && $exception->level <= $level ) {
           $list[] = $exception;
         }
       }
@@ -115,7 +118,7 @@ class Collector extends Library implements \Iterator, \Countable {
    * @return Exception
    */
   public function current() {
-    return $this->storage[ $this->cursor ];
+    return $this->_list[ $this->cursor ];
   }
   /**
    * @inheritdoc
@@ -137,7 +140,7 @@ class Collector extends Library implements \Iterator, \Countable {
    * @return bool
    */
   public function valid() {
-    return isset( $this->storage[ $this->cursor ] );
+    return isset( $this->_list[ $this->cursor ] );
   }
   /**
    * @inheritdoc
@@ -152,6 +155,6 @@ class Collector extends Library implements \Iterator, \Countable {
    * @return int
    */
   public function count() {
-    return count( $this->storage );
+    return count( $this->_list );
   }
 }

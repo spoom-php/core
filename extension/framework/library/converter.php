@@ -1,12 +1,13 @@
-<?php namespace Framework\Helper;
+<?php namespace Framework;
 
 use Framework\Exception;
+use Framework\Helper;
 
 /**
  * Interface ConverterInterface
  * @package Framework\Helper
  */
-interface ConverterInterface extends LibraryInterface, FailableInterface {
+interface ConverterInterface extends Helper\FailableInterface {
 
   /**
    * Try to set a wrong type of meta class
@@ -74,8 +75,11 @@ interface ConverterInterface extends LibraryInterface, FailableInterface {
 /**
  * Class Converter
  * @package Framework\Helper
+ *
+ * @property-read array $map Custom format map to converter formats
  */
-class Converter extends Library {
+class Converter implements Helper\AccessableInterface {
+  use Helper\Accessable;
 
   /**
    * Try to add a non-ConverterInterface instance
@@ -87,7 +91,7 @@ class Converter extends Library {
    *
    * @var ConverterInterface[]
    */
-  private $_list = [];
+  private $list = [];
   /**
    * Map custom format names (key) to converter formats (value)
    *
@@ -107,7 +111,7 @@ class Converter extends Library {
    *
    */
   function __clone() {
-    $this->_list = Enumerable::copy( $this->_list );
+    $this->list = Helper\Enumerable::copy( $this->list );
   }
 
   /**
@@ -165,8 +169,8 @@ class Converter extends Library {
     else {
 
       $format = $converter->getFormat();
-      $tmp    = isset( $this->_list[ $format ] ) ? $this->_list[ $format ] : null;
-      if( empty( $tmp ) || $overwrite ) $this->_list[ $format ] = $converter;
+      $tmp    = isset( $this->list[ $format ] ) ? $this->list[ $format ] : null;
+      if( empty( $tmp ) || $overwrite ) $this->list[ $format ] = $converter;
 
       return $this;
     }
@@ -180,8 +184,8 @@ class Converter extends Library {
    */
   public function remove( $format = null ) {
 
-    if( empty( $format ) ) $this->_list = [];
-    else unset( $this->_list[ (string) $format ] );
+    if( empty( $format ) ) $this->list = [];
+    else unset( $this->list[ (string) $format ] );
   }
   /**
    * Get a converter (or all converter) from the collection, based on the format
@@ -191,13 +195,13 @@ class Converter extends Library {
    * @return ConverterInterface|ConverterInterface[]|null
    */
   public function get( $format = null ) {
-    if( $format === null ) return $this->_list;
+    if( $format === null ) return $this->list;
     else {
 
       $tmp = $this->getMap( $format );
       if( $tmp ) $format = $tmp;
 
-      return ( isset( $this->_list[ $format ] ) ? $this->_list[ $format ] : null );
+      return ( isset( $this->list[ $format ] ) ? $this->list[ $format ] : null );
     }
   }
 }

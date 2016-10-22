@@ -1,7 +1,7 @@
 <?php namespace Framework\Storage;
 
 use Framework\Exception;
-use Framework\Helper\ConverterInterface;
+use Framework\ConverterInterface;
 
 /**
  * Class File

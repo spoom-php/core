@@ -58,8 +58,8 @@ abstract class Helper {
    * Return extension directory from given param ( extension id ). It will return  false if params are invalid or the
    * given extension doesn't exist otherwise the directory without _PATH_BASE
    *
-   * @param string  $id
-   * @param boolean $validate
+   * @param string $id
+   * @param bool   $validate
    *
    * @return string|bool
    */

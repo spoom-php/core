@@ -2,7 +2,7 @@
 
 use Framework\Extension;
 use Framework\Storage;
-use Framework\Helper\Converter;
+use Framework\Converter;
 
 /**
  * Interface ConfigurationInterface
@@ -38,7 +38,7 @@ interface ConfigurationInterface extends Storage\PermanentInterface {
  * @package Framework\Extension
  *
  * @property-read Extension $extension   The extension source of the configuration
- * @property      string    $environment The actual environment
+ * @property      string    $environment The actual environment's name
  */
 class Configuration extends Storage\File implements ConfigurationInterface {
 

@@ -1,16 +1,20 @@
-<?php namespace Framework\Helper\Converter;
+<?php namespace Framework\Converter;
 
 use Framework\Exception;
-use Framework\Helper\ConverterInterface;
-use Framework\Helper\Failable;
-use Framework\Helper\Library;
+use Framework\Helper;
+use Framework;
 
 /**
  * Class Json
- * @package Framework\Helper\Converter
+ * @package Framework\Converter
+ *
+ * @property JsonMeta    $meta
+ * @property-read string $format Used format name
+ * @property-read string $name   The converter name
  */
-class Json extends Library implements ConverterInterface {
-  use Failable;
+class Json implements Framework\ConverterInterface, Helper\AccessableInterface {
+  use Helper\Accessable;
+  use Helper\Failable;
 
   const FORMAT = 'json';
   const NAME   = 'json';
@@ -36,7 +40,7 @@ class Json extends Library implements ConverterInterface {
   }
 
   /**
-   * @inheritDoc
+   * @inheritdoc
    *
    * @param mixed    $content The content to serialize
    * @param resource $stream  Optional output stream
@@ -72,7 +76,7 @@ class Json extends Library implements ConverterInterface {
     }
   }
   /**
-   * @inheritDoc
+   * @inheritdoc
    *
    * @param string|resource $content The content (can be a stream) to unserialize
    *
@@ -140,7 +144,7 @@ class Json extends Library implements ConverterInterface {
 }
 /**
  * Class JsonMeta
- * @package Framework\Helper\Converter
+ * @package Framework\Converter
  */
 class JsonMeta {
 

@@ -3,19 +3,19 @@
 use Framework;
 use Framework\EventData;
 use Framework\Exception;
-use Framework\Helper\FeasibleInterface;
-use Framework\Helper\Library;
+use Framework\Helper;
 use Framework\StorageInterface;
 
 /**
  * Class Listener
  * @package Framework\Event
  *
- * @property string                $library Fully qualified class name or extension library index of the handler class
- * @property bool                  $enable  Allow execute
+ * @property      string           $library Fully qualified class name or extension library index of the handler class
+ * @property      bool             $enable  Allow execute
  * @property-read StorageInterface $data    Provided data on execute
  */
-class Listener extends Library {
+class Listener implements Helper\AccessableInterface {
+  use Helper\Accessable;
 
   /**
    * Library for the listener is missing. Data:
@@ -35,7 +35,7 @@ class Listener extends Library {
   /**
    * Library instance cache
    *
-   * @var FeasibleInterface[]
+   * @var Helper\FeasibleInterface[]
    */
   private static $instance;
 
@@ -70,7 +70,7 @@ class Listener extends Library {
    *
    * @throws Exception\Strict
    */
-  public function __construct( $library, $data = [ ], $enable = true ) {
+  public function __construct( $library, $data = [], $enable = true ) {
 
     $this->setLibrary( $library );
     $this->_data   = $data instanceof Framework\StorageInterface ? $data : new Framework\Storage( $data );

@@ -1,22 +1,25 @@
-<?php namespace Framework\Helper\Converter;
+<?php namespace Framework\Converter;
 
 use Framework\Exception;
-use Framework\Helper\ConverterInterface;
-use Framework\Helper\Failable;
-use Framework\Helper\Library;
+use Framework\Helper;
+use Framework;
 
 /**
  * Class Native
- * @package Framework\Helper\Converter
+ * @package Framework\Converter
+ *
+ * @property-read string $format Used format name
+ * @property-read string $name   The converter name
  */
-class Native extends Library implements ConverterInterface {
-  use Failable;
-  
+class Native implements Framework\ConverterInterface, Helper\AccessableInterface {
+  use Helper\Accessable;
+  use Helper\Failable;
+
   const FORMAT = 'pser';
   const NAME   = 'native';
 
   /**
-   * @inheritDoc
+   * @inheritdoc
    *
    * @param mixed    $content The content to serialize
    * @param resource $stream  Optional output stream
@@ -35,7 +38,7 @@ class Native extends Library implements ConverterInterface {
         fwrite( $stream, $result );
         return null;
       }
-      
+
     } catch( \Exception $e ) {
       $this->setException( $e );
     }
@@ -43,7 +46,7 @@ class Native extends Library implements ConverterInterface {
     return null;
   }
   /**
-   * @inheritDoc
+   * @inheritdoc
    *
    * @param string|resource $content The content (can be a stream) to unserialize
    *

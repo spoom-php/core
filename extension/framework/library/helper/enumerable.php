@@ -1,7 +1,6 @@
 <?php namespace Framework\Helper;
 
-use Framework\Helper\Converter\Json;
-use Framework\Helper\Converter\XmlMeta;
+use Framework\Converter;
 use Framework\StorageInterface;
 
 /**
@@ -17,8 +16,8 @@ abstract class Enumerable {
    * @param object|array $content
    * @param int          $options JSON_* constant flags
    *
-   * @deprecated Use the Framework\Helper\Converter\Json class
-   * @return string|boolean The JSON string or false on failure
+   * @deprecated Use the Framework\Converter\Json class
+   * @return string|bool The JSON string or false on failure
    */
   public static function toJson( $content, $options = 0 ) {
     return ( new Converter\Json( $options ) )->serialize( $content );
@@ -32,7 +31,7 @@ abstract class Enumerable {
    * @param int    $depth
    * @param int    $options
    *
-   * @deprecated Use the Framework\Helper\Converter\Json class
+   * @deprecated Use the Framework\Converter\Json class
    * @return mixed
    */
   public static function fromJson( $content, $assoc = false, $depth = 512, $options = 0 ) {
@@ -53,11 +52,11 @@ abstract class Enumerable {
    * @param string $version   The xml version number
    * @param string $encoding  The xml encoding
    *
-   * @deprecated Use the Framework\Helper\Converter\Xml class
+   * @deprecated Use the Framework\Converter\Xml class
    * @return array
    */
   public static function fromXml( $xml, array &$attribute = [], &$version = '1.0', &$encoding = 'UTF-8' ) {
-    $meta             = new XmlMeta( $version, $encoding );
+    $meta             = new Converter\XmlMeta( $version, $encoding );
     $meta->attributes = $attribute;
 
     $result = ( new Converter\Xml( $meta ) )->unserialize( $xml );
@@ -80,11 +79,11 @@ abstract class Enumerable {
    * @param string $version    Xml version number
    * @param string $encoding   Xml encoding
    *
-   * @deprecated Use the Framework\Helper\Converter\Xml class
+   * @deprecated Use the Framework\Converter\Xml class
    * @return \SimpleXMLElement
    */
   public static function toXml( $enumerable, array $attribute = [], $root_name = 'xml', $version = '1.0', $encoding = 'UTF-8' ) {
-    $meta             = new XmlMeta( $version, $encoding );
+    $meta             = new Converter\XmlMeta( $version, $encoding );
     $meta->root       = $root_name;
     $meta->attributes = $attribute;
 
@@ -97,7 +96,7 @@ abstract class Enumerable {
    *
    * @param object|array $content The input enumerable
    *
-   * @deprecated Use the Framework\Helper\Converter\Ini class
+   * @deprecated Use the Framework\Converter\Ini class
    * @return string
    */
   public static function toIni( $content ) {
@@ -108,7 +107,7 @@ abstract class Enumerable {
    *
    * @param string $content An ini formatted string
    *
-   * @deprecated Use the Framework\Helper\Converter\Ini class
+   * @deprecated Use the Framework\Converter\Ini class
    * @return object
    */
   public static function fromIni( $content ) {
@@ -139,7 +138,7 @@ abstract class Enumerable {
     else if( $ordered ) for( $i = 0; $i < count( $test ); ++$i ) {
       if( !isset( $test[ $i ] ) ) return false;
     } else foreach( $test as $i => $value ) {
-      if( !is_integer( $i ) ) return false;
+      if( !is_int( $i ) ) return false;
     }
 
     return true;
@@ -195,7 +194,7 @@ abstract class Enumerable {
    * @since ?
    *
    * @param mixed             $input
-   * @param boolean           $object Result casted to object or array
+   * @param bool              $object Result casted to object or array
    * @param array|object|null $default
    *
    * @return array|object|null

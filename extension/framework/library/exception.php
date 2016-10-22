@@ -1,11 +1,7 @@
 <?php namespace Framework;
 
-use Framework\Exception\Helper;
 use Framework\Helper\Enumerable;
-use Framework\Helper\Library;
-use Framework\Helper\LibraryInterface;
-use Framework\Helper\LogableInterface;
-use Framework\Helper\LogInterface;
+use Framework\Helper;
 use Framework\Helper\Text;
 
 /**
@@ -18,7 +14,8 @@ use Framework\Helper\Text;
  * @property-read int       $level     The log level
  * @property-read string    $id        The unique identifier. The format is '<extension>#<code>'
  */
-abstract class Exception extends \Exception implements \JsonSerializable, LibraryInterface, LogableInterface {
+abstract class Exception extends \Exception implements \JsonSerializable, Helper\LogableInterface, Helper\AccessableInterface {
+  use Helper\Accessable;
 
   /**
    * The level of the exception based on the exception's type
@@ -60,7 +57,7 @@ abstract class Exception extends \Exception implements \JsonSerializable, Librar
     else {
 
       $message = Text::insert( $id, $data );
-      $tmp     = Exception\Helper::parse( Helper::EXCEPTION_UNKNOWN );
+      $tmp     = Exception\Helper::parse( Exception\Helper::EXCEPTION_UNKNOWN );
     }
 
     $this->_id        = $tmp->extension . '#' . $tmp->code;
@@ -71,26 +68,6 @@ abstract class Exception extends \Exception implements \JsonSerializable, Librar
     parent::__construct( $message, $tmp->code, $exception );
   }
 
-  /**
-   * @param $index
-   *
-   * @return mixed
-   * @throws Exception\Strict
-   */
-  public function __get( $index ) {
-
-    $method = Library::searchGetter( $index, $this );
-    if( $method ) return $this->{$method}();
-    else throw new Exception\Strict( Library::EXCEPTION_MISSING_PROPERTY, [ 'property' => $index ] );
-  }
-  /**
-   * @param $index
-   *
-   * @return bool
-   */
-  public function __isset( $index ) {
-    return Library::searchGetter( $index, $this ) !== null;
-  }
   /**
    * @return string
    */
@@ -152,7 +129,7 @@ abstract class Exception extends \Exception implements \JsonSerializable, Librar
     if( $more ) {
       $tmp[ 'line' ]     = $this->getFile() . ':' . $this->getLine();
       $tmp[ 'trace' ]    = $this->getTrace();
-      $tmp[ 'previous' ] = Helper::convert( $this->getPrevious(), $more );
+      $tmp[ 'previous' ] = Exception\Helper::convert( $this->getPrevious(), $more );
     }
 
     return $tmp;

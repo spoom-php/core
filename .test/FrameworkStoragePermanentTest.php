@@ -1,6 +1,6 @@
 <?php
 
-use Framework\Helper\Converter;
+use Framework\Converter;
 
 class FrameworkStoragePermanentTest extends PHPUnit_Framework_TestCase {
 

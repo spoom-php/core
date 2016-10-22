@@ -3,15 +3,19 @@
 use Framework\Event;
 use Framework\Exception;
 use Framework\Extension;
-use Framework\Helper\Library;
+use Framework\Helper;
 use Framework\Storage\File as StorageFile;
-use Framework\Helper\Converter;
+use Framework\Converter;
 
 /**
  * Class Storage
  * @package Framework\Event
+ *
+ * @property-read Listener[] $list Attached listeners
+ * @property-read Event      $event
  */
-class Storage extends Library implements \Countable, \Iterator {
+class Storage implements \Countable, \Iterator, Helper\AccessableInterface {
+  use Helper\Accessable;
 
   const DIRECTORY_SOURCE = 'asset/event/';
 
@@ -40,7 +44,7 @@ class Storage extends Library implements \Countable, \Iterator {
    *
    * @var Listener[]
    */
-  private $_list = [ ];
+  private $_list = [];
 
   /**
    * @var Event
@@ -87,7 +91,7 @@ class Storage extends Library implements \Countable, \Iterator {
    */
   public function clear( $deep = false ) {
 
-    $this->_list  = [ ];
+    $this->_list  = [];
     $this->loaded = $deep;
   }
 
@@ -116,7 +120,7 @@ class Storage extends Library implements \Countable, \Iterator {
 
         array_unshift( $this->_list, new Event\Listener(
           isset( $listener->library ) ? $listener->library : null,
-          isset( $listener->data ) ? $listener->data : [ ],
+          isset( $listener->data ) ? $listener->data : [],
           !empty( $listener->enable )
         ) );
 
@@ -146,10 +150,7 @@ class Storage extends Library implements \Countable, \Iterator {
   }
 
   /**
-   * Return the current element
-   * @link  http://php.net/manual/en/iterator.current.php
-   * @return mixed Can return any type.
-   * @since 5.0.0
+   * @inheritdoc
    */
   public function current() {
 
@@ -157,29 +158,19 @@ class Storage extends Library implements \Countable, \Iterator {
     return $this->_list[ $this->cursor ];
   }
   /**
-   * Move forward to next element
-   * @link  http://php.net/manual/en/iterator.next.php
-   * @return void Any returned value is ignored.
-   * @since 5.0.0
+   * @inheritdoc
    */
   public function next() {
     ++$this->cursor;
   }
   /**
-   * Return the key of the current element
-   * @link  http://php.net/manual/en/iterator.key.php
-   * @return mixed scalar on success, or null on failure.
-   * @since 5.0.0
+   * @inheritdoc
    */
   public function key() {
     return $this->cursor;
   }
   /**
-   * Checks if current position is valid
-   * @link  http://php.net/manual/en/iterator.valid.php
-   * @return boolean The return value will be casted to boolean and then evaluated.
-   * Returns true on success or false on failure.
-   * @since 5.0.0
+   * @inheritdoc
    */
   public function valid() {
 
@@ -187,23 +178,14 @@ class Storage extends Library implements \Countable, \Iterator {
     return isset( $this->_list[ $this->cursor ] );
   }
   /**
-   * Rewind the Iterator to the first element
-   * @link  http://php.net/manual/en/iterator.rewind.php
-   * @return void Any returned value is ignored.
-   * @since 5.0.0
+   * @inheritdoc
    */
   public function rewind() {
     $this->cursor = 0;
   }
 
   /**
-   * Count elements of an object
-   * @link  http://php.net/manual/en/countable.count.php
-   * @return int The custom count as an integer.
-   * </p>
-   * <p>
-   * The return value is cast to an integer.
-   * @since 5.1.0
+   * @inheritdoc
    */
   public function count() {
 

@@ -1,8 +1,6 @@
-<?php namespace Framework\Helper;
+<?php namespace Framework;
 
-use Framework\Extension;
-use Framework\Storage;
-use Framework\StorageInterface;
+use Framework\Helper;
 
 /**
  * Interface LogInterface
@@ -11,7 +9,7 @@ use Framework\StorageInterface;
  * @property-read string $namespace The default namespace for log entries
  * @property-read string $name      The name of the logger
  */
-interface LogInterface extends LibraryInterface {
+interface LogInterface {
 
   /**
    * This event MUST be called before every new log entry. This can prevent the log
@@ -104,8 +102,11 @@ interface LogInterface extends LibraryInterface {
  * @package Framework\Helper
  *
  * @property-read string $file      The default log file
+ * @property-read string $name
+ * @property-read string $namespace Default namespace for the log entry
  */
-class Log extends Library implements LogInterface {
+class Log implements LogInterface, Helper\AccessableInterface {
+  use Helper\Accessable;
 
   /**
    * Pattern for one log entry for file based logging. This can be processed as a csv row
@@ -175,7 +176,7 @@ class Log extends Library implements LogInterface {
       $datetime    = date( 'Y-m-d\TH:i:s', $sec ) . '.' . substr( $usec, 2, 4 ) . date( 'O', $sec );
       $data        = $data instanceof StorageInterface ? $data : new Storage( $data );
       $namespace   = empty( $namespace ) ? $this->_namespace : $namespace;
-      $description = Text::insert( $message, $data, Text::TYPE_INSERT_LEAVE );
+      $description = Helper\Text::insert( $message, $data, true );
       $event       = $this->extension->trigger( static::EVENT_CREATE, [
         'instance'    => $this,
         'namespace'   => $namespace,
@@ -191,9 +192,9 @@ class Log extends Library implements LogInterface {
 
         $message     = $event->getString( 'message', $message );
         $data        = $event->get( 'data', $data );
-        $description = $event->getString( 'description', Text::insert( $message, $data, Text::TYPE_INSERT_LEAVE ) );
+        $description = $event->getString( 'description', Helper\Text::insert( $message, $data, true ) );
 
-        file_put_contents( $this->file, Text::insert( static::PATTERN_MESSAGE, [
+        file_put_contents( $this->file, Helper\Text::insert( static::PATTERN_MESSAGE, [
           'time'        => $event->getString( 'datetime', $datetime ),
           'level'       => \Framework::getLevel( $level ),
           'namespace'   => str_replace( [ ';', "\n" ], [ ',', '' ], $event->getString( 'namespace', $namespace ) ),

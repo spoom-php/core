@@ -29,10 +29,10 @@ abstract class Text {
    *  - numbers (with $simple == false)
    *  - objects with __toString() method (with $simple == false)
    *
-   * @param mixed   $input
-   * @param boolean $simple True strings or converted
+   * @param mixed $input
+   * @param bool  $simple True strings or converted
    *
-   * @return boolean
+   * @return bool
    */
   public static function is( $input, $simple = false ) {
     if( is_string( $input ) ) return true;
@@ -143,7 +143,7 @@ abstract class Text {
    *
    * @param string                        $text      Input string to insert
    * @param array|object|StorageInterface $insertion The insertion variables
-   * @param boolean                       $keep      Keep the missing insertions, or replace them with empty string
+   * @param bool                          $keep      Keep the missing insertions, or replace them with empty string
    *
    * @return array|string
    */

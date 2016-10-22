@@ -40,7 +40,7 @@ abstract class Helper {
    *
    * @param mixed $input
    *
-   * @return boolean
+   * @return bool
    */
   public static function is( $input ) {
     return $input instanceof \Exception || ( $input instanceof Collector && $input->exist() );

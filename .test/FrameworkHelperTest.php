@@ -1,5 +1,7 @@
 <?php
 
+use Framework\Converter;
+use Framework\ConverterInterface;
 use Framework\Helper\Number;
 use Framework\Helper;
 
@@ -60,43 +62,43 @@ class FrameworkHelperTest extends PHPUnit_Framework_TestCase {
 
   public function testConverter() {
 
-    $list = new Helper\Converter( [
-      $converter_json = new Helper\Converter\Json(),
-      $converter_ini = new Helper\Converter\Ini()
+    $list = new Converter( [
+      $converter_json = new Converter\Json(),
+      $converter_ini = new Converter\Ini()
     ] );
 
     // basic converter tests
     $this->assertEquals( 2, count( $list->get() ) );
-    $this->assertTrue( $list->get( Helper\Converter\Json::FORMAT ) instanceof Helper\Converter\Json );
-    $this->assertEquals( 512, $list->get( Helper\Converter\Json::FORMAT )->getMeta()->depth );
+    $this->assertTrue( $list->get( Converter\Json::FORMAT ) instanceof Converter\Json );
+    $this->assertEquals( 512, $list->get( Converter\Json::FORMAT )->getMeta()->depth );
 
     // test converter overwrite
-    $list->add( new Helper\Converter\Json( 0, 256 ), false );
-    $this->assertEquals( 512, $list->get( Helper\Converter\Json::FORMAT )->getMeta()->depth );
-    $list->add( new Helper\Converter\Json( 0, 256 ), true );
-    $this->assertEquals( 256, $list->get( Helper\Converter\Json::FORMAT )->getMeta()->depth );
+    $list->add( new Converter\Json( 0, 256 ), false );
+    $this->assertEquals( 512, $list->get( Converter\Json::FORMAT )->getMeta()->depth );
+    $list->add( new Converter\Json( 0, 256 ), true );
+    $this->assertEquals( 256, $list->get( Converter\Json::FORMAT )->getMeta()->depth );
 
     // test converter remove
-    $list->remove( Helper\Converter\Json::FORMAT );
-    $this->assertNull( $list->get( Helper\Converter\Json::FORMAT ) );
+    $list->remove( Converter\Json::FORMAT );
+    $this->assertNull( $list->get( Converter\Json::FORMAT ) );
 
     // test for format mapping
     $list->add( $converter_json );
     $list->setMap( [
-      'format-test0' => Helper\Converter\Json::FORMAT,
-      'format-test1' => Helper\Converter\Json::FORMAT
+      'format-test0' => Converter\Json::FORMAT,
+      'format-test1' => Converter\Json::FORMAT
     ] );
 
     $this->assertEquals( $converter_json, $list->get( 'format-test0' ) );
-    $this->assertEquals( $converter_json, $list->get( Helper\Converter\Json::FORMAT ) );
+    $this->assertEquals( $converter_json, $list->get( Converter\Json::FORMAT ) );
     $this->assertNull( $list->get( 'format-test2' ) );
   }
   /**
    * @dataProvider providerConverter
    *
-   * @param Helper\ConverterInterface $converter
+   * @param ConverterInterface $converter
    */
-  public function testConverterType( Helper\ConverterInterface $converter ) {
+  public function testConverterType( ConverterInterface $converter ) {
 
     $content = (object) [ 'test1' => (object) [ 'test2' => (object) [ 'test3' => 3 ], 'test4' => 4 ] ];
     $tmp     = $converter->serialize( $content );
@@ -121,10 +123,10 @@ class FrameworkHelperTest extends PHPUnit_Framework_TestCase {
 
   public function providerConverter() {
     return [
-      [ new Helper\Converter\Json() ],
-      [ new Helper\Converter\Ini() ],
-      [ new Helper\Converter\Xml() ],
-      [ new Helper\Converter\Native() ]
+      [ new Converter\Json() ],
+      [ new Converter\Ini() ],
+      [ new Converter\Xml() ],
+      [ new Converter\Native() ]
     ];
   }
 }

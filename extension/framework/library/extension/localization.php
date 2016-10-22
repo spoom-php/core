@@ -3,7 +3,7 @@
 use Framework\Extension;
 use Framework\Application;
 use Framework\Storage;
-use Framework\Helper\Converter;
+use Framework\Converter;
 
 /**
  * Interface LocalizationInterface
