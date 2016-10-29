@@ -41,17 +41,12 @@ class Ini implements ConverterInterface, Helper\AccessableInterface {
 
     } else {
 
-      $iterator = new \RecursiveIteratorIterator( new \RecursiveArrayIterator( Enumerable::read( $content, false, [] ) ) );
-      foreach( $iterator as $value ) {
+      $this->flatten( $result, Enumerable::read( $content, false, [] ) );
+      foreach( $result as $key => $value ) {
 
-        $keys = [];
-        foreach( range( 0, $iterator->getDepth() ) as $depth ) {
-          $keys[] = $iterator->getSubIterator( $depth )->key();
-        }
-
-        $print    = is_bool( $value ) ? ( $value ? 'true' : 'false' ) : $value;
+        $print    = is_bool( $value ) ? ( $value ? 'true' : 'false' ) : Helper\Text::read( $value );
         $quote    = Number::is( $value ) || is_bool( $value ) ? '' : ( !mb_strpos( $value, '"' ) ? '"' : "'" );
-        $result[] = join( '.', $keys ) . "={$quote}{$print}{$quote}";
+        $result[] = $key . '=' . $quote . $print . $quote;
       }
     }
 
@@ -106,6 +101,24 @@ class Ini implements ConverterInterface, Helper\AccessableInterface {
     }
 
     return $result;
+  }
+
+  /**
+   * Convert multi dimension array/object into one dimension with key merging (recursive)
+   *
+   * TODO extract the dot separator into meta option
+   *
+   * @param array        $input
+   * @param object|array $enumerable
+   * @param string       $root
+   */
+  protected function flatten( array &$input, $enumerable, $root = '' ) {
+    foreach( $enumerable as $key => $value ) {
+
+      $key = $root . ( empty( $root ) ? '' : '.' ) . $key;
+      if( !Enumerable::is( $value ) ) $input[ $key ] = $value;
+      else $this->flatten( $input, $value, $key );
+    }
   }
 
   /**

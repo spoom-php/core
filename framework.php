@@ -369,7 +369,7 @@ class FrameworkImport {
   /**
    * Store the custom namespace connections to their root paths
    *
-   * @var array[string]string
+   * @var array[string]
    */
   private static $definition = [];
 
@@ -380,7 +380,11 @@ class FrameworkImport {
    * @param string $path      The path for the namespace
    */
   public static function define( $namespace, $path ) {
-    self::$definition[ trim( $namespace, '\\' ) . '\\' ] = rtrim( $path, '/' ) . '/';
+
+    // optimise the namespace
+    $namespace = trim( $namespace, '\\' );
+
+    self::$definition[ $namespace ] = [ rtrim( $path, '/' ) . '/', substr_count( $namespace, '\\' ) + 1 ];
     uksort( self::$definition, function ( $a, $b ) {
       return strlen( $b ) - strlen( $a );
     } );
@@ -391,7 +395,7 @@ class FrameworkImport {
    * @param string $namespace The namespace to remove
    */
   public static function undefine( $namespace ) {
-    unset( self::$definition[ trim( $namespace, '\\' ) . '\\' ] );
+    unset( self::$definition[ trim( $namespace, '\\' ) ] );
   }
 
   /**
@@ -410,35 +414,27 @@ class FrameworkImport {
       // fix for absolute class definitions
       $class = ltrim( $class, '\\' );
 
+      $path = explode( '\\', $class );
+      $name = array_pop( $path );
+
       // try first the custom paths (custom autoload path support)
-      foreach( static::$definition as $namespace => $directory ) {
+      foreach( static::$definition as $namespace => list( $directory, $length ) ) {
         if( strpos( $class, $namespace ) === 0 ) {
 
-          $path = explode( '\\', substr( $class, strlen( $namespace ) ) );
-          $name = array_pop( $path );
-
           // return when the loader find a perfect match, and the class really exist
-          if( self::search( $name, $path, $directory ) && self::exist( $class ) ) {
+          if( self::search( $name, array_slice( $path, $length ), $directory ) && self::exist( $class ) ) {
             return true;
           }
         }
       }
 
       // try to find an extension library
-      $depth = Framework::EXTENSION_DEPTH;
-      for( $i = $depth; $i > 0; --$i ) {
+      $extension = Framework::search( $path );
+      if( !empty( $extension ) ) {
 
-        $path = explode( '\\', $class );
-        $name = array_pop( $path );
-
-        $extension = Framework::search( $path );
-        if( empty( $extension ) ) break;
-        else {
-
-          $root = Framework::PATH_BASE . Framework::PATH_EXTENSION . $extension . '/' . Framework::EXTENSION_LIBRARY;
-          if( self::search( $name, $path, $root ) && self::exist( $class ) ) {
-            return true;
-          }
+        $root = Framework::PATH_BASE . Framework::PATH_EXTENSION . $extension . '/' . Framework::EXTENSION_LIBRARY;
+        if( self::search( $name, $path, $root ) && self::exist( $class ) ) {
+          return true;
         }
       }
 
