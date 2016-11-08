@@ -691,6 +691,7 @@ class Storage extends Library implements StorageInterface {
     $tmp = $this->search( $index );
     if( !$tmp->exist ) $result = $default;
     else if( $tmp->key === null ) $result = $tmp->container;
+    else if( $tmp->container instanceof StorageInterface ) $result = $tmp->container->get( $tmp->key . static::SEPARATOR_TYPE . $index->type, $default );
     else if( Enumerable::isArrayLike( $tmp->container ) ) $result = $tmp->container[ $tmp->key ];
     else $result = $tmp->container->{$tmp->key};
 
@@ -699,7 +700,7 @@ class Storage extends Library implements StorageInterface {
       // force string type
       case self::TYPE_STRING:
 
-        if( $tmp->exist && ( is_string( $result ) || is_numeric( $result ) || is_null( $result ) ) ) $result = (string) $result;
+        if( $tmp->exist && ( is_string( $result ) || is_numeric( $result ) ) ) $result = (string) $result;
         else $result = $default;
 
         break;
