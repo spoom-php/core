@@ -171,10 +171,13 @@ class Log implements LogInterface, Helper\AccessableInterface {
     if( $level <= \Framework::LEVEL_NONE || $level > \Framework::getLog() ) return true;
     else {
 
+      // pre-process the data
+      $data = $data instanceof StorageInterface ? $data : new Storage( $data );
+      if( !$data->exist( 'backtrace' ) ) $data->set( 'backtrace', array_slice( debug_backtrace(), 1 ) );
+
       // define local variables and trigger event for external loggers
       list( $usec, $sec ) = explode( ' ', microtime() );
       $datetime    = date( 'Y-m-d\TH:i:s', $sec ) . '.' . substr( $usec, 2, 4 ) . date( 'O', $sec );
-      $data        = $data instanceof StorageInterface ? $data : new Storage( $data );
       $namespace   = empty( $namespace ) ? $this->_namespace : $namespace;
       $description = Helper\Text::insert( $message, $data, true );
       $event       = $this->extension->trigger( static::EVENT_CREATE, [

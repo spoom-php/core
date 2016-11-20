@@ -99,9 +99,7 @@ abstract class Text {
 
           // skip ssl since it wasn't using the strong algo
           if( $strong === true ) $raw .= $tmp;
-          else Application::getLog()->notice( 'Generated OpenSSL random value is not strong, what next?', [
-            'trace' => debug_backtrace()
-          ], 'framework:helper.string' ); // log: notice
+          else Application::getLog()->notice( 'Generated OpenSSL random value is not strong, what next?', [], 'framework:helper.string' ); // log: notice
         }
 
         // try to read from the unix RNG

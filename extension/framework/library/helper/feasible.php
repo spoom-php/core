@@ -46,8 +46,7 @@ trait Feasible {
         Application::getLog()->warning( 'Missing \'{name}\' executeable', [
           'name'      => $name,
           'arguments' => $arguments,
-          'method'    => $method,
-          'trace'     => debug_backtrace()
+          'method'    => $method
         ], 'framework:helper.feasible' );
 
       }

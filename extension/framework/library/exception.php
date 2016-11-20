@@ -102,6 +102,7 @@ abstract class Exception extends \Exception implements \JsonSerializable, Helper
       // extend data
       $data                = Enumerable::read( $data, false, [] );
       $data[ 'exception' ] = $this->toArray( true );
+      $data[ 'backtrace' ] = false;
 
       $instance->create( $this->message, $this->_data + $data, 'framework:exception!' . $this->id, $this->_level );
     }
