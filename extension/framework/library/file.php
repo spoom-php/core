@@ -16,12 +16,14 @@ interface FileInterface {
   public function __toString();
 
   /**
-   * Check if the path is exists
+   * Check if the path is exists, with the given meta data
+   *
+   * @param array $meta Optional metadata checks
    *
    * @return bool
    * @throws Exception Unsuccessful operation, due to the underlying system
    */
-  public function exist();
+  public function exist( array $meta = [] );
   /**
    * Write content to a file
    *

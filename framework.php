@@ -6,7 +6,7 @@
  *
  * @deprecated Use \Framework::PATH_BASE
  */
-define( '_PATH_BASE', rtrim( dirname( __FILE__ ), '\\/' ) . '/' );
+define( '_PATH_BASE', rtrim( dirname( __FILE__ ), DIRECTORY_SEPARATOR ) . DIRECTORY_SEPARATOR );
 
 /**
  * Class Framework
