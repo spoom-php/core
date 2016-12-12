@@ -54,38 +54,7 @@ class Xml implements Framework\ConverterInterface, Helper\AccessableInterface {
     $dom->appendChild( $root = $dom->createElement( $this->_meta->root ) );
 
     // walk trough the enumerable and build the xml
-    $objects = [ (object) [ 'element' => &$root, 'data' => $content, 'name' => $this->_meta->root, 'key' => '' ] ];
-    while( $object = array_shift( $objects ) ) {
-      /** @var \DOMElement $element */
-      $element = $object->element;
-
-      // handle xml "leaf"
-      if( !Helper\Enumerable::is( $object->data ) ) {
-
-        if( $object->data === null ) $value = 'NULL';
-        else if( $object->data === true ) $value = 'TRUE';
-        else if( $object->data === false ) $value = 'FALSE';
-        else $value = (string) $object->data;
-
-        if( in_array( $object->key, $this->_meta->attributes ) ) $element->setAttribute( $object->name, $value );
-        else $element->appendChild( $dom->createTextNode( $value ) );
-
-        // handle objects and arrays
-      } else foreach( $object->data as $index => $value ) {
-
-        // handle attributes, arrays and properties (in this order)
-        if( in_array( $object->key . '.' . $index, $this->_meta->attributes ) ) {
-          $objects[] = (object) [ 'element' => $element, 'data' => $value, 'name' => $index, 'key' => $object->key . '.' . $index ];
-        } else if( Helper\Enumerable::isArray( $value, false ) ) {
-          $objects[] = (object) [ 'element' => $element, 'data' => $value, 'name' => $index, 'key' => $object->key . '.' . $index ];
-        } else {
-          $child = $dom->createElement( is_int( $index ) ? $object->name : $index );
-
-          $element->appendChild( $child );
-          $objects[] = (object) [ 'element' => $child, 'data' => $value, 'name' => $child->tagName, 'key' => $object->key . '.' . $index ];
-        }
-      }
-    }
+    $this->write( $dom, $root, $content, $this->_meta->root, '' );
 
     // create xml from dom
     $result = simplexml_import_dom( $dom );
@@ -129,72 +98,113 @@ class Xml implements Framework\ConverterInterface, Helper\AccessableInterface {
 
       $this->_meta->version  = $dom->xmlVersion;
       $this->_meta->encoding = $dom->xmlEncoding;
+      unset( $dom );
 
       // create root element and start the parsing
-      $root     = simplexml_load_string( $content );
-      $elements = [ [ &$result, $root, '' ] ];
-      while( $next = array_shift( $elements ) ) {
-        $container = &$next[ 0 ];
-        $element   = $next[ 1 ];
-        $key       = $next[ 2 ];
+      $root   = simplexml_load_string( $content );
+      $result = $this->read( $root, '' );
+    }
 
-        // handle "recursion" end, and set simple data to the container
-        if( !is_object( $element ) || !( $element instanceof \SimpleXMLElement ) || ( !$element->children()->count() && !$element->attributes()->count() ) ) {
-          switch( (string) $element ) {
-            case 'NULL':
-              $container = null;
-              continue;
-            case 'TRUE':
-              $container = true;
-              continue;
-            case 'FALSE':
-              $container = false;
-              continue;
-            default:
-              $container = (string) $element;
-              continue;
-          }
-        }
+    return $result;
+  }
 
-        // handle item attributes
-        foreach( $element->attributes() as $index => $value ) {
-          $container->{$index} = (object) [];
-          $elements[]          = [ &$container->{$index}, $value, $key . '.' . $index ];
+  /**
+   * @param \DOMDocument $dom
+   * @param \DOMElement  $element
+   * @param mixed        $data
+   * @param string       $name
+   * @param string       $key
+   */
+  protected function write( &$dom, &$element, $data, $name, $key ) {
 
-          // save to meta for proper write back
-          $this->_meta->attributes[] = $key . '.' . $index;
-        }
+    // handle xml "leaf"
+    if( !Helper\Enumerable::is( $data ) ) {
 
-        // collect children names and values (it's for find the arrays before add to the queue)
-        $tmp = [];
-        foreach( $element->children() as $value ) {
+      if( $data === null ) $value = 'NULL';
+      else if( $data === true ) $value = 'TRUE';
+      else if( $data === false ) $value = 'FALSE';
+      else $value = (string) $data;
 
-          /** @var \SimpleXMLElement $value */
-          $index = (string) $value->getName();
-          if( !isset( $tmp[ $index ] ) ) $tmp[ $index ] = $value;
-          else {
+      if( in_array( $key, $this->_meta->attributes ) ) $element->setAttribute( $name, $value );
+      else $element->appendChild( $dom->createTextNode( $value ) );
 
-            if( !is_array( $tmp[ $index ] ) ) $tmp[ $index ] = [ $tmp[ $index ] ];
-            $tmp[ $index ][] = $value;
-          }
-        }
+      return;
+    }
 
-        // walk trough all children data and add them to the queue
-        foreach( $tmp as $index => $value ) {
-          $container->{$index} = (object) [];
+    // handle objects and arrays
+    foreach( $data as $index => $value ) {
 
-          if( !is_array( $value ) ) $elements[] = [ &$container->{$index}, $value, $key . '.' . $index ];
-          else {
+      // handle attributes, arrays and properties (in this order)
+      if( in_array( $key . '.' . $index, $this->_meta->attributes ) ) $this->write( $dom, $element, $value, $index, $key . '.' . $index );
+      else if( Helper\Enumerable::isArray( $value, false ) ) $this->write( $dom, $element, $value, $index, $key . '.' . $index );
+      else {
+        $child = $dom->createElement( is_int( $index ) ? $name : $index );
 
-            // handle arrays
-            $container->{$index} = [];
-            foreach( $value as $i => $v ) $elements[] = [ &$container->{$index}[ $i ], $v, $key . '.' . $index . '.' . $i ];
-          }
+        $element->appendChild( $child );
+        $this->write( $dom, $child, $value, $child->tagName, $key . '.' . $index );
+      }
+    }
+  }
+  /**
+   * @param mixed  $element
+   * @param string $key
+   *
+   * @return mixed
+   */
+  protected function read( $element, $key ) {
+
+    // handle "recursion" end, and set simple data to the container
+    if( !is_object( $element ) || !( $element instanceof \SimpleXMLElement ) || ( !$element->children()->count() && !$element->attributes()->count() ) ) {
+      switch( (string) $element ) {
+        case 'NULL':
+          return null;
+        case 'TRUE':
+          return true;
+        case 'FALSE':
+          return false;
+        default:
+          return (string) $element;
+      }
+    }
+
+    $container = [];
+
+    // handle item attributes
+    foreach( $element->attributes() as $index => $value ) {
+
+      // save to meta for proper write back
+      $this->_meta->attributes[] = $key . '.' . $index;
+      $container[ $index ]       = $this->read( $value, $key . '.' . $index );
+    }
+
+    // collect children names and values (it's for find the arrays before add to the queue)
+    $tmp = [];
+    foreach( $element->children() as $value ) {
+
+      /** @var \SimpleXMLElement $value */
+      $index = (string) $value->getName();
+      if( !isset( $tmp[ $index ] ) ) $tmp[ $index ] = $value;
+      else {
+
+        if( !is_array( $tmp[ $index ] ) ) $tmp[ $index ] = [ $tmp[ $index ] ];
+        $tmp[ $index ][] = $value;
+      }
+    }
+
+    // walk trough all children data and add them to the queue
+    foreach( $tmp as $index => $value ) {
+      if( !is_array( $value ) ) $container[ $index ] = $this->read( $value, $key . '.' . $index );
+      else {
+
+        // handle arrays
+        $container[ $index ] = [];
+        foreach( $value as $i => $v ) {
+          $container[ $index ][ $i ] = $this->read( $v, $key . '.' . $index . '.' . $i );
         }
       }
     }
 
-    return $result;
+    return (object) $container;
   }
 
   /**
