@@ -170,11 +170,11 @@ class Stream implements StreamInterface, AccessableInterface {
       }
 
       // read the content
-      if( !$stream ) return stream_get_contents( $this->_resource, $length > 0 ? $length : null );
+      if( !$stream ) return stream_get_contents( $this->_resource, $length > 0 ? $length : -1 );
       else if( !( $stream instanceof StreamInterface ) || !$stream->isWritable() ) throw new Exception\Strict( static::EXCEPTION_INVALID_STREAM, [ 'value' => $stream ] );
       else {
 
-        stream_copy_to_stream( $this->_resource, $stream->getResource(), $length > 0 ? $length : null );
+        stream_copy_to_stream( $this->_resource, $stream->getResource(), $length > 0 ? $length : -1 );
         return null;
       }
     }

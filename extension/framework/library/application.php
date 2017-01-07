@@ -10,6 +10,12 @@ use Framework\Exception\Strict;
 abstract class Application {
 
   /**
+   * General exception for a missing (but needed) PHP extension/feature
+   *
+   * @param string $name Extension or feature name with version (separated by @)
+   */
+  const EXCEPTION_FEATURE_MISSING = 'framework#0C';
+  /**
    * Header already sent when try to redirect the page
    */
   const EXCEPTION_FAIL_REDIRECT = 'framework#9N';

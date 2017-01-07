@@ -74,7 +74,9 @@ interface FileInterface {
    */
   public function create( array $meta = [] );
   /**
-   * Remove a directory or a file. This will remove the directory AND ALL the contents in it
+   * Remove a directory or a file
+   *
+   * This will remove the directory AND ALL the contents in it
    *
    * @throws Exception If the path is not writeable
    * @throws Exception Unsuccessful operation, due to the underlying system
@@ -82,7 +84,9 @@ interface FileInterface {
   public function destroy();
 
   /**
-   * Copy the content (or a directory with sub-content) to the destination. Overwrites the destination silently
+   * Copy the content (or a directory with sub-content) to the destination
+   *
+   * Overwrites the destination silently
    *
    * @param string $destination
    * @param bool   $move Remove the source after the successful copy
@@ -116,9 +120,116 @@ interface FileInterface {
    * @param mixed       $value
    * @param string|null $name
    *
-   * @throws Exception Try to set a read-only meta
    * @throws Exception Unsuccessful operation, due to the underlying system
    */
   public function setMeta( $value, $name = null );
-}
 
+  /**
+   * @return File\SystemInterface
+   */
+  public function getSystem();
+  /**
+   * @return bool
+   */
+  public function isDirectory();
+  /**
+   * @return bool
+   */
+  public function isReadable();
+  /**
+   * @return bool
+   */
+  public function isWriteable();
+}
+/**
+ * Class File
+ * @package Framework
+ */
+class File implements FileInterface {
+
+  /**
+   * @var File\SystemInterface
+   */
+  private $_system;
+  /**
+   * @var string
+   */
+  private $_path;
+
+  /**
+   *
+   * @param File\SystemInterface $system
+   * @param string               $path
+   */
+  public function __construct( File\SystemInterface $system, $path ) {
+    $this->_system = $system;
+    $this->_path   = $path;
+  }
+
+  /** */
+  public function __toString() {
+    return $this->getPath( true );
+  }
+
+  /** */
+  public function exist( array $meta = [] ) {
+    return $this->_system->exist( $this->_path, $meta );
+  }
+
+  /** */
+  public function write( $content, $append = true, array $meta = [] ) {
+    $this->_system->write( $this->_path, $content, $append, $meta );
+  }
+  /** */
+  public function read( $stream = null ) {
+    return $this->_system->read( $this->_path, $stream );
+  }
+
+  /** */
+  public function search( $pattern = null, $recursive = false, $directory = true ) {
+    return $this->_system->search( $this->_path, $pattern, $recursive, $directory );
+  }
+  /** */
+  public function create( array $meta = [] ) {
+    return $this->_system->create( $this->_path, $meta );
+  }
+  /** */
+  public function destroy() {
+    $this->_system->destroy( $this->_path );
+  }
+
+  /** */
+  public function copy( $destination, $move = false ) {
+    return $this->_system->copy( $this->_path, $destination, $move );
+  }
+
+  /** */
+  public function getPath( $real = false ) {
+    return $real ? $this->_system->getPath( $this->_path ) : $this->_path;
+  }
+  /** */
+  public function getMeta( $name = null ) {
+    return $this->_system->getMeta( $this->_path, $name );
+  }
+  /** */
+  public function setMeta( $value, $name = null ) {
+    return $this->_system->setMeta( $this->_path, $value, $name );
+  }
+
+  /** */
+  public function getSystem() {
+    return $this->_system;
+  }
+  /** */
+  public function isDirectory() {
+    return $this->getMeta( File\System::META_TYPE ) == File\System::TYPE_DIRECTORY;
+  }
+  /** */
+  public function isReadable() {
+    return $this->getMeta( File\System::META_PERMISSION_READ );
+  }
+  /** */
+  public function isWriteable() {
+    return $this->getMeta( File\System::META_PERMISSION_WRITE );
+  }
+}

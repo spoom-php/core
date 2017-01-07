@@ -1,7 +1,7 @@
 <?php namespace Framework\Exception;
 
 use Framework\Exception;
-use Framework\Helper;
+use Framework;
 
 /**
  * Class Collector
@@ -9,8 +9,8 @@ use Framework\Helper;
  *
  * @property-read Exception[] $list Stored exceptions
  */
-class Collector implements \Iterator, \Countable, Helper\AccessableInterface {
-  use Helper\Accessable;
+class Collector implements \Iterator, \Countable, Framework\Helper\AccessableInterface {
+  use Framework\Helper\Accessable;
 
   /**
    * Exception storage

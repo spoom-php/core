@@ -1,7 +1,6 @@
 <?php namespace Framework;
 
 use Framework;
-use Framework\Helper\File;
 use Framework\Helper;
 
 /**
@@ -201,7 +200,7 @@ class Extension implements Helper\AccessableInterface {
     $directory = $this->directory( $path, $root );
     if( $file_name == '*' || $file_name{0} == '|' ) {
 
-      $files = File::getList( $this->directory( $path, true ), false, $file_name == '*' ? false : preg_replace( '/(^\\||\\|$)/', '/', $file_name ) );
+      $files = Helper\File::getList( $this->directory( $path, true ), false, $file_name == '*' ? false : preg_replace( '/(^\\||\\|$)/', '/', $file_name ) );
       foreach( $files as &$f ) $f = $directory . $f;
 
       return $files;

@@ -1,6 +1,7 @@
 <?php namespace Framework\File;
 
 use Framework\Exception;
+use Framework\File;
 use Framework\FileInterface;
 use Framework\Helper\Stream;
 use Framework\Helper\StreamInterface;
@@ -73,6 +74,13 @@ interface SystemInterface {
   const META_PERMISSION_WRITE = 'permission_write';
 
   /**
+   * Clear the internal path or meta caches
+   *
+   * @return $this
+   */
+  public function reset();
+
+  /**
    * Check if the path is exists, with the given meta data
    *
    * @param string $path
@@ -109,6 +117,14 @@ interface SystemInterface {
    */
   public function read( $path, $stream = null );
 
+  /**
+   * Return a path handler object
+   *
+   * @param string $path
+   *
+   * @return FileInterface
+   */
+  public function get( $path );
   /**
    * List directory contents
    *
@@ -157,7 +173,7 @@ interface SystemInterface {
    * @param string $destination
    * @param bool   $move Remove the source after the successful copy
    *
-   * @return FileInterface
+   * @return FileInterface The destination path, even if the copy wasn't successful
    * @throws Exception If the path is not readable or the destination is not writeable
    * @throws Exception Unsuccessful operation, due to the underlying system
    */
@@ -170,17 +186,17 @@ interface SystemInterface {
    *
    * @return string
    */
-  public function getPath( $path = '' );
+  public function getPath( $path );
   /**
-   * Get a (or all) meta for a specific path
+   * Get meta for a specific path
    *
-   * @param string      $path
-   * @param string|null $name
+   * @param string               $path
+   * @param string[]|string|null $names
    *
    * @return array|mixed
    * @throws Exception Unsuccessful operation, due to the underlying system
    */
-  public function getMeta( $path, $name = null );
+  public function getMeta( $path, $names = null );
   /**
    * Set a path metadata, if not read only
    *
@@ -198,7 +214,7 @@ interface SystemInterface {
 /**
  * Class System
  *
- * note: All links will be converted to realpath and handled by that
+ * note: All links will be converted to realpath
  *
  * @package Framework\File
  */
@@ -207,11 +223,32 @@ class System implements SystemInterface {
   const EXCEPTION_FAIL = 'framework#0';
 
   /**
+   * Cache path normalization
+   *
+   * @var string[]
+   */
+  private static $cache = [];
+
+  /**
+   * Cached real paths (key is the standard path)
+   *
+   * @var array
+   */
+  private $cache_path = [];
+  /**
+   * Cache paths meta values (key is the standard path, value is the cached meta values)
+   *
+   * @var array[]
+   */
+  private $cache_meta = [];
+
+  /**
    * @var string
    */
   private $root;
 
   /**
+   *
    * @param string $root The root path for the filesystem. It MUST exists!
    *
    * @throws Exception\Strict Invalid root path
@@ -226,22 +263,27 @@ class System implements SystemInterface {
     }
   }
 
-  /**
-   * @inheritdoc
-   */
-  public function exist( $path, array $meta = [] ) {
-    $path = $this->getPath( $path );
+  /** */
+  public function reset() {
 
-    $result = file_exists( $path );
+    clearstatcache();
+    $this->cache_path = $this->cache_meta = [];
+
+    return $this;
+  }
+
+  /** */
+  public function exist( $path, array $meta = [] ) {
+    $_path = $this->getPath( $path );
+
+    $result = file_exists( $_path );
     if( $result && !empty( $meta ) ) {
       // TODO check agains the metadata array
     }
 
     return $result;
   }
-  /**
-   * @inheritdoc
-   */
+  /** */
   public function write( $path, $content, $append = true, array $meta = [] ) {
 
     $_meta = $this->getMeta( $path );
@@ -251,8 +293,7 @@ class System implements SystemInterface {
 
       // create the directory
       // TODO add default meta for the silent directory creation
-      $directory = dirname( $path );
-      $this->create( $directory );
+      $this->create( static::directory( dirname( $path ) ) );
 
       // create write operation pointer
       $resource = fopen( $this->getPath( $path ), $append ? 'a' : 'w' );
@@ -267,9 +308,7 @@ class System implements SystemInterface {
       }
     }
   }
-  /**
-   * @inheritdoc
-   */
+  /** */
   public function read( $path, $stream = null ) {
     if( !$this->exist( $path ) ) return $stream ? null : '';
     else {
@@ -291,9 +330,11 @@ class System implements SystemInterface {
     }
   }
 
-  /**
-   * @inheritdoc
-   */
+  /** */
+  public function get( $path ) {
+    return new File( $this, $path );
+  }
+  /** */
   public function search( $path, $pattern = null, $recursive = false, $directory = true ) {
 
     $meta = $this->getMeta( $path );
@@ -303,7 +344,7 @@ class System implements SystemInterface {
     else {
 
       $result = [];
-      $path .= rtrim( $path, static::DIRECTORY_SEPARATOR ) . static::DIRECTORY_SEPARATOR;
+      $path = static::directory( $path );
       $_path = $this->getPath( $path );
 
       $list = scandir( $_path );
@@ -311,8 +352,10 @@ class System implements SystemInterface {
         if( !in_array( $tmp, [ '.', '..' ] ) && ( !$pattern || preg_match( $pattern, $path . $tmp ) ) ) {
 
           $is_directory = $this->getMeta( $path . $tmp, static::META_TYPE ) == static::TYPE_DIRECTORY;
+          if( $is_directory ) $tmp = static::directory( $tmp );
+
           if( ( $directory || !$is_directory ) ) {
-            // TODO add to the result ($result[] = new File( $this, $path . $tmp );
+            $result[] = new File( $this, $path . $tmp );
           }
 
           // search in subdirectory
@@ -325,9 +368,7 @@ class System implements SystemInterface {
       return $result;
     }
   }
-  /**
-   * @inheritdoc
-   */
+  /** */
   public function create( $path, array $meta = [] ) {
 
     if( !$this->exist( $path ) ) {
@@ -343,8 +384,7 @@ class System implements SystemInterface {
 
           // create the directory
           // TODO add default meta for the silent directory creation
-          $directory = dirname( $path );
-          $this->create( $directory );
+          $this->create( static::directory( dirname( $path ) ) );
 
           $result = @touch( $_path );
         }
@@ -358,11 +398,9 @@ class System implements SystemInterface {
       }
     }
 
-    // TODO return new File( $this, $path );
+    return new File( $this, $path );
   }
-  /**
-   * @inheritdoc
-   */
+  /** */
   public function destroy( $path ) {
     if( $this->exist( $path ) ) {
 
@@ -390,18 +428,56 @@ class System implements SystemInterface {
     }
   }
 
+  /** */
   public function copy( $path, $destination, $move = false ) {
-    // TODO Implement copy()
+    if( $this->exist( $path ) ) {
+
+      // check for permissions
+      $_meta             = $this->getMeta( $path );
+      $_meta_destination = $this->getMeta( $destination );
+      if( !$_meta[ static::META_PERMISSION_READ ] ) throw new Exception\Strict( static::EXCEPTION_PERMISSION_INVALID, [ 'path' => $path ] );
+      else if( !$_meta_destination[ static::META_PERMISSION_WRITE ] ) throw new Exception\Strict( static::EXCEPTION_PERMISSION_INVALID, [ 'path' => $destination ] );
+      else if( $_meta_destination[ static::META_TYPE ] != $_meta[ static::META_TYPE ] ) throw new Exception\Strict( static::EXCEPTION_TYPE_INVALID, [ 'path' => $destination, 'allow' => $_meta[ static::META_TYPE ] ] );
+      else {
+
+        $_path        = $this->getPath( $path );
+        $_destination = $this->getPath( $destination );
+        if( $move ) $result = @rename( $_path, $_destination );
+        else {
+
+          // handle simple file copy
+          if( $_meta[ static::META_TYPE ] != static::TYPE_DIRECTORY ) $result = @copy( $_path, $_destination );
+          else {
+
+            // copy base directory
+            $result = $this->create( $destination );
+            if( $result ) {
+
+              // copy all contents from the directory
+              $list = $this->search( $path );
+              foreach( $list as $file ) {
+                $file->copy( static::directory( $destination ) . substr( $file->getPath(), strlen( $path ) ) );
+              }
+            }
+          }
+        }
+
+        if( !$result ) throw new Exception\System( static::EXCEPTION_FAIL, [ 'path' => $path ] );
+        else {
+
+          $this->setMeta( $destination, $_meta );
+        }
+      }
+    }
+
+    return new File( $this, $destination );
   }
 
-  /**
-   * @inheritdoc
-   *
-   * TODO cache paths
-   */
-  public function getPath( $path = '' ) {
-    if( empty( $path ) ) return $this->root;
-    else {
+  /** */
+  public function getPath( $path ) {
+
+    if( empty( $path ) || $path == static::DIRECTORY_SEPARATOR ) return $this->root;
+    else if( !isset( $this->cache_path[ $path ] ) ) {
 
       // normalize path
       $_path = static::path( $path );
@@ -417,80 +493,137 @@ class System implements SystemInterface {
         $_path = realpath( $_path );
       }
 
-      return $_path;
+      $this->cache_path[ $path ] = $_path;
     }
+
+    return $this->cache_path[ $path ];
   }
-  /**
-   * @inheritdoc
-   *
-   * TODO optimize simple access (eg: only for type)
-   */
-  public function getMeta( $path, $name = null ) {
-    $_path = $this->getPath( $path );
+  /** */
+  public function getMeta( $path, $names = null ) {
 
-    // handle missing path
-    if( !file_exists( $_path ) ) {
+    // provide default values for meta types
+    if( empty( $names ) ) $names = [
+      static::META_TYPE,
+      static::META_TIME,
+      static::META_PERMISSION,
+      static::META_PERMISSION_READ,
+      static::META_PERMISSION_WRITE
+    ];
 
-      // search for the first exists path to determine the right permissions for create
-      $root = $_path;
-      do {
-        $root = dirname( $root );
-      } while( !file_exists( $root ) );
+    // save return meta, and force array names 
+    $result_name = !is_array( $names ) ? $names : null;
+    $names       = is_array( $names ) ? $names : [ $names ];
 
-      $info = new \SplFileInfo( $root );
-      $meta = [
-        static::META_TYPE => $_path[ strlen( $_path ) - 1 ] == static::DIRECTORY_SEPARATOR ? static::TYPE_DIRECTORY : static::TYPE_FILE,
-        static::META_TIME => 0,
+    $result = [];
+    $_path  = $file = $exist = null;
+    foreach( $names as $name ) {
 
-        static::META_PERMISSION       => $info->getPerms(),
-        static::META_PERMISSION_READ  => $info->isReadable(),
-        static::META_PERMISSION_WRITE => $info->isWritable()
-      ];
-    } else {
+      // check for cached meta
+      if( !isset( $this->cache_meta[ $path ][ $name ] ) ) {
 
-      // add basic metadata
-      $info = new \SplFileInfo( $_path );
-      $meta = [
-        static::META_TYPE => $info->isDir() ? static::TYPE_DIRECTORY : static::TYPE_FILE,
-        static::META_TIME => $info->getMTime(),
+        // determine path basic data for meta checks (only once)
+        if( empty( $_path ) ) {
 
-        static::META_PERMISSION       => $info->getPerms(),
-        static::META_PERMISSION_READ  => $info->isReadable(),
-        static::META_PERMISSION_WRITE => $info->isWritable()
-      ];
+          $_path = $file = $this->getPath( $path );
+          $exist = file_exists( $_path );
 
-      // TODO add size for a directory, only if needed
-      if( $meta[ static::META_TYPE ] == static::TYPE_FILE ) {
-        $meta[ static::META_SIZE ] = $info->getSize();
-      }
-
-      // search for mime type, only if needed
-      if( $name == static::META_MIME ) {
-
-        $tmp = class_exists( '\finfo' ) || function_exists( 'mime_content_type' );
-        if( !$tmp ) throw new Exception\System( \Framework::EXCEPTION_FEATURE_MISSING, [ 'name' => 'fileinfo@0.1.0' ] );
-        else if( !class_exists( '\finfo' ) ) $tmp = mime_content_type( $_path );
-        else {
-
-          $info = new \finfo( FILEINFO_MIME_TYPE );
-          $tmp  = $info->file( $_path );
-          if( in_array( $tmp, [ 'application/octet-stream', 'inode/x-empty' ] ) ) {
-            $tmp = $info->buffer( $this->read( $path ) );
-          }
+          // find the first exists directory for non-exists files (to provide permission values for create)
+          if( !$exist ) do {
+            $file = dirname( $file );
+          } while( !file_exists( $file ) );
         }
 
-        $meta[ static::META_MIME ] = $tmp ?: null;
+        $meta = null;
+        switch( $name ) {
+          case static::META_TYPE:
+
+            if( $exist ) $meta = is_dir( $_path ) ? static::TYPE_DIRECTORY : static::TYPE_FILE;
+            else $meta = empty( $path ) || $path[ strlen( $path ) - 1 ] == static::DIRECTORY_SEPARATOR ? static::TYPE_DIRECTORY : static::TYPE_FILE;
+
+            break;
+
+          case static::META_SIZE:
+
+            if( !$exist ) $meta = 0;
+            else if( $this->getMeta( $path, static::META_TYPE ) == static::TYPE_FILE ) $meta = filesize( $_path );
+            else {
+
+              // calculate the size of a directory
+              $meta = 0;
+              $tmp  = $this->search( $path );
+              foreach( $tmp as $t ) {
+                $meta += $t->getMeta( static::META_SIZE );
+              }
+            }
+
+            break;
+
+          case static::META_MIME:
+
+            if( !$exist ) $meta = null;
+            else {
+
+              $tmp = class_exists( '\finfo' ) || function_exists( 'mime_content_type' );
+              if( !$tmp ) throw new Exception\System( \Framework\Application::EXCEPTION_FEATURE_MISSING, [ 'name' => 'fileinfo@0.1.0' ] );
+              else if( !class_exists( '\finfo' ) ) $meta = mime_content_type( $_path );
+              else {
+
+                $info = new \finfo( FILEINFO_MIME_TYPE );
+                $meta = $info->file( $_path );
+                if( in_array( $meta, [ 'application/octet-stream', 'inode/x-empty' ] ) ) {
+                  $meta = $info->buffer( $this->read( $path ) );
+                }
+              }
+            }
+
+            break;
+
+          case static::META_TIME:
+
+            $meta = $exist ? filemtime( $_path ) : 0;
+            break;
+
+          case static::META_PERMISSION:
+
+            $meta = fileperms( $file ) & 0777;
+            break;
+          case static::META_PERMISSION_READ:
+
+            $meta = is_readable( $file );
+            break;
+
+          case static::META_PERMISSION_WRITE:
+
+            $meta = is_writeable( $file );
+            break;
+        }
+
+        // create meta storage if needed
+        $this->cache_meta[ $path ]          = empty( $this->cache_meta[ $path ] ) ? [] : $this->cache_meta[ $path ];
+        $this->cache_meta[ $path ][ $name ] = $meta;
       }
+
+      // extend the result with the meta
+      $result[ $name ] = $this->cache_meta[ $path ][ $name ];
     }
 
-    // TODO implement support for multiple named meta
-    return empty( $name ) ? $meta : ( isset( $meta[ $name ] ) ? $meta[ $name ] : null );
+    return $result_name ? ( isset( $result[ $result_name ] ) ? $result[ $result_name ] : null ) : $result;
   }
-  /**
-   * @inheritdoc
-   */
+  /** */
   public function setMeta( $path, $value, $name = null ) {
-    // TODO implement permission change
+    $_path = $this->getPath( $path );
+
+    // convert direct meta set
+    if( !empty( $name ) ) {
+      $value = [ $name => $value ];
+    }
+
+    // change the permission
+    if( isset( $value[ static::META_PERMISSION ] ) ) {
+      if( @!chmod( $_path, $value[ static::META_PERMISSION ] ) ) {
+        // FIXME this should throw or at least log an error
+      }
+    }
   }
 
   /**
@@ -506,9 +639,10 @@ class System implements SystemInterface {
    */
   public static function path( $path ) {
 
-    // deep normalization if the path contains one-dir-up segment (clean multiple separators)
-    $_path = preg_replace( '#\\' . static::DIRECTORY_SEPARATOR . '+#', static::DIRECTORY_SEPARATOR, ltrim( $path, static::DIRECTORY_SEPARATOR ) );
-    if( strpos( $_path, static::DIRECTORY_PREVIOUS ) !== false ) {
+    if( !isset( self::$cache[ $path ] ) ) {
+
+      // deep normalization if the path contains one-dir-up segment (clean multiple separators)
+      $_path = preg_replace( '#\\' . static::DIRECTORY_SEPARATOR . '+#', static::DIRECTORY_SEPARATOR, ltrim( $path, static::DIRECTORY_SEPARATOR ) );
 
       $tmp      = explode( static::DIRECTORY_SEPARATOR, $_path );
       $segments = [];
@@ -522,13 +656,27 @@ class System implements SystemInterface {
       }
 
       $_path = implode( static::DIRECTORY_SEPARATOR, $segments );
+
+      // check for root voilation
+      if( preg_match( addcslashes( '#^' . static::DIRECTORY_PREVIOUS . '(' . static::DIRECTORY_SEPARATOR . '|$)#', './' ), $_path ) ) {
+        throw new Exception\Strict( static::EXCEPTION_PATH_INVALID, [ 'path' => $path ] );
+      }
+
+      self::$cache[ $path ] = $_path;
     }
 
-    // check for root voilation
-    if( preg_match( addcslashes( '#^' . static::DIRECTORY_PREVIOUS . '(' . static::DIRECTORY_SEPARATOR . '|$)#', './' ), $_path ) ) {
-      throw new Exception\Strict( static::EXCEPTION_PATH_INVALID, [ 'path' => $path ] );
-    }
-
-    return $_path;
+    return self::$cache[ $path ];
+  }
+  /**
+   * Force path to be a directory
+   *
+   * ..and ensure the trailing separator (except for root path)
+   *
+   * @param string $path
+   *
+   * @return string
+   */
+  public static function directory( $path ) {
+    return ltrim( rtrim( $path, static::DIRECTORY_SEPARATOR ) . static::DIRECTORY_SEPARATOR, static::DIRECTORY_SEPARATOR );
   }
 }
