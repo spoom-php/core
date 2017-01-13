@@ -140,7 +140,7 @@ class Log implements LogInterface, Helper\AccessableInterface {
   /**
    * Default logger file output
    *
-   * @var string
+   * @var FileInterface
    */
   private $_file = null;
 
@@ -154,7 +154,7 @@ class Log implements LogInterface, Helper\AccessableInterface {
 
     // save instance properties
     $this->_name      = $name;
-    $this->_namespace = empty( $namespace ) ? (string) $this->extension : $namespace;
+    $this->_namespace = empty( $namespace ) ? $this->extension->getId() : $namespace;
   }
 
   /**
@@ -188,20 +188,20 @@ class Log implements LogInterface, Helper\AccessableInterface {
       ] );
 
       // check if the external loggers done the work
-      if( !$event->prevented && $this->file ) {
+      if( !$event->prevented && $this->getFile() ) {
 
         $message     = $event->getString( 'message', $message );
         $data        = $event->get( 'data', $data );
         $description = $event->getString( 'description', Helper\Text::insert( $message, $data, true ) );
 
-        file_put_contents( $this->file, Helper\Text::insert( static::PATTERN_MESSAGE, [
+        $this->getFile()->write( Helper\Text::insert( static::PATTERN_MESSAGE, [
           'time'        => $event->getString( 'datetime', $datetime ),
           'level'       => \Framework::getLevel( $level ),
           'namespace'   => str_replace( [ ';', "\n" ], [ ',', '' ], $event->getString( 'namespace', $namespace ) ),
           'message'     => str_replace( [ ';', "\n" ], [ ',', '' ], $message ),
           'data'        => str_replace( [ ';', "\n" ], [ ',', '' ], json_encode( $data ) ),
           'description' => str_replace( [ ';', "\n" ], [ ',', '' ], $description )
-        ] ), FILE_APPEND );
+        ] ) );
       }
 
       return !$event->collector->exist();
@@ -286,19 +286,21 @@ class Log implements LogInterface, Helper\AccessableInterface {
     return $this->_name;
   }
   /**
+   * @since ???
    * @since 0.6.0
    *
-   * @return string
+   * @return FileInterface
    */
   public function getFile() {
 
     // define the default log file
     if( $this->_file === null ) {
-
-      $directory   = \Framework::PATH_BASE . \Framework::PATH_TMP;
       $this->_file = false;
-      if( is_dir( $directory ) || @mkdir( $directory, 0755, true ) ) {
-        $this->_file = $directory . date( 'Ymd' ) . '-' . $this->_name . '.log';
+
+      $tmp = Application::getFile( \Framework::PATH_TMP . date( 'Ymd' ) . '-' . $this->_name . '.log' );
+      try {
+        $this->_file = $tmp->create();
+      } catch( \Exception $e ) {
       }
     }
 

@@ -79,9 +79,9 @@ class Extension implements Helper\AccessableInterface {
    */
   private $_manifest;
   /**
-   * Extension directory from root without _PATH_BASE
+   * Extension directory
    *
-   * @var string
+   * @var FileInterface
    */
   private $_directory = null;
   /**
@@ -128,9 +128,9 @@ class Extension implements Helper\AccessableInterface {
       else {
 
         $this->_directory = $directory;
-        $this->_manifest  = new Storage\File( $this->_directory . 'manifest', [
+        $this->_manifest = new Storage\File( $this->_directory, [
           new Converter\Json( JSON_PRETTY_PRINT )
-        ] );
+        ], 'manifest' );
       }
     }
   }
@@ -171,41 +171,17 @@ class Extension implements Helper\AccessableInterface {
   }
 
   /**
-   * Return an extension directory. The return path is relative to the extension directory by default
-   * (it can be modified with the $root parameter)
+   * Get or search file(s) in the extension's directory
    *
-   * @param string      $path Path from extension root
-   * @param bool|string $root Add _PATH_BASE constant or another ( or nothing )
+   * @param string      $path    Sub-path, relative from the extension directory
+   * @param string|null $pattern Pattern for file listing. Accept '*' wildcard
    *
-   * @return string
+   * @return FileInterface|FileInterface[]
    */
-  public function directory( $path = '', $root = false ) {
+  public function file( $path = '', $pattern = null ) {
 
-    $base = $root === true ? \Framework::PATH_BASE : ( is_string( $root ) ? $root : '' );
-    return $base . rtrim( $this->_directory . ltrim( $path, '/' ), '/' ) . '/';
-  }
-  /**
-   * Return an extension file ( or file list ). The return file path is relative to the extension directory by default
-   * (it can be modified with the $root parameter)
-   *
-   * @param string $file_name The file name ( use | and | for regexp file filter or * for directory listing )
-   * @param string $path      Path from the extension root
-   * @param bool   $root      Add _PATH_BASE constant or another prefix for the path ( or nothing )
-   *
-   * @return bool|string
-   */
-  public function file( $file_name, $path = '', $root = false ) {
-
-    // file list
-    $directory = $this->directory( $path, $root );
-    if( $file_name == '*' || $file_name{0} == '|' ) {
-
-      $files = Helper\File::getList( $this->directory( $path, true ), false, $file_name == '*' ? false : preg_replace( '/(^\\||\\|$)/', '/', $file_name ) );
-      foreach( $files as &$f ) $f = $directory . $f;
-
-      return $files;
-
-    } else return $directory . $file_name;
+    $directory = $this->getDirectory()->get( $path );
+    return empty( $pattern ) ? $directory : $directory->search( $pattern === '*' ? null : $pattern );
   }
 
   /**
@@ -262,6 +238,15 @@ class Extension implements Helper\AccessableInterface {
     return $event->execute( $arguments );
   }
 
+  /**
+   *
+   * @since ???
+   *
+   * @return FileInterface
+   */
+  public function getDirectory() {
+    return $this->_directory;
+  }
   /**
    * @since 0.6.0
    *

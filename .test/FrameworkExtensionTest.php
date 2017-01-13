@@ -45,8 +45,8 @@ class FrameworkExtensionTest extends PHPUnit_Framework_TestCase {
   public function testAdvance( \Framework\Extension $extension ) {
 
     // check file access
-    $this->assertEquals( 'extension/framework/configuration/application.json', $extension->file( 'application.json', 'configuration' ) );
-    $this->assertEquals( [ 'extension/framework/configuration/application.json' ], $extension->file( '|^application|', 'configuration' ) );
+    $this->assertEquals( 'extension/framework/configuration/application.json', $extension->file( 'configuration/application.json' )->getPath() );
+    $this->assertEquals( 1, count( $extension->file( 'configuration/', '#application#' ) ) );
 
     // check class searching and creating
     $this->assertEquals( '\Framework\Storage', $extension->library( [ 'test1', 'storage', 'application' ] ) );

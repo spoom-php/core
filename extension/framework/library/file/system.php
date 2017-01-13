@@ -1,5 +1,6 @@
 <?php namespace Framework\File;
 
+use Framework\Application;
 use Framework\Exception;
 use Framework\File;
 use Framework\FileInterface;
@@ -17,24 +18,26 @@ interface SystemInterface {
    *
    * @param string $root The invalid path
    */
-  const EXCEPTION_ROOT_INVALID = 'framework#0';
+  const EXCEPTION_ROOT_INVALID = 'framework#36W';
   /**
    * The given path is outside the root
+   *
+   * @param string $path The invalid path
    */
-  const EXCEPTION_PATH_INVALID = 'framework#0';
+  const EXCEPTION_PATH_INVALID = 'framework#35W';
   /**
    * The path's type is not suitable for the operation
    *
    * @param string $path
-   * @param string $allow
+   * @param string $allow Allowed path type name
    */
-  const EXCEPTION_TYPE_INVALID = 'framework#0';
+  const EXCEPTION_TYPE_INVALID = 'framework#34N';
   /**
    * Don't have enough permission for the operation
    *
    * @param string $path
    */
-  const EXCEPTION_PERMISSION_INVALID = 'framework#0';
+  const EXCEPTION_PERMISSION_INVALID = 'framework#33C';
 
   const DIRECTORY_SEPARATOR = '/';
   const DIRECTORY_CURRENT   = '.';
@@ -220,7 +223,13 @@ interface SystemInterface {
  */
 class System implements SystemInterface {
 
-  const EXCEPTION_FAIL = 'framework#0';
+  /**
+   * Failed file operation
+   *
+   * @param string $path
+   * @param array  $error Error description
+   */
+  const EXCEPTION_FAIL = 'framework#32E';
 
   /**
    * Cache path normalization
@@ -263,7 +272,7 @@ class System implements SystemInterface {
     }
   }
 
-  /** */
+  //
   public function reset() {
 
     clearstatcache();
@@ -272,7 +281,7 @@ class System implements SystemInterface {
     return $this;
   }
 
-  /** */
+  //
   public function exist( $path, array $meta = [] ) {
     $_path = $this->getPath( $path );
 
@@ -283,7 +292,7 @@ class System implements SystemInterface {
 
     return $result;
   }
-  /** */
+  //
   public function write( $path, $content, $append = true, array $meta = [] ) {
 
     $_meta = $this->getMeta( $path );
@@ -296,8 +305,8 @@ class System implements SystemInterface {
       $this->create( static::directory( dirname( $path ) ) );
 
       // create write operation pointer
-      $resource = fopen( $this->getPath( $path ), $append ? 'a' : 'w' );
-      if( !$resource ) throw new Exception\System( static::EXCEPTION_FAIL, [ 'path' => $path ] );
+      $resource = @fopen( $this->getPath( $path ), $append ? 'a' : 'w' );
+      if( !$resource ) throw new Exception\System( static::EXCEPTION_FAIL, [ 'path' => $path, 'error' => error_get_last() ] );
       else {
 
         $resource = Stream::instance( $resource );
@@ -308,7 +317,7 @@ class System implements SystemInterface {
       }
     }
   }
-  /** */
+  //
   public function read( $path, $stream = null ) {
     if( !$this->exist( $path ) ) return $stream ? null : '';
     else {
@@ -319,8 +328,8 @@ class System implements SystemInterface {
       else {
 
         // create write operation pointer
-        $resource = fopen( $this->getPath( $path ), 'r' );
-        if( !$resource ) throw new Exception\System( static::EXCEPTION_FAIL, [ 'path' => $path ] );
+        $resource = @fopen( $this->getPath( $path ), 'r' );
+        if( !$resource ) throw new Exception\System( static::EXCEPTION_FAIL, [ 'path' => $path, 'error' => error_get_last() ] );
         else {
 
           $resource = Stream::instance( $resource );
@@ -330,11 +339,11 @@ class System implements SystemInterface {
     }
   }
 
-  /** */
+  //
   public function get( $path ) {
     return new File( $this, $path );
   }
-  /** */
+  //
   public function search( $path, $pattern = null, $recursive = false, $directory = true ) {
 
     $meta = $this->getMeta( $path );
@@ -349,7 +358,7 @@ class System implements SystemInterface {
 
       $list = scandir( $_path );
       foreach( $list as $tmp ) {
-        if( !in_array( $tmp, [ '.', '..' ] ) && ( !$pattern || preg_match( $pattern, $path . $tmp ) ) ) {
+        if( !in_array( $tmp, [ '.', '..' ] ) && ( !$pattern || preg_match( $pattern, $tmp ) ) ) {
 
           $is_directory = $this->getMeta( $path . $tmp, static::META_TYPE ) == static::TYPE_DIRECTORY;
           if( $is_directory ) $tmp = static::directory( $tmp );
@@ -368,7 +377,7 @@ class System implements SystemInterface {
       return $result;
     }
   }
-  /** */
+  //
   public function create( $path, array $meta = [] ) {
 
     if( !$this->exist( $path ) ) {
@@ -389,7 +398,7 @@ class System implements SystemInterface {
           $result = @touch( $_path );
         }
 
-        if( !$result ) throw new Exception\System( static::EXCEPTION_FAIL, [ 'path' => $path ] );
+        if( !$result ) throw new Exception\System( static::EXCEPTION_FAIL, [ 'path' => $path, 'error' => error_get_last() ] );
         else {
 
           // apply metadata for the new path
@@ -400,7 +409,7 @@ class System implements SystemInterface {
 
     return new File( $this, $path );
   }
-  /** */
+  //
   public function destroy( $path ) {
     if( $this->exist( $path ) ) {
 
@@ -423,12 +432,14 @@ class System implements SystemInterface {
           $result = @rmdir( $_path );
         }
 
-        if( !$result ) throw new Exception\System( static::EXCEPTION_FAIL, [ 'path' => $path ] );
+        if( !$result ) {
+          throw new Exception\System( static::EXCEPTION_FAIL, [ 'path' => $path, 'error' => error_get_last() ] );
+        }
       }
     }
   }
 
-  /** */
+  //
   public function copy( $path, $destination, $move = false ) {
     if( $this->exist( $path ) ) {
 
@@ -462,7 +473,7 @@ class System implements SystemInterface {
           }
         }
 
-        if( !$result ) throw new Exception\System( static::EXCEPTION_FAIL, [ 'path' => $path ] );
+        if( !$result ) throw new Exception\System( static::EXCEPTION_FAIL, [ 'path' => $path, 'error' => error_get_last() ] );
         else {
 
           $this->setMeta( $destination, $_meta );
@@ -473,7 +484,7 @@ class System implements SystemInterface {
     return new File( $this, $destination );
   }
 
-  /** */
+  //
   public function getPath( $path ) {
 
     if( empty( $path ) || $path == static::DIRECTORY_SEPARATOR ) return $this->root;
@@ -498,7 +509,7 @@ class System implements SystemInterface {
 
     return $this->cache_path[ $path ];
   }
-  /** */
+  //
   public function getMeta( $path, $names = null ) {
 
     // provide default values for meta types
@@ -564,7 +575,7 @@ class System implements SystemInterface {
             else {
 
               $tmp = class_exists( '\finfo' ) || function_exists( 'mime_content_type' );
-              if( !$tmp ) throw new Exception\System( \Framework\Application::EXCEPTION_FEATURE_MISSING, [ 'name' => 'fileinfo@0.1.0' ] );
+              if( !$tmp ) throw new Exception\System( Application::EXCEPTION_FEATURE_MISSING, [ 'name' => 'fileinfo@0.1.0' ] );
               else if( !class_exists( '\finfo' ) ) $meta = mime_content_type( $_path );
               else {
 
@@ -609,7 +620,7 @@ class System implements SystemInterface {
 
     return $result_name ? ( isset( $result[ $result_name ] ) ? $result[ $result_name ] : null ) : $result;
   }
-  /** */
+  //
   public function setMeta( $path, $value, $name = null ) {
     $_path = $this->getPath( $path );
 

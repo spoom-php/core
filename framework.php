@@ -455,9 +455,9 @@ class FrameworkImport {
   /**
    * Find the class file and load it
    *
-   * @param string $name The class name
-   * @param string $path The file path
-   * @param string $root The path's root
+   * @param string   $name The class name
+   * @param string[] $path The file path
+   * @param string   $root The path's root
    *
    * @return bool True if the file was successfully loaded
    */
@@ -514,9 +514,9 @@ class FrameworkImport {
   /**
    * Split the class name into subclassnames through the camel or TitleCase. The full classname is not included in the result array
    *
-   * @example `Framework::tokenize( 'Pop3MailerClass' ) // [ 'Pop3', 'Pop3Mailer' ]`
-   * @example `Framework::tokenize( 'POP3MailerClass' ) // [ 'POP3', 'POP3Mailer' ]`
-   * @example `Framework::tokenize( 'POP3Mailer' ) // [ 'POP3' ]`
+   * @example `FrameworkImport::tokenize( 'Pop3MailerClass' ) // [ 'Pop3', 'Pop3Mailer' ]`
+   * @example `FrameworkImport::explode( 'POP3MailerClass' ) // [ 'POP3', 'POP3Mailer' ]`
+   * @example `FrameworkImport::explode( 'POP3Mailer' ) // [ 'POP3' ]`
    *
    * @param string $name The original classname
    *

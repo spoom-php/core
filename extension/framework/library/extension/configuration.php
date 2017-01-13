@@ -61,7 +61,7 @@ class Configuration extends Storage\File implements ConfigurationInterface {
    * @param Extension $source
    */
   public function __construct( Extension $source ) {
-    parent::__construct( $source->directory( '' ) . Extension::DIRECTORY_CONFIGURATION, [
+    parent::__construct( $source->file( Extension::DIRECTORY_CONFIGURATION ), [
       new Converter\Json( JSON_PRETTY_PRINT ),
       new Converter\Xml(),
       new Converter\Ini()
@@ -78,36 +78,31 @@ class Configuration extends Storage\File implements ConfigurationInterface {
    * @return bool
    */
   protected function validate( $name ) {
-    return is_string( $name ) && is_dir( \Framework::PATH_BASE . $this->_path . $name . '/' );
+    return is_string( $name ) && $this->getDirectory()->get( $name . '/' )->exist();
   }
-  /**
-   * @param string      $namespace
-   * @param string|null $format
-   * @param bool        $exist
-   *
-   * @return mixed
-   */
-  protected function getFile( $namespace, $format = null, &$exist = false ) {
+  //
+  protected function searchFile( $namespace, $format = null ) {
 
-    // change the directory temporary then search for the path
-    $tmp = $this->_path;
-    if( !empty( $this->environment ) ) $this->_path .= $this->environment . '/';
+    $tmp = $this->getDirectory();
+    try {
 
-    $result      = parent::getFile( $namespace, $format, $exist );
-    $this->_path = $tmp;
+      // change the directory temporary then search for the path
+      if( !empty( $this->getEnvironment() ) ) {
+        $this->setDirectory( $tmp->get( $this->getEnvironment() . '/' ) );
+      }
 
-    return $result;
+      return parent::searchFile( $namespace, $format );
+
+    } finally {
+      $this->setDirectory( $tmp );
+    }
   }
 
-  /**
-   * @return Extension
-   */
+  //
   public function getExtension() {
     return $this->_extension;
   }
-  /**
-   * @return string
-   */
+  //
   public function getEnvironment() {
 
     // load the first environment
@@ -117,9 +112,7 @@ class Configuration extends Storage\File implements ConfigurationInterface {
 
     return $this->_environment;
   }
-  /**
-   * @param string $value
-   */
+  //
   public function setEnvironment( $value ) {
 
     // save the original environment for later compare

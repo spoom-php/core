@@ -55,12 +55,15 @@ abstract class Application {
   const EVENT_TERMINATE = 'application.terminate';
 
   /**
+   * @var File\SystemInterface|null
+   */
+  private static $filesystem = null;
+  /**
    * Exception collector, for runtime error collect
    *
    * @var Collector
    */
   private static $collector = null;
-
   /**
    * @var string
    */
@@ -234,6 +237,21 @@ abstract class Application {
     exit();
   }
 
+  /**
+   * Get file from the local root filesystem
+   *
+   * @param string $path
+   *
+   * @return FileInterface
+   */
+  public static function getFile( $path = '' ) {
+
+    if( empty( static::$filesystem ) ) {
+      static::$filesystem = new File\System( \Framework::PATH_BASE );
+    }
+
+    return static::$filesystem->get( $path );
+  }
   /**
    * Getter for collector
    *

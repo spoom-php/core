@@ -51,6 +51,14 @@ interface FileInterface {
   public function read( $stream = null );
 
   /**
+   * Get a sub-path
+   *
+   * @param string $path
+   *
+   * @return FileInterface
+   */
+  public function get( $path );
+  /**
    * List directory contents
    *
    * @param string|null $pattern   Search pattern if any
@@ -166,69 +174,73 @@ class File implements FileInterface {
     $this->_path   = $path;
   }
 
-  /** */
+  //
   public function __toString() {
     return $this->getPath( true );
   }
 
-  /** */
+  //
   public function exist( array $meta = [] ) {
     return $this->_system->exist( $this->_path, $meta );
   }
 
-  /** */
+  //
   public function write( $content, $append = true, array $meta = [] ) {
     $this->_system->write( $this->_path, $content, $append, $meta );
   }
-  /** */
+  //
   public function read( $stream = null ) {
     return $this->_system->read( $this->_path, $stream );
   }
 
-  /** */
+  //
+  public function get( $path ) {
+    return empty( $path ) ? $this : new static( $this->_system, File\System::directory( $this->getPath() ) . $path );
+  }
+  //
   public function search( $pattern = null, $recursive = false, $directory = true ) {
     return $this->_system->search( $this->_path, $pattern, $recursive, $directory );
   }
-  /** */
+  //
   public function create( array $meta = [] ) {
     return $this->_system->create( $this->_path, $meta );
   }
-  /** */
+  //
   public function destroy() {
     $this->_system->destroy( $this->_path );
   }
 
-  /** */
+  //
   public function copy( $destination, $move = false ) {
     return $this->_system->copy( $this->_path, $destination, $move );
   }
 
-  /** */
+  //
   public function getPath( $real = false ) {
     return $real ? $this->_system->getPath( $this->_path ) : $this->_path;
   }
-  /** */
+  //
   public function getMeta( $name = null ) {
     return $this->_system->getMeta( $this->_path, $name );
   }
-  /** */
+  //
   public function setMeta( $value, $name = null ) {
     return $this->_system->setMeta( $this->_path, $value, $name );
   }
 
-  /** */
+  //
   public function getSystem() {
     return $this->_system;
   }
-  /** */
+  //
   public function isDirectory() {
     return $this->getMeta( File\System::META_TYPE ) == File\System::TYPE_DIRECTORY;
   }
-  /** */
+  //
   public function isReadable() {
     return $this->getMeta( File\System::META_PERMISSION_READ );
   }
-  /** */
+  //
   public function isWriteable() {
     return $this->getMeta( File\System::META_PERMISSION_WRITE );
   }
