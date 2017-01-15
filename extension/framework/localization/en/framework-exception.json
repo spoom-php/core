@@ -11,13 +11,6 @@
   "#10": "Invalid localization: {localization}",
 
   "#11": "The namespace can't be null in the multi permanent storage",
-  "#12": "Can't write the path ({path}) due to: {error}",
-  "#13": "Can't write the path ({path}) due to: {error}",
-  "#14": "Can't read the path ({path})",
-  "#15": "Can't read the path ({path}) due to: {error}",
-  "#16": "Can't remove the path ({path})",
-  "#17": "Can't remove the path ({path}) due to: {error}",
-  "#18": "The path for the permanent storage is not defined",
   "#19": "Can't clean some remained file ({path}) after format change",
 
   "#20": "Missing class property ({property})",
@@ -35,5 +28,11 @@
   "#28": "The meta must be a(n) {class} instance",
   "#29": "Can't serialize the content",
   "#30": "Can't de-serialize the content",
-  "#31": "The converter must be a \\Framework\\Helper\\ConverterInterface instance"
+  "#31": "The converter must be a \\Framework\\Helper\\ConverterInterface instance",
+
+  "#32": "Failed file operation: {path}, error: {error.message}",
+  "#33": "Not enough permission for the file operation: {path}",
+  "#34": "File path is not suitable for the operation: {path}, allowed only for '{allow}'",
+  "#35": "File path root violation: {path}",
+  "#36": "File system root is missing or not readable: {root}"
 }

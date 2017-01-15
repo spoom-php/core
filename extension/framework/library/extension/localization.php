@@ -21,17 +21,23 @@ interface LocalizationInterface extends Storage\PermanentInterface {
   public function __construct( Extension $source );
 
   /**
+   * @since 0.6.0
+   *
    * @return Extension
    */
   public function getExtension();
   /**
    * Get the current localization name
    *
+   * @since 0.6.0
+   *
    * @return string
    */
   public function getLocalization();
   /**
    * Set the current localization name
+   *
+   * @since 0.6.0
    *
    * @param string $value
    */
@@ -59,7 +65,7 @@ class Localization extends Storage\File implements LocalizationInterface {
    *
    * @var string
    */
-  protected $_localization;
+  private $_localization;
 
   /**
    * Set defaults
@@ -67,7 +73,7 @@ class Localization extends Storage\File implements LocalizationInterface {
    * @param Extension $source
    */
   public function __construct( Extension $source ) {
-    parent::__construct( $source->directory( '' ) . Extension::DIRECTORY_LOCALIZATION, [
+    parent::__construct( $source->file( Extension::DIRECTORY_LOCALIZATION ), [
       new Converter\Json( JSON_PRETTY_PRINT ),
       new Converter\Ini()
     ] );
@@ -83,54 +89,40 @@ class Localization extends Storage\File implements LocalizationInterface {
    * @return bool
    */
   protected function validate( $name ) {
-    return is_string( $name ) && is_dir( \Framework::PATH_BASE . $this->_path . $name . '/' );
+    return is_string( $name ) && $this->getDirectory()->get( $name . '/' )->exist();
   }
-  /**
-   * @param string      $namespace
-   * @param string|null $format
-   * @param bool        $exist
-   *
-   * @return mixed
-   */
-  protected function getFile( $namespace, $format = null, &$exist = false ) {
+  //
+  protected function searchFile( $namespace, $format = null ) {
 
-    // define the localization of not already
-    if( !isset( $this->_localization ) ) $this->localization = Application::getLocalization();
+    $tmp = $this->getDirectory();
+    try {
 
-    // change the directory temporary then search for the path
-    $tmp = $this->_path;
-    $this->_path .= $this->_localization . '/';
+      // change the directory temporary then search for the path
+      if( !empty( $this->getLocalization() ) ) {
+        $this->setDirectory( $tmp->get( $this->getLocalization() . '/' ) );
+      }
 
-    $result      = parent::getFile( $namespace, $format, $exist );
-    $this->_path = $tmp;
+      return parent::searchFile( $namespace, $format );
 
-    return $result;
+    } finally {
+      $this->setDirectory( $tmp );
+    }
   }
 
-  /**
-   * @since 0.6.0
-   *
-   * @return Extension
-   */
+  //
   public function getExtension() {
     return $this->_extension;
   }
-  /**
-   * @since 0.6.0
-   *
-   * @return string
-   */
+  //
   public function getLocalization() {
 
-    if( !isset( $this->_localization ) ) $this->setLocalization( Application::getLocalization() );
+    if( !isset( $this->_localization ) ) {
+      $this->setLocalization( Application::getLocalization() );
+    }
 
     return $this->_localization;
   }
-  /**
-   * @since 0.6.0
-   *
-   * @param string $value
-   */
+  //
   public function setLocalization( $value ) {
 
     // save the original localization for later compare

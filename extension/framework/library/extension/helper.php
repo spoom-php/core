@@ -1,5 +1,9 @@
 <?php namespace Framework\Extension;
 
+use Framework\Application;
+use Framework\File;
+use Framework\FileInterface;
+
 /**
  * Class Helper
  * @package Framework\Extension
@@ -51,7 +55,7 @@ abstract class Helper {
    * @return bool
    */
   public static function exist( $id, $validate = false ) {
-    return ( !$validate || self::validate( $id ) ) && is_dir( \Framework::PATH_BASE . self::directory( $id, false ) );
+    return ( !$validate || self::validate( $id ) ) && ( $tmp = self::directory( $id, false ) ) && $tmp->exist();
   }
 
   /**
@@ -61,16 +65,16 @@ abstract class Helper {
    * @param string $id
    * @param bool   $validate
    *
-   * @return string|bool
+   * @return FileInterface|null
    */
   public static function directory( $id, $validate = true ) {
 
     // check existance
-    if( $validate && ( !self::validate( $id ) || !self::exist( $id ) ) ) return false;
+    if( $validate && ( !self::validate( $id ) || !self::exist( $id ) ) ) return null;
     else {
 
       // return the directory
-      return \Framework::PATH_EXTENSION . $id . '/';
+      return Application::getFile( File\System::directory( \Framework::PATH_EXTENSION . $id ) );
     }
   }
 

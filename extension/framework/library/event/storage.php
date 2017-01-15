@@ -108,7 +108,7 @@ class Storage implements \Countable, \Iterator, Helper\AccessableInterface {
       if( !isset( self::$source ) ) {
 
         $extension    = Extension::instance( 'framework' );
-        self::$source = new StorageFile( $extension->directory( self::DIRECTORY_SOURCE ), [
+        self::$source = new StorageFile( $extension->file( self::DIRECTORY_SOURCE ), [
           new Converter\Json( JSON_PRETTY_PRINT ),
           new Converter\Xml()
         ] );

@@ -13,12 +13,27 @@ class FrameworkHelperTest extends PHPUnit_Framework_TestCase {
     parent::__construct( $name, $data, $dataName );
   }
 
+  private static $directory;
+
+  public static function setUpBeforeClass() {
+
+    // reset stream test files
+    static::$directory = \Framework::PATH_BASE . '.test/FrameworkHelperTest/';
+    @file_put_contents( static::$directory . 'stream-a.txt', '01234' );
+    @file_put_contents( static::$directory . 'stream-r.txt', '01234' );
+  }
+  public static function tearDownAfterClass() {
+
+    // clear stream test files
+    @unlink( static::$directory . 'stream-rw.txt' );
+  }
+
   public function testString() {
 
     // test unqiue string generation length
     $this->assertEquals( 542, strlen( Framework\Helper\Text::unique( 542 ) ) );
 
-    // TODO test uncovered String and File method
+    // TODO test uncovered String methods
   }
   public function testNumber() {
 
@@ -58,6 +73,40 @@ class FrameworkHelperTest extends PHPUnit_Framework_TestCase {
     $this->assertTrue( Number::equal( "123.456789", 123.4568, 4 ) );
     $this->assertTrue( Number::equal( 123.6, 123.62 ) );
     $this->assertTrue( Number::equal( 123.3, 123 ) );
+  }
+  /**
+   * Test stream functionalities
+   */
+  public function testStream() {
+
+    // test empty writeable stream
+    $rw = Framework\Helper\Stream::instance( fopen( static::$directory . 'stream-rw.txt', 'w+' ) );
+    $this->assertEquals( 0, $rw->count() );
+    $this->assertTrue( $rw->isReadable() && $rw->isWritable() && $rw->isSeekable() );
+
+    // test basic read/write operations
+    $rw->write( '0123--6789' );
+    $this->assertEquals( 10, $rw->count() );
+    $rw->seek( 4 );
+    $this->assertEquals( 4, $rw->getOffset() );
+    $rw->write( '45' );
+    $this->assertEquals( '0123456789', $rw->read( 0, 0 ) );
+
+    // test write from stream
+    $a = Framework\Helper\Stream::instance( fopen( static::$directory . 'stream-a.txt', 'a+' ) );
+    $this->assertTrue( $a->isWritable() && $a->isReadable() && $a->isSeekable() );
+
+    $a->write( $rw->seek( 0 ) );
+    $this->assertEquals( 15, $a->count() );
+    $this->assertEquals( '012340123456789', $a->read( 0, 0 ) );
+
+    // test read only and read to stream
+    $r = Framework\Helper\Stream::instance( fopen( static::$directory . 'stream-r.txt', 'r' ) );
+    $this->assertTrue( !$r->isWritable() && $r->isReadable() && $r->isSeekable() );
+
+    $this->assertEquals( '01234', $r->read( 0, 0 ) );
+    $r->read( 0, 0, $rw->seek( 5 ) );
+    $this->assertEquals( '0123401234', $rw->read( 0, 0 ) );
   }
 
   public function testConverter() {

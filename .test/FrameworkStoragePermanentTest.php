@@ -1,6 +1,7 @@
 <?php
 
 use Framework\Converter;
+use Framework\File;
 
 class FrameworkStoragePermanentTest extends PHPUnit_Framework_TestCase {
 
@@ -45,7 +46,7 @@ class FrameworkStoragePermanentTest extends PHPUnit_Framework_TestCase {
    */
   public function testFile() {
 
-    $storage = $this->getStorage( '.test/FrameworkStoragePermanentTest/test' );
+    $storage = $this->getStorage( '.test/FrameworkStoragePermanentTest/', 'test' );
     $storage->set( 'test1.test2.test3', 3 );
     $storage->set( 'test1.test4', 4 );
 
@@ -63,7 +64,7 @@ class FrameworkStoragePermanentTest extends PHPUnit_Framework_TestCase {
     $this->assertFileNotExists( \Framework::PATH_BASE . '.test/FrameworkStoragePermanentTest/test.json' );
 
     // test autoloader off
-    $storage       = $this->getStorage( '.test/FrameworkStoragePermanentTest/test' );
+    $storage       = $this->getStorage( '.test/FrameworkStoragePermanentTest/', 'test' );
     $storage->auto = false;
     $this->assertEquals( null, $storage->get( 'test1.test2.test3' ) );
 
@@ -125,13 +126,14 @@ class FrameworkStoragePermanentTest extends PHPUnit_Framework_TestCase {
     $this->assertFileExists( \Framework::PATH_BASE . '.test/FrameworkStoragePermanentTest/test/test-json.pser' );
   }
 
-  private function getStorage( $path ) {
-    $storage = new \Framework\Storage\File( $path, [
+  private function getStorage( $path, $file = null ) {
+    $storage = new \Framework\Storage\File( ( new File\System( Framework::PATH_BASE ) )->get( $path ), [
       new Converter\Json(),
       new Converter\Xml(),
       new Converter\Ini(),
       new Converter\Native()
-    ] );
+    ], $file );
+    
     return $storage;
   }
 }
