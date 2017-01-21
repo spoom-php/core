@@ -90,14 +90,14 @@ abstract class String {
         if( !function_exists( 'openssl_random_pseudo_bytes' ) ) {
 
           // log: warning
-          Request::getLog()->warning( 'Cannot use OpenSSL random, `openssl_random_pseudo_bytes()` doesn\'t exists.', [ ], '\Framework\Helper\String' );
+          Request::getLog()->warning( 'Cannot use OpenSSL random, `openssl_random_pseudo_bytes()` doesn\'t exists.', [], '\Framework\Helper\String' );
 
         } else {
           $tmp = openssl_random_pseudo_bytes( $seeds, $strong );
 
           // skip ssl since it wasn't using the strong algo
           if( $strong === true ) $raw .= $tmp;
-          else Request::getLog()->notice( 'Generated OpenSSL random value is not strong, what next?', [ ], '\Framework\Helper\String' ); // log: notice
+          else Request::getLog()->notice( 'Generated OpenSSL random value is not strong, what next?', [], '\Framework\Helper\String' ); // log: notice
         }
 
         // try to read from the unix RNG
@@ -175,17 +175,19 @@ abstract class String {
   public static function toLink( $text ) {
 
     $source = [
-      '/á/i', '/é/i', '/ű|ú|ü/i', '/ő|ó|ö/i', '/í/i', // accented characters
-      '/[\W]+/iu',                                     // special characters
-      '/[\s]+/'                                       // whitespaces
+      '/á/i', '/é/i', '/ű|ú|ü/i', '/ő|ó|ö/i', '/í/i',     // accented characters
+      '/[\s]+/',                                          // whitespaces
+      '/[^\w\+]+/iu',                                     // special characters
+      '/[\-]+/i',                                         // shrink multiple separators
+      '/[\+]+/i',
+      '/(\-\+)|(\+\-)/i'                                  // change the separators next to each other
     ];
-    $target = [ 'a', 'e', 'u', 'o', 'i', '-', '+' ];
+    $target = [ 'a', 'e', 'u', 'o', 'i', '+', '-', '-', '+', '+' ];
 
     // convert text
-    $text = mb_convert_case( $text, MB_CASE_LOWER, 'UTF-8' ); // lowercase
-    $text = preg_replace( $source, $target, $text );          // change the chars
-    $text = preg_replace( '/[+\-]+/i', '-', $text );          // clean special chars next to each other
-    $text = trim( $text, ' -+' );                             // trim special chars the beginning or end of the string
+    $text = mb_convert_case( $text, MB_CASE_LOWER, 'UTF-8' );   // lowercase
+    $text = preg_replace( $source, $target, $text );            // change the chars
+    $text = trim( $text, ' -+' );                               // trim special chars the beginning or end of the string
 
     return $text;
   }
