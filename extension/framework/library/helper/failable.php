@@ -10,6 +10,12 @@ interface FailableInterface {
    * @return \Exception|null
    */
   public function getException();
+  /**
+   * @param \Exception|FailableInterface|null $value
+   *
+   * @return bool
+   */
+  public function setException( $value = null );
 }
 /**
  * Trait Failable
@@ -28,13 +34,12 @@ trait Failable {
   public function getException() {
     return $this->_exception;
   }
-
   /**
    * @param \Exception|FailableInterface|null $value
    *
    * @return bool
    */
-  protected function setException( $value = null ) {
+  public function setException( $value = null ) {
     $this->_exception = $value instanceof FailableInterface ? $value->getException() : $value;
     return !empty( $this->_exception );
   }

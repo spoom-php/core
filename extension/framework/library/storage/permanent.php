@@ -207,7 +207,7 @@ abstract class Permanent extends Storage implements PermanentInterface {
         $content   = $event->get( 'content', $content );
 
         // check the event result
-        if( $event->collector->exist() ) throw $event->collector->get();
+        if( $event->getException() ) throw $event->getException();
         else if( !$event->isPrevented() ) {
 
           // save and perform the conversion
@@ -253,7 +253,7 @@ abstract class Permanent extends Storage implements PermanentInterface {
       $converter = $event->get( 'converter', $converter );
 
       // check the event result
-      if( $event->collector->exist() ) throw $event->collector->get();
+      if( $event->getException() ) throw $event->getException();
       else {
 
         // read the namespace's data, and check for the converter
@@ -307,7 +307,7 @@ abstract class Permanent extends Storage implements PermanentInterface {
       ] );
 
       // check the event result
-      if( $event->collector->exist() ) throw $event->collector->get();
+      if( $event->getException() ) throw $event->getException();
       else {
 
         // call the native destroy if not prevented

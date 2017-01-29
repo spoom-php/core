@@ -1,195 +1,273 @@
 <?php namespace Framework\Event;
 
-use Framework\Event;
-use Framework\Exception;
-use Framework\Extension;
+use Framework;
+use Framework\EventInterface;
 use Framework\Helper;
-use Framework\Storage\File as StorageFile;
-use Framework\Converter;
+use Framework\Exception;
 
+/**
+ * Interface StorageInterface
+ * @package Framework\Event
+ */
+interface StorageInterface {
+
+  /**
+   * Try to attach a non-callable
+   */
+  const EXCEPTION_INVALID_CALLBACK = 'framework#37W';
+  /**
+   * Try to trigger the global event
+   */
+  const EXCEPTION_INVALID_EVENT = 'framework#38N';
+
+  /**
+   * Default priority for callbacks
+   */
+  const PRIORITY_DEFAULT = 100;
+  /**
+   * Global event name
+   *
+   * This event can't be triggered manually, but called before every event
+   */
+  const EVENT_GLOBAL = '.';
+
+  /**
+   * Execute the event in this storage context
+   *
+   * @param EventInterface $event
+   *
+   * @return EventInterface
+   */
+  public function trigger( EventInterface $event );
+
+  /**
+   * Attach callback(s) for event(s)
+   *
+   * Events can be a simple string array, or an associative array in event => priority format. Empty (===null) event means the global
+   * event, that will triggered before every event.
+   *
+   * @param callable          $callback
+   * @param string|array|null $event
+   * @param int|null          $priority
+   *
+   * @return static
+   */
+  public function attach( $callback, $event = null, $priority = self::PRIORITY_DEFAULT );
+  /**
+   * Detach callback(s) from event(s)
+   *
+   * Callback must be the exact same instance that attached previously. Empty (===null) callback means "remove all"
+   *
+   * @param string|array|null $event
+   * @param callable|null     $callback
+   *
+   * @return static
+   */
+  public function detach( $event = null, $callback = null );
+  /**
+   * Detach every callable from the storage
+   *
+   * @return static
+   */
+  public function detachAll();
+
+  /**
+   * Get events that has attached callback(s)
+   *
+   * @return string[]
+   */
+  public function getEventList();
+  /**
+   * Get attached callbacks for an event
+   *
+   * @param string|null $event
+   * @param array       $priority
+   *
+   * @return \callable[]
+   */
+  public function getCallbackList( $event = null, array &$priority = [] );
+
+  /**
+   * Storage (mostly unique) name
+   *
+   * @return string
+   */
+  public function getName();
+}
 /**
  * Class Storage
  * @package Framework\Event
- *
- * @property-read Listener[] $list Attached listeners
- * @property-read Event      $event
  */
-class Storage implements \Countable, \Iterator, Helper\AccessableInterface {
+class Storage implements StorageInterface, Helper\AccessableInterface {
   use Helper\Accessable;
 
-  const DIRECTORY_SOURCE = 'asset/event/';
+  /**
+   * @var string
+   */
+  private $_name;
 
   /**
-   * The static listener storage (file based)
+   * Stores callbacks by event
    *
-   * @var StorageFile
+   * @var array
    */
-  private static $source;
-
+  private $callback = [];
   /**
-   * Iterator cursor
+   * Stores priorities for callbacks by event
    *
-   * @var int
+   * @var array
    */
-  private $cursor = 0;
-  /**
-   * Static listener status flag
-   *
-   * @var bool
-   */
-  private $loaded = false;
+  private $priority = [];
 
   /**
-   * Attached listener list
-   *
-   * @var Listener[]
+   * @param string $name
    */
-  private $_list = [];
-
-  /**
-   * @var Event
-   */
-  private $_event;
-
-  /**
-   * @param Event $event
-   */
-  public function __construct( Event $event ) {
-
-    $this->_event = $event;
+  public function __construct( $name ) {
+    $this->_name = $name;
   }
 
-  /**
-   * Register new event listener
-   *
-   * @param Listener $listener
-   */
-  public function add( Listener $listener ) {
-    array_push( $this->_list, $listener );
-  }
-  /**
-   * Remove an event listener
-   *
-   * @param Listener $listener
-   */
-  public function remove( Listener $listener ) {
+  //
+  public function trigger( EventInterface $event ) {
 
-    $this->load();
-    foreach( $this->_list as $i => $item ) {
-      if( $item === $listener ) {
+    if( $event->getName() == static::EVENT_GLOBAL ) throw new Exception\Strict( static::EXCEPTION_INVALID_EVENT );
+    else try {
 
-        array_splice( $this->_list, $i, 1 );
-        $this->_list = array_values( $this->_list );
+      // call the global event handlers
+      $list = $this->getCallbackList();
+      foreach( $list as $callback ) {
+        call_user_func_array( $callback, [ $event, $this ] );
       }
+
+      // call the specific event handlers
+      $list = $this->getCallbackList( $event->getName() );
+      foreach( $list as $callback ) {
+        call_user_func_array( $callback, [ $event, $this ] );
+      }
+
+    } catch( \Exception $e ) {
+      $event->setException( $e );
+    }
+
+    return $event;
+  }
+
+  //
+  public function attach( $callback, $event = null, $priority = self::PRIORITY_DEFAULT ) {
+
+    if( !is_callable( $callback ) ) throw new Exception\Strict( static::EXCEPTION_INVALID_CALLBACK );
+    else {
+
+      // narmalize the input (global event handling, and non-array events)
+      if( $event === null ) $event = [ static::EVENT_GLOBAL => $priority ];
+      else if( !is_array( $event ) ) $event = [ $event => $priority ];
+
+      foreach( $event as $index => $value ) {
+
+        // add default priority
+        if( is_numeric( $index ) ) {
+          $index = $value;
+          $value = $priority;
+        }
+
+        // prevent duplicate callback for an event (and remove from all if it's a global attach)
+        $this->detach( $index == static::EVENT_GLOBAL ? array_keys( $this->callback ) : $index, $callback );
+
+        // create empty event storage
+        if( !isset( $this->callback[ $index ] ) ) {
+          $this->callback[ $index ] = [];
+          $this->priority[ $index ] = [];
+        }
+
+        // add callback with priority
+        $this->callback[ $index ][] = $callback;
+        $this->priority[ $index ][] = $value;
+
+        // recalculate the callback list order
+        $this->sort( $index );
+      }
+
+      return $this;
+    }
+  }
+  //
+  public function detach( $event = null, $callback = null ) {
+
+    // handle global event callbacks and force array input
+    if( $event === null ) $event = [ static::EVENT_GLOBAL ];
+    else if( !is_array( $event ) ) $event = [ $event ];
+
+    foreach( $event as $ev ) {
+
+      // handle "remove all" callback
+      if( $callback === null ) unset( $this->callback[ $ev ], $this->priority[ $ev ] );
+      else if( !empty( $this->callback[ $ev ] ) ) {
+
+        // find a specific callback
+        foreach( $this->callback[ $ev ] as $index => $value ) {
+          if( $value === $callback ) {
+            array_splice( $this->callback[ $ev ], $index, 1 );
+            array_splice( $this->priority[ $ev ], $index, 1 );
+
+            break;
+          }
+        }
+      }
+    }
+
+    return $this;
+  }
+  //
+  public function detachAll() {
+
+    $this->callback = $this->priority = [];
+    return $this;
+  }
+
+  /**
+   * Sort event callbacks based on their priority
+   *
+   * @param string $event
+   */
+  protected function sort( $event ) {
+    if( !empty( $this->callback[ $event ] ) ) {
+
+      // sort by the priorities, but keep the original indexes (we need it for the repopulation)
+      $priority = $this->priority[ $event ];
+      asort( $priority );
+
+      // repopulate the callbacks based on the new priority "map"
+      $tmp                      = $this->callback[ $event ];
+      $this->callback[ $event ] = [];
+      foreach( $priority as $index => $_ ) {
+        $this->callback[ $event ][] = $tmp[ $index ];
+      }
+
+      // reset priority indexes (to match the repopulated array)
+      $this->priority[ $event ] = array_values( $priority );
     }
   }
 
-  /**
-   * Clear all event listener
-   *
-   * @param bool $deep Don't reload the static listeners
-   */
-  public function clear( $deep = false ) {
-
-    $this->_list  = [];
-    $this->loaded = $deep;
+  //
+  public function getEventList() {
+    return array_values( array_filter( array_keys( $this->callback ), function ( $event ) {
+      // filter out the global event handler
+      return $event != static::EVENT_GLOBAL;
+    } ) );
   }
+  //
+  public function getCallbackList( $event = null, array &$priority = [] ) {
 
-  /**
-   * Load the static listeners
-   */
-  protected function load() {
-
-    // load only once
-    if( !$this->loaded ) {
-      $this->loaded = true;
-
-      // create the static source handler
-      if( !isset( self::$source ) ) {
-
-        $extension    = Extension::instance( 'framework' );
-        self::$source = new StorageFile( $extension->file( self::DIRECTORY_SOURCE ), [
-          new Converter\Json( JSON_PRETTY_PRINT ),
-          new Converter\Xml()
-        ] );
-      }
-
-      // try to create the listeners (the reverse order is for the unshifting)
-      $tmp = array_reverse( self::$source->getArray( (string) $this->_event ) );
-      foreach( $tmp as $listener ) try {
-
-        array_unshift( $this->_list, new Event\Listener(
-          isset( $listener->library ) ? $listener->library : null,
-          isset( $listener->data ) ? $listener->data : [],
-          !empty( $listener->enable )
-        ) );
-
-      } catch( \Exception $e ) {
-
-        // log: *
-        Exception\Helper::wrap( $e )->log( [
-          'event' => (string) $this->_event
-        ] );
-      }
+    // handle global event callbacks
+    if( $event === null ) {
+      $event = static::EVENT_GLOBAL;
     }
+
+    $priority = isset( $this->priority[ $event ] ) ? $this->priority[ $event ] : [];
+    return isset( $this->callback[ $event ] ) ? $this->callback[ $event ] : [];
   }
 
-  /**
-   * @return Listener[]
-   */
-  public function getList() {
-
-    $this->load();
-    return $this->_list;
-  }
-  /**
-   * @return Event
-   */
-  public function getEvent() {
-    return $this->_event;
-  }
-
-  /**
-   * @inheritdoc
-   */
-  public function current() {
-
-    $this->load();
-    return $this->_list[ $this->cursor ];
-  }
-  /**
-   * @inheritdoc
-   */
-  public function next() {
-    ++$this->cursor;
-  }
-  /**
-   * @inheritdoc
-   */
-  public function key() {
-    return $this->cursor;
-  }
-  /**
-   * @inheritdoc
-   */
-  public function valid() {
-
-    $this->load();
-    return isset( $this->_list[ $this->cursor ] );
-  }
-  /**
-   * @inheritdoc
-   */
-  public function rewind() {
-    $this->cursor = 0;
-  }
-
-  /**
-   * @inheritdoc
-   */
-  public function count() {
-
-    $this->load();
-    return count( $this->_list );
+  //
+  public function getName() {
+    return $this->_name;
   }
 }

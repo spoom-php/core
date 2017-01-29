@@ -107,8 +107,8 @@ abstract class Application {
 
     // call initialise event
     $event = $extension->trigger( self::EVENT_START );
-    if( $event->collector->count() ) throw $event->collector->get();
-    else if( $event->prevented ) throw new Exception\Strict( self::EXCEPTION_FAIL_START );
+    if( $event->getException() ) throw $event->getException();
+    else if( $event->isPrevented() ) throw new Exception\Strict( self::EXCEPTION_FAIL_START );
 
     return true;
   }
@@ -125,8 +125,8 @@ abstract class Application {
     // call display event to let extensions render the content
     $event = $extension->trigger( self::EVENT_RUN );
 
-    if( $event->collector->count() ) throw $event->collector->get();
-    else return !$event->prevented ? $event->get( '' ) : null;
+    if( $event->getException() ) throw $event->getException();
+    else return !$event->isPrevented() ? $event->get( '' ) : null;
   }
   /**
    * Trigger the stop event. In this event the request result should be rendered to the output, based on the content
@@ -144,8 +144,8 @@ abstract class Application {
       'content' => $content
     ] );
 
-    if( $event->collector->count() ) throw $event->collector->get();
-    else return !$event->prevented ? $event->get( '' ) : null;
+    if( $event->getException() ) throw $event->getException();
+    else return !$event->isPrevented() ? $event->get( '' ) : null;
   }
 
   /**

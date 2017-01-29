@@ -1,6 +1,5 @@
 <?php namespace Framework;
 
-use Framework;
 use Framework\Helper;
 
 /**
@@ -15,6 +14,7 @@ use Framework\Helper;
  * @property-read Extension\ConfigurationInterface $configuration The configuration storage object
  * @property-read Extension\LocalizationInterface  $localization  The localization storage object
  * @property-read LogInterface                     $log           The default extension logger instance
+ * @property-read Event\StorageInterface           $event         Event storage
  */
 class Extension implements Helper\AccessableInterface {
   use Helper\Accessable;
@@ -96,6 +96,12 @@ class Extension implements Helper\AccessableInterface {
    * @var Extension\LocalizationInterface
    */
   private $_localization = null;
+  /**
+   * Handle event triggers for the extension
+   *
+   * @var Event\StorageInterface
+   */
+  private $_event = null;
 
   /**
    * Object constructor. Define directory of the object
@@ -225,17 +231,15 @@ class Extension implements Helper\AccessableInterface {
   }
 
   /**
-   * Triggers an event of the extension and return the event object for the result
+   * Triggers an event of the extension and return the event as the result
    *
-   * @param string $event     The dot separated event name
-   * @param array  $arguments Arguments passed to the event handlers
+   * @param string $name Event (name) to trigger
+   * @param array  $data Default event data
    *
-   * @return Framework\EventData
+   * @return EventInterface
    */
-  public function trigger( $event, $arguments = [] ) {
-
-    $event = Framework\Event::instance( $this->_id, $event );
-    return $event->execute( $arguments );
+  public function trigger( $name, $data = [] ) {
+    return $this->getEvent()->trigger( new Event( $name, $data ) );
   }
 
   /**
@@ -311,6 +315,19 @@ class Extension implements Helper\AccessableInterface {
    */
   public function getLog() {
     return Log::instance( $this->_id );
+  }
+  /**
+   * @since ??
+   *
+   * @return Event\StorageInterface
+   */
+  public function getEvent() {
+
+    if( !$this->_event ) {
+      $this->_event = new Event\Storage( $this->_id );
+    }
+
+    return $this->_event;
   }
 
   /**

@@ -191,7 +191,7 @@ class Log implements LogInterface, Helper\AccessableInterface {
       ] );
 
       // check if the external loggers done the work
-      if( !$event->prevented && $this->getFile() ) {
+      if( !$event->isPrevented() && $this->getFile() ) try {
 
         $message     = $event->getString( 'message', $message );
         $data        = $event->get( 'data', $data );
@@ -205,9 +205,14 @@ class Log implements LogInterface, Helper\AccessableInterface {
           'data'        => str_replace( [ ';', "\n" ], [ ',', '' ], json_encode( $data ) ),
           'description' => str_replace( [ ';', "\n" ], [ ',', '' ], $description )
         ] ) );
+
+        return true;
+
+      } catch( \Exception $e ) {
+        // suppress exceptions for the logger
       }
 
-      return !$event->collector->exist();
+      return !$event->isPrevented() && !$event->getException();
     }
   }
 

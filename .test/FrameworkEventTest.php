@@ -1,88 +1,72 @@
 <?php
 
+use Framework\Event;
+use Framework\EventInterface;
+
 class FrameworkEventTest extends PHPUnit_Framework_TestCase {
 
-  public function __construct( $name = null, array $data = [ ], $dataName = '' ) {
+  public function __construct( $name = null, array $data = [], $dataName = '' ) {
     \Framework::setup( \Framework::ENVIRONMENT_DEVELOPMENT ) && \Framework::execute( function () { } );
-    
-    $source    = \Framework::PATH_BASE . '.test/FrameworkEventTest/';
-    $directory = \Framework::PATH_BASE . 'extension/framework/asset/event/';
-    ( is_dir( $directory ) || mkdir( $directory, 0777, true ) ) && copy( $source . 'framework.json', $directory . 'framework.json' );
-
-    $directory = \Framework::PATH_BASE . 'extension/framework/library/';
-    copy( $source . 'test.php', $directory . 'test.php' );
-    copy( $source . 'test2.php', $directory . 'test2.php' );
 
     parent::__construct( $name, $data, $dataName );
   }
 
-  public function __destruct() {
-    @unlink( \Framework::PATH_BASE . 'extension/framework/asset/event/framework.json' );
-    @unlink( \Framework::PATH_BASE . 'extension/framework/library/test.php' );
-    @unlink( \Framework::PATH_BASE . 'extension/framework/library/test2.php' );
-  }
-
   public function testBasic() {
 
-    // static event handler registration and execute
-    $event  = \Framework\Event::instance( 'framework', 'test.simple' );
-    $result = $event->execute( [ 'test' => 1 ] );
-    $this->assertEquals( [ 1, 'simple' ], $result->get( 'output' ) );
+    $storage   = new Event\Storage( 'test' );
+    $callback1 = $this->_callback( 1 );
+    $callback2 = $this->_callback( 2 );
+    $callback3 = $this->_callback( 3 );
 
-    // event stop and prevention
-    $result = $event->execute( [ 'test' => 2 ] );
-    $this->assertEquals( [ 'stopped', 'prevented' ], $result->get( 'output' ) );
+    $storage->attach( $callback1, [ 'test1', 'test2' => 1 ] );
+    $storage->attach( $callback2, 'test1', Event\Storage::PRIORITY_DEFAULT / 2 );
+    $storage->attach( $callback3, [ 'test1' => 0, 'test2' => 0 ] );
+
+    // test callback attach with priority
+    $priority = [];
+    $this->assertSame( [ $callback3, $callback2, $callback1 ], $storage->getCallbackList( 'test1', $priority ) );
+    $this->assertSame( [ 0, Event\Storage::PRIORITY_DEFAULT / 2, Event\Storage::PRIORITY_DEFAULT ], $priority );
+    $this->assertSame( [ $callback3, $callback1 ], $storage->getCallbackList( 'test2', $priority ) );
+    $this->assertSame( [ 0, 1 ], $priority );
+    $this->assertEquals( [ 'test1', 'test2' ], $storage->getEventList() );
+
+    // test event triggering
+    $event1 = $storage->trigger( new Event( 'test1', [ 'prevent' => 1 ] ) );
+
+    $this->assertTrue( $event1->isPrevented() );
+    $this->assertEquals( 1, $event1->get( 'prevented' ) );
+    $this->assertEquals( 1, $event1->get( 'callback' ) );
+
+    $event2 = $storage->trigger( new Event( 'test2', [ 'prevent' => 0 ] ) );
+
+    $this->assertFalse( $event2->isPrevented() );
+    $this->assertEquals( null, $event2->get( 'prevented' ) );
+    $this->assertEquals( 1, $event2->get( 'callback' ) );
+
+    // test callback detach
+    $storage->detach( 'test1', $callback2 );
+    $this->assertSame( [ $callback3, $callback1 ], $storage->getCallbackList( 'test1' ) );
+
+    $storage->detach( 'test2' );
+    $this->assertSame( [], $storage->getCallbackList( 'test2' ) );
+    $this->assertSame( [ 'test1' ], $storage->getEventList() );
   }
 
-  public function testAdvanced() {
+  /**
+   * Create a callback with specific name
+   *
+   * @param int $number
+   *
+   * @return callable
+   */
+  private function _callback( $number ) {
+    return function ( EventInterface $event ) use ( $number ) {
+      $event->set( 'callback', $number );
 
-    $event = \Framework\Event::instance( 'framework', 'test.advance' );
-
-    // dynamic event handler addition and run order
-    $event->getStorage()->clear();
-    $event->getStorage()->add( new \Framework\Event\Listener( 'framework:test2' ) );
-    $result = $event->execute( [ 'test' => 1 ] );
-    $this->assertEquals( 2, $result->get( 'output' ) );
-
-    // listener iteration, modification and disabling
-    $storage = $event->getStorage();
-    foreach( $storage as $listener ) {
-      /** @var \Framework\Event\Listener $listener */
-
-      if( $listener->library == \Framework::library( 'framework:test2' ) ) {
-        $listener->enable = false;
+      if( $event->get( 'prevent' ) == $number ) {
+        $event->setPrevented();
+        $event->set( 'prevented', $number );
       }
-    }
-    $result = $event->execute( [ 'test' => 2 ] );
-    $this->assertEquals( [ 2, 'advance' ], $result->get( 'output' ) );
-
-    // listener removal
-    $storage->clear();
-    $storage->add( new \Framework\Event\Listener( 'framework:test2' ) );
-    foreach( $storage as $listener ) {
-      /** @var \Framework\Event\Listener $listener */
-
-      if( $listener->library == \Framework::library( 'framework:test2' ) ) {
-        $storage->remove( $listener );
-      }
-    }
-    $result = $event->execute( [ 'test' => 2 ] );
-    $this->assertEquals( [ 2, 'advance' ], $result->get( 'output' ) );
-  }
-
-  public function testCustom() {
-
-    $event = \Framework\Event::instance( 'test', 'custom' );
-    $event->getStorage()->add( new \Framework\Event\Listener( [ $this, 'custom1' ] ) );
-    $event->getStorage()->add( new \Framework\Event\Listener( function ( \Framework\EventData $e ) {
-      $e->extend( 'result:', [ 'test:custom2' ] );
-    } ) );
-
-    $result = $event->execute( [ ] );
-    $this->assertEquals( [ 'test:custom1', 'test:custom2' ], $result->get( 'result:' ) );
-  }
-
-  public function custom1( \Framework\EventData $e ) {
-    $e->extend( 'result:', [ 'test:custom1' ] );
+    };
   }
 }

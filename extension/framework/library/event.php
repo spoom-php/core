@@ -1,140 +1,41 @@
 <?php namespace Framework;
 
-use Framework\Exception;
-use Framework\Exception\Collector;
 use Framework\Helper;
 
-/**
- * Class Event
- * @package Framework
- *
- * @property-read string        $name
- * @property-read string        $namespace
- * @property-read Event\Storage $storage
- */
-class Event implements Helper\AccessableInterface {
-  use Helper\Accessable;
-
-  /**
-   * @var array[string]Event
-   */
-  private static $instance = [];
-
-  /**
-   * @var string
-   */
-  private $_name;
-  /**
-   * @var string
-   */
-  private $_namespace;
-
-  /**
-   * Registered listener source
-   *
-   * @var Event\Storage
-   */
-  private $_storage;
-
-  /**
-   * @param string $namespace
-   * @param string $name
-   */
-  protected function __construct( $namespace, $name ) {
-
-    $this->_namespace = $namespace;
-    $this->_name      = $name;
-    $this->_storage   = new Event\Storage( $this );
-  }
+interface EventInterface extends StorageInterface, Helper\FailableInterface {
 
   /**
    * @return string
    */
-  public function __toString() {
-    return $this->_namespace . ':' . $this->_name;
-  }
+  public function getName();
 
   /**
-   * Execute the event. This will execute all the registered listeners (which is enabled) from the event's storage
-   *
-   * @param array|object $arguments The input arguments for the event
-   *
-   * @return EventData The event result
+   * @return bool
    */
-  public function execute( $arguments = [] ) {
-
-    $data = new EventData( $this, $arguments );
-    $list = $this->_storage->getList();
-
-    // execute registered listeners
-    foreach( $list as $listener ) try {
-
-      $listener->execute( $data );
-
-    } catch( \Exception $e ) {
-      $data->collector->add( Exception\Helper::wrap( $e ) );
-    }
-
-    return $data;
-  }
-
+  public function isStopped();
   /**
-   * @return string
+   * @param bool $value
    */
-  public function getName() {
-    return $this->_name;
-  }
+  public function setStopped( $value = true );
   /**
-   * @return string
+   * @return bool
    */
-  public function getNamespace() {
-    return $this->_namespace;
-  }
+  public function isPrevented();
   /**
-   * @return Event\Storage
+   * @param bool $value
    */
-  public function getStorage() {
-    return $this->_storage;
-  }
-
-  /**
-   * Get an event instance. This is the only way to get an event instance
-   *
-   * @param string $namespace
-   * @param string $name
-   *
-   * @return Event
-   */
-  public static function instance( $namespace, $name ) {
-
-    $index = $namespace . ':' . $name;
-    return isset( self::$instance[ $index ] ) ? self::$instance[ $index ] : ( self::$instance[ $index ] = new static( $namespace, $name ) );
-  }
+  public function setPrevented( $value = true );
 }
+
 /**
- * Store an event arguments (the 'argument' namespace) and results ('result' namespace)
- *
  * @package Framework
  *
- * @property-read Event     $event
- * @property-read Collector $collector
- * @property      bool      $stopped This flag doesn't stop the listener calls, but the listeners MUST respect it internally
- * @property      bool      $prevented
+ * @property bool $stopped This flag doesn't stop the listener calls, but the listeners MUST respect it internally
+ * @property bool $prevented
  */
-class EventData extends Storage {
-
-  const NAMESPACE_RESULT   = 'result';
-  const NAMESPACE_ARGUMENT = 'argument';
-
-  /**
-   * @var Event
-   */
-  private $_event;
-
-  /**
-   * @var Collector
-   */
-  private $_collector = null;
+class Event extends Storage implements EventInterface, Helper\AccessableInterface {
+  use Helper\Failable;
+  use Helper\Accessable;
 
   /**
    * @var bool
@@ -146,31 +47,26 @@ class EventData extends Storage {
   private $_prevented = false;
 
   /**
-   * @param Event        $event
-   * @param array|object $argument
+   * @var string
    */
-  public function __construct( Event $event, $argument = [] ) {
-    parent::__construct( [], self::NAMESPACE_RESULT );
+  private $_name;
 
-    $this->_event     = $event;
-    $this->_collector = new Exception\Collector();
+  /**
+   * @param string     $name
+   * @param mixed|null $data
+   */
+  public function __construct( $name, $data = null ) {
+    parent::__construct( $data, null );
 
-    $this->set( self::NAMESPACE_ARGUMENT . self::SEPARATOR_NAMESPACE, $argument );
+    $this->_name = $name;
   }
 
   /**
-   * @return Event
+   * @return string
    */
-  public function getEvent() {
-    return $this->_event;
+  public function getName() {
+    return $this->_name;
   }
-  /**
-   * @return Collector
-   */
-  public function getCollector() {
-    return $this->_collector;
-  }
-
   /**
    * @return bool
    */
@@ -180,7 +76,7 @@ class EventData extends Storage {
   /**
    * @param bool $value
    */
-  public function setStopped( $value ) {
+  public function setStopped( $value = true ) {
     $this->_stopped = (bool) $value;
   }
   /**
@@ -192,7 +88,7 @@ class EventData extends Storage {
   /**
    * @param bool $value
    */
-  public function setPrevented( $value ) {
+  public function setPrevented( $value = true ) {
     $this->_prevented = (bool) $value;
   }
 }

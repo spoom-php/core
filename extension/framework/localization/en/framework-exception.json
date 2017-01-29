@@ -18,9 +18,6 @@
   "#22": "Invalid or missing localization storage ({class}) for the '{extension}' extension",
   "#23": "There is no converter for the '{namespace}' namespace",
 
-  "#24": "Listener' library is missing: {value}",
-  "#25": "Invalid listener. Must implement the Listener::CLASS_LIBRARY interface",
-
   "#26": "Invalid environment name ('{value}'). The name can contains only lowercase letters, dash and underscore.",
 
   "#27": "Failure: #{code} with '{message}', at '{file}'",
@@ -34,5 +31,8 @@
   "#33": "Not enough permission for the file operation: {path}",
   "#34": "File path is not suitable for the operation: {path}, allowed only for '{allow}'",
   "#35": "File path root violation: {path}",
-  "#36": "File system root is missing or not readable: {root}"
+  "#36": "File system root is missing or not readable: {root}",
+
+  "#37": "Event callback must be a valid callable",
+  "#38": "Can't trigger the global event manually"
 }
