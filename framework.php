@@ -273,8 +273,10 @@ class Framework {
   /**
    * Check for class, interface or trait existance
    *
-   * @param string $name The fully qualified name (with namespace)
-   *
+   * @since v0.6.5
+   * 
+*@param string $name The fully qualified name (with namespace)
+   *                     
    * @return bool True, if already loaded
    */
   public static function exist( $name ) {
