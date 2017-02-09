@@ -223,7 +223,7 @@ class Framework {
   public static function import( $class ) {
 
     // do not import class that is exists already
-    if( class_exists( $class, false ) ) return true;
+    if( self::exist( $class ) ) return true;
     else {
 
       // fix for absolute class definitions
@@ -267,8 +267,20 @@ class Framework {
         }
       }
 
-      return class_exists( $class, false );
+      return self::exist( $class );
     }
+  }
+  /**
+   * Check for class, interface or trait existance
+   *
+   * @since v0.6.5
+   * 
+*@param string $name The fully qualified name (with namespace)
+   *                     
+   * @return bool True, if already loaded
+   */
+  public static function exist( $name ) {
+    return class_exists( $name, false ) || interface_exists( $name, false ) || trait_exists( $name );
   }
 
   /**
