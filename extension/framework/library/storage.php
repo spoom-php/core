@@ -731,14 +731,13 @@ class Storage implements StorageInterface, Helper\AccessableInterface {
    */
   private function index( $index ) {
 
-    if( is_string( $index ) && isset( $this->cache[ 'index' ][ $index ] ) ) return $this->cache[ 'index' ][ $index ];
-    else {
+    if( !is_string( $index ) || !isset( $this->cache[ 'index' ][ $index ] ) ) {
 
       $result                           = $this->parse( $index );
-      $this->cache[ 'index' ][ $index ] = &$result;
-
-      return $result;
+      $this->cache[ 'index' ][ $index ] = $result;
     }
+
+    return clone $this->cache[ 'index' ][ $index ];
   }
   /**
    * Process the storage getter result. This will convert the result to the right type
@@ -754,6 +753,7 @@ class Storage implements StorageInterface, Helper\AccessableInterface {
     $tmp = $this->search( $index );
     if( !$tmp->exist ) $result = $default;
     else if( $tmp->key === null ) $result = $tmp->container;
+    else if( $tmp->container instanceof StorageInterface ) $result = $tmp->container->get( $tmp->key . static::SEPARATOR_TYPE . $index->type, $default );
     else if( Enumerable::isArrayLike( $tmp->container ) ) $result = $tmp->container[ $tmp->key ];
     else $result = $tmp->container->{$tmp->key};
 
@@ -762,7 +762,7 @@ class Storage implements StorageInterface, Helper\AccessableInterface {
       // force string type
       case self::TYPE_STRING:
 
-        if( $tmp->exist && ( Text::is( $result ) || is_null( $result ) ) ) $result = Text::read( $result );
+        if( $tmp->exist && ( Text::is( $result ) ) ) $result = Text::read( $result );
         else $result = $default;
 
         break;
