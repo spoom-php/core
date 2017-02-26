@@ -63,7 +63,7 @@ abstract class Exception extends \Exception implements \JsonSerializable, Helper
     $this->_id        = $tmp->extension . '#' . $tmp->code;
     $this->_extension = Extension::instance( $tmp->extension );
     $this->_data      = Enumerable::read( $data, false, [] );
-    $this->_level     = $tmp->level ?: \Framework::LEVEL_ERROR;
+    $this->_level = $tmp->level ?: Application::LEVEL_ERROR;
 
     parent::__construct( $message, $tmp->code, $exception );
   }
@@ -96,7 +96,7 @@ abstract class Exception extends \Exception implements \JsonSerializable, Helper
    */
   public function log( $data = [], LogInterface $instance = null ) {
 
-    $instance = $instance ?: Application::getLog();
+    $instance = $instance ?: Application::instance()->getLog();
     if( $instance ) {
 
       // extend data

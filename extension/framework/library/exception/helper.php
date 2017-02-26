@@ -1,5 +1,6 @@
 <?php namespace Framework\Exception;
 
+use Framework\Application;
 use Framework\Exception;
 use Framework\Extension;
 
@@ -29,10 +30,10 @@ abstract class Helper {
    * @var array[string]int
    */
   private static $LEVEL = [
-    'C' => \Framework::LEVEL_CRITICAL,
-    'E' => \Framework::LEVEL_ERROR,
-    'W' => \Framework::LEVEL_WARNING,
-    'N' => \Framework::LEVEL_NOTICE
+    'C' => Application::LEVEL_CRITICAL,
+    'E' => Application::LEVEL_ERROR,
+    'W' => Application::LEVEL_WARNING,
+    'N' => Application::LEVEL_NOTICE
   ];
 
   /**

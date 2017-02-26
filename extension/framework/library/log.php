@@ -32,7 +32,7 @@ interface LogInterface {
    *
    * @return bool
    */
-  public function create( $message, $data = [], $namespace = '', $level = \Framework::LEVEL_DEBUG );
+  public function create( $message, $data = [], $namespace = '', $level = Application::LEVEL_DEBUG );
 
   /**
    * @param string               $message   The log message pattern
@@ -165,10 +165,10 @@ class Log implements LogInterface, Helper\AccessableInterface {
    *
    * @return bool
    */
-  public function create( $message, $data = [], $namespace = '', $level = \Framework::LEVEL_DEBUG ) {
+  public function create( $message, $data = [], $namespace = '', $level = Application::LEVEL_DEBUG ) {
 
     // check type against reporting level
-    if( $level <= \Framework::LEVEL_NONE || $level > \Framework::getLog() ) return true;
+    if( $level <= Application::LEVEL_NONE || $level > Application::instance()->getLogLevel() ) return true;
     else {
 
       // pre-process the data
@@ -199,7 +199,7 @@ class Log implements LogInterface, Helper\AccessableInterface {
 
         $this->getFile()->write( Helper\Text::insert( static::PATTERN_MESSAGE, [
           'time'        => $event->getString( 'datetime', $datetime ),
-          'level'       => \Framework::getLevel( $level ),
+          'level'       => $level,
           'namespace'   => str_replace( [ ';', "\n" ], [ ',', '' ], $event->getString( 'namespace', $namespace ) ),
           'message'     => str_replace( [ ';', "\n" ], [ ',', '' ], $message ),
           'data'        => str_replace( [ ';', "\n" ], [ ',', '' ], json_encode( $data ) ),
@@ -224,7 +224,7 @@ class Log implements LogInterface, Helper\AccessableInterface {
    * @return bool
    */
   public function debug( $message, $data = [], $namespace = '' ) {
-    return $this->create( $message, $data, $namespace, \Framework::LEVEL_DEBUG );
+    return $this->create( $message, $data, $namespace, Application::LEVEL_DEBUG );
   }
   /**
    * @param string               $message   The log message pattern
@@ -234,7 +234,7 @@ class Log implements LogInterface, Helper\AccessableInterface {
    * @return bool
    */
   public function info( $message, $data = [], $namespace = '' ) {
-    return $this->create( $message, $data, $namespace, \Framework::LEVEL_INFO );
+    return $this->create( $message, $data, $namespace, Application::LEVEL_INFO );
   }
   /**
    * @param string               $message   The log message pattern
@@ -244,7 +244,7 @@ class Log implements LogInterface, Helper\AccessableInterface {
    * @return bool
    */
   public function notice( $message, $data = [], $namespace = '' ) {
-    return $this->create( $message, $data, $namespace, \Framework::LEVEL_NOTICE );
+    return $this->create( $message, $data, $namespace, Application::LEVEL_NOTICE );
   }
   /**
    * @param string               $message   The log message pattern
@@ -254,7 +254,7 @@ class Log implements LogInterface, Helper\AccessableInterface {
    * @return bool
    */
   public function warning( $message, $data = [], $namespace = '' ) {
-    return $this->create( $message, $data, $namespace, \Framework::LEVEL_WARNING );
+    return $this->create( $message, $data, $namespace, Application::LEVEL_WARNING );
   }
   /**
    * @param string               $message   The log message pattern
@@ -264,7 +264,7 @@ class Log implements LogInterface, Helper\AccessableInterface {
    * @return bool
    */
   public function error( $message, $data = [], $namespace = '' ) {
-    return $this->create( $message, $data, $namespace, \Framework::LEVEL_ERROR );
+    return $this->create( $message, $data, $namespace, Application::LEVEL_ERROR );
   }
   /**
    * @param string               $message   The log message pattern
@@ -274,7 +274,7 @@ class Log implements LogInterface, Helper\AccessableInterface {
    * @return bool
    */
   public function critical( $message, $data = [], $namespace = '' ) {
-    return $this->create( $message, $data, $namespace, \Framework::LEVEL_CRITICAL );
+    return $this->create( $message, $data, $namespace, Application::LEVEL_CRITICAL );
   }
 
   /**
@@ -305,7 +305,7 @@ class Log implements LogInterface, Helper\AccessableInterface {
     if( $this->_file === null ) {
       $this->_file = false;
 
-      $tmp = Application::getFile( \Framework::PATH_TMP . date( 'Ymd' ) . '-' . $this->_name . '.log' );
+      $tmp = Application::instance()->getFile( 'tmp/' . date( 'Ymd' ) . '-' . $this->_name . '.log' );
       try {
         $this->_file = $tmp->create();
       } catch( \Exception $e ) {

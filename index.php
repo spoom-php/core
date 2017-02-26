@@ -1,9 +1,12 @@
-<?php require 'framework.php';
+<?php
 
-// setup and execute the framework with the callbacks
-Framework::setup() && Framework::execute( function () {
+$framework = new Framework\Application( __DIR__, [
+  'environment'  => Framework\Application::ENVIRONMENT_PRODUCTION,
+  'log_level'    => \Framework\Application::LEVEL_INFO,
+  'report_level' => \Framework\Application::LEVEL_NONE,
 
-  // execute the 'framework' extension's request handler
-  Framework\Application::execute();
-
-}, '\Framework\Application::terminate', '\Framework\Application::failure' );
+  'localization' => 'en',
+  'locale'       => null,
+  'encoding'     => mb_internal_encoding(),
+  'timezone'     => date_default_timezone_get()
+] );

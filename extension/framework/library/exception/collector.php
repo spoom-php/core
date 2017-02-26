@@ -2,6 +2,7 @@
 
 use Framework\Exception;
 use Framework;
+use Framework\Application;
 
 /**
  * Class Collector
@@ -53,10 +54,10 @@ class Collector implements \Iterator, \Countable, Framework\Helper\AccessableInt
    *
    * @return bool
    */
-  public function exist( $id = null, $level = \Framework::LEVEL_NOTICE ) {
+  public function exist( $id = null, $level = Application::LEVEL_NOTICE ) {
 
     // check for simple matches
-    if( empty( $id ) && $level >= \Framework::LEVEL_NOTICE ) return !empty( $this->_list );
+    if( empty( $id ) && $level >= Application::LEVEL_NOTICE ) return !empty( $this->_list );
     else foreach( $this->_list as $exception ) {
       if( Exception\Helper::match( $exception, $id ) && $exception->level <= $level ) {
         return true;
@@ -95,10 +96,10 @@ class Collector implements \Iterator, \Countable, Framework\Helper\AccessableInt
    *
    * @return Exception[]
    */
-  public function getList( $id = null, $level = \Framework::LEVEL_NOTICE ) {
+  public function getList( $id = null, $level = Application::LEVEL_NOTICE ) {
 
     // check for simple matches
-    if( empty( $id ) && $level >= \Framework::LEVEL_NOTICE ) return $this->_list;
+    if( empty( $id ) && $level >= Application::LEVEL_NOTICE ) return $this->_list;
     else {
 
       $list = [];

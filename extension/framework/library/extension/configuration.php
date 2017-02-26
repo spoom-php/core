@@ -1,5 +1,6 @@
 <?php namespace Framework\Extension;
 
+use Framework\Application;
 use Framework\Extension;
 use Framework\Storage;
 use Framework\Converter;
@@ -107,7 +108,7 @@ class Configuration extends Storage\File implements ConfigurationInterface {
 
     // load the first environment
     if( !isset( $this->_environment ) ) {
-      $this->setEnvironment( \Framework::getEnvironment() );
+      $this->setEnvironment( Application::instance()->getEnvironment() );
     }
 
     return $this->_environment;
@@ -119,7 +120,7 @@ class Configuration extends Storage\File implements ConfigurationInterface {
     $tmp = $this->_environment;
 
     // set the new environment
-    $global = \Framework::getEnvironment();
+    $global = Application::instance()->getEnvironment();
     if( $this->validate( $value ) ) $this->_environment = $value;
     else if( $this->validate( $global ) ) $this->_environment = $global;
     else $this->_environment = '';

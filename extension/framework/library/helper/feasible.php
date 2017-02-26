@@ -43,7 +43,7 @@ trait Feasible {
       else {
 
         // log: warning
-        Application::getLog()->warning( 'Missing \'{name}\' executeable', [
+        Application::instance()->getLog()->warning( 'Missing \'{name}\' executeable', [
           'name'      => $name,
           'arguments' => $arguments,
           'method'    => $method

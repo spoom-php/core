@@ -117,7 +117,7 @@ class Localization extends Storage\File implements LocalizationInterface {
   public function getLocalization() {
 
     if( !isset( $this->_localization ) ) {
-      $this->setLocalization( Application::getLocalization() );
+      $this->setLocalization( Application::instance()->getLocalization() );
     }
 
     return $this->_localization;
@@ -129,7 +129,7 @@ class Localization extends Storage\File implements LocalizationInterface {
     $tmp = $this->_localization;
 
     // set the new localization
-    $global = Application::getLocalization();
+    $global = Application::instance()->getLocalization();
     if( $this->validate( $value ) ) $this->_localization = $value;
     else if( $global != $value && $this->validate( $global ) ) $this->_localization = $global;
     else if( $this->validate( $this->_extension->manifest->getString( 'localization' ) ) ) {
