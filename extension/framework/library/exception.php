@@ -2,27 +2,46 @@
 
 use Framework\Helper\Enumerable;
 use Framework\Helper;
-use Framework\Helper\Text;
 
 /**
- * Extend simple PHP \Exception with the power of code base text with language and insertion support
+ * Interface ExceptionInterface
+ * @package Framework
+ */
+interface ExceptionInterface extends \Throwable, \JsonSerializable, Helper\LogableInterface {
+
+  const ID = '0#framework';
+
+  /**
+   * Unique identifier of the exception
+   *
+   * @return string
+   */
+  public function getId();
+  /**
+   * Exception danger level
+   *
+   * @return int
+   */
+  public function getSeverity();
+  /**
+   * Additional data for the exception
+   *
+   * @return array
+   */
+  public function getContext();
+}
+
+/**
+ * Exception for public display, usually for the user. This can be a missfilled form field warning, bad request
+ * parameter or a deeper exception (Strict or System) public version
  *
  * @package Framework
  *
- * @property-read array     $data      The data attached to the exception
- * @property-read Extension $extension The message localization source
- * @property-read int       $level     The log level
- * @property-read string    $id        The unique identifier. The format is '<extension>#<code>'
+ * @property-read string $id           The unique identifier
+ * @property-read array  $data         The data attached to the exception
+ * @property-read int    $severity     The log level
  */
-abstract class Exception extends \Exception implements \JsonSerializable, Helper\LogableInterface, Helper\AccessableInterface {
-  use Helper\Accessable;
-
-  /**
-   * The level of the exception based on the exception's type
-   *
-   * @var int
-   */
-  private $_level;
+class Exception extends \Exception implements ExceptionInterface {
 
   /**
    * The unique identifier of the exception
@@ -30,151 +49,83 @@ abstract class Exception extends \Exception implements \JsonSerializable, Helper
    * @var string
    */
   private $_id;
+
   /**
-   * Insertion data
+   * The severity level of the exception
    *
+   * @var int
+   */
+  private $_severity = Application::LEVEL_ERROR;
+
+  /**
    * @var array
    */
-  private $_data = [];
-  /**
-   * Source of the error message if not null
-   *
-   * @var Extension
-   */
-  private $_extension = null;
+  private $_context = [];
 
   /**
-   * Initialise the custom Exception object, with extension and code specified message or a simple string message
-   *
-   * @param string|\Exception $id
-   * @param array|object      $data
-   * @param \Exception        $exception
+   * @param string          $message
+   * @param int             $id
+   * @param array           $context
+   * @param \Throwable|null $previous
+   * @param int             $severity
    */
-  public function __construct( $id, $data = [], \Exception $exception = null ) {
+  public function __construct( $message, $id, $context = [], \Throwable $previous = null, $severity = Application::LEVEL_ERROR ) {
+    parent::__construct( $message, (int) $id, $previous );
 
-    $tmp = Exception\Helper::parse( $id );
-    if( $tmp ) $message = Exception\Helper::build( Extension::instance( $tmp->extension ), $tmp->code, $data );
-    else {
-
-      $message = Text::insert( $id, $data );
-      $tmp     = Exception\Helper::parse( Exception\Helper::EXCEPTION_UNKNOWN );
-    }
-
-    $this->_id        = $tmp->extension . '#' . $tmp->code;
-    $this->_extension = Extension::instance( $tmp->extension );
-    $this->_data      = Enumerable::read( $data, false, [] );
-    $this->_level = $tmp->level ?: Application::LEVEL_ERROR;
-
-    parent::__construct( $message, $tmp->code, $exception );
+    $this->_id       = $id;
+    $this->_context  = Enumerable::read( $context, false );
+    $this->_severity = (int) $severity;
   }
 
-  /**
-   * @return string
-   */
+  //
   public function __toString() {
-    return $this->id . ": '" . $this->getMessage() . "'";
+    return $this->getId() . ": '" . $this->getMessage() . "'";
   }
 
-  /**
-   * Compare and exception' id to a valid exception id
-   *
-   * @param string|null $input
-   *
-   * @return bool
-   */
-  public function match( $input ) {
-    return Exception\Helper::match( $this, $input );
-  }
-  /**
-   * Log the exception
-   *
-   * @param array             $data     Additional data to the log
-   * @param LogInterface|null $instance The logger instance use to create the log. If null, the Application::getLog() used
-   *
-   * @return $this
-   * @throws Exception\Strict
-   */
+  //
   public function log( $data = [], LogInterface $instance = null ) {
-
-    $instance = $instance ?: Application::instance()->getLog();
-    if( $instance ) {
-
-      // extend data
-      $data                = Enumerable::read( $data, false, [] );
-      $data[ 'exception' ] = $this->toArray( true );
-      $data[ 'backtrace' ] = false;
-
-      $instance->create( $this->message, $this->_data + $data, 'framework:exception!' . $this->id, $this->_level );
-    }
-
-    return $this;
+    // TODO implement
   }
 
-  /**
-   * Make an associative array from the exception
-   *
-   * @param bool $more Append additional data to the result
-   *
-   * @return array
-   */
-  public function toArray( $more = false ) {
-
-    $tmp = [
-      'id'        => $this->id,
-      'code'      => $this->getCode(),
-      'message'   => $this->getMessage(),
-      'extension' => $this->_extension ? $this->_extension->id : null,
-      'data'      => $this->_data
-    ];
-
-    if( $more ) {
-      $tmp[ 'line' ]     = $this->getFile() . ':' . $this->getLine();
-      $tmp[ 'trace' ]    = $this->getTrace();
-      $tmp[ 'previous' ] = Exception\Helper::convert( $this->getPrevious(), $more );
-    }
-
-    return $tmp;
-  }
-
-  /**
-   * @since 0.6.0
-   *
-   * @return string
-   */
+  //
   public function getId() {
     return $this->_id;
   }
-  /**
-   * @since 0.6.0
-   *
-   * @return array
-   */
-  public function getData() {
-    return $this->_data;
+  //
+  public function getContext() {
+    return $this->_context;
   }
-  /**
-   * @return int
-   */
-  public function getLevel() {
-    return $this->_level;
+  //
+  public function getSeverity() {
+    return $this->_severity;
   }
 
-  /**
-   * @since 0.6.0
-   *
-   * @return \Framework\Extension
-   */
-  public function getExtension() {
-    return $this->_extension;
-  }
-
-  /**
-   * Specify data which should be serialized to JSON
-   * @link http://php.net/manual/en/jsonserializable.jsonserialize.php
-   * @return mixed data which can be serialized by <b>json_encode</b>,
-   * which is a value of any type other than a resource.
-   */
+  //
   public function jsonSerialize() {
-    return (object) $this->toArray();
+
+    // TODO implement
+
+    return [];
+  }
+
+  /**
+   * @param \Throwable $throwable
+   *
+   * @return ExceptionInterface
+   */
+  public static function wrap( \Throwable $throwable ) {
+
+    switch( true ) {
+      case $throwable instanceof ExceptionInterface:
+        return $throwable;
+
+      case $throwable instanceof \LogicException:
+        return new Exception\Strict( $throwable->getMessage(), Exception\Strict::ID, [], $throwable );
+
+      case $throwable instanceof \RuntimeException:
+        return new Exception\System( $throwable->getMessage(), Exception\System::ID, [], $throwable );
+    }
+
+    return new static( $throwable->getMessage(), static::ID, [], $throwable );
   }
 }

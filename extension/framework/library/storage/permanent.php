@@ -1,5 +1,6 @@
 <?php namespace Framework\Storage;
 
+use Framework\Application;
 use Framework\ConverterInterface;
 use Framework\Exception;
 use Framework\Extension;
@@ -93,12 +94,6 @@ abstract class Permanent extends Storage implements PermanentInterface {
   use Helper\Failable;
 
   /**
-   * There is no converter for a namespace to able to read/write the data. Data:
-   *  - namespace [string]: The namespace that has no converter
-   */
-  const EXCEPTION_MISSING_CONVERTER = 'framework#23W';
-
-  /**
    * Triggered before the namespace saving. The save can be prevented. Arguments:
    * - instance [Permanent]: The storage instance
    * - namespace [string|null]: The namespace to save
@@ -188,15 +183,15 @@ abstract class Permanent extends Storage implements PermanentInterface {
       $converter = isset( $this->converter_cache[ $namespace ] ) ? $this->converter_cache[ $namespace ] : null;
       if( $converter != $tmp ) $converter = clone $tmp;
 
-      if( empty( $converter ) ) throw new Exception\Strict( static::EXCEPTION_MISSING_CONVERTER );
+      if( empty( $converter ) ) throw new PermanentExceptionConverter( $namespace );
       else {
 
         $index   = $namespace ? ( $namespace . self::SEPARATOR_NAMESPACE ) : '';
         $content = $this->get( $index );
 
         // trigger before save event for custom storage
-        $extension = Extension::instance( 'framework' );
-        $event     = $extension->trigger( self::EVENT_SAVE, [
+        $extension = Extension::instance();
+        $event   = $extension->trigger( self::EVENT_SAVE, [
           'instance'  => $this,
           'namespace' => $namespace,
           'converter' => $converter,
@@ -242,8 +237,8 @@ abstract class Permanent extends Storage implements PermanentInterface {
       $this->converter_cache[ $namespace ] = null;
 
       // trigger before load event for custom storage
-      $extension = Extension::instance( 'framework' );
-      $event     = $extension->trigger( self::EVENT_LOAD, [
+      $extension = Extension::instance();
+      $event                               = $extension->trigger( self::EVENT_LOAD, [
         'instance'  => $this,
         'namespace' => $namespace,
         'converter' => $converter
@@ -264,7 +259,7 @@ abstract class Permanent extends Storage implements PermanentInterface {
         }
 
         // check the converter
-        if( !empty( $content ) && ( empty( $converter ) || !( $converter instanceof ConverterInterface ) ) ) throw new Exception\Strict( self::EXCEPTION_MISSING_CONVERTER, [ 'namespace' => $namespace ] );
+        if( !empty( $content ) && ( empty( $converter ) || !( $converter instanceof ConverterInterface ) ) ) throw new PermanentExceptionConverter( $namespace );
         else {
 
           // convert and set the namespace's data
@@ -299,7 +294,7 @@ abstract class Permanent extends Storage implements PermanentInterface {
     try {
 
       // trigger before load event for custom storage
-      $extension = Extension::instance( 'framework' );
+      $extension = Extension::instance();
       $event     = $extension->trigger( self::EVENT_REMOVE, [
         'instance'  => $this,
         'namespace' => $namespace,
@@ -339,7 +334,7 @@ abstract class Permanent extends Storage implements PermanentInterface {
       if( $this->getException() ) {
 
         // log exceptions for autoloading
-        Exception\Helper::wrap( $this->getException() )->log();
+        Exception::wrap( $this->getException() )->log();
       }
     }
 
@@ -399,4 +394,23 @@ abstract class Permanent extends Storage implements PermanentInterface {
    * @param string|null $namespace The namespace
    */
   abstract protected function destroy( $namespace = null );
+}
+
+/**
+ * There is no converter for a namespace to able to read/write the data
+ *
+ * @package Framework\Storage
+ */
+class PermanentExceptionConverter extends Exception\Strict {
+
+  const ID = '23#framework';
+
+  /**
+   * @param string $namespace The namespace that has no converter
+   */
+  public function __construct( $namespace ) {
+
+    $data = [ 'namespace' => $namespace ];
+    parent::__construct( '(Un)serialization failed, due to an error', static::ID, $data, null, Application::LEVEL_WARNING );
+  }
 }

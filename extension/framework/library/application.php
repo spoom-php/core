@@ -7,17 +7,6 @@
 class Application {
 
   /**
-   * General exception for a missing (but needed) PHP extension/feature
-   *
-   * @param string $name Extension or feature name with version (separated by @)
-   */
-  const EXCEPTION_FEATURE_MISSING = 'framework#0C';
-  /**
-   * Trying to set invalid localization
-   */
-  const EXCEPTION_INVALID_LOCALIZATION = 'framework#10W';
-
-  /**
    * Production environment
    */
   const ENVIRONMENT_PRODUCTION = 'production';
@@ -120,7 +109,7 @@ class Application {
         set_exception_handler( function ( $exception ) {
 
           // log the exception
-          if( $exception ) Exception\Helper::wrap( $exception )->log();
+          if( $exception ) Exception::wrap( $exception )->log();
 
         } );
 
@@ -274,14 +263,9 @@ class Application {
    * Set request localization
    *
    * @param string $value
-   *
-   * @throws Exception\Strict ::EXCEPTION_INVALID_LOCALIZATION
    */
   public function setLocalization( $value ) {
-
-    $value = trim( mb_strtolower( $value ) );
-    if( preg_match( '/^[a-z_-]+$/', $value ) < 1 ) throw new Exception\Strict( self::EXCEPTION_INVALID_LOCALIZATION, [ 'localization' => $value ] );
-    else $this->localization = $value;
+    $this->localization = trim( mb_strtolower( $value ) );
   }
 
   /**
@@ -291,5 +275,25 @@ class Application {
   public static function instance() {
     if( empty( self::$instance ) ) throw new \Exception( 'There is no Application instance right now' );
     else return self::$instance;
+  }
+}
+
+/**
+ * General exception for a missing (but needed) PHP extension/feature
+ *
+ * @package Framework
+ */
+class ApplicationExceptionFeature extends Exception\System {
+
+  const ID = '0#framework';
+
+  /**
+   * @param string $feature Extension or feature name
+   * @param string $version Minimum required version
+   */
+  public function __construct( $feature, $version ) {
+
+    $data = [ 'feature' => $feature, 'version' => $version ];
+    parent::__construct( '(Un)serialization failed, due to an error', static::ID, $data, null, Application::LEVEL_CRITICAL );
   }
 }

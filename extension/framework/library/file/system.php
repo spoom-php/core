@@ -1,43 +1,18 @@
 <?php namespace Framework\File;
 
-use Framework\Application;
+use Framework;
 use Framework\Exception;
 use Framework\File;
 use Framework\FileInterface;
 use Framework\Helper\Stream;
 use Framework\Helper\StreamInterface;
+use Framework\Helper\Text;
 
 /**
  * Interface SystemInterface
  * @package Framework\File
  */
 interface SystemInterface {
-
-  /**
-   * Missing, not a directory or not readable root path
-   *
-   * @param string $root The invalid path
-   */
-  const EXCEPTION_ROOT_INVALID = 'framework#36W';
-  /**
-   * The given path is outside the root
-   *
-   * @param string $path The invalid path
-   */
-  const EXCEPTION_PATH_INVALID = 'framework#35W';
-  /**
-   * The path's type is not suitable for the operation
-   *
-   * @param string $path
-   * @param string $allow Allowed path type name
-   */
-  const EXCEPTION_TYPE_INVALID = 'framework#34N';
-  /**
-   * Don't have enough permission for the operation
-   *
-   * @param string $path
-   */
-  const EXCEPTION_PERMISSION_INVALID = 'framework#33C';
 
   const DIRECTORY_SEPARATOR = '/';
   const DIRECTORY_CURRENT   = '.';
@@ -224,14 +199,6 @@ interface SystemInterface {
 class System implements SystemInterface {
 
   /**
-   * Failed file operation
-   *
-   * @param string $path
-   * @param array  $error Error description
-   */
-  const EXCEPTION_FAIL = 'framework#32E';
-
-  /**
    * Cache path normalization
    *
    * @var string[]
@@ -260,12 +227,12 @@ class System implements SystemInterface {
    *
    * @param string $root The root path for the filesystem. It MUST exists!
    *
-   * @throws Exception\Strict Invalid root path
+   * @throws SystemExceptionRootInvalid Invalid root path
    */
   public function __construct( $root ) {
 
     $_root = is_link( $root ) ? realpath( $root ) : $root;
-    if( $_root === false || !is_dir( $_root ) || !is_readable( $_root ) ) throw new Exception\Strict( static::EXCEPTION_ROOT_INVALID, [ 'root' => $root ] );
+    if( $_root === false || !is_dir( $_root ) || !is_readable( $_root ) ) throw new SystemExceptionRootInvalid( $root );
     else {
 
       $this->root = rtrim( $_root, DIRECTORY_SEPARATOR ) . DIRECTORY_SEPARATOR;
@@ -296,8 +263,8 @@ class System implements SystemInterface {
   public function write( $path, $content, $append = true, array $meta = [] ) {
 
     $_meta = $this->getMeta( $path );
-    if( $_meta[ static::META_TYPE ] != static::TYPE_FILE ) throw new Exception\Strict( static::EXCEPTION_TYPE_INVALID, [ 'path' => $path, 'allow' => static::TYPE_FILE ] );
-    else if( !$_meta[ static::META_PERMISSION_WRITE ] ) throw new Exception\Strict( static::EXCEPTION_PERMISSION_INVALID, [ 'path' => $path ] );
+    if( $_meta[ static::META_TYPE ] != static::TYPE_FILE ) throw new SystemExceptionTypeInvalid( $path, [ static::TYPE_FILE ] );
+    else if( !$_meta[ static::META_PERMISSION_WRITE ] ) throw new SystemExceptionPermission( $path, static::META_PERMISSION_WRITE );
     else {
 
       // create the directory
@@ -306,7 +273,7 @@ class System implements SystemInterface {
 
       // create write operation pointer
       $resource = @fopen( $this->getPath( $path ), $append ? 'a' : 'w' );
-      if( !$resource ) throw new Exception\System( static::EXCEPTION_FAIL, [ 'path' => $path, 'error' => error_get_last() ] );
+      if( !$resource ) throw new SystemException( $path, error_get_last() );
       else {
 
         $resource = Stream::instance( $resource );
@@ -323,13 +290,13 @@ class System implements SystemInterface {
     else {
 
       $meta = $this->getMeta( $path );
-      if( $meta[ static::META_TYPE ] != static::TYPE_FILE ) throw new Exception\Strict( static::EXCEPTION_TYPE_INVALID, [ 'path' => $path, 'allow' => static::TYPE_FILE ] );
-      else if( !$meta[ static::META_PERMISSION_READ ] ) throw new Exception\Strict( static::EXCEPTION_PERMISSION_INVALID, [ 'path' => $path ] );
+      if( $meta[ static::META_TYPE ] != static::TYPE_FILE ) throw new SystemExceptionTypeInvalid( $path, [ static::TYPE_FILE ] );
+      else if( !$meta[ static::META_PERMISSION_READ ] ) throw new SystemExceptionPermission( $path, static::META_PERMISSION_READ );
       else {
 
         // create write operation pointer
         $resource = @fopen( $this->getPath( $path ), 'r' );
-        if( !$resource ) throw new Exception\System( static::EXCEPTION_FAIL, [ 'path' => $path, 'error' => error_get_last() ] );
+        if( !$resource ) throw new SystemException( $path, error_get_last() );
         else {
 
           $resource = Stream::instance( $resource );
@@ -347,8 +314,8 @@ class System implements SystemInterface {
   public function search( $path, $pattern = null, $recursive = false, $directory = true ) {
 
     $meta = $this->getMeta( $path );
-    if( $meta[ static::META_TYPE ] != static::TYPE_DIRECTORY ) throw new Exception\Strict( static::EXCEPTION_TYPE_INVALID, [ 'path' => $path, 'allow' => static::TYPE_DIRECTORY ] );
-    else if( !$meta[ static::META_PERMISSION_READ ] ) throw new Exception\Strict( static::EXCEPTION_PERMISSION_INVALID, [ 'path' => $path ] );
+    if( $meta[ static::META_TYPE ] != static::TYPE_DIRECTORY ) throw new SystemExceptionTypeInvalid( $path, [ static::TYPE_DIRECTORY ] );
+    else if( !$meta[ static::META_PERMISSION_READ ] ) throw new SystemExceptionPermission( $path, static::META_PERMISSION_READ );
     else if( !$this->exist( $path ) ) return [];
     else {
 
@@ -384,7 +351,7 @@ class System implements SystemInterface {
 
       // check for permissions
       $_meta = $this->getMeta( $path );
-      if( !$_meta[ static::META_PERMISSION_WRITE ] ) throw new Exception\Strict( static::EXCEPTION_PERMISSION_INVALID, [ 'path' => $path ] );
+      if( !$_meta[ static::META_PERMISSION_WRITE ] ) throw new SystemExceptionPermission( $path, static::META_PERMISSION_WRITE );
       else {
 
         $_path = $this->getPath( $path );
@@ -398,7 +365,7 @@ class System implements SystemInterface {
           $result = @touch( $_path );
         }
 
-        if( !$result ) throw new Exception\System( static::EXCEPTION_FAIL, [ 'path' => $path, 'error' => error_get_last() ] );
+        if( !$result ) throw new SystemException( $path, error_get_last() );
         else {
 
           // apply metadata for the new path
@@ -415,7 +382,7 @@ class System implements SystemInterface {
 
       // check for permissions
       $_meta = $this->getMeta( $path );
-      if( !$_meta[ static::META_PERMISSION_WRITE ] ) throw new Exception\Strict( static::EXCEPTION_PERMISSION_INVALID, [ 'path' => $path ] );
+      if( !$_meta[ static::META_PERMISSION_WRITE ] ) throw new SystemExceptionPermission( $path, static::META_PERMISSION_WRITE );
       else {
 
         $_path = $this->getPath( $path );
@@ -433,7 +400,7 @@ class System implements SystemInterface {
         }
 
         if( !$result ) {
-          throw new Exception\System( static::EXCEPTION_FAIL, [ 'path' => $path, 'error' => error_get_last() ] );
+          throw new SystemException( $path, error_get_last() );
         }
       }
     }
@@ -446,9 +413,9 @@ class System implements SystemInterface {
       // check for permissions
       $_meta             = $this->getMeta( $path );
       $_meta_destination = $this->getMeta( $destination );
-      if( !$_meta[ static::META_PERMISSION_READ ] ) throw new Exception\Strict( static::EXCEPTION_PERMISSION_INVALID, [ 'path' => $path ] );
-      else if( !$_meta_destination[ static::META_PERMISSION_WRITE ] ) throw new Exception\Strict( static::EXCEPTION_PERMISSION_INVALID, [ 'path' => $destination ] );
-      else if( $_meta_destination[ static::META_TYPE ] != $_meta[ static::META_TYPE ] ) throw new Exception\Strict( static::EXCEPTION_TYPE_INVALID, [ 'path' => $destination, 'allow' => $_meta[ static::META_TYPE ] ] );
+      if( !$_meta[ static::META_PERMISSION_READ ] ) throw new SystemExceptionPermission( $path, static::META_PERMISSION_READ );
+      else if( !$_meta_destination[ static::META_PERMISSION_WRITE ] ) throw new SystemExceptionPermission( $destination, static::META_PERMISSION_WRITE );
+      else if( $_meta_destination[ static::META_TYPE ] != $_meta[ static::META_TYPE ] ) throw new SystemExceptionTypeInvalid( $destination, [ $_meta[ static::META_TYPE ] ] );
       else {
 
         $_path        = $this->getPath( $path );
@@ -473,7 +440,7 @@ class System implements SystemInterface {
           }
         }
 
-        if( !$result ) throw new Exception\System( static::EXCEPTION_FAIL, [ 'path' => $path, 'error' => error_get_last() ] );
+        if( !$result ) throw new SystemException( $path, error_get_last() );
         else {
 
           $this->setMeta( $destination, $_meta );
@@ -575,7 +542,7 @@ class System implements SystemInterface {
             else {
 
               $tmp = class_exists( '\finfo' ) || function_exists( 'mime_content_type' );
-              if( !$tmp ) throw new Exception\System( Application::EXCEPTION_FEATURE_MISSING, [ 'name' => 'fileinfo@0.1.0' ] );
+              if( !$tmp ) throw new Framework\ApplicationExceptionFeature( 'fileinfo', '0.1.0' );
               else if( !class_exists( '\finfo' ) ) $meta = mime_content_type( $_path );
               else {
 
@@ -646,7 +613,7 @@ class System implements SystemInterface {
    * @param string $path Standard path string
    *
    * @return string
-   * @throws Exception\Strict The path begins with static::DIRECTORY_PREVIOUS, which will voilate the root
+   * @throws SystemExceptionPathInvalid The path begins with static::DIRECTORY_PREVIOUS, which will voilate the root
    */
   public static function path( $path ) {
 
@@ -670,7 +637,7 @@ class System implements SystemInterface {
 
       // check for root voilation
       if( preg_match( addcslashes( '#^' . static::DIRECTORY_PREVIOUS . '(' . static::DIRECTORY_SEPARATOR . '|$)#', './' ), $_path ) ) {
-        throw new Exception\Strict( static::EXCEPTION_PATH_INVALID, [ 'path' => $path ] );
+        throw new SystemExceptionPathInvalid( $path );
       }
 
       self::$cache[ $path ] = $_path;
@@ -689,5 +656,103 @@ class System implements SystemInterface {
    */
   public static function directory( $path ) {
     return ltrim( rtrim( $path, static::DIRECTORY_SEPARATOR ) . static::DIRECTORY_SEPARATOR, static::DIRECTORY_SEPARATOR );
+  }
+}
+
+/**
+ * Interface for all File related exceptions
+ *
+ * @package Framework\File
+ */
+interface SystemExceptionInterface extends Framework\ExceptionInterface {
+}
+/**
+ * Basic file operation failures
+ *
+ * @package Framework\File
+ */
+class SystemException extends Exception\System implements SystemExceptionInterface {
+
+  const ID = '32#framework';
+
+  /**
+   * @param string          $path
+   * @param mixed           $error
+   * @param \Throwable|null $previous
+   */
+  public function __construct( $path, $error, \Throwable $previous = null ) {
+
+    $data = [ 'path' => $path, 'error' => $error ];
+    parent::__construct( Text::insert( 'Failed file operation for \'{path}\'', $data ), static::ID, $data, $previous );
+  }
+}
+/**
+ * Missing, not a directory or not readable root path
+ *
+ * @package Framework\File
+ */
+class SystemExceptionRootInvalid extends Exception\System implements SystemExceptionInterface {
+
+  const ID = '36#framework';
+
+  /**
+   * @param string $path The invalid path
+   */
+  public function __construct( $path ) {
+    $data = [ 'path' => $path ];
+    parent::__construct( Text::insert( 'Missing or invalid filesystem root: \'{path}\'', $data ), static::ID, $data, null, Framework\Application::LEVEL_WARNING );
+  }
+}
+/**
+ * The given path is outside the root
+ *
+ * @package Framework\File
+ */
+class SystemExceptionPathInvalid extends Exception\System implements SystemExceptionInterface {
+
+  const ID = '35#framework';
+
+  /**
+   * @param string $path The invalid path
+   */
+  public function __construct( $path ) {
+    $data = [ 'path' => $path ];
+    parent::__construct( Text::insert( 'Path is outside the root: \'{path}\'', $data ), static::ID, $data, null, Framework\Application::LEVEL_WARNING );
+  }
+}
+/**
+ * The path's type is not suitable for the operation
+ *
+ * @package Framework\File
+ */
+class SystemExceptionTypeInvalid extends Exception\Strict implements SystemExceptionInterface {
+
+  const ID = '34#framework';
+
+  /**
+   * @param string $path
+   * @param array  $allow Allowed path types
+   */
+  public function __construct( $path, array $allow ) {
+    $data = [ 'path' => $path, 'allow' => implode( ',', $allow ) ];
+    parent::__construct( Text::insert( 'Path (\'{path}\') must be {allow} for this operation', $data ), static::ID, $data, null, Framework\Application::LEVEL_NOTICE );
+  }
+}
+/**
+ * Don't have enough permission for the operation
+ *
+ * @package Framework\File
+ */
+class SystemExceptionPermission extends Exception\System implements SystemExceptionInterface {
+
+  const ID = '33#framework';
+
+  /**
+   * @param string $path
+   * @param string $allow Required permission meta name
+   */
+  public function __construct( $path, $allow ) {
+    $data = [ 'path' => $path, 'allow' => $allow ];
+    parent::__construct( Text::insert( 'Failed operation, due to insufficient permission for \'{path}\'', $data ), static::ID, $data, null, Framework\Application::LEVEL_CRITICAL );
   }
 }

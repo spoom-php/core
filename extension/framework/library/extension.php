@@ -10,7 +10,7 @@ use Framework\Helper;
  * @package Framework
  *
  * @property-read string                           $id            Unique name
- * @property-read Storage\File                     $manifest      The manifest storage
+ * @property-read Storage\PermanentInterface       $manifest      The manifest storage
  * @property-read Extension\ConfigurationInterface $configuration The configuration storage object
  * @property-read Extension\LocalizationInterface  $localization  The localization storage object
  * @property-read LogInterface                     $log           The default extension logger instance
@@ -19,39 +19,14 @@ use Framework\Helper;
 class Extension implements Helper\AccessableInterface {
   use Helper\Accessable;
 
+  const ID = 'framework';
+
   /**
    * Extension instance cache
    *
    * @var array[string]Extension
    */
   private static $instance = [];
-
-  /**
-   * Exception code for missing extension directory. One data will be passed:
-   *  - id [string]: Extension id
-   */
-  const EXCEPTION_MISSING_EXTENSION = 'framework#5C';
-  /**
-   * The configuration class definition invalid. Data:
-   *  - extension [string]: The extension id
-   *  - class [string]: The classname that is invalid (or null if not exist)
-   *
-   * @since 0.6.0
-   */
-  const EXCEPTION_INVALID_CONFIGURATION = 'framework#21C';
-  /**
-   * The localization class definition invalid. Data:
-   *  - extension [string]: The extension id
-   *  - class [string]: The classname that is invalid (or null if not exist)
-   *
-   * @since 0.6.0
-   */
-  const EXCEPTION_INVALID_LOCALIZATION = 'framework#22C';
-
-  /**
-   * Exception code for invalid extension id
-   */
-  const EXCEPTION_INVALID_ID = 'framework#6W';
 
   /**
    * Default directory for localization files
@@ -65,14 +40,6 @@ class Extension implements Helper\AccessableInterface {
   const DIRECTORY_CONFIGURATION = 'configuration/';
 
   /**
-   * Store extension id. It's the package and the
-   * name separated by a dash
-   *
-   * @var string
-   */
-  private $_id;
-
-  /**
    * Provide the manifest data access
    *
    * @var Storage\File
@@ -83,7 +50,7 @@ class Extension implements Helper\AccessableInterface {
    *
    * @var FileInterface
    */
-  private $_directory = null;
+  private $_filesystem = null;
   /**
    * Handle configuration files for the extension
    *
@@ -103,42 +70,8 @@ class Extension implements Helper\AccessableInterface {
    */
   private $_event = null;
 
-  /**
-   * Object constructor. Define directory of the object
-   * and create config and localization objects
-   *
-   * Throws error if manifest configuration file contains
-   * different package or name from the given extension
-   *
-   * @param string|null $id The extension package and name separated by a dot
-   *
-   * @throws Exception\Strict On invalid extension id or invalid manifest data
-   * @throws Exception\System On missing extension
-   */
-  public function __construct( $id = null ) {
+  protected function __construct() {
 
-    // define the id
-    if( !empty( $id ) ) $this->_id = $id;
-    else {
-
-      $class     = explode( '\\', mb_strtolower( get_class( $this ) ) );
-      $this->_id = \Framework::search( $class );
-    }
-
-    if( !Extension\Helper::validate( $this->_id ) ) throw new Exception\Strict( self::EXCEPTION_INVALID_ID, [ 'id' => $this->_id ] );
-    else {
-
-      // define directory
-      $directory = Extension\Helper::directory( $this->_id, false );
-      if( !$directory ) throw new Exception\System( self::EXCEPTION_MISSING_EXTENSION, [ 'id' => $this->_id ] );
-      else {
-
-        $this->_directory = $directory;
-        $this->_manifest = new Storage\File( $this->_directory, [
-          new Converter\Json( JSON_PRETTY_PRINT )
-        ], 'manifest' );
-      }
-    }
   }
 
   /**
@@ -186,48 +119,8 @@ class Extension implements Helper\AccessableInterface {
    */
   public function file( $path = '', $pattern = null ) {
 
-    $directory = $this->getDirectory()->get( $path );
-    return empty( $pattern ) ? $directory : $directory->search( $pattern === '*' ? null : $pattern );
-  }
-
-  /**
-   * Get the first exist library name or return false if none of them is exists
-   *
-   * @param string $class_name String with dot separated namespace ( exclude Package\Name\ ) or an array of this
-   *                           strings ( return the first exist )
-   *
-   * @return string|false
-   */
-  public function library( $class_name ) {
-
-    if( !is_array( $class_name ) ) $class_name = [ $class_name ];
-    foreach( $class_name as $name ) {
-
-      $class = \Framework::library( $this->_id . ':' . $name );
-      if( $class ) return $class;
-    }
-
-    return false;
-  }
-  /**
-   * Create a new instance from extension library class with given param.
-   *
-   * @param string|array $class_name String with dot separated namespace ( exclude Package\Name\ ) or an array of this
-   *                                 strings ( return the first exist )
-   * @param mixed        $param      Array of params added to the contructor but NOT as a param list!
-   *
-   * @return mixed
-   */
-  public function create( $class_name, $param = null ) {
-
-    $class = $this->library( $class_name );
-    if( $class ) {
-
-      $instance = isset( $param ) ? new $class( $param ) : new $class();
-      return $instance;
-    }
-
-    return null;
+    $file = $this->getFilesystem()->get( $path );
+    return empty( $pattern ) ? $file : $file->search( $pattern === '*' ? null : $pattern );
   }
 
   /**
@@ -246,10 +139,15 @@ class Extension implements Helper\AccessableInterface {
    *
    * @since ???
    *
-   * @return FileInterface
+   * @return File\SystemInterface
    */
-  public function getDirectory() {
-    return $this->_directory;
+  public function getFilesystem() {
+
+    if( empty( $this->_filesystem ) ) {
+      $this->_filesystem = new File\System( dirname( __DIR__ ) );
+    }
+
+    return $this->_filesystem;
   }
   /**
    * @since 0.6.0
@@ -257,33 +155,32 @@ class Extension implements Helper\AccessableInterface {
    * @return string
    */
   public function getId() {
-    return $this->_id;
+    return static::ID;
   }
   /**
    * @since 0.6.0
    *
-   * @return Storage\File
+   * @return Storage\PermanentInterface
    */
   public function getManifest() {
+
+    if( empty( $this->_manifest ) ) {
+      $this->_manifest = new Storage\File( $this->getFilesystem()->get( '' ), [
+        new Converter\Json( JSON_PRETTY_PRINT )
+      ], 'composer' );
+    }
+
     return $this->_manifest;
   }
   /**
    * @since 0.6.0
    *
    * @return Extension\ConfigurationInterface
-   * @throws Exception\System
    */
   public function getConfiguration() {
 
-    if( !$this->_configuration ) {
-
-      $tmp   = $this->_manifest->getString( 'storage.configuration', 'framework:extension.configuration' );
-      $class = \Framework::library( $tmp );
-      if( $class && is_subclass_of( $class, '\Framework\Extension\ConfigurationInterface' ) ) $this->_configuration = new $class( $this );
-      else throw new Exception\System( self::EXCEPTION_INVALID_CONFIGURATION, [
-        'extension' => $this->_id,
-        'class'     => \Framework::library( $tmp, false )
-      ] );
+    if( empty( $this->_configuration ) ) {
+      $this->_configuration = new Extension\Configuration( $this );
     }
 
     return $this->_configuration;
@@ -292,18 +189,11 @@ class Extension implements Helper\AccessableInterface {
    * @since 0.6.0
    *
    * @return Extension\LocalizationInterface
-   * @throws Exception\System
    */
   public function getLocalization() {
 
-    if( !$this->_localization ) {
-
-      $class = \Framework::library( $this->_manifest->getString( 'storage.localization', 'framework:extension.localization' ) );
-      if( $class && is_subclass_of( $class, '\Framework\Extension\LocalizationInterface' ) ) $this->_localization = new $class( $this );
-      else throw new Exception\System( self::EXCEPTION_INVALID_LOCALIZATION, [
-        'extension' => $this->_id,
-        'class'     => $class
-      ] );
+    if( empty( $this->_localization ) ) {
+      $this->_localization = new Extension\Localization( $this );
     }
 
     return $this->_localization;
@@ -314,7 +204,7 @@ class Extension implements Helper\AccessableInterface {
    * @return LogInterface
    */
   public function getLog() {
-    return Log::instance( $this->_id );
+    return Log::instance( $this->getId() );
   }
   /**
    * @since ??
@@ -324,7 +214,7 @@ class Extension implements Helper\AccessableInterface {
   public function getEvent() {
 
     if( !$this->_event ) {
-      $this->_event = new Event\Storage( $this->_id );
+      $this->_event = new Event\Storage( $this->getId() );
     }
 
     return $this->_event;
@@ -333,11 +223,11 @@ class Extension implements Helper\AccessableInterface {
   /**
    * Get an extension instance from the shared instance cache
    *
-   * @param string $id The extension id
-   *
    * @return static
    */
-  public static function instance( $id ) {
-    return isset( self::$instance[ $id ] ) ? self::$instance[ $id ] : ( self::$instance[ $id ] = new static( $id ) );
+  public static function instance() {
+
+    $id = static::ID;
+    return isset( self::$instance[ $id ] ) ? self::$instance[ $id ] : ( self::$instance[ $id ] = new static() );
   }
 }

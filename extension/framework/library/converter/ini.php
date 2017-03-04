@@ -1,6 +1,6 @@
 <?php namespace Framework\Converter;
 
-use Framework\Exception;
+use Framework;
 use Framework\Helper;
 use Framework\Helper\Enumerable;
 use Framework\Helper\Number;
@@ -20,26 +20,13 @@ class Ini implements ConverterInterface, Helper\AccessableInterface {
   const FORMAT = 'ini';
   const NAME   = 'ini';
 
-  /**
-   * @inheritdoc
-   *
-   * @param mixed    $content The content to serialize
-   * @param resource $stream  Optional output stream
-   *
-   * @return string|null
-   */
+  //
   public function serialize( $content, $stream = null ) {
     $this->setException();
 
     $result = [];
-    if( !Enumerable::is( $content ) ) {
-
-      $this->setException( new Exception\Strict( static::EXCEPTION_FAIL_SERIALIZE, [
-        'instance' => $this,
-        'content'  => $content
-      ] ) );
-
-    } else {
+    if( !Enumerable::is( $content ) ) $this->setException( new Framework\ConverterExceptionFail( $this, $content ) );
+    else {
 
       $this->flatten( $result, Enumerable::read( $content, false, [] ) );
       foreach( $result as $key => $value ) {
@@ -58,13 +45,7 @@ class Ini implements ConverterInterface, Helper\AccessableInterface {
       return null;
     }
   }
-  /**
-   * @inheritdoc
-   *
-   * @param string|resource $content The content (can be a stream) to unserialize
-   *
-   * @return mixed
-   */
+  //
   public function unserialize( $content ) {
     $this->setException();
 
@@ -75,15 +56,8 @@ class Ini implements ConverterInterface, Helper\AccessableInterface {
 
     $result = (object) [];
     $ini    = parse_ini_string( $content, false );
-    if( !is_array( $ini ) ) {
-
-      $this->setException( new Exception\Strict( static::EXCEPTION_FAIL_UNSERIALIZE, [
-        'instance' => $this,
-        'content'  => $content,
-        'error'    => error_get_last()
-      ] ) );
-
-    } else foreach( $ini as $key => $value ) {
+    if( !is_array( $ini ) ) $this->setException( new Framework\ConverterExceptionFail( $this, $content, error_get_last() ) );
+    else foreach( $ini as $key => $value ) {
 
       $keys = explode( '.', $key );
       $tmp  = &$result;
@@ -121,31 +95,20 @@ class Ini implements ConverterInterface, Helper\AccessableInterface {
     }
   }
 
-  /**
-   * @return null
-   */
+  //
   public function getMeta() {
     return null;
   }
-  /**
-   * @param null $value
-   *
-   * @return $this
-   * @throws Exception\Strict
-   */
+  //
   public function setMeta( $value ) {
     return $this;
   }
 
-  /**
-   * @return string The name of the format that the converter use
-   */
+  //
   public function getFormat() {
     return static::FORMAT;
   }
-  /**
-   * @return string The unique name of the converter type
-   */
+  //
   public function getName() {
     return static::NAME;
   }

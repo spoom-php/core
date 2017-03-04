@@ -150,7 +150,7 @@ class Log implements LogInterface, Helper\AccessableInterface {
    */
   public function __construct( $name, $namespace = '' ) {
 
-    $this->extension = Extension::instance( 'framework' );
+    $this->extension = Extension::instance();
 
     // save instance properties
     $this->_name      = $name;
@@ -208,7 +208,7 @@ class Log implements LogInterface, Helper\AccessableInterface {
 
         return true;
 
-      } catch( \Exception $e ) {
+      } catch( \Throwable $e ) {
         // suppress exceptions for the logger
       }
 
@@ -308,7 +308,7 @@ class Log implements LogInterface, Helper\AccessableInterface {
       $tmp = Application::instance()->getFile( 'tmp/' . date( 'Ymd' ) . '-' . $this->_name . '.log' );
       try {
         $this->_file = $tmp->create();
-      } catch( \Exception $e ) {
+      } catch( \Throwable $e ) {
       }
     }
 

@@ -1,6 +1,5 @@
 <?php namespace Framework\Converter;
 
-use Framework\Exception;
 use Framework\Helper;
 use Framework;
 
@@ -38,14 +37,7 @@ class Xml implements Framework\ConverterInterface, Helper\AccessableInterface {
     $this->_meta = clone $this->_meta;
   }
 
-  /**
-   * @inheritdoc
-   *
-   * @param mixed    $content The content to serialize
-   * @param resource $stream  Optional output stream
-   *
-   * @return string|null
-   */
+  //
   public function serialize( $content, $stream = null ) {
     $this->setException();
 
@@ -65,13 +57,7 @@ class Xml implements Framework\ConverterInterface, Helper\AccessableInterface {
       return null;
     }
   }
-  /**
-   * @inheritdoc
-   *
-   * @param string|resource $content The content (can be a stream) to unserialize
-   *
-   * @return mixed
-   */
+  //
   public function unserialize( $content ) {
     $this->setException();
 
@@ -86,15 +72,8 @@ class Xml implements Framework\ConverterInterface, Helper\AccessableInterface {
     $dom    = new \DOMDocument();
     $result = (object) [];
 
-    if( !$dom->loadXML( $content ) ) {
-
-      $this->setException( new Exception\Strict( static::EXCEPTION_FAIL_UNSERIALIZE, [
-        'instance' => $this,
-        'content'  => $content,
-        'error'    => libxml_get_last_error()
-      ] ) );
-
-    } else {
+    if( !$dom->loadXML( $content ) ) $this->setException( new Framework\ConverterExceptionFail( $this, $content, libxml_get_last_error() ) );
+    else {
 
       $this->_meta->version  = $dom->xmlVersion;
       $this->_meta->encoding = $dom->xmlEncoding;
@@ -207,34 +186,23 @@ class Xml implements Framework\ConverterInterface, Helper\AccessableInterface {
     return (object) $container;
   }
 
-  /**
-   * @return XmlMeta
-   */
+  //
   public function getMeta() {
     return clone $this->_meta;
   }
-  /**
-   * @param XmlMeta $value
-   *
-   * @return $this
-   * @throws Exception\Strict
-   */
+  //
   public function setMeta( $value ) {
-    if( !( $value instanceof XmlMeta ) ) throw new Exception\Strict( static::EXCEPTION_INVALID_META, [ 'meta' => XmlMeta::class, 'value' => $value ] );
+    if( !( $value instanceof XmlMeta ) ) throw new \InvalidArgumentException( 'Meta must be a subclass of ' . XmlMeta::class, $value );
     else $this->_meta = $value;
 
     return $this;
   }
 
-  /**
-   * @return string The name of the format that the converter use
-   */
+  //
   public function getFormat() {
     return static::FORMAT;
   }
-  /**
-   * @return string The unique name of the converter type
-   */
+  //
   public function getName() {
     return static::NAME;
   }

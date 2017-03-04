@@ -1,5 +1,6 @@
 <?php namespace Framework\Helper;
 
+use Framework\Application;
 use Framework\Exception;
 
 /**
@@ -9,19 +10,12 @@ use Framework\Exception;
 interface AccessableInterface {
 
   /**
-   * There is no getter or setter for the requested property
-   *
-   * @param string $property The requested property name
-   */
-  const EXCEPTION_MISSING_PROPERTY = 'framework#20N';
-
-  /**
    * Access private/protected (or dynamic) properties trough a getter
    *
    * @param string $property
    *
    * @return mixed
-   * @throws Exception\Strict
+   * @throws AccessibleExceptionMissing
    */
   public function __get( $property );
   /**
@@ -31,7 +25,7 @@ interface AccessableInterface {
    * @param mixed  $value
    *
    * @return void
-   * @throws Exception\Strict
+   * @throws AccessibleExceptionMissing
    */
   public function __set( $property, $value );
   /**
@@ -57,14 +51,7 @@ trait Accessable {
    */
   private static $accessible_cache = [];
 
-  /**
-   * Access private/protected (or dynamic) properties trough a getter
-   *
-   * @param string $property
-   *
-   * @return mixed
-   * @throws Exception\Strict
-   */
+  //
   public function __get( $property ) {
 
     $cache = get_class( $this ) . '->g.' . $property;
@@ -82,17 +69,9 @@ trait Accessable {
 
     $method = self::$accessible_cache[ $cache ];
     if( $method ) return $this->{$method}();
-    else throw new Exception\Strict( AccessableInterface::EXCEPTION_MISSING_PROPERTY, [ 'property' => $property ] );
+    else throw new AccessibleExceptionMissing( $this, $property );
   }
-  /**
-   * Access private/protected (or dynamic) properties trough a setter
-   *
-   * @param string $property
-   * @param mixed  $value
-   *
-   * @return void
-   * @throws Exception\Strict
-   */
+  //
   public function __set( $property, $value ) {
 
     $cache = get_class( $this ) . '->s.' . $property;
@@ -106,21 +85,35 @@ trait Accessable {
     }
 
     $method = self::$accessible_cache[ $cache ];
-    if( !$method ) throw new Exception\Strict( AccessableInterface::EXCEPTION_MISSING_PROPERTY, [ 'property' => $property ] );
+    if( !$method ) throw new AccessibleExceptionMissing( $this, $property );
     else $this->{$method}( $value );
   }
-  /**
-   * Check for access to a private/protected (or dynamic) property
-   *
-   * @param string $property
-   *
-   * @return bool
-   */
+  //
   public function __isset( $property ) {
     try {
       return $this->__get( $property ) !== null;
-    } catch( Exception\Strict $e ) {
+    } catch( AccessibleExceptionMissing $e ) {
       return false;
     }
+  }
+}
+
+/**
+ * There is no getter or setter for the requested property
+ *
+ * @package Framework\Helper
+ */
+class AccessibleExceptionMissing extends Exception\Strict {
+
+  const ID = '20#framework';
+
+  /**
+   * @param string $instance
+   * @param string $property The requested property name
+   */
+  public function __construct( $instance, $property ) {
+
+    $data = [ 'class' => get_class( $instance ), 'property' => $property ];
+    parent::__construct( Text::insert( 'There is no \'{property}\' in {class}', $data ), static::ID, $data, null, Application::LEVEL_NOTICE );
   }
 }

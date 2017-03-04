@@ -18,17 +18,6 @@ use Framework\FileInterface;
 class File extends Permanent {
 
   /**
-   * Empty namespace operation for a multi storage
-   */
-  const EXCEPTION_INVALID_NAMESPACE = 'framework#11N';
-  /**
-   * Can't remove the remained file after format change. Arguments:
-   * - path [string]: The path
-   * - meta [PermanentMeta]: The metadata for the remain file
-   */
-  const EXCEPTION_FAIL_CLEAN = 'framework#19N';
-
-  /**
    * Root directory source
    *
    * @var FileInterface
@@ -64,7 +53,7 @@ class File extends Permanent {
       $previous      = $this->searchFile( $namespace, $previous_meta->getFormat() );
 
     } catch( \Exception $e ) {
-      Exception\Helper::wrap( $e )->log();
+      Exception::wrap( $e )->log();
     }
 
     // do the saving like normal
@@ -77,10 +66,7 @@ class File extends Permanent {
         $previous->destroy();
 
       } catch( \Exception $e ) {
-        $this->setException( new Exception\System( self::EXCEPTION_FAIL_CLEAN, [
-          'path' => (string) $previous,
-          'meta' => $previous_meta
-        ], $e ) );
+        $this->setException( $e );
       }
     }
 
@@ -119,15 +105,13 @@ class File extends Permanent {
    * @param string|null $format    Force extension for the file
    *
    * @return FileInterface The file MAY not exists
-   * @throws Exception\Strict Empty namespace with multi storage
+   * @throws \InvalidArgumentException Empty namespace with multi storage
    */
   protected function searchFile( $namespace, $format = null ) {
 
     // define and check the namespace
     $namespace = !$this->isMulti() ? $this->_file : $namespace;
-    if( $namespace === null ) {
-      throw new Exception\Strict( static::EXCEPTION_INVALID_NAMESPACE );
-    }
+    if( $namespace === null ) throw new \InvalidArgumentException( 'Namespace cannot be NULL' );
 
     // collect available formats
     if( !empty( $format ) ) $format_list = [ $format ];

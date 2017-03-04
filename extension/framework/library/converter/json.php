@@ -1,6 +1,5 @@
 <?php namespace Framework\Converter;
 
-use Framework\Exception;
 use Framework\Helper;
 use Framework;
 
@@ -39,14 +38,7 @@ class Json implements Framework\ConverterInterface, Helper\AccessableInterface {
     $this->_meta = clone $this->_meta;
   }
 
-  /**
-   * @inheritdoc
-   *
-   * @param mixed    $content The content to serialize
-   * @param resource $stream  Optional output stream
-   *
-   * @return string|null
-   */
+  //
   public function serialize( $content, $stream = null ) {
     $this->setException();
 
@@ -57,11 +49,7 @@ class Json implements Framework\ConverterInterface, Helper\AccessableInterface {
       if( json_last_error() != JSON_ERROR_NONE ) {
 
         $result = null;
-        throw new Exception\Strict( static::EXCEPTION_FAIL_SERIALIZE, [
-          'instance' => $this,
-          'content'  => $content,
-          'error'    => [ json_last_error(), json_last_error_msg() ]
-        ] );
+        throw new Framework\ConverterExceptionFail( $this, $content, [ json_last_error(), json_last_error_msg() ] );
       }
 
     } catch( \Exception $e ) {
@@ -75,13 +63,7 @@ class Json implements Framework\ConverterInterface, Helper\AccessableInterface {
       return null;
     }
   }
-  /**
-   * @inheritdoc
-   *
-   * @param string|resource $content The content (can be a stream) to unserialize
-   *
-   * @return mixed
-   */
+  //
   public function unserialize( $content ) {
     $this->setException();
 
@@ -96,11 +78,7 @@ class Json implements Framework\ConverterInterface, Helper\AccessableInterface {
       $result = json_decode( $content, $this->_meta->associative, $this->_meta->depth, $this->_meta->options );
       if( json_last_error() != JSON_ERROR_NONE ) {
         $result = null;
-        throw new Exception\Strict( static::EXCEPTION_FAIL_UNSERIALIZE, [
-          'instance' => $this,
-          'content'  => $content,
-          'error'    => [ json_last_error(), json_last_error_msg() ]
-        ] );
+        throw new Framework\ConverterExceptionFail( $this, $content, [ json_last_error(), json_last_error_msg() ] );
       }
 
     } catch( \Exception $e ) {
@@ -110,34 +88,23 @@ class Json implements Framework\ConverterInterface, Helper\AccessableInterface {
     return $result;
   }
 
-  /**
-   * @return JsonMeta
-   */
+  //
   public function getMeta() {
     return clone $this->_meta;
   }
-  /**
-   * @param JsonMeta $value
-   *
-   * @return $this
-   * @throws Exception\Strict
-   */
+  //
   public function setMeta( $value ) {
-    if( !( $value instanceof JsonMeta ) ) throw new Exception\Strict( static::EXCEPTION_INVALID_META, [ 'meta' => JsonMeta::class, 'value' => $value ] );
+    if( !( $value instanceof JsonMeta ) ) throw new \InvalidArgumentException( 'Meta must be a subclass of ' . JsonMeta::class, $value );
     else $this->_meta = $value;
 
     return $this;
   }
 
-  /**
-   * @return string The name of the format that the converter use
-   */
+  //
   public function getFormat() {
     return static::FORMAT;
   }
-  /**
-   * @return string The unique name of the converter type
-   */
+  //
   public function getName() {
     return static::NAME;
   }

@@ -3,22 +3,12 @@
 use Framework;
 use Framework\EventInterface;
 use Framework\Helper;
-use Framework\Exception;
 
 /**
  * Interface StorageInterface
  * @package Framework\Event
  */
 interface StorageInterface {
-
-  /**
-   * Try to attach a non-callable
-   */
-  const EXCEPTION_INVALID_CALLBACK = 'framework#37W';
-  /**
-   * Try to trigger the global event
-   */
-  const EXCEPTION_INVALID_EVENT = 'framework#38N';
 
   /**
    * Default priority for callbacks
@@ -129,7 +119,7 @@ class Storage implements StorageInterface, Helper\AccessableInterface {
   //
   public function trigger( EventInterface $event ) {
 
-    if( $event->getName() == static::EVENT_GLOBAL ) throw new Exception\Strict( static::EXCEPTION_INVALID_EVENT );
+    if( $event->getName() == static::EVENT_GLOBAL ) throw new \InvalidArgumentException( 'Global event is not triggerable' );
     else try {
 
       // call the global event handlers
@@ -154,7 +144,7 @@ class Storage implements StorageInterface, Helper\AccessableInterface {
   //
   public function attach( $callback, $event = null, $priority = self::PRIORITY_DEFAULT ) {
 
-    if( !is_callable( $callback ) ) throw new Exception\Strict( static::EXCEPTION_INVALID_CALLBACK );
+    if( !is_callable( $callback ) ) throw new \InvalidArgumentException( 'Only valid callable can be attached to an event' );
     else {
 
       // narmalize the input (global event handling, and non-array events)

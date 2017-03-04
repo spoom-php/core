@@ -10,30 +10,6 @@ use Framework\Helper;
 interface ConverterInterface extends Helper\FailableInterface {
 
   /**
-   * Try to set a wrong type of meta class
-   *
-   * @param string $class The necessary meta class name
-   * @param mixed  $value The wrong meta
-   */
-  const EXCEPTION_INVALID_META = 'framework#28E';
-  /**
-   * Failed serialization
-   *
-   * @param ConverterInterface $instance The converter
-   * @param mixed              $content  The content to serialize
-   * @param mixed              $error    The error description, if any
-   */
-  const EXCEPTION_FAIL_SERIALIZE = 'framework#29N';
-  /**
-   * Failed de-serialization
-   *
-   * @param ConverterInterface $instance The converter
-   * @param string             $content  The content to unserialize
-   * @param mixed              $error    The error description, if any
-   */
-  const EXCEPTION_FAIL_UNSERIALIZE = 'framework#30N';
-
-  /**
    * Serialize the content to a formatted (based on the meta property) string
    *
    * @param mixed    $content The content to serialize
@@ -59,7 +35,7 @@ interface ConverterInterface extends Helper\FailableInterface {
    * @param mixed $value
    *
    * @return $this
-   * @throws Exception\Strict
+   * @throws \InvalidArgumentException Try to set a wrong Meta subclass
    */
   public function setMeta( $value );
 
@@ -80,11 +56,6 @@ interface ConverterInterface extends Helper\FailableInterface {
  */
 class Converter implements Helper\AccessableInterface {
   use Helper\Accessable;
-
-  /**
-   * Try to add a non-ConverterInterface instance
-   */
-  const EXCEPTION_INVALID_CONVERTER = 'framework#31E';
 
   /**
    * Available converters
@@ -161,11 +132,11 @@ class Converter implements Helper\AccessableInterface {
    * @param bool               $overwrite Overwrite the exists converter with the same name
    *
    * @return $this
-   * @throws Exception\Strict
+   * @throws \InvalidArgumentException Try to add a non ConverterInterface class
    */
   public function add( $converter, $overwrite = true ) {
 
-    if( !( $converter instanceof ConverterInterface ) ) throw new Exception\Strict( static::EXCEPTION_INVALID_CONVERTER );
+    if( !( $converter instanceof ConverterInterface ) ) throw new \InvalidArgumentException( 'Converter must implement the ' . ConverterInterface::class );
     else {
 
       $format = $converter->getFormat();
@@ -203,5 +174,26 @@ class Converter implements Helper\AccessableInterface {
 
       return ( isset( $this->list[ $format ] ) ? $this->list[ $format ] : null );
     }
+  }
+}
+
+/**
+ * Failed (de-)serialization
+ *
+ * @package Framework
+ */
+class ConverterExceptionFail extends Exception\Strict {
+
+  const ID = '29#framework';
+
+  /**
+   * @param ConverterInterface $instance
+   * @param mixed              $content The content to (un)serialize
+   * @param mixed              $error
+   */
+  public function __construct( ConverterInterface $instance, $content, $error = null ) {
+
+    $data = [ 'instance' => $instance, 'content' => $content, 'error' => $error ];
+    parent::__construct( '(Un)serialization failed, due to an error', static::ID, $data );
   }
 }

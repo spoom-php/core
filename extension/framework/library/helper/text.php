@@ -1,6 +1,5 @@
 <?php namespace Framework\Helper;
 
-use Framework\Exception;
 use Framework\Application;
 use Framework\Storage;
 use Framework\StorageInterface;
@@ -10,14 +9,6 @@ use Framework\StorageInterface;
  * @package Framework\Helper
  */
 abstract class Text {
-
-  /**
-   * Missing hash algorithm
-   *
-   * @param string $algorithm The wrong algorithm name
-   * @param string $list      The available algorithms list (separated by commas)
-   */
-  const EXCEPTION_INVALID_ALGORITHM = 'framework#8E';
 
   /**
    * Regexp for string insertion
@@ -75,7 +66,7 @@ abstract class Text {
    * @param int      $seeds  The minimum length of the secure random seeds (only used when the $secure param is true)
    *
    * @return string The unique string
-   * @throws Exception\Strict Throws ::EXCEPTION_INVALID_ALGORITHM when the hashing algorithm is invalid
+   * @throws \InvalidArgumentException Throws when the hashing algorithm is invalid
    */
   public static function unique( $length = null, $prefix = '', $secure = true, $hash = 'sha256', $seeds = 64 ) {
 
@@ -128,16 +119,16 @@ abstract class Text {
    * @param string $algorithm The hashing algorithm name
    *
    * @return string The hashed string
-   * @throws Exception\Strict Throws ::EXCEPTION_INVALID_ALGORITHM when the hashing algorithm is invalid
+   * @throws \InvalidArgumentException Throws when the hashing algorithm is invalid
    */
   public static function hash( $raw, $algorithm = 'sha256' ) {
 
     $tmp = @hash( $algorithm, $raw );
     if( !empty( $tmp ) ) return $tmp;
-    else throw new Exception\Strict( self::EXCEPTION_INVALID_ALGORITHM, [
+    else throw new \InvalidArgumentException( Text::insert( 'Invalid hash algorithm: {algorithm}; avaliable {list}', [
       'algorithm' => $algorithm,
       'list'      => implode( ',', hash_algos() )
-    ] );
+    ] ) );
   }
 
   /**
