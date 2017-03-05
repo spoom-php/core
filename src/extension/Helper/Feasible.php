@@ -39,7 +39,7 @@ trait Feasible {
 
       // check function validity
       $method = $this->method( $name, true );
-      if( $method ) return $method->invokeArgs( $this, is_array( $arguments ) ? $arguments : ( $arguments === null ? [ ] : [ $arguments ] ) );
+      if( $method ) return $method->invokeArgs( $this, is_array( $arguments ) ? $arguments : ( $arguments === null ? [] : [ $arguments ] ) );
       else {
 
         // log: warning

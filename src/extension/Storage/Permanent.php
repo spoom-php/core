@@ -191,7 +191,7 @@ abstract class Permanent extends Storage implements PermanentInterface {
 
         // trigger before save event for custom storage
         $extension = Extension::instance();
-        $event   = $extension->trigger( self::EVENT_SAVE, [
+        $event = $extension->trigger( self::EVENT_SAVE, [
           'instance'  => $this,
           'namespace' => $namespace,
           'converter' => $converter,
@@ -238,7 +238,7 @@ abstract class Permanent extends Storage implements PermanentInterface {
 
       // trigger before load event for custom storage
       $extension = Extension::instance();
-      $event                               = $extension->trigger( self::EVENT_LOAD, [
+      $event = $extension->trigger( self::EVENT_LOAD, [
         'instance'  => $this,
         'namespace' => $namespace,
         'converter' => $converter

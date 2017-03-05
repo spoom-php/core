@@ -89,7 +89,7 @@ class Storage implements StorageInterface, Helper\AccessableInterface {
    * This event can't be triggered manually, but called before every event
    */
   const EVENT_GLOBAL = '.';
-  
+
   /**
    * @var string
    */
