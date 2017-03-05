@@ -401,7 +401,7 @@ abstract class Permanent extends Storage implements PermanentInterface {
  *
  * @package Framework\Storage
  */
-class PermanentExceptionConverter extends Exception\Strict {
+class PermanentExceptionConverter extends Exception\Logic {
 
   const ID = '23#framework';
 
@@ -411,6 +411,6 @@ class PermanentExceptionConverter extends Exception\Strict {
   public function __construct( $namespace ) {
 
     $data = [ 'namespace' => $namespace ];
-    parent::__construct( '(Un)serialization failed, due to an error', static::ID, $data, null, Application::LEVEL_WARNING );
+    parent::__construct( '(Un)serialization failed, due to an error', static::ID, $data, null, Application::SEVERITY_WARNING );
   }
 }

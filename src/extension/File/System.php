@@ -38,9 +38,9 @@ interface SystemInterface {
    * @param bool                   $append Append or rewrite the file
    * @param array                  $meta   Change (or set the new) file's meta
    *
-   * @throws Exception If the path is a directory not a file
-   * @throws Exception If the path is not writeable
-   * @throws Exception Unsuccessful operation, due to the underlying system
+   * @throws SystemExceptionTypeInvalid If the path is a directory not a file
+   * @throws SystemExceptionPermission If the path is not writeable
+   * @throws SystemException Unsuccessful operation, due to the underlying system
    */
   public function write( $path, $content, $append = true, array $meta = [] );
   /**
@@ -52,9 +52,9 @@ interface SystemInterface {
    * @param StreamInterface|null $stream Output stream if not null
    *
    * @return string|null
-   * @throws Exception If the path is a directory not a file
-   * @throws Exception If the path is not readable
-   * @throws Exception Unsuccessful operation, due to the underlying system
+   * @throws SystemExceptionTypeInvalid If the path is a directory not a file
+   * @throws SystemExceptionPermission If the path is not readable
+   * @throws SystemException Unsuccessful operation, due to the underlying system
    */
   public function read( $path, $stream = null );
 
@@ -75,9 +75,9 @@ interface SystemInterface {
    * @param bool        $directory Include or exclude directories
    *
    * @return FileInterface[]
-   * @throws Exception If the path is a file not a directory
-   * @throws Exception If the path is not readable
-   * @throws Exception Unsuccessful operation, due to the underlying system
+   * @throws SystemExceptionTypeInvalid If the path is a file not a directory
+   * @throws SystemExceptionPermission If the path is not readable
+   * @throws SystemException Unsuccessful operation, due to the underlying system
    */
   public function search( $path, $pattern = null, $recursive = false, $directory = true );
   /**
@@ -89,8 +89,8 @@ interface SystemInterface {
    * @param array  $meta The newly created path meta
    *
    * @return FileInterface
-   * @throws Exception If the path is not writeable
-   * @throws Exception Unsuccessful operation, due to the underlying system
+   * @throws SystemExceptionPermission If the path is not writeable
+   * @throws SystemException Unsuccessful operation, due to the underlying system
    */
   public function create( $path, array $meta = [] );
   /**
@@ -100,8 +100,8 @@ interface SystemInterface {
    *
    * @param string $path
    *
-   * @throws Exception If the path is not writeable
-   * @throws Exception Unsuccessful operation, due to the underlying system
+   * @throws SystemExceptionPermission If the path is not writeable
+   * @throws SystemException Unsuccessful operation, due to the underlying system
    */
   public function destroy( $path );
 
@@ -115,8 +115,8 @@ interface SystemInterface {
    * @param bool   $move Remove the source after the successful copy
    *
    * @return FileInterface The destination path, even if the copy wasn't successful
-   * @throws Exception If the path is not readable or the destination is not writeable
-   * @throws Exception Unsuccessful operation, due to the underlying system
+   * @throws SystemExceptionPermission If the path is not readable or the destination is not writeable
+   * @throws SystemException Unsuccessful operation, due to the underlying system
    */
   public function copy( $path, $destination, $move = false );
 
@@ -135,7 +135,7 @@ interface SystemInterface {
    * @param string[]|string|null $names
    *
    * @return array|mixed
-   * @throws Exception Unsuccessful operation, due to the underlying system
+   * @throws SystemException Unsuccessful operation, due to the underlying system
    */
   public function getMeta( $path, $names = null );
   /**
@@ -147,13 +147,13 @@ interface SystemInterface {
    * @param mixed       $value
    * @param string|null $name
    *
-   * @throws Exception Unsuccessful operation, due to the underlying system
+   * @throws SystemException Unsuccessful operation, due to the underlying system
    */
   public function setMeta( $path, $value, $name = null );
 }
 
 /**
- * Class System
+ * Class Runtime
  *
  * note: All links will be converted to realpath
  *
@@ -672,7 +672,7 @@ interface SystemExceptionInterface extends Framework\ExceptionInterface {
  *
  * @package Framework\File
  */
-class SystemException extends Exception\System implements SystemExceptionInterface {
+class SystemException extends Exception\Runtime implements SystemExceptionInterface {
 
   const ID = '32#framework';
 
@@ -692,7 +692,7 @@ class SystemException extends Exception\System implements SystemExceptionInterfa
  *
  * @package Framework\File
  */
-class SystemExceptionRootInvalid extends Exception\System implements SystemExceptionInterface {
+class SystemExceptionRootInvalid extends Exception\Runtime implements SystemExceptionInterface {
 
   const ID = '36#framework';
 
@@ -707,7 +707,7 @@ class SystemExceptionRootInvalid extends Exception\System implements SystemExcep
       static::ID,
       $data,
       null,
-      Framework\Application::LEVEL_WARNING
+      Framework\Application::SEVERITY_WARNING
     );
   }
 }
@@ -716,7 +716,7 @@ class SystemExceptionRootInvalid extends Exception\System implements SystemExcep
  *
  * @package Framework\File
  */
-class SystemExceptionPathInvalid extends Exception\System implements SystemExceptionInterface {
+class SystemExceptionPathInvalid extends Exception\Runtime implements SystemExceptionInterface {
 
   const ID = '35#framework';
 
@@ -725,7 +725,7 @@ class SystemExceptionPathInvalid extends Exception\System implements SystemExcep
    */
   public function __construct( $path ) {
     $data = [ 'path' => $path ];
-    parent::__construct( Text::insert( 'Path is outside the root: \'{path}\'', $data ), static::ID, $data, null, Framework\Application::LEVEL_WARNING );
+    parent::__construct( Text::insert( 'Path is outside the root: \'{path}\'', $data ), static::ID, $data, null, Framework\Application::SEVERITY_WARNING );
   }
 }
 /**
@@ -733,7 +733,7 @@ class SystemExceptionPathInvalid extends Exception\System implements SystemExcep
  *
  * @package Framework\File
  */
-class SystemExceptionTypeInvalid extends Exception\Strict implements SystemExceptionInterface {
+class SystemExceptionTypeInvalid extends Exception\Logic implements SystemExceptionInterface {
 
   const ID = '34#framework';
 
@@ -749,7 +749,7 @@ class SystemExceptionTypeInvalid extends Exception\Strict implements SystemExcep
       static::ID,
       $data,
       null,
-      Framework\Application::LEVEL_NOTICE
+      Framework\Application::SEVERITY_NOTICE
     );
   }
 }
@@ -758,7 +758,7 @@ class SystemExceptionTypeInvalid extends Exception\Strict implements SystemExcep
  *
  * @package Framework\File
  */
-class SystemExceptionPermission extends Exception\System implements SystemExceptionInterface {
+class SystemExceptionPermission extends Exception\Runtime implements SystemExceptionInterface {
 
   const ID = '33#framework';
 
@@ -774,7 +774,7 @@ class SystemExceptionPermission extends Exception\System implements SystemExcept
       static::ID,
       $data,
       null,
-      Framework\Application::LEVEL_CRITICAL
+      Framework\Application::SEVERITY_CRITICAL
     );
   }
 }

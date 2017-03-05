@@ -42,7 +42,7 @@ class FrameworkStoragePermanentTest extends TestCase {
   }
 
   /**
-   * @throws Exception\System
+   * @throws Exception\Runtime
    */
   public function testFile() {
 
@@ -77,7 +77,7 @@ class FrameworkStoragePermanentTest extends TestCase {
     $this->assertFileNotExists( self::TEST_DIRECTORY . 'test.xml' );
   }
   /**
-   * @throws Exception\System
+   * @throws Exception\Runtime
    */
   public function testDirectory() {
 

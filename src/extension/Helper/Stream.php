@@ -216,7 +216,7 @@ class Stream implements StreamInterface, AccessableInterface {
  *
  * @package Framework\Helper
  */
-class StreamExceptionInvalid extends Exception\Strict {
+class StreamExceptionInvalid extends Exception\Logic {
 
   const ID = '0#framework';
 

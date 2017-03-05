@@ -2,6 +2,9 @@
 
 /**
  * Class Application
+ *
+ * TODO create Unittests
+ *
  * @package Framework
  */
 class Application {
@@ -22,263 +25,221 @@ class Application {
   /**
    * The level of silence
    */
-  const LEVEL_NONE = 0;
+  const SEVERITY_NONE = 0;
+  /**
+   * The level of total devastation, when the system is unuseable
+   */
+  const SEVERITY_EMERGENCY = 1;
+  /**
+   * The level of immediate attention
+   */
+  const SEVERITY_ALERT = 2;
   /**
    * The level of critical problems
    */
-  const LEVEL_CRITICAL = 1;
+  const SEVERITY_CRITICAL = 3;
   /**
    * The level of errors
    */
-  const LEVEL_ERROR = 2;
+  const SEVERITY_ERROR = 4;
   /**
    * The level of warnings
    */
-  const LEVEL_WARNING = 3;
+  const SEVERITY_WARNING = 5;
   /**
-   * The level of noticable problems but nothing serious
+   * The level of nothing serious but still need some attention
    */
-  const LEVEL_NOTICE = 4;
+  const SEVERITY_NOTICE = 6;
   /**
-   * The level of informations
+   * The level of useful informations
    */
-  const LEVEL_INFO = 5;
+  const SEVERITY_INFO = 7;
   /**
-   * The level of all problems (debugging)
+   * The level of detailed informations
    */
-  const LEVEL_DEBUG = 6;
+  const SEVERITY_DEBUG = 8;
 
   /**
    * @var static
    */
   private static $instance;
+  /**
+   * Map severity levels to PHP error levels
+   *
+   * @var array
+   */
+  private static $SEVERITY = [
+    self::SEVERITY_NONE      => 0,
+    self::SEVERITY_EMERGENCY => 0,
+    self::SEVERITY_ALERT     => 0,
+    self::SEVERITY_CRITICAL  => E_COMPILE_ERROR | E_PARSE,
+    self::SEVERITY_ERROR     => E_ERROR | E_CORE_ERROR | E_USER_ERROR | E_RECOVERABLE_ERROR,
+    self::SEVERITY_WARNING   => E_WARNING | E_COMPILE_WARNING | E_CORE_WARNING | E_USER_WARNING,
+    self::SEVERITY_NOTICE    => E_NOTICE | E_USER_NOTICE,
+    self::SEVERITY_INFO      => E_STRICT | E_DEPRECATED | E_USER_DEPRECATED,
+    self::SEVERITY_DEBUG     => E_ALL
+  ];
 
   /**
    * @var string
    */
-  private $localization;
+  private $_environment;
   /**
    * @var string
    */
-  private $environment;
+  private $_localization;
   /**
    * @var LogInterface
    */
-  private $log;
+  private $_log;
   /**
    * @var File\SystemInterface
    */
-  private $filesystem;
-  /**
-   * The framework log level
-   *
-   * @var int
-   */
-  private $log_level;
-  /**
-   * The framework report level
-   *
-   * @var int
-   */
-  private $report_level;
+  private $_filesystem;
 
   /**
-   * @param string $root
-   * @param array  $configuration
+   * Application constructor.
    *
-   * @throws \Exception
+   * @param string               $environment
+   * @param string               $localization
+   * @param File\SystemInterface $filesystem
+   * @param LogInterface         $log
    */
-  public function __construct( $root, array $configuration = [] ) {
+  public function __construct( $environment, $localization, File\SystemInterface $filesystem, LogInterface $log ) {
 
-    if( self::$instance ) throw new \Exception( 'Framework can\'t have multiple Application instances' );
+    if( self::$instance ) throw new \LogicException( 'Unable to create another instance, use ::instance() instead' );
+    else if( empty( $environment ) ) throw new \InvalidArgumentException( "Missing configuration: 'environment'" );
+    else if( empty( $localization ) ) throw new \InvalidArgumentException( "Missing configuration: 'localization'" );
     else {
 
       //
       self::$instance = $this;
 
-      // check for the environment
-      if( empty( $configuration[ 'environment' ] ) ) throw new \Exception( 'Fatal exception at setup: Missing environment configuration' );
-      else if( empty( $configuration[ 'localization' ] ) ) throw new \Exception( 'Fatal exception at setup: Missing localization configuration' );
-      else try {
+      //
+      $this->_environment  = $environment;
+      $this->_localization = $localization;
+      $this->_filesystem   = $filesystem;
+      $this->_log          = $log;
 
-        $this->environment  = $configuration[ 'environment' ];
-        $this->localization = $configuration[ 'localization' ];
-        // TODO setup report/log
+      // register the exception handler to log every unhandled exception
+      set_exception_handler( function ( $exception ) {
 
-        // register the exception handler to log every unhandled exception
-        set_exception_handler( function ( $exception ) {
+        // log the exception
+        if( $exception ) Exception::wrap( $exception )->log();
 
-          // log the exception
-          if( $exception ) Exception::wrap( $exception )->log();
+      } );
 
-        } );
+      // override the PHP error handler
+      set_error_handler( function ( $code, $message, $file, $line ) {
 
-        // override the PHP error handler
-        set_error_handler( function ( $code, $message, $file, $line ) {
-
-          // process the input into standard values
-          if( !error_reporting() ) $level = self::LEVEL_NONE;
-          else {
-
-            //
-            switch( true ) {
-              case ( E_STRICT | E_DEPRECATED | E_USER_DEPRECATED ) & $code:
-                $level = self::LEVEL_INFO;
-                break;
-              case ( E_NOTICE | E_USER_NOTICE ) & $code:
-                $level = self::LEVEL_NOTICE;
-                break;
-              case ( E_WARNING | E_COMPILE_WARNING | E_CORE_WARNING | E_USER_WARNING ) & $code:
-                $level = self::LEVEL_WARNING;
-                break;
-              case ( E_ERROR | E_CORE_ERROR | E_USER_ERROR | E_RECOVERABLE_ERROR ) & $code:
-                $level = self::LEVEL_ERROR;
-                break;
-              case ( E_COMPILE_ERROR | E_PARSE ) & $code:
-              default:
-                $level = self::LEVEL_ERROR;
-                break;
+        // process the input into standard values
+        $level = self::SEVERITY_NONE;
+        if( error_reporting() ) {
+          foreach( static::$SEVERITY as $severity => $tmp ) {
+            if( $tmp & $code ) {
+              $level = $severity;
+              break;
             }
           }
+        }
 
-          // log the fail
-          self::getLog()->create( 'Unexpected code failure: #{code} with \'{message}\' message, at \'{file}\'', [
-            'code'    => $code,
-            'message' => $message,
-            'file'    => $file . ':' . $line
-          ], 'framework:application', $level );
+        // log the fail
+        static::getLog()->create( 'Unexpected code failure: #{code} with \'{message}\' message, at \'{file}\'', [
+          'code'    => $code,
+          'message' => $message,
+          'file'    => $file . ':' . $line
+        ], static::class, $level );
 
-          // TODO this should(?) throw an exception on errors
+        // TODO this should(?) throw an exception on errors
 
-          return false;
-        } );
-
-        setlocale( LC_ALL, $configuration[ 'locale' ] );
-
-        // setup encoding
-        mb_internal_encoding( $configuration[ 'encoding' ] );
-        mb_http_output( $configuration[ 'encoding' ] );
-
-        // setup timezones
-        date_default_timezone_set( $configuration[ 'timezone' ] );
-
-        $this->filesystem = new File\System( $root );
-        // TODO make logger independent from the application
-        $this->log = new Log( 'spoom' );
-
-      } catch( Exception $e ) {
-        throw new \Exception( 'Fatal exception at setup: #' . $e->getCode() . ', ' . $e->getMessage(), 0, $e );
-      }
+        return false;
+      } );
     }
   }
 
   /**
+   * Environment of the application
+   *
    * @return string
    */
   public function getEnvironment() {
-    return $this->environment;
+    return $this->_environment;
   }
   /**
-   * @return int
-   */
-  public function getReportLevel() {
-    return $this->report_level;
-  }
-  /**
-   * @param int $value
-   */
-  public function setReportLevel( $value ) {
-    $this->report_level = (int) $value;
-
-    // setup error reporting in PHP
-    $reporting = 0;
-    switch( $this->report_level ) {
-      case self::LEVEL_NONE:
-
-        error_reporting( -1 );
-        ini_set( 'display_errors', 0 );
-
-        break;
-
-      /** @noinspection PhpMissingBreakStatementInspection */
-      case self::LEVEL_DEBUG:
-        $reporting = E_ALL;
-      /** @noinspection PhpMissingBreakStatementInspection */
-      case self::LEVEL_INFO:
-        $reporting |= E_STRICT | E_DEPRECATED | E_USER_DEPRECATED;
-      /** @noinspection PhpMissingBreakStatementInspection */
-      case self::LEVEL_NOTICE:
-        $reporting |= E_NOTICE | E_USER_NOTICE;
-      /** @noinspection PhpMissingBreakStatementInspection */
-      case self::LEVEL_WARNING:
-        $reporting |= E_WARNING | E_COMPILE_WARNING | E_CORE_WARNING | E_USER_WARNING;
-      /** @noinspection PhpMissingBreakStatementInspection */
-      case self::LEVEL_ERROR:
-        $reporting |= E_ERROR | E_CORE_ERROR | E_USER_ERROR | E_RECOVERABLE_ERROR;
-      /** @noinspection PhpMissingBreakStatementInspection */
-      case self::LEVEL_CRITICAL:
-        $reporting |= E_COMPILE_ERROR | E_PARSE;
-      /** @noinspection PhpMissingBreakStatementInspection */
-      default:
-
-        ini_set( 'display_errors', 1 );
-        error_reporting( $reporting );
-    }
-  }
-
-  /**
-   * @return int
-   */
-  public function getLogLevel() {
-    return $this->log_level;
-  }
-  /**
-   * @param int $value
-   */
-  public function setLogLevel( $value ) {
-    $this->log_level = (int) $value;
-  }
-
-  /**
-   * Get file from the local root filesystem
+   * Filesystem root or any path of the application
    *
    * @param string $path
    *
    * @return FileInterface
    */
   public function getFile( $path = '' ) {
-    return $this->filesystem->get( $path );
+    return $this->_filesystem->get( $path );
   }
   /**
+   * Default logger of the application
+   *
    * @return LogInterface
    */
   public function getLog() {
-    return $this->log;
+    return $this->_log;
   }
 
   /**
-   * Get page localization string
+   * Localization of the application
    *
    * @return string
    */
   public function getLocalization() {
-    return $this->localization;
+    return $this->_localization;
   }
   /**
-   * Set request localization
+   * Set localization of the application
    *
    * @param string $value
    */
   public function setLocalization( $value ) {
-    $this->localization = trim( mb_strtolower( $value ) );
+    $this->_localization = trim( mb_strtolower( $value ) );
   }
 
+  /**
+   * Global setup of the PHP environment
+   *
+   * This SHOULD be done before the framework...or anything else in the PHP code
+   *
+   * @param int   $severity Maximum severity level tht should be reported
+   * @param array $configuration
+   */
+  public static function environment( $severity, array $configuration = [] ) {
+
+    // setup error reporting in PHP
+    $reporting = ~E_ALL;
+    foreach( self::$SEVERITY as $key => $value ) {
+      if( $key <= $severity ) $reporting |= $value;
+    }
+    error_reporting( $reporting );
+
+    // setup locale
+    if( isset( $configuration[ 'locale' ] ) ) {
+      setlocale( LC_ALL, $configuration[ 'locale' ] );
+    }
+
+    // setup encoding
+    if( isset( $configuration[ 'encoding' ] ) ) {
+      mb_internal_encoding( $configuration[ 'encoding' ] );
+      mb_http_output( $configuration[ 'encoding' ] );
+    }
+
+    // setup timezones
+    if( isset( $configuration[ 'timezone' ] ) ) {
+      date_default_timezone_set( $configuration[ 'timezone' ] );
+    }
+  }
   /**
    * @return static
    * @throws \Exception
    */
   public static function instance() {
-    if( empty( self::$instance ) ) throw new \Exception( 'There is no Application instance right now' );
+    if( empty( self::$instance ) ) throw new \LogicException( 'There is no Application instance right now' );
     else return self::$instance;
   }
 }
@@ -288,7 +249,7 @@ class Application {
  *
  * @package Framework
  */
-class ApplicationExceptionFeature extends Exception\System {
+class ApplicationExceptionFeature extends Exception\Runtime {
 
   const ID = '0#framework';
 
@@ -299,6 +260,6 @@ class ApplicationExceptionFeature extends Exception\System {
   public function __construct( $feature, $version ) {
 
     $data = [ 'feature' => $feature, 'version' => $version ];
-    parent::__construct( '(Un)serialization failed, due to an error', static::ID, $data, null, Application::LEVEL_CRITICAL );
+    parent::__construct( '(Un)serialization failed, due to an error', static::ID, $data, null, Application::SEVERITY_CRITICAL );
   }
 }

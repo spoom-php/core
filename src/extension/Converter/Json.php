@@ -28,8 +28,8 @@ class Json implements Framework\ConverterInterface, Helper\AccessableInterface {
    * @param int          $depth
    * @param bool         $associative
    */
-  public function __construct( $options = 0, $depth = 512, $associative = false ) {
-    $this->_meta = $options instanceof JsonMeta ? $options : new JsonMeta( $options | JSON_PARTIAL_OUTPUT_ON_ERROR, $depth, $associative );
+  public function __construct( $options = JSON_PARTIAL_OUTPUT_ON_ERROR, $depth = 512, $associative = false ) {
+    $this->_meta = $options instanceof JsonMeta ? $options : new JsonMeta( $options, $depth, $associative );
   }
   /**
    *
@@ -143,7 +143,7 @@ class JsonMeta {
    * @param int  $depth
    * @param bool $associative
    */
-  public function __construct( $options = 0, $depth = 512, $associative = false ) {
+  public function __construct( $options = JSON_PARTIAL_OUTPUT_ON_ERROR, $depth = 512, $associative = false ) {
     $this->options     = $options;
     $this->depth       = $depth;
     $this->associative = $associative;

@@ -1,14 +1,13 @@
 <?php require '../vendor/autoload.php';
 
+use Spoom\Framework;
 use Spoom\Framework\Application;
+use Spoom\Framework\File;
 
-$spoom = new Application( __DIR__, [
-  'environment'  => Application::ENVIRONMENT_DEVELOPMENT,
-  'log_level'    => Application::LEVEL_DEBUG,
-  'report_level' => Application::LEVEL_DEBUG,
-
-  'localization' => 'en',
-  'locale'       => null,
-  'encoding'     => mb_internal_encoding(),
-  'timezone'     => date_default_timezone_get()
-] );
+// setup the Spoom application 
+$spoom = new Application(
+  Application::ENVIRONMENT_DEVELOPMENT,
+  'en',
+  ( $tmp = new File\System( __DIR__ ) ),
+  new Framework\Log( $tmp->get( 'tmp/' ), 'unittest', Application::SEVERITY_DEBUG )
+);

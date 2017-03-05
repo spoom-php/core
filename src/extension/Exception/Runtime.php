@@ -10,7 +10,7 @@ use Spoom\Framework\Helper\Enumerable;
  *
  * @package Framework\Exception
  */
-class System extends \RuntimeException implements ExceptionInterface {
+class Runtime extends \RuntimeException implements ExceptionInterface {
 
   const ID = '0#framework';
 
@@ -26,7 +26,7 @@ class System extends \RuntimeException implements ExceptionInterface {
    *
    * @var int
    */
-  private $_severity = Application::LEVEL_ERROR;
+  private $_severity = Application::SEVERITY_ERROR;
 
   /**
    * @var array
@@ -40,7 +40,7 @@ class System extends \RuntimeException implements ExceptionInterface {
    * @param \Throwable|null $previous
    * @param int             $severity
    */
-  public function __construct( $message, $id, $context = [], \Throwable $previous = null, $severity = Application::LEVEL_CRITICAL ) {
+  public function __construct( $message, $id, $context = [], \Throwable $previous = null, $severity = Application::SEVERITY_CRITICAL ) {
     parent::__construct( $message, (int) $id, $previous );
 
     $this->_id       = $id;
@@ -55,7 +55,19 @@ class System extends \RuntimeException implements ExceptionInterface {
 
   //
   public function log( $data = [], LogInterface $instance = null ) {
-    // TODO implement
+
+    $instance = $instance ?: Application::instance()->getLog();
+    if( $instance ) {
+
+      // extend data
+      $data                = Enumerable::read( $data, false, [] );
+      $data[ 'exception' ] = $this;
+      $data[ 'backtrace' ] = false;
+
+      $instance->create( $this->message, $data, static::class . ':' . $this->getId(), $this->getSeverity() );
+    }
+
+    return $this;
   }
 
   //
@@ -73,9 +85,15 @@ class System extends \RuntimeException implements ExceptionInterface {
 
   //
   public function jsonSerialize() {
+    return (object) [
+      'id'      => $this->getId(),
+      'code'    => $this->getCode(),
+      'message' => $this->getMessage(),
+      'context' => $this->getContext(),
 
-    // TODO implement
-
-    return [];
+      'line'     => $this->getFile() . ':' . $this->getLine(),
+      'trace'    => $this->getTrace(),
+      'previous' => $this->getPrevious()
+    ];
   }
 }

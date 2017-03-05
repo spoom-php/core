@@ -31,7 +31,7 @@ interface ExceptionInterface extends \Throwable, \JsonSerializable, Helper\Logab
 
 /**
  * Exception for public display, usually for the user. This can be a missfilled form field warning, bad request
- * parameter or a deeper exception (Strict or System) public version
+ * parameter or a deeper exception (Logic or Runtime) public version
  *
  * @package Framework
  *
@@ -55,7 +55,7 @@ class Exception extends \Exception implements ExceptionInterface {
    *
    * @var int
    */
-  private $_severity = Application::LEVEL_ERROR;
+  private $_severity = Application::SEVERITY_ERROR;
 
   /**
    * @var array
@@ -69,7 +69,7 @@ class Exception extends \Exception implements ExceptionInterface {
    * @param \Throwable|null $previous
    * @param int             $severity
    */
-  public function __construct( $message, $id, $context = [], \Throwable $previous = null, $severity = Application::LEVEL_ERROR ) {
+  public function __construct( $message, $id, $context = [], \Throwable $previous = null, $severity = Application::SEVERITY_ERROR ) {
     parent::__construct( $message, (int) $id, $previous );
 
     $this->_id       = $id;
@@ -84,7 +84,19 @@ class Exception extends \Exception implements ExceptionInterface {
 
   //
   public function log( $data = [], LogInterface $instance = null ) {
-    // TODO implement
+
+    $instance = $instance ?: Application::instance()->getLog();
+    if( $instance ) {
+
+      // extend data
+      $data                = Enumerable::read( $data, false, [] );
+      $data[ 'exception' ] = $this;
+      $data[ 'backtrace' ] = false;
+
+      $instance->create( $this->message, $data, static::class . ':' . $this->getId(), $this->getSeverity() );
+    }
+
+    return $this;
   }
 
   //
@@ -102,10 +114,16 @@ class Exception extends \Exception implements ExceptionInterface {
 
   //
   public function jsonSerialize() {
+    return (object) [
+      'id'      => $this->getId(),
+      'code'    => $this->getCode(),
+      'message' => $this->getMessage(),
+      'context' => $this->getContext(),
 
-    // TODO implement
-
-    return [];
+      'line'     => $this->getFile() . ':' . $this->getLine(),
+      'trace'    => $this->getTrace(),
+      'previous' => $this->getPrevious()
+    ];
   }
 
   /**
@@ -120,10 +138,10 @@ class Exception extends \Exception implements ExceptionInterface {
         return $throwable;
 
       case $throwable instanceof \LogicException:
-        return new Exception\Strict( $throwable->getMessage(), Exception\Strict::ID, [], $throwable );
+        return new Exception\Logic( $throwable->getMessage(), Exception\Logic::ID, [], $throwable );
 
       case $throwable instanceof \RuntimeException:
-        return new Exception\System( $throwable->getMessage(), Exception\System::ID, [], $throwable );
+        return new Exception\Runtime( $throwable->getMessage(), Exception\Runtime::ID, [], $throwable );
     }
 
     return new static( $throwable->getMessage(), static::ID, [], $throwable );

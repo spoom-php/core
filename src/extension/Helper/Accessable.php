@@ -103,7 +103,7 @@ trait Accessable {
  *
  * @package Framework\Helper
  */
-class AccessibleExceptionMissing extends Exception\Strict {
+class AccessibleExceptionMissing extends Exception\Logic {
 
   const ID = '20#framework';
 
@@ -114,6 +114,6 @@ class AccessibleExceptionMissing extends Exception\Strict {
   public function __construct( $instance, $property ) {
 
     $data = [ 'class' => get_class( $instance ), 'property' => $property ];
-    parent::__construct( Text::insert( 'There is no \'{property}\' in {class}', $data ), static::ID, $data, null, Application::LEVEL_NOTICE );
+    parent::__construct( Text::insert( 'There is no \'{property}\' in {class}', $data ), static::ID, $data, null, Application::SEVERITY_NOTICE );
   }
 }

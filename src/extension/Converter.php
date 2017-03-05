@@ -182,7 +182,7 @@ class Converter implements Helper\AccessableInterface {
  *
  * @package Framework
  */
-class ConverterExceptionFail extends Exception\Strict {
+class ConverterExceptionFail extends Exception\Logic {
 
   const ID = '29#framework';
 
