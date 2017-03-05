@@ -1,9 +1,10 @@
 <?php namespace Spoom\Framework\Extension;
 
 use Spoom\Framework\Application;
-use Spoom\Framework\Extension;
+use Spoom\Framework\FileInterface;
 use Spoom\Framework\Storage;
 use Spoom\Framework\Converter;
+use Spoom\Framework\File;
 
 /**
  * Interface ConfigurationInterface
@@ -14,61 +15,52 @@ use Spoom\Framework\Converter;
 interface ConfigurationInterface extends Storage\PermanentInterface {
 
   /**
-   * Set defaults
+   * @param bool $active Return the currenty active or the desired value
    *
-   * @param Extension $source
+   * @return null|string
    */
-  public function __construct( Extension $source );
-
+  public function getEnvironment( $active = false );
   /**
-   * @return Extension
+   * @param string|null $value
    */
-  public function getExtension();
-  /**
-   * @return string
-   */
-  public function getEnvironment();
-  /**
-   * @param string $value
-   */
-  public function setEnvironment( $value );
+  public function setEnvironment( $value = null );
 }
 
 /**
  * Class Configuration
  * @package Framework\Extension
  *
- * @property-read Extension $extension   The extension source of the configuration
- * @property      string    $environment The actual environment's name
+ * @property      string|null $environment The actual environment's name
  */
 class Configuration extends Storage\File implements ConfigurationInterface {
 
   /**
-   * Extension data source
-   *
-   * @var Extension
-   */
-  private $_extension = null;
-  /**
-   * Currently loaded environment
+   * Desired environment
    *
    * @var string|null
    */
-  private $_environment = null;
+  private $_environment;
+  /**
+   * Last accessed environment
+   *
+   * @var string|null
+   */
+  private $active;
 
   /**
-   * Set defaults and init the FileStorage
-   *
-   * @param Extension $source
+   * @var array
    */
-  public function __construct( Extension $source ) {
-    parent::__construct( $source->file( Extension::DIRECTORY_CONFIGURATION ), [
+  private $cache = [ '' ];
+
+  /**
+   * @param FileInterface $directory
+   */
+  public function __construct( FileInterface $directory ) {
+    parent::__construct( $directory, [
       new Converter\Json( JSON_PRETTY_PRINT ),
       new Converter\Xml(),
       new Converter\Ini()
     ] );
-
-    $this->_extension = $source;
   }
 
   /**
@@ -79,7 +71,20 @@ class Configuration extends Storage\File implements ConfigurationInterface {
    * @return bool
    */
   protected function validate( $name ) {
-    return is_string( $name ) && $this->getDirectory()->get( $name . '/' )->exist();
+
+    // search in the cache first
+    if( in_array( $name, $this->cache ) ) return true;
+    else {
+
+      // check the environment existance
+      $result = $this->getDirectory()->get( $name )->exist( [
+        File\System::META_TYPE => File\System::TYPE_DIRECTORY
+      ] );
+
+      // populate the cache
+      if( $result ) $this->cache[] = $result;
+      return $result;
+    }
   }
   //
   protected function searchFile( $namespace, $format = null ) {
@@ -87,11 +92,35 @@ class Configuration extends Storage\File implements ConfigurationInterface {
     $tmp = $this->getDirectory();
     try {
 
-      // change the directory temporary then search for the path
-      if( !empty( $this->getEnvironment() ) ) {
-        $this->setDirectory( $tmp->get( $this->getEnvironment() . '/' ) );
+      // collect possible environment names
+      $allow = [];
+      if( $this->_environment !== null ) $allow[] = $this->_environment;
+      $allow[] = Application::instance()->getEnvironment();
+      $allow[] = '';
+
+      //
+      foreach( $allow as $environment ) {
+        if( $this->validate( $environment ) ) {
+
+          // clear meta/cache/storage when the environment has changed
+          if( $this->active != $environment ) {
+
+            $this->_source         = [];
+            $this->converter_cache = [];
+            $this->clean();
+          }
+
+          $this->active = $environment;
+          break;
+        }
       }
 
+      // change the directory temporary then search for the path
+      if( !empty( $this->active ) ) {
+        $this->setDirectory( $tmp->get( $this->active ) );
+      }
+
+      // search like normal
       return parent::searchFile( $namespace, $format );
 
     } finally {
@@ -100,37 +129,11 @@ class Configuration extends Storage\File implements ConfigurationInterface {
   }
 
   //
-  public function getExtension() {
-    return $this->_extension;
+  public function getEnvironment( $active = false ) {
+    return $active ? $this->cache : $this->_environment;
   }
   //
-  public function getEnvironment() {
-
-    // load the first environment
-    if( !isset( $this->_environment ) ) {
-      $this->setEnvironment( Application::instance()->getEnvironment() );
-    }
-
-    return $this->_environment;
-  }
-  //
-  public function setEnvironment( $value ) {
-
-    // save the original environment for later compare
-    $tmp = $this->_environment;
-
-    // set the new environment
-    $global = Application::instance()->getEnvironment();
-    if( $this->validate( $value ) ) $this->_environment = $value;
-    else if( $this->validate( $global ) ) $this->_environment = $global;
-    else $this->_environment = '';
-
-    // clear meta/cache/storage when the environment has changed
-    if( $this->_environment != $tmp ) {
-
-      $this->_source         = [];
-      $this->converter_cache = [];
-      $this->clean();
-    }
+  public function setEnvironment( $value = null ) {
+    $this->_environment = $value;
   }
 }

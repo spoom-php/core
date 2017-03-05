@@ -98,8 +98,6 @@ class Application {
   private $_filesystem;
 
   /**
-   * Application constructor.
-   *
    * @param string               $environment
    * @param string               $localization
    * @param File\SystemInterface $filesystem
@@ -113,13 +111,13 @@ class Application {
     else {
 
       //
-      self::$instance = $this;
-
-      //
       $this->_environment  = $environment;
       $this->_localization = $localization;
       $this->_filesystem   = $filesystem;
       $this->_log          = $log;
+
+      //
+      self::$instance = $this;
 
       // register the exception handler to log every unhandled exception
       set_exception_handler( function ( $exception ) {
@@ -198,7 +196,7 @@ class Application {
    * @param string $value
    */
   public function setLocalization( $value ) {
-    $this->_localization = trim( mb_strtolower( $value ) );
+    $this->_localization = trim( $value );
   }
 
   /**

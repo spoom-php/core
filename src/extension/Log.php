@@ -62,7 +62,7 @@ interface LogInterface {
   /**
    * @param string               $message   The log message pattern
    * @param array|object|Storage $data      The pattern insertion or additional data
-   * @param string $namespace The namespace for the log entry
+   * @param string               $namespace The namespace for the log entry
    */
   public function error( $message, $data = [], $namespace = '' );
   /**
@@ -78,6 +78,10 @@ interface LogInterface {
    * @return string
    */
   public function getChannel();
+  /**
+   * @param string $value
+   */
+  public function setChannel( $value );
   /**
    * Maximum severity level that will be logged
    *
@@ -130,19 +134,24 @@ class Log implements LogInterface, Helper\AccessableInterface {
    *
    * @var Event\StorageInterface
    */
-  protected $event;
+  protected $event_storage;
   /**
    * @var ConverterInterface
    */
   protected $converter;
 
+  /**
+   * @param FileInterface $directory
+   * @param string        $channel
+   * @param int           $severity
+   */
   public function __construct( FileInterface $directory, $channel, $severity ) {
 
     $this->_directory = $directory;
     $this->_channel   = $channel;
     $this->_severity  = $severity;
 
-    $this->event     = Extension::instance()->getEvent();
+    //
     $this->converter = new Json();
   }
 
@@ -165,7 +174,7 @@ class Log implements LogInterface, Helper\AccessableInterface {
         if( !$data->exist( 'backtrace' ) ) $data->set( 'backtrace', array_slice( debug_backtrace(), 1 ) );
 
         // trigger event for the log entry
-        $event = $this->event->trigger( new Event( static::EVENT_CREATE, [
+        $event = $this->getEventStorage()->trigger( new Event( static::EVENT_CREATE, [
           'instance'    => $this,
           'namespace'   => $namespace,
           'severity'    => $severity,
@@ -236,10 +245,26 @@ class Log implements LogInterface, Helper\AccessableInterface {
   protected function getFile( $prefix = null ) {
     return $this->_directory->get( ( $prefix ? ( $prefix . '-' ) : '' ) . $this->getChannel() );
   }
+  /**
+   * @return Event\StorageInterface
+   */
+  protected function getEventStorage() {
+
+    //
+    if( empty( $this->event_storage ) ) {
+      $this->event_storage = Extension::instance()->getEventStorage();
+    }
+
+    return $this->event_storage;
+  }
 
   //
   public function getChannel() {
     return $this->_channel;
+  }
+  //
+  public function setChannel( $value ) {
+    $this->_channel = $value;
   }
   //
   public function getSeverity() {
