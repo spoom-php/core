@@ -1,0 +1,46 @@
+<?php namespace Spoom\Framework\Helper;
+
+/**
+ * Interface FailableInterface
+ * @package Framework\Helper
+ */
+interface FailableInterface {
+
+  /**
+   * @return \Exception|null
+   */
+  public function getException();
+  /**
+   * @param \Exception|FailableInterface|null $value
+   *
+   * @return bool
+   */
+  public function setException( $value = null );
+}
+/**
+ * Trait Failable
+ * @package Framework\Helper
+ */
+trait Failable {
+
+  /**
+   * @var \Exception|null
+   */
+  protected $_exception;
+
+  /**
+   * @return \Exception|null
+   */
+  public function getException() {
+    return $this->_exception;
+  }
+  /**
+   * @param \Exception|FailableInterface|null $value
+   *
+   * @return bool
+   */
+  public function setException( $value = null ) {
+    $this->_exception = $value instanceof FailableInterface ? $value->getException() : $value;
+    return !empty( $this->_exception );
+  }
+}
