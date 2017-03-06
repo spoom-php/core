@@ -147,9 +147,12 @@ class Extension implements ExtensionInterface, Helper\AccessableInterface {
 
   protected function __construct() {
 
-    $this->_filesystem    = new File\System( dirname( __DIR__ ) );
-    $this->_configuration = new Extension\Configuration( $this->file( static::DIRECTORY_CONFIGURATION ) );
-    $this->_localization  = new Extension\Localization( $this->file( static::DIRECTORY_LOCALIZATION ) );
+    $this->_filesystem = new File\System( dirname( __DIR__ ) );
+
+    //
+    $directory            = Application::instance()->getPublicFile( $this->getId() );
+    $this->_configuration = new Extension\Configuration( $directory->get( static::DIRECTORY_CONFIGURATION ) );
+    $this->_localization  = new Extension\Localization( $directory->get( static::DIRECTORY_LOCALIZATION ) );
     $this->_event_storage = new Event\Storage( $this->getId() );
 
     $this->_log = clone Application::instance()->getLog();

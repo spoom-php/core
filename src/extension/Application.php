@@ -1,5 +1,7 @@
 <?php namespace Spoom\Framework;
 
+use Spoom\Composer\Autoload;
+
 /**
  * Class Application
  *
@@ -93,6 +95,14 @@ class Application {
    */
   private $_log;
   /**
+   * App root filesystem
+   *
+   * @var File\SystemInterface
+   */
+  private $_root;
+  /**
+   * Spoom's public directory
+   *
    * @var File\SystemInterface
    */
   private $_filesystem;
@@ -100,10 +110,10 @@ class Application {
   /**
    * @param string               $environment
    * @param string               $localization
-   * @param File\SystemInterface $filesystem
+   * @param File\SystemInterface $root
    * @param LogInterface         $log
    */
-  public function __construct( $environment, $localization, File\SystemInterface $filesystem, LogInterface $log ) {
+  public function __construct( $environment, $localization, File\SystemInterface $root, LogInterface $log ) {
 
     if( self::$instance ) throw new \LogicException( 'Unable to create another instance, use ::instance() instead' );
     else if( empty( $environment ) ) throw new \InvalidArgumentException( "Missing configuration: 'environment'" );
@@ -113,8 +123,11 @@ class Application {
       //
       $this->_environment  = $environment;
       $this->_localization = $localization;
-      $this->_filesystem   = $filesystem;
       $this->_log          = $log;
+      $this->_root = $root;
+
+      //
+      $this->_filesystem = new File\System( Autoload::DIRECTORY );
 
       //
       self::$instance = $this;
@@ -164,13 +177,23 @@ class Application {
     return $this->_environment;
   }
   /**
-   * Filesystem root or any path of the application
+   * File from the app root directory
    *
    * @param string $path
    *
    * @return FileInterface
    */
-  public function getFile( $path = '' ) {
+  public function getRootFile( $path = '' ) {
+    return $this->_root->get( $path );
+  }
+  /**
+   * File from the Spoom's public directory
+   *
+   * @param string $path
+   *
+   * @return File|FileInterface
+   */
+  public function getPublicFile( $path = '' ) {
     return $this->_filesystem->get( $path );
   }
   /**
