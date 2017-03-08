@@ -25,7 +25,7 @@ abstract class Text {
    *
    * @return bool
    */
-  public static function is( $input, $simple = false ) {
+  public static function is( $input, bool $simple = false ): bool {
     if( is_string( $input ) ) return true;
     else if( !$simple ) return Number::is( $input, true ) || ( is_object( $input ) && method_exists( $input, '__toString' ) );
     else return false;
@@ -39,7 +39,7 @@ abstract class Text {
    *
    * @return string|null
    */
-  public static function read( $input, $default = null ) {
+  public static function read( $input, string $default = null ) {
     switch( true ) {
       case is_string( $input ):
         return $input;
@@ -68,7 +68,7 @@ abstract class Text {
    * @return string The unique string
    * @throws \InvalidArgumentException Throws when the hashing algorithm is invalid
    */
-  public static function unique( $length = null, $prefix = '', $secure = true, $hash = 'sha256', $seeds = 64 ) {
+  public static function unique( int $length = null, string $prefix = '', bool $secure = true, string $hash = 'sha256', int $seeds = 64 ): string {
 
     $result = '';
     do {
@@ -77,32 +77,15 @@ abstract class Text {
       $raw = $prefix . uniqid( mt_rand(), true );
 
       // add some unpredictable random strings for available sources
-      if( $secure ) {
+      if( $secure ) try {
 
-        // try ssl first
-        if( !function_exists( 'openssl_random_pseudo_bytes' ) ) {
+        $raw .= random_bytes( $seeds );
 
-          // log: warning
-          Application::instance()
-                     ->getLog()
-                     ->warning( 'Cannot use OpenSSL random, `openssl_random_pseudo_bytes()` doesn\'t exists.', [], 'framework:helper.string' );
+      } catch( \Exception $e ) {
 
-        } else {
-          $tmp = openssl_random_pseudo_bytes( $seeds, $strong );
-
-          // skip ssl since it wasn't using the strong algo
-          if( $strong === true ) $raw .= $tmp;
-          else Application::instance()
-                          ->getLog()
-                          ->notice( 'Generated OpenSSL random value is not strong, what next?', [], 'framework:helper.string' ); // log: notice
-        }
-
-        // try to read from the unix RNG
-        if( is_readable( '/dev/urandom' ) ) {
-          $tmp = fopen( '/dev/urandom', 'rb' );
-          $raw .= fread( $tmp, $seeds );
-          fclose( $tmp );
-        }
+        // log: warning
+        Application::instance()->getLog()->warning( 'Cannot use random_bytes due to an error', [ 'error' => $e ], static::class );
+        
       }
 
       // hash the generated string
@@ -121,7 +104,7 @@ abstract class Text {
    * @return string The hashed string
    * @throws \InvalidArgumentException Throws when the hashing algorithm is invalid
    */
-  public static function hash( $raw, $algorithm = 'sha256' ) {
+  public static function hash( string $raw, string $algorithm = 'sha256' ): string {
 
     $tmp = @hash( $algorithm, $raw );
     if( !empty( $tmp ) ) return $tmp;

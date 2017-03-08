@@ -8,8 +8,6 @@ use Spoom\Framework;
  * @package Framework\Converter
  *
  * @property XmlMeta     $meta
- * @property-read string $format Used format name
- * @property-read string $name   The converter name
  */
 class Xml implements Framework\ConverterInterface, Helper\AccessableInterface {
   use Helper\Accessable;
@@ -38,7 +36,7 @@ class Xml implements Framework\ConverterInterface, Helper\AccessableInterface {
   }
 
   //
-  public function serialize( $content, $stream = null ) {
+  public function serialize( $content, ?Helper\StreamInterface $stream = null ):?string {
     $this->setException();
 
     // create dom and the root element
@@ -53,7 +51,7 @@ class Xml implements Framework\ConverterInterface, Helper\AccessableInterface {
     if( !$stream ) return $result->asXML();
     else {
 
-      fwrite( $stream, $result->asXML() );
+      $stream->write( $result->asXML() );
       return null;
     }
   }
@@ -62,8 +60,8 @@ class Xml implements Framework\ConverterInterface, Helper\AccessableInterface {
     $this->setException();
 
     // handle stream input
-    if( is_resource( $content ) ) {
-      $content = stream_get_contents( $content );
+    if( $content instanceof Helper\StreamInterface ) {
+      $content = $content->read();
     }
 
     $this->_meta->attributes = [];
@@ -94,7 +92,7 @@ class Xml implements Framework\ConverterInterface, Helper\AccessableInterface {
    * @param string       $name
    * @param string       $key
    */
-  protected function write( &$dom, &$element, $data, $name, $key ) {
+  protected function write( \DOMDocument &$dom, \DOMElement &$element, $data, string $name, string $key ) {
 
     // handle xml "leaf"
     if( !Helper\Enumerable::is( $data ) ) {
@@ -130,7 +128,7 @@ class Xml implements Framework\ConverterInterface, Helper\AccessableInterface {
    *
    * @return mixed
    */
-  protected function read( $element, $key ) {
+  protected function read( $element, string $key ) {
 
     // handle "recursion" end, and set simple data to the container
     if( !is_object( $element ) || !( $element instanceof \SimpleXMLElement ) || ( !$element->children()->count() && !$element->attributes()->count() ) ) {
@@ -186,11 +184,17 @@ class Xml implements Framework\ConverterInterface, Helper\AccessableInterface {
     return (object) $container;
   }
 
-  //
+  /**
+   * @return XmlMeta
+   */
   public function getMeta() {
-    return clone $this->_meta;
+    return $this->_meta;
   }
-  //
+  /**
+   * @param XmlMeta $value
+   *
+   * @return $this
+   */
   public function setMeta( $value ) {
     if( !( $value instanceof XmlMeta ) ) throw new \InvalidArgumentException( 'Meta must be a subclass of ' . XmlMeta::class, $value );
     else $this->_meta = $value;
@@ -199,11 +203,11 @@ class Xml implements Framework\ConverterInterface, Helper\AccessableInterface {
   }
 
   //
-  public function getFormat() {
+  public function getFormat(): string {
     return static::FORMAT;
   }
   //
-  public function getName() {
+  public function getName(): string {
     return static::NAME;
   }
 }
@@ -217,7 +221,7 @@ class XmlMeta {
    * @param string $version
    * @param string $encoding
    */
-  public function __construct( $version = '1.0', $encoding = 'UTF-8' ) {
+  public function __construct( string $version = '1.0', string $encoding = 'UTF-8' ) {
     $this->version  = $version;
     $this->encoding = $encoding;
   }

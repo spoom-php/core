@@ -9,8 +9,8 @@ use Spoom\Framework\Helper;
  *
  * TODO create Unittests
  *
- * @property-read string $channel  The name of the logger
- * @property int         $severity Maximum severity level that will be logged
+ * @property string $channel  The name of the logger
+ * @property int    $severity Maximum severity level that will be logged
  */
 interface LogInterface {
 
@@ -33,74 +33,72 @@ interface LogInterface {
    * @param string               $namespace The namespace for the log entry
    * @param int                  $severity  The log level
    */
-  public function create( $message, $data = [], $namespace = '', $severity = Application::SEVERITY_DEBUG );
+  public function create( string $message, $data = [], string $namespace = '', int $severity = Application::SEVERITY_DEBUG );
 
   /**
    * @param string               $message   The log message pattern
    * @param array|object|Storage $data      The pattern insertion or additional data
    * @param string               $namespace The namespace for the log entry
    */
-  public function debug( $message, $data = [], $namespace = '' );
+  public function debug( string $message, $data = [], string $namespace = '' );
   /**
    * @param string               $message   The log message pattern
    * @param array|object|Storage $data      The pattern insertion or additional data
    * @param string               $namespace The namespace for the log entry
    */
-  public function info( $message, $data = [], $namespace = '' );
+  public function info( string $message, $data = [], string $namespace = '' );
   /**
    * @param string               $message   The log message pattern
    * @param array|object|Storage $data      The pattern insertion or additional data
    * @param string               $namespace The namespace for the log entry
    */
-  public function notice( $message, $data = [], $namespace = '' );
+  public function notice( string $message, $data = [], string $namespace = '' );
   /**
    * @param string               $message   The log message pattern
    * @param array|object|Storage $data      The pattern insertion or additional data
    * @param string               $namespace The namespace for the log entry
    */
-  public function warning( $message, $data = [], $namespace = '' );
+  public function warning( string $message, $data = [], string $namespace = '' );
   /**
    * @param string               $message   The log message pattern
    * @param array|object|Storage $data      The pattern insertion or additional data
    * @param string               $namespace The namespace for the log entry
    */
-  public function error( $message, $data = [], $namespace = '' );
+  public function error( string $message, $data = [], string $namespace = '' );
   /**
    * @param string               $message   The log message pattern
    * @param array|object|Storage $data      The pattern insertion or additional data
    * @param string               $namespace The namespace for the log entry
    */
-  public function critical( $message, $data = [], $namespace = '' );
+  public function critical( string $message, $data = [], string $namespace = '' );
 
   /**
    * The name of the logger
    *
    * @return string
    */
-  public function getChannel();
+  public function getChannel(): string;
   /**
    * @param string $value
    */
-  public function setChannel( $value );
+  public function setChannel( string $value );
   /**
    * Maximum severity level that will be logged
    *
    * @return int
    */
-  public function getSeverity();
+  public function getSeverity(): int;
   /**
    * @param int $value
    */
-  public function setSeverity( $value );
+  public function setSeverity( int $value );
 }
 
 /**
  * Class Log
  * @package Framework\Helper
  *
- * @property-read string $file      The default log file
- * @property-read string $name
- * @property-read string $namespace Default namespace for the log entry
+ * @property-read FileInterface $file The default log file
  */
 class Log implements LogInterface, Helper\AccessableInterface {
   use Helper\Accessable;
@@ -145,7 +143,7 @@ class Log implements LogInterface, Helper\AccessableInterface {
    * @param string        $channel
    * @param int           $severity
    */
-  public function __construct( FileInterface $directory, $channel, $severity ) {
+  public function __construct( FileInterface $directory, string $channel, int $severity ) {
 
     $this->_directory = $directory;
     $this->_channel   = $channel;
@@ -156,7 +154,7 @@ class Log implements LogInterface, Helper\AccessableInterface {
   }
 
   //
-  public function create( $message, $data = [], $namespace = '', $severity = Application::SEVERITY_DEBUG ) {
+  public function create( string $message, $data = [], string $namespace = '', int $severity = Application::SEVERITY_DEBUG ) {
 
     // check type against logging level
     if( !self::$protect && $severity > Application::SEVERITY_NONE && $severity <= $this->getSeverity() ) {
@@ -210,27 +208,27 @@ class Log implements LogInterface, Helper\AccessableInterface {
   }
 
   //
-  public function debug( $message, $data = [], $namespace = '' ) {
+  public function debug( string $message, $data = [], string $namespace = '' ) {
     return $this->create( $message, $data, $namespace, Application::SEVERITY_DEBUG );
   }
   //
-  public function info( $message, $data = [], $namespace = '' ) {
+  public function info( string $message, $data = [], string $namespace = '' ) {
     return $this->create( $message, $data, $namespace, Application::SEVERITY_INFO );
   }
   //
-  public function notice( $message, $data = [], $namespace = '' ) {
+  public function notice( string $message, $data = [], string $namespace = '' ) {
     return $this->create( $message, $data, $namespace, Application::SEVERITY_NOTICE );
   }
   //
-  public function warning( $message, $data = [], $namespace = '' ) {
+  public function warning( string $message, $data = [], string $namespace = '' ) {
     return $this->create( $message, $data, $namespace, Application::SEVERITY_WARNING );
   }
   //
-  public function error( $message, $data = [], $namespace = '' ) {
+  public function error( string $message, $data = [], string $namespace = '' ) {
     return $this->create( $message, $data, $namespace, Application::SEVERITY_ERROR );
   }
   //
-  public function critical( $message, $data = [], $namespace = '' ) {
+  public function critical( string $message, $data = [], string $namespace = '' ) {
     return $this->create( $message, $data, $namespace, Application::SEVERITY_CRITICAL );
   }
 
@@ -242,13 +240,13 @@ class Log implements LogInterface, Helper\AccessableInterface {
    *
    * @return FileInterface
    */
-  protected function getFile( $prefix = null ) {
+  protected function getFile( ?string $prefix = null ): FileInterface {
     return $this->_directory->get( ( $prefix ? ( $prefix . '-' ) : '' ) . $this->getChannel() );
   }
   /**
    * @return Event\StorageInterface
    */
-  protected function getEventStorage() {
+  protected function getEventStorage(): Event\StorageInterface {
 
     //
     if( empty( $this->event_storage ) ) {
@@ -259,19 +257,19 @@ class Log implements LogInterface, Helper\AccessableInterface {
   }
 
   //
-  public function getChannel() {
+  public function getChannel(): string {
     return $this->_channel;
   }
   //
-  public function setChannel( $value ) {
+  public function setChannel( string $value ) {
     $this->_channel = $value;
   }
   //
-  public function getSeverity() {
+  public function getSeverity(): int {
     return $this->_severity;
   }
   //
-  public function setSeverity( $severity ) {
+  public function setSeverity( int $severity ) {
     $this->_severity = $severity;
   }
 }

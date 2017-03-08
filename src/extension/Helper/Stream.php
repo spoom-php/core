@@ -24,7 +24,7 @@ interface StreamInterface extends \Countable {
    * @return static
    * @throws StreamExceptionInvalid Invalid input or instance stream
    */
-  public function write( $content, $offset = null );
+  public function write( $content, int $offset = null );
   /**
    * Read from the stream
    *
@@ -35,7 +35,7 @@ interface StreamInterface extends \Countable {
    * @return string
    * @throws StreamExceptionInvalid Invalid input or instance stream
    */
-  public function read( $length = 0, $offset = null, $stream = null );
+  public function read( int $length = 0, int $offset = null, StreamInterface $stream = null );
 
   /**
    * Move the internal cursor within the stream
@@ -45,7 +45,7 @@ interface StreamInterface extends \Countable {
    * @return static
    * @throws \InvalidArgumentException when the offset is negative
    */
-  public function seek( $offset = 0 );
+  public function seek( int $offset = 0 );
 
   /**
    * Get the internal stream resource
@@ -58,7 +58,7 @@ interface StreamInterface extends \Countable {
    *
    * @return int
    */
-  public function getOffset();
+  public function getOffset(): int;
   /**
    * Get the raw metadata of the stream
    *
@@ -66,26 +66,26 @@ interface StreamInterface extends \Countable {
    *
    * @return array|mixed
    */
-  public function getMeta( $key = null );
+  public function getMeta( string $key = null );
 
   /**
    * Write to the stream is allowed
    *
    * @return bool
    */
-  public function isWritable();
+  public function isWritable(): bool;
   /**
    * Read from the stream is allowed
    *
    * @return bool
    */
-  public function isReadable();
+  public function isReadable(): bool;
   /**
    * Seek the stream is allowed
    *
    * @return bool
    */
-  public function isSeekable();
+  public function isSeekable(): bool;
 }
 /**
  * Class Stream
@@ -118,7 +118,7 @@ class Stream implements StreamInterface, AccessableInterface {
   }
 
   //
-  public function write( $content, $offset = null ) {
+  public function write( $content, int $offset = null ) {
     if( !$this->isWritable() ) throw new StreamExceptionInvalid( $this, 'write' );
     else {
 
@@ -136,7 +136,7 @@ class Stream implements StreamInterface, AccessableInterface {
     }
   }
   //
-  public function read( $length = 0, $offset = null, $stream = null ) {
+  public function read( int $length = 0, int $offset = null, StreamInterface $stream = null ) {
     if( !$this->isReadable() ) throw new StreamExceptionInvalid( $this, 'read' );
     else {
 
@@ -157,7 +157,7 @@ class Stream implements StreamInterface, AccessableInterface {
   }
 
   //
-  public function seek( $offset = 0 ) {
+  public function seek( int $offset = 0 ) {
     if( !$this->isSeekable() ) throw new StreamExceptionInvalid( $this, 'seek' );
     else if( $offset < 0 ) throw new \InvalidArgumentException( 'Offset must be non-negative' );
     else fseek( $this->_resource, $offset );
@@ -175,28 +175,28 @@ class Stream implements StreamInterface, AccessableInterface {
     return $this->_resource;
   }
   //
-  public function getOffset() {
+  public function getOffset(): int {
     return $this->_resource ? ftell( $this->_resource ) : 0;
   }
   //
-  public function getMeta( $key = null ) {
+  public function getMeta( string $key = null ) {
 
     $tmp = $this->_resource ? stream_get_meta_data( $this->_resource ) : null;
-    if( empty( $tmp ) || empty( $key ) ) return $tmp;
-    else return !empty( $tmp[ $key ] ) ? $tmp[ $key ] : null;
+    if( !isset( $tmp ) || !isset( $key ) ) return $tmp;
+    else return $tmp[ $key ] ?? null;
   }
 
   //
-  public function isWritable() {
+  public function isWritable(): bool {
     $tmp = $this->getMeta( 'mode' );
     return $tmp && preg_match( '/(r\+|w\+?|a\+?|x\+?)/i', $tmp );
   }
   //
-  public function isReadable() {
+  public function isReadable(): bool {
     return true;
   }
   //
-  public function isSeekable() {
+  public function isSeekable(): bool {
     return (bool) $this->getMeta( 'seekable' );
   }
 
@@ -206,7 +206,7 @@ class Stream implements StreamInterface, AccessableInterface {
    * @return StreamInterface
    * @throws \InvalidArgumentException
    */
-  public static function instance( $value ) {
+  public static function instance( $value ): StreamInterface {
     return $value instanceof StreamInterface ? $value : new static( $value );
   }
 }

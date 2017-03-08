@@ -6,22 +6,25 @@ use Spoom\Framework\Helper;
 /**
  * Interface ConverterInterface
  * @package Framework\Helper
+ *
+ * @property-read string $format Used format name
+ * @property-read string $name   The converter name
  */
 interface ConverterInterface extends Helper\FailableInterface {
 
   /**
    * Serialize the content to a formatted (based on the meta property) string
    *
-   * @param mixed    $content The content to serialize
-   * @param resource $stream  Optional output stream
+   * @param mixed                       $content The content to serialize
+   * @param Helper\StreamInterface|null $stream  Optional output stream
    *
    * @return string|null
    */
-  public function serialize( $content, $stream = null );
+  public function serialize( $content, ?Helper\StreamInterface $stream = null ): ?string;
   /**
    * Unserialize string into a php value
    *
-   * @param string|resource $content The content (can be a stream) to unserialize
+   * @param string|Helper\StreamInterface $content The content (can be a stream) to unserialize
    *
    * @return mixed
    */
@@ -42,11 +45,11 @@ interface ConverterInterface extends Helper\FailableInterface {
   /**
    * @return string The name of the format that the converter use
    */
-  public function getFormat();
+  public function getFormat(): string;
   /**
    * @return string The unique name of the converter
    */
-  public function getName();
+  public function getName(): string;
 }
 /**
  * Class Converter
@@ -73,7 +76,7 @@ class Converter implements Helper\AccessableInterface {
   /**
    * @param ConverterInterface[] $list
    */
-  public function __construct( $list = [] ) {
+  public function __construct( array $list = [] ) {
     foreach( $list as $converter ) {
       $this->add( $converter );
     }
@@ -94,7 +97,7 @@ class Converter implements Helper\AccessableInterface {
    *
    * @return static
    */
-  public function setMap( $custom, $format = null ) {
+  public function setMap( $custom, ?string $format = null ) {
     if( is_array( $custom ) ) $this->_map = $custom;
     else $this->_map[ $custom ] = $format;
 
@@ -103,11 +106,11 @@ class Converter implements Helper\AccessableInterface {
   /**
    * Remove a previously defined mapping
    *
-   * @param string $custom
+   * @param string|null $custom
    *
    * @return static
    */
-  public function removeMap( $custom = null ) {
+  public function removeMap( ?string $custom = null ) {
     if( $custom === null ) $this->_map = [];
     else unset( $this->_map[ $custom ] );
 
@@ -120,9 +123,9 @@ class Converter implements Helper\AccessableInterface {
    *
    * @return array|string|null
    */
-  public function getMap( $custom = null ) {
+  public function getMap( ?string $custom = null ) {
     if( $custom === null ) return $this->_map;
-    else return isset( $this->_map[ $custom ] ) ? $this->_map[ $custom ] : null;
+    else return $this->_map[ $custom ] ?? null;
   }
 
   /**
@@ -134,13 +137,13 @@ class Converter implements Helper\AccessableInterface {
    * @return $this
    * @throws \InvalidArgumentException Try to add a non ConverterInterface class
    */
-  public function add( $converter, $overwrite = true ) {
+  public function add( ConverterInterface $converter, bool $overwrite = true ) {
 
     if( !( $converter instanceof ConverterInterface ) ) throw new \InvalidArgumentException( 'Converter must implement the ' . ConverterInterface::class );
     else {
 
       $format = $converter->getFormat();
-      $tmp    = isset( $this->list[ $format ] ) ? $this->list[ $format ] : null;
+      $tmp = $this->list[ $format ] ?? null;
       if( empty( $tmp ) || $overwrite ) $this->list[ $format ] = $converter;
 
       return $this;
@@ -153,7 +156,7 @@ class Converter implements Helper\AccessableInterface {
    *
    * @param string|null $format The format of the converter, or null for remove all
    */
-  public function remove( $format = null ) {
+  public function remove( ?string $format = null ) {
 
     if( empty( $format ) ) $this->list = [];
     else unset( $this->list[ (string) $format ] );
@@ -165,14 +168,14 @@ class Converter implements Helper\AccessableInterface {
    *
    * @return ConverterInterface|ConverterInterface[]|null
    */
-  public function get( $format = null ) {
+  public function get( ?string $format = null ) {
     if( $format === null ) return $this->list;
     else {
 
       $tmp = $this->getMap( $format );
       if( $tmp ) $format = $tmp;
 
-      return ( isset( $this->list[ $format ] ) ? $this->list[ $format ] : null );
+      return $this->list[ $format ] ?? null;
     }
   }
 }

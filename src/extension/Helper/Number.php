@@ -14,7 +14,7 @@ abstract class Number {
    *
    * @return bool
    */
-  public static function is( $input, $simple = false ) {
+  public static function is( $input, bool $simple = false ): bool {
     if( is_int( $input ) || is_float( $input ) ) return true;
     else if( !$simple ) {
 
@@ -31,7 +31,7 @@ abstract class Number {
    *
    * @return bool
    */
-  public static function isInteger( $input ) {
+  public static function isInteger( $input ): bool {
     return self::is( $input ) && (string) (int) $input === (string) $input;
   }
   /**
@@ -41,7 +41,7 @@ abstract class Number {
    *
    * @return bool
    */
-  public static function isReal( $input ) {
+  public static function isReal( $input ): bool {
     return is_float( self::read( $input ) );
   }
 
@@ -75,7 +75,7 @@ abstract class Number {
    *
    * @return string|mixed
    */
-  public static function write( $input, $precision = null, $default = null ) {
+  public static function write( $input, ?int $precision = null, $default = null ) {
     if( !self::is( $input ) ) return $default;
     else {
 
@@ -95,7 +95,7 @@ abstract class Number {
    *
    * @return bool
    */
-  public static function equal( $a, $b, $precision = 0 ) {
+  public static function equal( $a, $b, int $precision = 0 ): bool {
     return self::write( $a, $precision ) == self::write( $b, $precision );
   }
 }

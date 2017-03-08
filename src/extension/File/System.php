@@ -28,8 +28,9 @@ interface SystemInterface {
    * @param array  $meta Optional metadata checks
    *
    * @return bool
+   * @throws File\SystemException Unsuccessful operation, due to the underlying system
    */
-  public function exist( $path, array $meta = [] );
+  public function exist( string $path, array $meta = [] ): bool;
   /**
    * Write content to a file
    *
@@ -42,7 +43,7 @@ interface SystemInterface {
    * @throws SystemExceptionPermission If the path is not writeable
    * @throws SystemException Unsuccessful operation, due to the underlying system
    */
-  public function write( $path, $content, $append = true, array $meta = [] );
+  public function write( string $path, $content, bool $append = true, array $meta = [] );
   /**
    * Read a file contents
    *
@@ -56,7 +57,7 @@ interface SystemInterface {
    * @throws SystemExceptionPermission If the path is not readable
    * @throws SystemException Unsuccessful operation, due to the underlying system
    */
-  public function read( $path, $stream = null );
+  public function read( string $path, $stream = null ):?string;
 
   /**
    * Return a path handler object
@@ -65,7 +66,7 @@ interface SystemInterface {
    *
    * @return FileInterface
    */
-  public function get( $path );
+  public function get( string $path ): FileInterface;
   /**
    * List directory contents
    *
@@ -79,7 +80,7 @@ interface SystemInterface {
    * @throws SystemExceptionPermission If the path is not readable
    * @throws SystemException Unsuccessful operation, due to the underlying system
    */
-  public function search( $path, $pattern = null, $recursive = false, $directory = true );
+  public function search( string $path, ?string $pattern = null, bool $recursive = false, bool $directory = true ): array;
   /**
    * Create an empty directory or file
    *
@@ -92,7 +93,7 @@ interface SystemInterface {
    * @throws SystemExceptionPermission If the path is not writeable
    * @throws SystemException Unsuccessful operation, due to the underlying system
    */
-  public function create( $path, array $meta = [] );
+  public function create( string $path, array $meta = [] ): FileInterface;
   /**
    * Remove a directory or a file
    *
@@ -103,7 +104,7 @@ interface SystemInterface {
    * @throws SystemExceptionPermission If the path is not writeable
    * @throws SystemException Unsuccessful operation, due to the underlying system
    */
-  public function destroy( $path );
+  public function destroy( string $path );
 
   /**
    * Copy the content (or a directory with sub-content) to the destination
@@ -118,7 +119,7 @@ interface SystemInterface {
    * @throws SystemExceptionPermission If the path is not readable or the destination is not writeable
    * @throws SystemException Unsuccessful operation, due to the underlying system
    */
-  public function copy( $path, $destination, $move = false );
+  public function copy( string $path, string $destination, bool $move = false ): FileInterface;
 
   /**
    * Get the absolute and "real" path string from the normalized version
@@ -127,7 +128,7 @@ interface SystemInterface {
    *
    * @return string
    */
-  public function getPath( $path );
+  public function getPath( string $path ): string;
   /**
    * Get meta for a specific path
    *
@@ -137,7 +138,7 @@ interface SystemInterface {
    * @return array|mixed
    * @throws SystemException Unsuccessful operation, due to the underlying system
    */
-  public function getMeta( $path, $names = null );
+  public function getMeta( string $path, $names = null );
   /**
    * Set a path metadata, if not read only
    *
@@ -149,7 +150,7 @@ interface SystemInterface {
    *
    * @throws SystemException Unsuccessful operation, due to the underlying system
    */
-  public function setMeta( $path, $value, $name = null );
+  public function setMeta( string $path, $value, ?string $name = null );
 }
 
 /**
@@ -229,7 +230,7 @@ class System implements SystemInterface {
    *
    * @throws SystemExceptionRootInvalid Invalid root path
    */
-  public function __construct( $root ) {
+  public function __construct( string $root ) {
 
     $_root = is_link( $root ) ? realpath( $root ) : $root;
     if( $_root === false || !is_dir( $_root ) || !is_readable( $_root ) ) throw new SystemExceptionRootInvalid( $root );
@@ -249,7 +250,7 @@ class System implements SystemInterface {
   }
 
   //
-  public function exist( $path, array $meta = [] ) {
+  public function exist( string $path, array $meta = [] ): bool {
     $_path = $this->getPath( $path );
 
     $result = file_exists( $_path );
@@ -260,7 +261,7 @@ class System implements SystemInterface {
     return $result;
   }
   //
-  public function write( $path, $content, $append = true, array $meta = [] ) {
+  public function write( string $path, $content, bool $append = true, array $meta = [] ) {
 
     $_meta = $this->getMeta( $path );
     if( $_meta[ static::META_TYPE ] != static::TYPE_FILE ) throw new SystemExceptionTypeInvalid( $path, [ static::TYPE_FILE ] );
@@ -285,7 +286,7 @@ class System implements SystemInterface {
     }
   }
   //
-  public function read( $path, $stream = null ) {
+  public function read( string $path, $stream = null ):?string {
     if( !$this->exist( $path ) ) return $stream ? null : '';
     else {
 
@@ -307,11 +308,11 @@ class System implements SystemInterface {
   }
 
   //
-  public function get( $path ) {
+  public function get( string $path ): FileInterface {
     return new File( $this, $path );
   }
   //
-  public function search( $path, $pattern = null, $recursive = false, $directory = true ) {
+  public function search( string $path, ?string $pattern = null, bool $recursive = false, bool $directory = true ): array {
 
     $meta = $this->getMeta( $path );
     if( $meta[ static::META_TYPE ] != static::TYPE_DIRECTORY ) throw new SystemExceptionTypeInvalid( $path, [ static::TYPE_DIRECTORY ] );
@@ -345,7 +346,7 @@ class System implements SystemInterface {
     }
   }
   //
-  public function create( $path, array $meta = [] ) {
+  public function create( string $path, array $meta = [] ): FileInterface {
 
     if( !$this->exist( $path ) ) {
 
@@ -377,7 +378,7 @@ class System implements SystemInterface {
     return new File( $this, $path );
   }
   //
-  public function destroy( $path ) {
+  public function destroy( string $path ) {
     if( $this->exist( $path ) ) {
 
       // check for permissions
@@ -407,7 +408,7 @@ class System implements SystemInterface {
   }
 
   //
-  public function copy( $path, $destination, $move = false ) {
+  public function copy( string $path, string $destination, bool $move = false ): FileInterface {
     if( $this->exist( $path ) ) {
 
       // check for permissions
@@ -453,7 +454,7 @@ class System implements SystemInterface {
   }
 
   //
-  public function getPath( $path ) {
+  public function getPath( string $path ): string {
 
     if( empty( $path ) || $path == static::DIRECTORY_SEPARATOR ) return $this->root;
     else if( !isset( $this->cache_path[ $path ] ) ) {
@@ -478,7 +479,7 @@ class System implements SystemInterface {
     return $this->cache_path[ $path ];
   }
   //
-  public function getMeta( $path, $names = null ) {
+  public function getMeta( string $path, $names = null ) {
 
     // provide default values for meta types
     if( empty( $names ) ) $names = [
@@ -586,10 +587,10 @@ class System implements SystemInterface {
       $result[ $name ] = $this->cache_meta[ $path ][ $name ];
     }
 
-    return $result_name ? ( isset( $result[ $result_name ] ) ? $result[ $result_name ] : null ) : $result;
+    return $result_name ? ( $result[ $result_name ] ?? null ) : $result;
   }
   //
-  public function setMeta( $path, $value, $name = null ) {
+  public function setMeta( string $path, $value, ?string $name = null ) {
     $_path = $this->getPath( $path );
 
     // convert direct meta set
@@ -616,7 +617,7 @@ class System implements SystemInterface {
    * @return string
    * @throws SystemExceptionPathInvalid The path begins with static::DIRECTORY_PREVIOUS, which will voilate the root
    */
-  public static function path( $path ) {
+  public static function path( string $path ): string {
 
     if( !isset( self::$cache[ $path ] ) ) {
 
@@ -655,7 +656,7 @@ class System implements SystemInterface {
    *
    * @return string
    */
-  public static function directory( $path ) {
+  public static function directory( string $path ): string {
     return ltrim( rtrim( $path, static::DIRECTORY_SEPARATOR ) . static::DIRECTORY_SEPARATOR, static::DIRECTORY_SEPARATOR );
   }
 }
@@ -681,7 +682,7 @@ class SystemException extends Exception\Runtime implements SystemExceptionInterf
    * @param mixed           $error
    * @param \Throwable|null $previous
    */
-  public function __construct( $path, $error, \Throwable $previous = null ) {
+  public function __construct( string $path, $error, ?\Throwable $previous = null ) {
 
     $data = [ 'path' => $path, 'error' => $error ];
     parent::__construct( Text::insert( 'Failed file operation for \'{path}\'', $data ), static::ID, $data, $previous );
@@ -699,7 +700,7 @@ class SystemExceptionRootInvalid extends Exception\Runtime implements SystemExce
   /**
    * @param string $path The invalid path
    */
-  public function __construct( $path ) {
+  public function __construct( string $path ) {
 
     $data = [ 'path' => $path ];
     parent::__construct(
@@ -723,7 +724,7 @@ class SystemExceptionPathInvalid extends Exception\Runtime implements SystemExce
   /**
    * @param string $path The invalid path
    */
-  public function __construct( $path ) {
+  public function __construct( string $path ) {
     $data = [ 'path' => $path ];
     parent::__construct( Text::insert( 'Path is outside the root: \'{path}\'', $data ), static::ID, $data, null, Framework\Application::SEVERITY_WARNING );
   }
@@ -741,7 +742,7 @@ class SystemExceptionTypeInvalid extends Exception\Logic implements SystemExcept
    * @param string $path
    * @param array  $allow Allowed path types
    */
-  public function __construct( $path, array $allow ) {
+  public function __construct( string $path, array $allow ) {
 
     $data = [ 'path' => $path, 'allow' => implode( ',', $allow ) ];
     parent::__construct(
@@ -766,7 +767,7 @@ class SystemExceptionPermission extends Exception\Runtime implements SystemExcep
    * @param string $path
    * @param string $allow Required permission meta name
    */
-  public function __construct( $path, $allow ) {
+  public function __construct( string $path, string $allow ) {
 
     $data = [ 'path' => $path, 'allow' => $allow ];
     parent::__construct(

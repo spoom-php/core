@@ -6,9 +6,6 @@ use Spoom\Framework;
 /**
  * Class Native
  * @package Framework\Converter
- *
- * @property-read string $format Used format name
- * @property-read string $name   The converter name
  */
 class Native implements Framework\ConverterInterface, Helper\AccessableInterface {
   use Helper\Accessable;
@@ -18,7 +15,7 @@ class Native implements Framework\ConverterInterface, Helper\AccessableInterface
   const NAME   = 'native';
 
   //
-  public function serialize( $content, $stream = null ) {
+  public function serialize( $content, ?Helper\StreamInterface $stream = null ):?string {
     $this->setException();
 
     try {
@@ -27,7 +24,7 @@ class Native implements Framework\ConverterInterface, Helper\AccessableInterface
       if( !$stream ) return $result;
       else {
 
-        fwrite( $stream, $result );
+        $stream->write( $result );
         return null;
       }
 
@@ -42,8 +39,8 @@ class Native implements Framework\ConverterInterface, Helper\AccessableInterface
     $this->setException();
 
     // handle stream input
-    if( is_resource( $content ) ) {
-      $content = stream_get_contents( $content );
+    if( $content instanceof Helper\StreamInterface ) {
+      $content = $content->read();
     }
 
     try {
@@ -65,11 +62,11 @@ class Native implements Framework\ConverterInterface, Helper\AccessableInterface
   }
 
   //
-  public function getFormat() {
+  public function getFormat(): string {
     return static::FORMAT;
   }
   //
-  public function getName() {
+  public function getName(): string {
     return static::NAME;
   }
 }

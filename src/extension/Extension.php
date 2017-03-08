@@ -5,11 +5,20 @@ use Spoom\Framework\Helper;
 /**
  * Interface ExtensionInterface
  * @package Spoom\Framework
+ *
+ * @property-read File\SystemInterface             $filesystem Filesystem, relative to the extension's root
+ * @property-read string                           $id         Unique name
+ * @property-read Extension\ConfigurationInterface $configuration
+ * @property-read Extension\LocalizationInterface  $localization
+ * @property-read LogInterface                     $log
+ * @property-read Event\StorageInterface           $event_storage
  */
 interface ExtensionInterface {
 
   /**
-   * Get language string from the extension language object. It's a proxy for Localization::getPattern() method
+   * Get language string from the extension language object
+   *
+   * It's a proxy for Localization::getPattern() method
    *
    * @param string       $index
    * @param array|string $insertion
@@ -17,16 +26,18 @@ interface ExtensionInterface {
    *
    * @return string
    */
-  public function text( $index, $insertion = null, $default = '' );
+  public function text( string $index, $insertion = null, string $default = '' ): string;
   /**
-   * Get configuration variable from extension configuration object. It's a proxy for Configuration::get() method
+   * Get configuration variable from extension configuration object
+   *
+   * It's a proxy for Configuration::get() method
    *
    * @param string $index
    * @param mixed  $default
    *
    * @return mixed
    */
-  public function option( $index, $default = null );
+  public function option( string $index, $default = null );
 
   /**
    * Get or search file(s) in the extension's directory
@@ -36,17 +47,19 @@ interface ExtensionInterface {
    *
    * @return FileInterface|FileInterface[]
    */
-  public function file( $path = '', $pattern = null );
+  public function file( string $path = '', ?string $pattern = null );
 
   /**
-   * Triggers an event of the extension and return the event as the result
+   * Triggers an event with the extension's storage
+   *
+   * ..and return the event as the result
    *
    * @param string $name Event (name) to trigger
    * @param array  $data Default event data
    *
    * @return EventInterface
    */
-  public function trigger( $name, $data = [] );
+  public function trigger( string $name, $data = [] ): EventInterface;
 
   /**
    *
@@ -54,59 +67,47 @@ interface ExtensionInterface {
    *
    * @return File\SystemInterface
    */
-  public function getFilesystem();
+  public function getFilesystem(): File\SystemInterface;
   /**
    * @since 0.6.0
    *
    * @return string
    */
-  public function getId();
+  public function getId(): string;
   /**
    * @since 0.6.0
    *
    * @return Extension\ConfigurationInterface
    */
-  public function getConfiguration();
+  public function getConfiguration(): Extension\ConfigurationInterface;
   /**
    * @since 0.6.0
    *
    * @return Extension\LocalizationInterface
    */
-  public function getLocalization();
+  public function getLocalization(): Extension\LocalizationInterface;
   /**
    * @since 0.6.0
    *
    * @return LogInterface
    */
-  public function getLog();
+  public function getLog(): LogInterface;
   /**
    * @since ??
    *
    * @return Event\StorageInterface
    */
-  public function getEventStorage();
+  public function getEventStorage(): Event\StorageInterface;
 }
 
-/**@package Framework
- *
- * @property-read string                           $id            Unique name
- * @property-read Extension\ConfigurationInterface $configuration The configuration storage object
- * @property-read Extension\LocalizationInterface  $localization  The localization storage object
- * @property-read LogInterface                     $log           The default extension logger instance
- * @property-read Event\StorageInterface           $event_storage Event storage
- * @property-read File\SystemInterface             $filesystem    Filesystem, relative to the extension's root
+/**
+ * Class Extension
+ * @package Spoom\Framework
  */
 class Extension implements ExtensionInterface, Helper\AccessableInterface {
   use Helper\Accessable;
 
   const ID = 'spoom-framework';
-
-  /**
-   * Extension instance cache
-   *
-   * @var array[string]Extension
-   */
-  private static $instance = [];
 
   /**
    * Default directory for localization files
@@ -118,6 +119,13 @@ class Extension implements ExtensionInterface, Helper\AccessableInterface {
    * warning: DO NOT TOUCH THIS! This directory is hardcoded in the autoloader
    */
   const DIRECTORY_CONFIGURATION = 'configuration/';
+
+  /**
+   * Extension instance cache
+   *
+   * @var array[string]Extension
+   */
+  private static $instance = [];
 
   /**
    * Extension directory
@@ -143,8 +151,14 @@ class Extension implements ExtensionInterface, Helper\AccessableInterface {
    * @var Event\StorageInterface
    */
   private $_event_storage;
+  /**
+   * @var LogInterface
+   */
   private $_log;
 
+  /**
+   *
+   */
   protected function __construct() {
 
     $this->_filesystem = new File\System( dirname( __DIR__ ) );
@@ -171,63 +185,29 @@ class Extension implements ExtensionInterface, Helper\AccessableInterface {
     $this->_log           = clone $this->_log;
   }
 
-  /**
-   * Get language string from the extension language object. It's a proxy for Localization::getPattern() method
-   *
-   * @param string       $index
-   * @param array|string $insertion
-   * @param string       $default
-   *
-   * @return string
-   */
-  public function text( $index, $insertion = null, $default = '' ) {
+  //
+  public function text( string $index, $insertion = null, string $default = '' ): string {
     return $this->getLocalization()->getPattern( $index, $insertion, $default );
   }
-  /**
-   * Get configuration variable from extension configuration object. It's a proxy for Configuration::get() method
-   *
-   * @param string $index
-   * @param mixed  $default
-   *
-   * @return mixed
-   */
-  public function option( $index, $default = null ) {
+  //
+  public function option( string $index, $default = null ) {
     return $this->getConfiguration()->get( $index, $default );
   }
 
-  /**
-   * Get or search file(s) in the extension's directory
-   *
-   * @param string      $path    Sub-path, relative from the extension directory
-   * @param string|null $pattern Pattern for file listing. Accept '*' wildcard
-   *
-   * @return FileInterface|FileInterface[]
-   */
-  public function file( $path = '', $pattern = null ) {
+  //
+  public function file( string $path = '', ?string $pattern = null ) {
 
     $file = $this->getFilesystem()->get( $path );
     return empty( $pattern ) ? $file : $file->search( $pattern === '*' ? null : $pattern );
   }
 
-  /**
-   * Triggers an event of the extension and return the event as the result
-   *
-   * @param string $name Event (name) to trigger
-   * @param array  $data Default event data
-   *
-   * @return EventInterface
-   */
-  public function trigger( $name, $data = [] ) {
+  //
+  public function trigger( string $name, $data = [] ): EventInterface {
     return $this->getEventStorage()->trigger( new Event( $name, $data ) );
   }
 
-  /**
-   *
-   * @since ???
-   *
-   * @return File\SystemInterface
-   */
-  public function getFilesystem() {
+  //
+  public function getFilesystem(): File\SystemInterface {
 
     if( empty( $this->_filesystem ) ) {
 
@@ -235,44 +215,24 @@ class Extension implements ExtensionInterface, Helper\AccessableInterface {
 
     return $this->_filesystem;
   }
-  /**
-   * @since 0.6.0
-   *
-   * @return string
-   */
-  public function getId() {
+  //
+  public function getId(): string {
     return static::ID;
   }
-  /**
-   * @since 0.6.0
-   *
-   * @return Extension\ConfigurationInterface
-   */
-  public function getConfiguration() {
+  //
+  public function getConfiguration(): Extension\ConfigurationInterface {
     return $this->_configuration;
   }
-  /**
-   * @since 0.6.0
-   *
-   * @return Extension\LocalizationInterface
-   */
-  public function getLocalization() {
+  //
+  public function getLocalization(): Extension\LocalizationInterface {
     return $this->_localization;
   }
-  /**
-   * @since 0.6.0
-   *
-   * @return LogInterface
-   */
-  public function getLog() {
+  //
+  public function getLog(): LogInterface {
     return $this->_log;
   }
-  /**
-   * @since ??
-   *
-   * @return Event\StorageInterface
-   */
-  public function getEventStorage() {
+  //
+  public function getEventStorage(): Event\StorageInterface {
     return $this->_event_storage;
   }
 
@@ -284,6 +244,6 @@ class Extension implements ExtensionInterface, Helper\AccessableInterface {
   public static function instance() {
 
     $id = static::ID;
-    return isset( self::$instance[ $id ] ) ? self::$instance[ $id ] : ( self::$instance[ $id ] = new static() );
+    return self::$instance[ $id ] ?? ( self::$instance[ $id ] = new static() );
   }
 }

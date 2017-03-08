@@ -9,9 +9,6 @@ use Spoom\Framework\ConverterInterface;
 /**
  * Class Ini
  * @package Framework\Converter
- *
- * @property-read string $format Used format name
- * @property-read string $name   The converter name
  */
 class Ini implements ConverterInterface, Helper\AccessableInterface {
   use Helper\Accessable;
@@ -21,7 +18,7 @@ class Ini implements ConverterInterface, Helper\AccessableInterface {
   const NAME   = 'ini';
 
   //
-  public function serialize( $content, $stream = null ) {
+  public function serialize( $content, ?Helper\StreamInterface $stream = null ):?string {
     $this->setException();
 
     $result = [];
@@ -41,7 +38,7 @@ class Ini implements ConverterInterface, Helper\AccessableInterface {
     if( !$stream ) return $result;
     else {
 
-      fwrite( $stream, $result );
+      $stream->write( $result );
       return null;
     }
   }
@@ -50,8 +47,8 @@ class Ini implements ConverterInterface, Helper\AccessableInterface {
     $this->setException();
 
     // handle stream input
-    if( is_resource( $content ) ) {
-      $content = stream_get_contents( $content );
+    if( $content instanceof Helper\StreamInterface ) {
+      $content = $content->read();
     }
 
     $result = (object) [];
@@ -86,7 +83,7 @@ class Ini implements ConverterInterface, Helper\AccessableInterface {
    * @param object|array $enumerable
    * @param string       $root
    */
-  protected function flatten( array &$input, $enumerable, $root = '' ) {
+  protected function flatten( array &$input, $enumerable, string $root = '' ) {
     foreach( $enumerable as $key => $value ) {
 
       $key = $root . ( empty( $root ) ? '' : '.' ) . $key;
@@ -105,11 +102,11 @@ class Ini implements ConverterInterface, Helper\AccessableInterface {
   }
 
   //
-  public function getFormat() {
+  public function getFormat(): string {
     return static::FORMAT;
   }
   //
-  public function getName() {
+  public function getName(): string {
     return static::NAME;
   }
 }

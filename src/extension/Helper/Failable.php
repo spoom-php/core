@@ -3,19 +3,21 @@
 /**
  * Interface FailableInterface
  * @package Framework\Helper
+ *
+ * @propert \Throwable $exception
  */
 interface FailableInterface {
 
   /**
-   * @return \Exception|null
+   * @return \Throwable|null
    */
-  public function getException();
+  public function getException(): ?\Throwable;
   /**
-   * @param \Exception|FailableInterface|null $value
+   * @param \Throwable|FailableInterface|null $value
    *
    * @return bool
    */
-  public function setException( $value = null );
+  public function setException( $value = null ): bool;
 }
 /**
  * Trait Failable
@@ -24,22 +26,22 @@ interface FailableInterface {
 trait Failable {
 
   /**
-   * @var \Exception|null
+   * @var \Throwable|null
    */
   protected $_exception;
 
   /**
-   * @return \Exception|null
+   * @return \Throwable|null
    */
-  public function getException() {
+  public function getException(): ?\Throwable {
     return $this->_exception;
   }
   /**
-   * @param \Exception|FailableInterface|null $value
+   * @param \Throwable|FailableInterface|null $value
    *
    * @return bool
    */
-  public function setException( $value = null ) {
+  public function setException( $value = null ): bool {
     $this->_exception = $value instanceof FailableInterface ? $value->getException() : $value;
     return !empty( $this->_exception );
   }

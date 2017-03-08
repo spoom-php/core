@@ -23,7 +23,7 @@ interface LocalizationInterface extends Storage\PermanentInterface {
    *
    * @return null|string
    */
-  public function getLocalization( $active = false );
+  public function getLocalization( bool $active = false ): ?string;
   /**
    * Set the current localization name
    *
@@ -31,7 +31,7 @@ interface LocalizationInterface extends Storage\PermanentInterface {
    *
    * @param string|null $value
    */
-  public function setLocalization( $value = null );
+  public function setLocalization( ?string $value = null );
 }
 
 /**
@@ -77,7 +77,7 @@ class Localization extends Storage\File implements LocalizationInterface {
    *
    * @return bool
    */
-  protected function validate( $name ) {
+  protected function validate( string $name ): bool {
 
     // search in the cache first
     if( in_array( $name, $this->cache ) ) return true;
@@ -94,7 +94,7 @@ class Localization extends Storage\File implements LocalizationInterface {
     }
   }
   //
-  protected function searchFile( $namespace, $format = null ) {
+  protected function searchFile( ?string $namespace, ?string $format = null ): FileInterface {
 
     $tmp = $this->getDirectory();
     try {
@@ -134,11 +134,11 @@ class Localization extends Storage\File implements LocalizationInterface {
   }
 
   //
-  public function getLocalization( $active = false ) {
+  public function getLocalization( bool $active = false ):?string {
     return $active ? $this->cache : $this->_localization;
   }
   //
-  public function setLocalization( $value = null ) {
+  public function setLocalization( ?string $value = null ) {
     $this->_localization = $value;
   }
 }

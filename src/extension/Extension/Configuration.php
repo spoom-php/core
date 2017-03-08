@@ -17,13 +17,13 @@ interface ConfigurationInterface extends Storage\PermanentInterface {
   /**
    * @param bool $active Return the currenty active or the desired value
    *
-   * @return null|string
+   * @return string|null
    */
-  public function getEnvironment( $active = false );
+  public function getEnvironment( bool $active = false ): ?string;
   /**
    * @param string|null $value
    */
-  public function setEnvironment( $value = null );
+  public function setEnvironment( ?string $value = null );
 }
 
 /**
@@ -70,7 +70,7 @@ class Configuration extends Storage\File implements ConfigurationInterface {
    *
    * @return bool
    */
-  protected function validate( $name ) {
+  protected function validate( string $name ): bool {
 
     // search in the cache first
     if( in_array( $name, $this->cache ) ) return true;
@@ -87,7 +87,7 @@ class Configuration extends Storage\File implements ConfigurationInterface {
     }
   }
   //
-  protected function searchFile( $namespace, $format = null ) {
+  protected function searchFile( ?string $namespace, ?string $format = null ): FileInterface {
 
     $tmp = $this->getDirectory();
     try {
@@ -129,11 +129,11 @@ class Configuration extends Storage\File implements ConfigurationInterface {
   }
 
   //
-  public function getEnvironment( $active = false ) {
+  public function getEnvironment( bool $active = false ):?string {
     return $active ? $this->cache : $this->_environment;
   }
   //
-  public function setEnvironment( $value = null ) {
+  public function setEnvironment( ?string $value = null ) {
     $this->_environment = $value;
   }
 }

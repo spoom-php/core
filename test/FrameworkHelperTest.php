@@ -138,6 +138,9 @@ class FrameworkHelperTest extends TestCase {
    * @dataProvider providerConverter
    *
    * @param ConverterInterface $converter
+   *
+   * @depends      testConverter
+   * @depends      testStream
    */
   public function testConverterType( ConverterInterface $converter ) {
 
@@ -148,10 +151,10 @@ class FrameworkHelperTest extends TestCase {
 
     // check for stream support
     $content = (object) [ 'test1' => (object) [ 'test2' => (object) [ 'test3' => 3 ], 'test4' => 4 ] ];
-    $tmp     = fopen( 'php://memory', 'w+' );
+    $tmp = Helper\Stream::instance( fopen( 'php://memory', 'w+' ) );
 
     $converter->serialize( $content, $tmp );
-    fseek( $tmp, 0 );
+    $tmp->seek( 0 );
     $this->assertNull( $converter->getException() );
     $this->assertEquals( $content, $converter->unserialize( $tmp ) );
   }

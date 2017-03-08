@@ -122,7 +122,7 @@ abstract class Enumerable {
    *
    * @return bool True if the test is an enumerable
    */
-  public static function is( $test ) {
+  public static function is( $test ): bool {
     return self::isArrayLike( $test ) || is_object( $test );
   }
   /**
@@ -133,7 +133,7 @@ abstract class Enumerable {
    *
    * @return bool true, if the $data was a real array with numeric indexes
    */
-  public static function isArray( $test, $ordered = true ) {
+  public static function isArray( $test, bool $ordered = true ): bool {
 
     if( !is_array( $test ) ) return false;
     else if( $ordered ) for( $i = 0; $i < count( $test ); ++$i ) {
@@ -152,7 +152,7 @@ abstract class Enumerable {
    * @since 0.6.4
    * @return bool
    */
-  public static function isArrayLike( $test ) {
+  public static function isArrayLike( $test ): bool {
     return is_array( $test ) || $test instanceof \ArrayAccess;
   }
 
@@ -200,7 +200,7 @@ abstract class Enumerable {
    *
    * @return array|object|null
    */
-  public static function read( $input, $object = true, $default = null ) {
+  public static function read( $input, bool $object = true, $default = null ) {
 
     if( is_object( $input ) ) {
 
@@ -231,7 +231,7 @@ abstract class Enumerable {
    *
    * @return object The { exist: bool, key: string, container: object|array }
    */
-  public static function search( &$enumerable, $tokens, $build = false ) {
+  public static function search( &$enumerable, array $tokens, bool $build = false ) {
 
     // if not index return the whole source
     $result = (object) [ 'exist' => true, 'key' => null, 'container' => &$enumerable ];

@@ -5,6 +5,13 @@ use Spoom\Framework\Helper\StreamInterface;
 /**
  * Interface FileInterface
  * @package Framework
+ *
+ * @property-read string               $path
+ * @property array                     $meta
+ * @property-read File\SystemInterface $system
+ * @property-read bool                 $directory
+ * @property-read bool                 $readable
+ * @property-read bool                 $writeable
  */
 interface FileInterface {
 
@@ -13,7 +20,7 @@ interface FileInterface {
    *
    * @return string
    */
-  public function __toString();
+  public function __toString(): string;
 
   /**
    * Check if the path is exists, with the given meta data
@@ -21,9 +28,9 @@ interface FileInterface {
    * @param array $meta Optional metadata checks
    *
    * @return bool
-   * @throws Exception Unsuccessful operation, due to the underlying system
+   * @throws File\SystemException Unsuccessful operation, due to the underlying system
    */
-  public function exist( array $meta = [] );
+  public function exist( array $meta = [] ): bool;
   /**
    * Write content to a file
    *
@@ -31,11 +38,11 @@ interface FileInterface {
    * @param bool                   $append Append or rewrite the file
    * @param array                  $meta   Change (or set the new) file's meta
    *
-   * @throws Exception If the path is a directory not a file
-   * @throws Exception If the path is not writeable
-   * @throws Exception Unsuccessful operation, due to the underlying system
+   * @throws File\SystemExceptionTypeInvalid If the path is a directory not a file
+   * @throws File\SystemExceptionPermission If the path is not writeable
+   * @throws File\SystemException Unsuccessful operation, due to the underlying system
    */
-  public function write( $content, $append = true, array $meta = [] );
+  public function write( $content, bool $append = true, array $meta = [] );
   /**
    * Read a file contents
    *
@@ -44,11 +51,11 @@ interface FileInterface {
    * @param StreamInterface|null $stream Output stream if not null
    *
    * @return string|null
-   * @throws Exception If the path is a directory not a file
-   * @throws Exception If the path is not readable
-   * @throws Exception Unsuccessful operation, due to the underlying system
+   * @throws File\SystemExceptionTypeInvalid If the path is a directory not a file
+   * @throws File\SystemExceptionPermission If the path is not readable
+   * @throws File\SystemException Unsuccessful operation, due to the underlying system
    */
-  public function read( $stream = null );
+  public function read( $stream = null ): ?string;
 
   /**
    * Get a sub-path
@@ -57,7 +64,7 @@ interface FileInterface {
    *
    * @return FileInterface
    */
-  public function get( $path );
+  public function get( string $path ): FileInterface;
   /**
    * List directory contents
    *
@@ -66,28 +73,28 @@ interface FileInterface {
    * @param bool        $directory Include or exclude directories
    *
    * @return FileInterface[]
-   * @throws Exception If the path is a file not a directory
-   * @throws Exception If the path is not readable
-   * @throws Exception Unsuccessful operation, due to the underlying system
+   * @throws File\SystemExceptionTypeInvalid If the path is a file not a directory
+   * @throws File\SystemExceptionPermission If the path is not readable
+   * @throws File\SystemException Unsuccessful operation, due to the underlying system
    */
-  public function search( $pattern = null, $recursive = false, $directory = true );
+  public function search( ?string $pattern = null, bool $recursive = false, bool $directory = true ): array;
   /**
    * Create an empty directory or file
    *
    * @param array $meta The newly created path meta
    *
    * @return FileInterface
-   * @throws Exception If the path is not writeable
-   * @throws Exception Unsuccessful operation, due to the underlying system
+   * @throws File\SystemExceptionPermission If the path is not writeable
+   * @throws File\SystemException Unsuccessful operation, due to the underlying system
    */
-  public function create( array $meta = [] );
+  public function create( array $meta = [] ): FileInterface;
   /**
    * Remove a directory or a file
    *
    * This will remove the directory AND ALL the contents in it
    *
-   * @throws Exception If the path is not writeable
-   * @throws Exception Unsuccessful operation, due to the underlying system
+   * @throws File\SystemExceptionPermission If the path is not writeable
+   * @throws File\SystemException Unsuccessful operation, due to the underlying system
    */
   public function destroy();
 
@@ -100,10 +107,10 @@ interface FileInterface {
    * @param bool   $move Remove the source after the successful copy
    *
    * @return FileInterface
-   * @throws Exception If the path is not readable or the destination is not writeable
-   * @throws Exception Unsuccessful operation, due to the underlying system
+   * @throws File\SystemExceptionPermission If the path is not readable or the destination is not writeable
+   * @throws File\SystemException Unsuccessful operation, due to the underlying system
    */
-  public function copy( $destination, $move = false );
+  public function copy( string $destination, bool $move = false ): FileInterface;
 
   /**
    * Get the path string
@@ -112,42 +119,42 @@ interface FileInterface {
    *
    * @return string
    */
-  public function getPath( $real = false );
+  public function getPath( bool $real = false ): string;
   /**
    * Get a (or all) meta for a specific path
    *
-   * @param string|null $name
+   * @param string[]|string|null $names
    *
    * @return array|mixed
-   * @throws Exception Unsuccessful operation, due to the underlying system
+   * @throws File\SystemException Unsuccessful operation, due to the underlying system
    */
-  public function getMeta( $name = null );
+  public function getMeta( $names = null );
   /**
    * Set a path metadata, if not read only
    *
    * @param mixed       $value
    * @param string|null $name
    *
-   * @throws Exception Unsuccessful operation, due to the underlying system
+   * @throws File\SystemException Unsuccessful operation, due to the underlying system
    */
-  public function setMeta( $value, $name = null );
+  public function setMeta( $value, ?string $name = null );
 
   /**
    * @return File\SystemInterface
    */
-  public function getSystem();
+  public function getSystem(): File\SystemInterface;
   /**
    * @return bool
    */
-  public function isDirectory();
+  public function isDirectory(): bool;
   /**
    * @return bool
    */
-  public function isReadable();
+  public function isReadable(): bool;
   /**
    * @return bool
    */
-  public function isWriteable();
+  public function isWriteable(): bool;
 }
 /**
  * Class File
@@ -169,40 +176,40 @@ class File implements FileInterface {
    * @param File\SystemInterface $system
    * @param string               $path
    */
-  public function __construct( File\SystemInterface $system, $path ) {
+  public function __construct( File\SystemInterface $system, string $path ) {
     $this->_system = $system;
     $this->_path   = $path;
   }
 
   //
-  public function __toString() {
+  public function __toString(): string {
     return $this->getPath( true );
   }
 
   //
-  public function exist( array $meta = [] ) {
+  public function exist( array $meta = [] ): bool {
     return $this->_system->exist( $this->_path, $meta );
   }
 
   //
-  public function write( $content, $append = true, array $meta = [] ) {
+  public function write( $content, bool $append = true, array $meta = [] ) {
     $this->_system->write( $this->_path, $content, $append, $meta );
   }
   //
-  public function read( $stream = null ) {
+  public function read( $stream = null ): string {
     return $this->_system->read( $this->_path, $stream );
   }
 
   //
-  public function get( $path ) {
+  public function get( string $path ): FileInterface {
     return empty( $path ) ? $this : new static( $this->_system, File\System::directory( $this->getPath() ) . $path );
   }
   //
-  public function search( $pattern = null, $recursive = false, $directory = true ) {
+  public function search( ?string $pattern = null, bool $recursive = false, bool $directory = true ): array {
     return $this->_system->search( $this->_path, $pattern, $recursive, $directory );
   }
   //
-  public function create( array $meta = [] ) {
+  public function create( array $meta = [] ): FileInterface {
     return $this->_system->create( $this->_path, $meta );
   }
   //
@@ -211,37 +218,37 @@ class File implements FileInterface {
   }
 
   //
-  public function copy( $destination, $move = false ) {
+  public function copy( string $destination, bool $move = false ): FileInterface {
     return $this->_system->copy( $this->_path, $destination, $move );
   }
 
   //
-  public function getPath( $real = false ) {
+  public function getPath( bool $real = false ): string {
     return $real ? $this->_system->getPath( $this->_path ) : $this->_path;
   }
   //
-  public function getMeta( $name = null ) {
-    return $this->_system->getMeta( $this->_path, $name );
+  public function getMeta( $names = null ) {
+    return $this->_system->getMeta( $this->_path, $names );
   }
   //
-  public function setMeta( $value, $name = null ) {
+  public function setMeta( $value, ?string $name = null ) {
     return $this->_system->setMeta( $this->_path, $value, $name );
   }
 
   //
-  public function getSystem() {
+  public function getSystem(): File\SystemInterface {
     return $this->_system;
   }
   //
-  public function isDirectory() {
+  public function isDirectory(): bool {
     return $this->getMeta( File\System::META_TYPE ) == File\System::TYPE_DIRECTORY;
   }
   //
-  public function isReadable() {
+  public function isReadable(): bool {
     return $this->getMeta( File\System::META_PERMISSION_READ );
   }
   //
-  public function isWriteable() {
+  public function isWriteable(): bool {
     return $this->getMeta( File\System::META_PERMISSION_WRITE );
   }
 }

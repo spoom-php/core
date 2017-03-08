@@ -8,8 +8,6 @@ use Spoom\Framework;
  * @package Framework\Converter
  *
  * @property JsonMeta    $meta
- * @property-read string $format Used format name
- * @property-read string $name   The converter name
  */
 class Json implements Framework\ConverterInterface, Helper\AccessableInterface {
   use Helper\Accessable;
@@ -28,7 +26,7 @@ class Json implements Framework\ConverterInterface, Helper\AccessableInterface {
    * @param int          $depth
    * @param bool         $associative
    */
-  public function __construct( $options = JSON_PARTIAL_OUTPUT_ON_ERROR, $depth = 512, $associative = false ) {
+  public function __construct( $options = JSON_PARTIAL_OUTPUT_ON_ERROR, int $depth = 512, bool $associative = false ) {
     $this->_meta = $options instanceof JsonMeta ? $options : new JsonMeta( $options, $depth, $associative );
   }
   /**
@@ -39,7 +37,7 @@ class Json implements Framework\ConverterInterface, Helper\AccessableInterface {
   }
 
   //
-  public function serialize( $content, $stream = null ) {
+  public function serialize( $content, ?Helper\StreamInterface $stream = null ):?string {
     $this->setException();
 
     $result = null;
@@ -59,7 +57,7 @@ class Json implements Framework\ConverterInterface, Helper\AccessableInterface {
     if( !$stream ) return $result;
     else {
 
-      fwrite( $stream, $result );
+      $stream->write( $result );
       return null;
     }
   }
@@ -68,8 +66,8 @@ class Json implements Framework\ConverterInterface, Helper\AccessableInterface {
     $this->setException();
 
     // handle stream input
-    if( is_resource( $content ) ) {
-      $content = stream_get_contents( $content );
+    if( $content instanceof Helper\StreamInterface ) {
+      $content = $content->read();
     }
 
     $result = null;
@@ -88,11 +86,17 @@ class Json implements Framework\ConverterInterface, Helper\AccessableInterface {
     return $result;
   }
 
-  //
+  /**
+   * @return JsonMeta
+   */
   public function getMeta() {
-    return clone $this->_meta;
+    return $this->_meta;
   }
-  //
+  /**
+   * @param JsonMeta $value
+   *
+   * @return $this
+   */
   public function setMeta( $value ) {
     if( !( $value instanceof JsonMeta ) ) throw new \InvalidArgumentException( 'Meta must be a subclass of ' . JsonMeta::class, $value );
     else $this->_meta = $value;
@@ -101,11 +105,11 @@ class Json implements Framework\ConverterInterface, Helper\AccessableInterface {
   }
 
   //
-  public function getFormat() {
+  public function getFormat(): string {
     return static::FORMAT;
   }
   //
-  public function getName() {
+  public function getName(): string {
     return static::NAME;
   }
 }
@@ -143,7 +147,7 @@ class JsonMeta {
    * @param int  $depth
    * @param bool $associative
    */
-  public function __construct( $options = JSON_PARTIAL_OUTPUT_ON_ERROR, $depth = 512, $associative = false ) {
+  public function __construct( int $options = JSON_PARTIAL_OUTPUT_ON_ERROR, int $depth = 512, bool $associative = false ) {
     $this->options     = $options;
     $this->depth       = $depth;
     $this->associative = $associative;

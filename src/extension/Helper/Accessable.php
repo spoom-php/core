@@ -108,10 +108,10 @@ class AccessibleExceptionMissing extends Exception\Logic {
   const ID = '20#framework';
 
   /**
-   * @param string $instance
+   * @param object $instance
    * @param string $property The requested property name
    */
-  public function __construct( $instance, $property ) {
+  public function __construct( $instance, string $property ) {
 
     $data = [ 'class' => get_class( $instance ), 'property' => $property ];
     parent::__construct( Text::insert( 'There is no \'{property}\' in {class}', $data ), static::ID, $data, null, Application::SEVERITY_NOTICE );

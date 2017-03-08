@@ -16,7 +16,7 @@ interface StorageInterface {
    *
    * @return EventInterface
    */
-  public function trigger( EventInterface $event );
+  public function trigger( EventInterface $event ): EventInterface;
 
   /**
    * Attach callback(s) for event(s)
@@ -30,7 +30,7 @@ interface StorageInterface {
    *
    * @return static
    */
-  public function attach( $callback, $event = null, $priority = null );
+  public function attach( callable $callback, $event = null, ?int $priority = null );
   /**
    * Detach callback(s) from event(s)
    *
@@ -41,7 +41,7 @@ interface StorageInterface {
    *
    * @return static
    */
-  public function detach( $event = null, $callback = null );
+  public function detach( $event = null, ?callable $callback = null );
   /**
    * Detach every callable from the storage
    *
@@ -54,7 +54,7 @@ interface StorageInterface {
    *
    * @return string[]
    */
-  public function getEventList();
+  public function getEventList(): array;
   /**
    * Get attached callbacks for an event
    *
@@ -63,14 +63,14 @@ interface StorageInterface {
    *
    * @return \callable[]
    */
-  public function getCallbackList( $event = null, array &$priority = [] );
+  public function getCallbackList( ?string $event = null, array &$priority = [] ): array;
 
   /**
    * Storage (mostly unique) name
    *
    * @return string
    */
-  public function getName();
+  public function getName(): string;
 }
 /**
  * Class Storage
@@ -116,7 +116,7 @@ class Storage implements StorageInterface, Helper\AccessableInterface {
   }
 
   //
-  public function trigger( EventInterface $event ) {
+  public function trigger( EventInterface $event ): EventInterface {
 
     if( $event->getName() == static::EVENT_GLOBAL ) throw new \InvalidArgumentException( 'Global event is not triggerable' );
     else try {
@@ -141,45 +141,41 @@ class Storage implements StorageInterface, Helper\AccessableInterface {
   }
 
   //
-  public function attach( $callback, $event = null, $priority = self::PRIORITY_DEFAULT ) {
+  public function attach( callable $callback, $event = null, ?int $priority = self::PRIORITY_DEFAULT ) {
 
-    if( !is_callable( $callback ) ) throw new \InvalidArgumentException( 'Only valid callable can be attached to an event' );
-    else {
+    // narmalize the input (global event handling, and non-array events)
+    if( $event === null ) $event = [ static::EVENT_GLOBAL => $priority ];
+    else if( !is_array( $event ) ) $event = [ $event => $priority ];
 
-      // narmalize the input (global event handling, and non-array events)
-      if( $event === null ) $event = [ static::EVENT_GLOBAL => $priority ];
-      else if( !is_array( $event ) ) $event = [ $event => $priority ];
+    foreach( $event as $index => $value ) {
 
-      foreach( $event as $index => $value ) {
-
-        // add default priority
-        if( is_numeric( $index ) ) {
-          $index = $value;
-          $value = $priority;
-        }
-
-        // prevent duplicate callback for an event (and remove from all if it's a global attach)
-        $this->detach( $index == static::EVENT_GLOBAL ? array_keys( $this->callback ) : $index, $callback );
-
-        // create empty event storage
-        if( !isset( $this->callback[ $index ] ) ) {
-          $this->callback[ $index ] = [];
-          $this->priority[ $index ] = [];
-        }
-
-        // add callback with priority
-        $this->callback[ $index ][] = $callback;
-        $this->priority[ $index ][] = $value;
-
-        // recalculate the callback list order
-        $this->sort( $index );
+      // add default priority
+      if( is_numeric( $index ) ) {
+        $index = $value;
+        $value = $priority;
       }
 
-      return $this;
+      // prevent duplicate callback for an event (and remove from all if it's a global attach)
+      $this->detach( $index == static::EVENT_GLOBAL ? array_keys( $this->callback ) : $index, $callback );
+
+      // create empty event storage
+      if( !isset( $this->callback[ $index ] ) ) {
+        $this->callback[ $index ] = [];
+        $this->priority[ $index ] = [];
+      }
+
+      // add callback with priority
+      $this->callback[ $index ][] = $callback;
+      $this->priority[ $index ][] = $value;
+
+      // recalculate the callback list order
+      $this->sort( $index );
     }
+
+    return $this;
   }
   //
-  public function detach( $event = null, $callback = null ) {
+  public function detach( $event = null, ?callable $callback = null ) {
 
     // handle global event callbacks and force array input
     if( $event === null ) $event = [ static::EVENT_GLOBAL ];
@@ -217,7 +213,7 @@ class Storage implements StorageInterface, Helper\AccessableInterface {
    *
    * @param string $event
    */
-  protected function sort( $event ) {
+  protected function sort( string $event ) {
     if( !empty( $this->callback[ $event ] ) ) {
 
       // sort by the priorities, but keep the original indexes (we need it for the repopulation)
@@ -237,26 +233,26 @@ class Storage implements StorageInterface, Helper\AccessableInterface {
   }
 
   //
-  public function getEventList() {
+  public function getEventList(): array {
     return array_values( array_filter( array_keys( $this->callback ), function ( $event ) {
       // filter out the global event handler
       return $event != static::EVENT_GLOBAL;
     } ) );
   }
   //
-  public function getCallbackList( $event = null, array &$priority = [] ) {
+  public function getCallbackList( ?string $event = null, array &$priority = [] ): array {
 
     // handle global event callbacks
     if( $event === null ) {
       $event = static::EVENT_GLOBAL;
     }
 
-    $priority = isset( $this->priority[ $event ] ) ? $this->priority[ $event ] : [];
-    return isset( $this->callback[ $event ] ) ? $this->callback[ $event ] : [];
+    $priority = $this->priority[ $event ] ?? [];
+    return $this->callback[ $event ] ?? [];
   }
 
   //
-  public function getName() {
+  public function getName(): string {
     return $this->_name;
   }
 }

@@ -7,31 +7,33 @@ interface EventInterface extends StorageInterface, Helper\FailableInterface {
   /**
    * @return string
    */
-  public function getName();
+  public function getName(): string;
 
   /**
    * @return bool
    */
-  public function isStopped();
+  public function isStopped(): bool;
   /**
    * @param bool $value
    */
-  public function setStopped( $value = true );
+  public function setStopped( bool $value = true );
   /**
    * @return bool
    */
-  public function isPrevented();
+  public function isPrevented(): bool;
   /**
    * @param bool $value
    */
-  public function setPrevented( $value = true );
+  public function setPrevented( bool $value = true );
 }
 
 /**
- * @package Framework
+ * Class Event
+ * @package Spoom\Framework
  *
- * @property bool $stopped This flag doesn't stop the listener calls, but the listeners MUST respect it internally
- * @property bool $prevented
+ * @property      bool   $stopped This flag doesn't stop the listener calls, but the listeners MUST respect it internally
+ * @property      bool   $prevented
+ * @property-read string $name
  */
 class Event extends Storage implements EventInterface, Helper\AccessableInterface {
   use Helper\Failable;
@@ -55,7 +57,7 @@ class Event extends Storage implements EventInterface, Helper\AccessableInterfac
    * @param string     $name
    * @param mixed|null $data
    */
-  public function __construct( $name, $data = null ) {
+  public function __construct( string $name, $data = null ) {
     parent::__construct( $data, null );
 
     $this->_name = $name;
@@ -64,31 +66,31 @@ class Event extends Storage implements EventInterface, Helper\AccessableInterfac
   /**
    * @return string
    */
-  public function getName() {
+  public function getName(): string {
     return $this->_name;
   }
   /**
    * @return bool
    */
-  public function isStopped() {
+  public function isStopped(): bool {
     return $this->_stopped;
   }
   /**
    * @param bool $value
    */
-  public function setStopped( $value = true ) {
-    $this->_stopped = (bool) $value;
+  public function setStopped( bool $value = true ) {
+    $this->_stopped = $value;
   }
   /**
    * @return bool
    */
-  public function isPrevented() {
+  public function isPrevented(): bool {
     return $this->_prevented;
   }
   /**
    * @param bool $value
    */
-  public function setPrevented( $value = true ) {
-    $this->_prevented = (bool) $value;
+  public function setPrevented( bool $value = true ) {
+    $this->_prevented = $value;
   }
 }

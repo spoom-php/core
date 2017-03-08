@@ -36,15 +36,15 @@ class File extends Permanent {
    * @param ConverterInterface[] $converters Default converters for the permanent storage. The first converter will be the default format
    * @param string|null          $file       Single file storage in the root directory
    */
-  public function __construct( FileInterface $directory, $converters = [], $file = null ) {
+  public function __construct( FileInterface $directory, array $converters = [], ?string $file = null ) {
     $this->_directory = $directory;
     $this->_file      = $file;
 
-    parent::__construct( null, $this->isMulti() ? 'default' : null, self::CACHE_NONE, $converters );
+    parent::__construct( null, $this->isMulti() ? 'default' : null, static::CACHE_NONE, $converters );
   }
 
   //
-  public function save( $namespace = null, $format = null ) {
+  public function save( ?string $namespace = null, ?string $format = null ) {
 
     // save previous file data for later
     if( isset( $this->converter_cache[ $namespace ] ) ) try {
@@ -74,12 +74,12 @@ class File extends Permanent {
   }
 
   //
-  protected function write( $content, $namespace = null ) {
+  protected function write( string $content, ?string $namespace = null ) {
     $file = $this->searchFile( $namespace, $this->converter_cache[ $namespace ]->getFormat() );
     $file->write( $content, false );
   }
   //
-  protected function read( $namespace = null ) {
+  protected function read( ?string $namespace = null ): ?string {
 
     $file = $this->searchFile( $namespace );
     if( !$file->exist() ) return null;
@@ -92,7 +92,7 @@ class File extends Permanent {
     }
   }
   //
-  protected function destroy( $namespace = null ) {
+  protected function destroy( ?string $namespace = null ) {
 
     $file = $this->searchFile( $namespace );
     if( $file ) $file->destroy();
@@ -101,13 +101,13 @@ class File extends Permanent {
   /**
    * Get file by namespace and format
    *
-   * @param string      $namespace The namespace
+   * @param string|null $namespace The namespace
    * @param string|null $format    Force extension for the file
    *
    * @return FileInterface The file MAY not exists
    * @throws \InvalidArgumentException Empty namespace with multi storage
    */
-  protected function searchFile( $namespace, $format = null ) {
+  protected function searchFile( ?string $namespace, ?string $format = null ): FileInterface {
 
     // define and check the namespace
     $namespace = !$this->isMulti() ? $this->_file : $namespace;
@@ -133,7 +133,7 @@ class File extends Permanent {
    *
    * @return bool
    */
-  public function isMulti() {
+  public function isMulti(): bool {
     return empty( $this->_file );
   }
   /**
@@ -141,7 +141,7 @@ class File extends Permanent {
    *
    * @return FileInterface
    */
-  public function getDirectory() {
+  public function getDirectory(): FileInterface {
     return $this->_directory;
   }
   /**
@@ -149,7 +149,7 @@ class File extends Permanent {
    *
    * @param FileInterface $value
    */
-  public function setDirectory( $value ) {
+  public function setDirectory( FileInterface $value ) {
     $this->_directory = $value;
   }
 
@@ -158,7 +158,7 @@ class File extends Permanent {
    *
    * @return string
    */
-  public function getFile() {
+  public function getFile(): string {
     return $this->_file;
   }
   /**
@@ -166,7 +166,7 @@ class File extends Permanent {
    *
    * @param string $value
    */
-  public function setFile( $value ) {
-    $this->_file = (string) $value;
+  public function setFile( string $value ) {
+    $this->_file = $value;
   }
 }

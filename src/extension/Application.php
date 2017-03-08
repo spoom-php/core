@@ -113,7 +113,7 @@ class Application {
    * @param File\SystemInterface $root
    * @param LogInterface         $log
    */
-  public function __construct( $environment, $localization, File\SystemInterface $root, LogInterface $log ) {
+  public function __construct( string $environment, string $localization, File\SystemInterface $root, LogInterface $log ) {
 
     if( self::$instance ) throw new \LogicException( 'Unable to create another instance, use ::instance() instead' );
     else if( empty( $environment ) ) throw new \InvalidArgumentException( "Missing configuration: 'environment'" );
@@ -173,7 +173,7 @@ class Application {
    *
    * @return string
    */
-  public function getEnvironment() {
+  public function getEnvironment(): string {
     return $this->_environment;
   }
   /**
@@ -183,7 +183,7 @@ class Application {
    *
    * @return FileInterface
    */
-  public function getRootFile( $path = '' ) {
+  public function getRootFile( string $path = '' ): FileInterface {
     return $this->_root->get( $path );
   }
   /**
@@ -191,9 +191,9 @@ class Application {
    *
    * @param string $path
    *
-   * @return File|FileInterface
+   * @return FileInterface
    */
-  public function getPublicFile( $path = '' ) {
+  public function getPublicFile( string $path = '' ): FileInterface {
     return $this->_filesystem->get( $path );
   }
   /**
@@ -201,7 +201,7 @@ class Application {
    *
    * @return LogInterface
    */
-  public function getLog() {
+  public function getLog(): LogInterface {
     return $this->_log;
   }
 
@@ -210,7 +210,7 @@ class Application {
    *
    * @return string
    */
-  public function getLocalization() {
+  public function getLocalization(): string {
     return $this->_localization;
   }
   /**
@@ -218,7 +218,7 @@ class Application {
    *
    * @param string $value
    */
-  public function setLocalization( $value ) {
+  public function setLocalization( string $value ) {
     $this->_localization = trim( $value );
   }
 
@@ -230,7 +230,7 @@ class Application {
    * @param int   $severity Maximum severity level tht should be reported
    * @param array $configuration
    */
-  public static function environment( $severity, array $configuration = [] ) {
+  public static function environment( int $severity, array $configuration = [] ) {
 
     // setup error reporting in PHP
     $reporting = ~E_ALL;
@@ -278,7 +278,7 @@ class ApplicationExceptionFeature extends Exception\Runtime {
    * @param string $feature Extension or feature name
    * @param string $version Minimum required version
    */
-  public function __construct( $feature, $version ) {
+  public function __construct( string $feature, string $version ) {
 
     $data = [ 'feature' => $feature, 'version' => $version ];
     parent::__construct( '(Un)serialization failed, due to an error', static::ID, $data, null, Application::SEVERITY_CRITICAL );

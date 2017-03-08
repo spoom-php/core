@@ -22,58 +22,58 @@ interface PermanentInterface extends StorageInterface, Helper\FailableInterface 
    * Save the namespace's actual storage data
    *
    * @param string|null $namespace The namespace to save
-   * @param string|null $converter
+   * @param string|null $format
    *
    * @return $this
    */
-  public function save( $namespace = null, $converter = null );
+  public function save( ?string $namespace = null, ?string $format = null );
   /**
-   * Load the given namespace into the storage
+   * Load a namespace into the storage
    *
    * @param string|null $namespace The namespace to load
    *
    * @return $this
    */
-  public function load( $namespace = null );
+  public function load( ?string $namespace = null );
   /**
-   * Remove the namespace data from the storage and the permanent storage
+   * Remove the namespace data from the storage and from the permanent storage
    *
    * @param string|null $namespace
    *
    * @return $this
    */
-  public function remove( $namespace = null );
+  public function remove( ?string $namespace = null );
 
   /**
-   * Get the converter object that parse and build the input and output object/string
+   * Get the converter object that store format handlers
    *
    * @return Converter
    */
-  public function getConverter();
+  public function getConverter(): Converter;
   /**
    * Autoload the namespaces or not
    *
    * @return bool
    */
-  public function isAuto();
+  public function isAuto(): bool;
   /**
    * Set new value to autoload the namespaces or not
    *
    * @param bool $value
    */
-  public function setAuto( $value );
+  public function setAuto( bool $value );
   /**
    * Get the default converter format
    *
    * @return string
    */
-  public function getFormat();
+  public function getFormat(): string;
   /**
    * Set the default converter format
    *
    * @param string $value
    */
-  public function setFormat( $value );
+  public function setFormat( string $value );
 }
 /**
  * Class Permanent
@@ -147,7 +147,7 @@ abstract class Permanent extends Storage implements PermanentInterface {
    * @param int                  $caching    The caching mechanism
    * @param ConverterInterface[] $converters Default converters for the permanent storage. The first converter will be the default format
    */
-  public function __construct( $data = null, $namespace = null, $caching = self::CACHE_SIMPLE, $converters = [] ) {
+  public function __construct( $data = null, ?string $namespace = null, int $caching = self::CACHE_SIMPLE, array $converters = [] ) {
     parent::__construct( $data, $namespace, $caching );
 
     // setup the converters
@@ -165,33 +165,26 @@ abstract class Permanent extends Storage implements PermanentInterface {
     $this->converter_cache = Enumerable::copy( $this->converter_cache );
   }
 
-  /**
-   * Save the namespace's actual storage data in the given (or the default) format
-   *
-   * @param string|null $namespace The namespace to save
-   * @param string|null $format    The format that the converter instance will recognise
-   *
-   * @return $this
-   */
-  public function save( $namespace = null, $format = null ) {
+  //
+  public function save( ?string $namespace = null, ?string $format = null ) {
     $this->setException();
 
     try {
 
       // get or create the converter
       $tmp       = $this->_converter->get( $format ?: $this->_format );
-      $converter = isset( $this->converter_cache[ $namespace ] ) ? $this->converter_cache[ $namespace ] : null;
+      $converter = $this->converter_cache[ $namespace ] ?? null;
       if( $converter != $tmp ) $converter = clone $tmp;
 
       if( empty( $converter ) ) throw new PermanentExceptionConverter( $namespace );
       else {
 
-        $index   = $namespace ? ( $namespace . self::SEPARATOR_NAMESPACE ) : '';
+        $index   = $namespace ? ( $namespace . static::SEPARATOR_NAMESPACE ) : '';
         $content = $this->get( $index );
 
         // trigger before save event for custom storage
         $extension = Extension::instance();
-        $event = $extension->trigger( self::EVENT_SAVE, [
+        $event   = $extension->trigger( static::EVENT_SAVE, [
           'instance'  => $this,
           'namespace' => $namespace,
           'converter' => $converter,
@@ -221,24 +214,18 @@ abstract class Permanent extends Storage implements PermanentInterface {
 
     return $this;
   }
-  /**
-   * Load the given namespace into the storage
-   *
-   * @param string|null $namespace The namespace to load
-   *
-   * @return $this
-   */
-  public function load( $namespace = null ) {
+  //
+  public function load( ?string $namespace = null ) {
     $this->setException();
 
     try {
 
-      $converter                           = isset( $this->converter_cache[ $namespace ] ) ? $this->converter_cache[ $namespace ] : null;
+      $converter                           = $this->converter_cache[ $namespace ] ?? null;
       $this->converter_cache[ $namespace ] = null;
 
       // trigger before load event for custom storage
       $extension = Extension::instance();
-      $event = $extension->trigger( self::EVENT_LOAD, [
+      $event                               = $extension->trigger( static::EVENT_LOAD, [
         'instance'  => $this,
         'namespace' => $namespace,
         'converter' => $converter
@@ -255,7 +242,7 @@ abstract class Permanent extends Storage implements PermanentInterface {
         if( !$event->isPrevented() ) {
 
           $content   = $this->read( $namespace );
-          $converter = isset( $this->converter_cache[ $namespace ] ) ? $this->converter_cache[ $namespace ] : null;
+          $converter                       = $this->converter_cache[ $namespace ] ?? null;
         }
 
         // check the converter
@@ -270,7 +257,7 @@ abstract class Permanent extends Storage implements PermanentInterface {
             else $this->converter_cache[ $namespace ] = $converter;
           }
 
-          $index = $namespace ? ( $namespace . self::SEPARATOR_NAMESPACE ) : '';
+          $index = $namespace ? ( $namespace . static::SEPARATOR_NAMESPACE ) : '';
           $this->set( $index, $content );
         }
       }
@@ -281,24 +268,18 @@ abstract class Permanent extends Storage implements PermanentInterface {
 
     return $this;
   }
-  /**
-   * Remove the namespace data from the storage with the permanent storage too
-   *
-   * @param string|null $namespace
-   *
-   * @return $this
-   */
-  public function remove( $namespace = null ) {
+  //
+  public function remove( ?string $namespace = null ) {
     $this->setException();
 
     try {
 
       // trigger before load event for custom storage
       $extension = Extension::instance();
-      $event     = $extension->trigger( self::EVENT_REMOVE, [
+      $event = $extension->trigger( static::EVENT_REMOVE, [
         'instance'  => $this,
         'namespace' => $namespace,
-        'converter' => isset( $this->converter_cache[ $namespace ] ) ? $this->converter_cache[ $namespace ] : null
+        'converter' => $this->converter_cache[ $namespace ] ?? null
       ] );
 
       // check the event result
@@ -309,7 +290,7 @@ abstract class Permanent extends Storage implements PermanentInterface {
         if( !$event->isPrevented() ) $this->destroy( $namespace );
 
         // do the rest of the remove
-        $index = $namespace ? ( $namespace . self::SEPARATOR_NAMESPACE ) : '';
+        $index = $namespace ? ( $namespace . static::SEPARATOR_NAMESPACE ) : '';
         $this->clear( $index );
 
         unset( $this->converter_cache[ $namespace ] );
@@ -325,7 +306,7 @@ abstract class Permanent extends Storage implements PermanentInterface {
   /**
    * @inheritdoc. Setup the autoloader for namespaces
    */
-  protected function search( $index, $build = false, $is_read = true ) {
+  protected function search( $index, bool $build = false, bool $is_read = true ) {
 
     // try to load the storage data if there is no already
     if( $this->isAuto() && !array_key_exists( $index->namespace, $this->converter_cache ) ) {
@@ -342,35 +323,25 @@ abstract class Permanent extends Storage implements PermanentInterface {
     return parent::search( $index, $build, $is_read );
   }
 
-  /**
-   * @return Converter
-   */
-  public function getConverter() {
+  //
+  public function getConverter(): Converter {
     return $this->_converter;
   }
-  /**
-   * @return bool
-   */
-  public function isAuto() {
+  //
+  public function isAuto(): bool {
     return $this->_auto;
   }
-  /**
-   * @param bool $value
-   */
-  public function setAuto( $value ) {
-    $this->_auto = (bool) $value;
+  //
+  public function setAuto( bool $value ) {
+    $this->_auto = $value;
   }
-  /**
-   * @return string
-   */
-  public function getFormat() {
+  //
+  public function getFormat(): string {
     return $this->_format;
   }
-  /**
-   * @param string $value
-   */
-  public function setFormat( $value ) {
-    $this->_format = (string) $value;
+  //
+  public function setFormat( string $value ) {
+    $this->_format = $value;
   }
 
   /**
@@ -379,7 +350,7 @@ abstract class Permanent extends Storage implements PermanentInterface {
    * @param string      $content   The content to write out
    * @param string|null $namespace The namespace of the content
    */
-  abstract protected function write( $content, $namespace = null );
+  abstract protected function write( string $content, ?string $namespace = null );
   /**
    * Read a namespace data from the permanent storage. The meta for the namespace MAY available through the meta property
    *
@@ -387,13 +358,13 @@ abstract class Permanent extends Storage implements PermanentInterface {
    *
    * @return null|string
    */
-  abstract protected function read( $namespace = null );
+  abstract protected function read( ?string $namespace = null ): ?string;
   /**
    * Destroy a namespace's permanent storage. The meta for the namespace MAY available through the meta property
    *
    * @param string|null $namespace The namespace
    */
-  abstract protected function destroy( $namespace = null );
+  abstract protected function destroy( ?string $namespace = null );
 }
 
 /**
@@ -406,9 +377,9 @@ class PermanentExceptionConverter extends Exception\Logic {
   const ID = '23#framework';
 
   /**
-   * @param string $namespace The namespace that has no converter
+   * @param string|null $namespace The namespace that has no converter
    */
-  public function __construct( $namespace ) {
+  public function __construct( ?string $namespace ) {
 
     $data = [ 'namespace' => $namespace ];
     parent::__construct( '(Un)serialization failed, due to an error', static::ID, $data, null, Application::SEVERITY_WARNING );
