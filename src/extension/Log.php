@@ -2,12 +2,11 @@
 
 use Spoom\Framework\Converter\Json;
 use Spoom\Framework\Helper;
+use Spoom\Framework\Helper\Enumerable;
 
 /**
  * Interface LogInterface
  * @package Framework\Helper
- *
- * TODO create Unittests
  *
  * @property string $channel  The name of the logger
  * @property int    $severity Maximum severity level that will be logged
@@ -71,6 +70,18 @@ interface LogInterface {
    * @param string               $namespace The namespace for the log entry
    */
   public function critical( string $message, $data = [], string $namespace = '' );
+  /**
+   * @param string               $message   The log message pattern
+   * @param array|object|Storage $data      The pattern insertion or additional data
+   * @param string               $namespace The namespace for the log entry
+   */
+  public function alert( string $message, $data = [], string $namespace = '' );
+  /**
+   * @param string               $message   The log message pattern
+   * @param array|object|Storage $data      The pattern insertion or additional data
+   * @param string               $namespace The namespace for the log entry
+   */
+  public function emergency( string $message, $data = [], string $namespace = '' );
 
   /**
    * The name of the logger
@@ -168,23 +179,22 @@ class Log implements LogInterface, Helper\AccessableInterface {
         $datetime = date( 'Y-m-d\TH:i:s', $sec ) . '.' . substr( $usec, 2, 4 ) . date( 'O', $sec );
 
         // add backtrace for the data, if needed
-        $data = $data instanceof StorageInterface ? $data : new Storage( $data );
-        if( !$data->exist( 'backtrace' ) ) $data->set( 'backtrace', array_slice( debug_backtrace(), 1 ) );
+        $data = Enumerable::read( $data, [] );
+        if( !isset( $data[ 'backtrace' ] ) ) $data[ 'backtrace' ] = array_slice( debug_backtrace(), 1 );
 
         // trigger event for the log entry
         $event = $this->getEventStorage()->trigger( new Event( static::EVENT_CREATE, [
-          'instance'    => $this,
-          'namespace'   => $namespace,
-          'severity'    => $severity,
-          'datetime'    => $datetime,
-          'description' => Helper\Text::insert( $message, $data, true ),
-          'message'     => $message,
-          'data'        => $data
+          'instance'  => $this,
+          'namespace' => $namespace,
+          'severity'  => $severity,
+          'datetime'  => $datetime,
+          'message'   => $message,
+          'data'      => $data
         ] ) );
         if( !$event->isPrevented() ) {
 
           $message     = $event->getString( 'message', $message );
-          $data        = $event->get( 'data', $data );
+          $data        = $event[ 'data' ] ?? $this->wrap( $data );
           $description = $event->getString( 'description', Helper\Text::insert( $message, $data, true ) );
           $datetime    = $event->getString( 'datetime', $datetime );
 
@@ -231,6 +241,53 @@ class Log implements LogInterface, Helper\AccessableInterface {
   public function critical( string $message, $data = [], string $namespace = '' ) {
     return $this->create( $message, $data, $namespace, Application::SEVERITY_CRITICAL );
   }
+  //
+  public function alert( string $message, $data = [], string $namespace = '' ) {
+    return $this->create( $message, $data, $namespace, Application::SEVERITY_ALERT );
+  }
+  //
+  public function emergency( string $message, $data = [], string $namespace = '' ) {
+    return $this->create( $message, $data, $namespace, Application::SEVERITY_EMERGENCY );
+  }
+
+  /**
+   * Preprocess the data before log it
+   *
+   * This will convert classes to array of properties with reflection
+   *
+   * @param mixed $data
+   * @param int   $deep Max process recursion
+   *
+   * @return mixed
+   */
+  public function wrap( $data, $deep = 10 ) {
+
+    if( --$deep < 0 || !Enumerable::is( $data ) ) return $data;
+    else {
+
+      // handle custom classes
+      if( is_object( $data ) && !( $data instanceof \StdClass ) ) {
+
+        $reflection = new \ReflectionClass( $data );
+        $tmp        = [ '__CLASS__' => $reflection->getName() ];
+
+        foreach( $reflection->getProperties() as $property ) {
+          if( !$property->isStatic() ) {
+            $property->setAccessible( true );
+
+            $key                                = $property->isPrivate() ? '-' : ( $property->isProtected() ? '#' : '+' );
+            $tmp[ $key . $property->getName() ] = $property->getValue( $data );
+          }
+        }
+
+        $data = $tmp;
+      }
+
+      //
+      foreach( $data as &$value ) $value = $this->wrap( $value );
+      return $data;
+    }
+  }
 
   /**
    * @since ???
@@ -240,13 +297,13 @@ class Log implements LogInterface, Helper\AccessableInterface {
    *
    * @return FileInterface
    */
-  protected function getFile( ?string $prefix = null ): FileInterface {
-    return $this->_directory->get( ( $prefix ? ( $prefix . '-' ) : '' ) . $this->getChannel() );
+  public function getFile( ?string $prefix = null ): FileInterface {
+    return $this->_directory->get( ( $prefix ? ( $prefix . '-' ) : '' ) . $this->getChannel() . '.log' );
   }
   /**
    * @return Event\StorageInterface
    */
-  protected function getEventStorage(): Event\StorageInterface {
+  public function getEventStorage(): Event\StorageInterface {
 
     //
     if( empty( $this->event_storage ) ) {

@@ -2,7 +2,6 @@
 
 use Spoom\Framework\Application;
 use Spoom\Framework\ExceptionInterface;
-use Spoom\Framework\LogInterface;
 use Spoom\Framework\Helper\Enumerable;
 
 /**
@@ -44,30 +43,13 @@ class Runtime extends \RuntimeException implements ExceptionInterface {
     parent::__construct( $message, (int) $id, $previous );
 
     $this->_id       = $id;
-    $this->_context  = Enumerable::read( $context, false );
+    $this->_context  = Enumerable::read( $context, [] );
     $this->_severity = (int) $severity;
   }
 
   //
   public function __toString() {
     return $this->getId() . ": '" . $this->getMessage() . "'";
-  }
-
-  //
-  public function log( $data = [], LogInterface $instance = null ) {
-
-    $instance = $instance ?: Application::instance()->getLog();
-    if( $instance ) {
-
-      // extend data
-      $data                = Enumerable::read( $data, false, [] );
-      $data[ 'exception' ] = $this;
-      $data[ 'backtrace' ] = false;
-
-      $instance->create( $this->message, $data, static::class . ':' . $this->getId(), $this->getSeverity() );
-    }
-
-    return $this;
   }
 
   //
@@ -85,15 +67,13 @@ class Runtime extends \RuntimeException implements ExceptionInterface {
 
   //
   public function jsonSerialize() {
-    return (object) [
+    return [
       'id'      => $this->getId(),
       'code'    => $this->getCode(),
       'message' => $this->getMessage(),
       'context' => $this->getContext(),
 
-      'line'     => $this->getFile() . ':' . $this->getLine(),
-      'trace'    => $this->getTrace(),
-      'previous' => $this->getPrevious()
+      'line' => $this->getFile() . ':' . $this->getLine()
     ];
   }
 }

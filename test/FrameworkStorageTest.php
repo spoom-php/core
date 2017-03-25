@@ -30,33 +30,24 @@ class FrameworkStorageTest extends TestCase {
     $this->assertEquals( '', $storage->getString( 'test1.test10' ) );
     $this->assertEquals( '', $storage->getString( 'test1.test10' ) );
 
-    // test namespace switching
-    $storage->namespace = 'test1';
-    $this->assertEquals( '', $storage->getString( 'test1.test8' ) );
-    $this->assertEquals( 'test', $storage->getString( 'test8' ) );
-    $this->assertEquals( 'test', $storage->getString( 'test1:test8' ) );
-    $storage->namespace = null;
-    $this->assertEquals( 'test', $storage->getString( 'test1.test8' ) );
-    $this->assertEquals( '', $storage->getString( 'test8' ) );
-
     // test value changing
-    $storage->set( 'test1.test9', 9 );
+    $storage[ 'test1.test9' ] = 9;
     $this->assertEquals( 9, $storage->get( 'test1.test9' ) );
     $this->assertEquals( 9, $storage->get( 'test1.test9' ) );
-    $storage->set( 'test0.test12', 1212 );
+    $storage[ 'test0.test12' ] = 1212;
     $this->assertEquals( 1212, $storage->get( 'test0.test12' ) );
 
     // test for structural change
     $this->assertEquals( 4, $storage->get( 'test1.test3.test4' ) );
-    $storage->set( 'test1.test3', 3 );
+    $storage[ 'test1.test3' ] = 3;
     $this->assertEquals( null, $storage->get( 'test1.test3.test4' ) );
     $this->assertEquals( 3, $storage->get( 'test1.test3' ) );
 
     // test for existance checks
-    $this->assertEquals( true, $storage->exist( 'test1.test3' ) );
-    $this->assertEquals( false, $storage->exist( 'test1.test11' ) );
-    $storage->clear( 'test1.test3' );
-    $this->assertEquals( false, $storage->exist( 'test1.test3' ) );
+    $this->assertEquals( true, isset( $storage[ 'test1.test3' ] ) );
+    $this->assertEquals( false, isset( $storage[ 'test1.test11' ] ) );
+    unset( $storage[ 'test1.test3' ] );
+    $this->assertEquals( false, isset( $storage[ 'test1.test3' ] ) );
 
     // check for arrayaccess behavior
     $this->assertEquals( 1212, $storage[ 'test0.test12' ] );
@@ -66,13 +57,13 @@ class FrameworkStorageTest extends TestCase {
     $this->assertEquals( false, isset( $storage[ 'test0.test12' ] ) );
 
     // test the storage in storage access and modification
-    $storage2 = new Storage( [ 'test30' => [ 'test0' => 'test0' ] ] );
-    $storage->set( 'test30', $storage2 );
+    $storage2            = new Storage( [ 'test30' => [ 'test0' => 'test0' ] ] );
+    $storage[ 'test30' ] = $storage2;
     $this->assertEquals( 'test0', $storage->get( 'test30.test30.test0' ) );
-    $storage->set( 'test30.test30.test1', 'test1' );
+    $storage[ 'test30.test30.test1' ] = 'test1';
     $this->assertEquals( 'test1', $storage->get( 'test30.test30.test1' ) );
     $this->assertEquals( 'test1', $storage2->get( 'test30.test1' ) );
-    $storage->set( 'test30.test30.test0', 'test2' );
+    $storage[ 'test30.test30.test0' ] = 'test2';
     $this->assertEquals( 'test2', $storage->get( 'test30.test30.test0' ) );
     $this->assertEquals( 'test2', $storage2->get( 'test30.test0' ) );
   }
@@ -86,34 +77,8 @@ class FrameworkStorageTest extends TestCase {
     $storage2 = clone $storage;
 
     // test object references after clone
-    $storage->set( 'test1.test2', 22 );
+    $storage[ 'test1.test2' ] = 22;
     $this->assertEquals( 2, $storage2->getNumber( 'test1.test2' ) );
-  }
-  /**
-   * @dataProvider provider
-   *
-   * @param Storage $storage
-   */
-  public function testExtend( $storage ) {
-
-    $storage->extend( 'test1.test2', 2 );
-    $this->assertEquals( 4, $storage->get( 'test1.test2' ) );
-
-    $storage->extend( 'test1.test8', '8' );
-    $this->assertEquals( 'test8', $storage->get( 'test1.test8' ) );
-
-    $storage->extend( 'test0', [ 'test13' => 13 ] );
-    $this->assertEquals( (object) [ 'test11' => 11, 'test12' => 12, 'test13' => 13 ], $storage->get( 'test0' ) );
-
-    // test custom object extend behavior
-    $storage2 = new Storage( [ 'test14' => 14 ] );
-    $storage->extend( 'test0', $storage2 );
-    $this->assertEquals( (object) ( [
-      'test11' => 11,
-      'test12' => 12,
-      'test13' => 13,
-      'test14' => 14
-    ] ), $storage->get( 'test0' ) );
   }
   /**
    * @dataProvider provider
@@ -122,13 +87,11 @@ class FrameworkStorageTest extends TestCase {
    */
   public function testEach( $storage ) {
 
-    $storage->each( function ( $key, $value, $index ) {
-      $this->assertEquals( 'test11', $key );
-      $this->assertEquals( 11, $value );
-      $this->assertEquals( 'test0.test11', $index );
-
-      return false;
-    }, 'test0' );
+    $allow = [ 'test0', 'test1' ];
+    $i     = 0;
+    foreach( $storage as $key => $value ) {
+      $this->assertEquals( $allow[ $i++ ], $key );
+    };
   }
 
   public function provider() {
@@ -150,7 +113,7 @@ class FrameworkStorageTest extends TestCase {
           'test8'  => 'test',
           'test20' => 9.9,
         ]
-      ], null, Storage::CACHE_NONE ) ],
+      ], false ) ],
       [ new Storage( [
         'test0' => (object) [
           'test11' => 11,
@@ -168,7 +131,7 @@ class FrameworkStorageTest extends TestCase {
           'test8'  => 'test',
           'test20' => 9.9,
         ]
-      ], null, Storage::CACHE_SIMPLE ) ]
+      ], true ) ]
     ];
   }
 }

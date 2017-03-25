@@ -136,7 +136,7 @@ class Application {
       set_exception_handler( function ( $exception ) {
 
         // log the exception
-        if( $exception ) Exception::wrap( $exception )->log();
+        if( $exception ) Exception::log( $exception );
 
       } );
 
@@ -155,7 +155,7 @@ class Application {
         }
 
         // log the fail
-        static::getLog()->create( 'Unexpected code failure: #{code} with \'{message}\' message, at \'{file}\'', [
+        $this->getLog()->create( 'Unexpected code failure: #{code} with \'{message}\' message, at \'{file}\'', [
           'code'    => $code,
           'message' => $message,
           'file'    => $file . ':' . $line

@@ -2,13 +2,15 @@
 
 use Spoom\Framework\Application;
 use Spoom\Framework\ConverterInterface;
+use Spoom\Framework\ConverterMap;
 use Spoom\Framework\Exception;
 use Spoom\Framework\Extension;
 use Spoom\Framework\Helper;
 use Spoom\Framework\Helper\Enumerable;
 use Spoom\Framework\Storage;
 use Spoom\Framework\StorageInterface;
-use Spoom\Framework\Converter;
+use Spoom\Framework\StorageMeta;
+use Spoom\Framework\StorageMetaSearch;
 
 /**
  * Interface PermanentInterface
@@ -47,9 +49,9 @@ interface PermanentInterface extends StorageInterface, Helper\FailableInterface 
   /**
    * Get the converter object that store format handlers
    *
-   * @return Converter
+   * @return ConverterMap
    */
-  public function getConverter(): Converter;
+  public function getConverterMap(): ConverterMap;
   /**
    * Autoload the namespaces or not
    *
@@ -86,7 +88,7 @@ interface PermanentInterface extends StorageInterface, Helper\FailableInterface 
  * TODO add support for full index save/load/remove?!
  *
  * @property-read Exception|null $exception The latest exception object
- * @property-read Converter      $converter The converter object that parse and build the input and output object/string
+ * @property-read ConverterMap   $converter The converter object that parse and build the input and output object/string
  * @property      bool           $auto      Autoload the namespaces or not
  * @property      string         $format    The default format for saving
  */
@@ -125,9 +127,9 @@ abstract class Permanent extends Storage implements PermanentInterface {
   /**
    * The converter list. Store the available converters
    *
-   * @var Converter
+   * @var ConverterMap
    */
-  protected $_converter;
+  protected $_converter_map;
   /**
    * Auto-load the namespaces or not
    *
@@ -142,16 +144,15 @@ abstract class Permanent extends Storage implements PermanentInterface {
   protected $_format = null;
 
   /**
-   * @param mixed|null           $data       The initial data
-   * @param string|null          $namespace  The default namespace
-   * @param int                  $caching    The caching mechanism
+   * @param object|array         $source     The initial data
+   * @param bool                 $caching
    * @param ConverterInterface[] $converters Default converters for the permanent storage. The first converter will be the default format
    */
-  public function __construct( $data = null, ?string $namespace = null, int $caching = self::CACHE_SIMPLE, array $converters = [] ) {
-    parent::__construct( $data, $namespace, $caching );
+  public function __construct( $source, bool $caching = true, array $converters = [] ) {
+    parent::__construct( $source, $caching );
 
     // setup the converters
-    $this->_converter = new Converter( $converters );
+    $this->_converter_map = new ConverterMap( $converters );
     if( count( $converters ) ) $this->setFormat( $converters[ 0 ]->getFormat() );
   }
 
@@ -161,7 +162,7 @@ abstract class Permanent extends Storage implements PermanentInterface {
   public function __clone() {
     parent::__clone();
 
-    $this->_converter      = clone $this->_converter;
+    $this->_converter_map  = clone $this->_converter_map;
     $this->converter_cache = Enumerable::copy( $this->converter_cache );
   }
 
@@ -172,19 +173,18 @@ abstract class Permanent extends Storage implements PermanentInterface {
     try {
 
       // get or create the converter
-      $tmp       = $this->_converter->get( $format ?: $this->_format );
+      $tmp       = $this->_converter_map->get( $format ?: $this->_format );
       $converter = $this->converter_cache[ $namespace ] ?? null;
       if( $converter != $tmp ) $converter = clone $tmp;
 
       if( empty( $converter ) ) throw new PermanentExceptionConverter( $namespace );
       else {
 
-        $index   = $namespace ? ( $namespace . static::SEPARATOR_NAMESPACE ) : '';
-        $content = $this->get( $index );
+        $content = $this[ $namespace ? ( $namespace . static::SEPARATOR_NAMESPACE ) : '' ];
 
         // trigger before save event for custom storage
         $extension = Extension::instance();
-        $event   = $extension->trigger( static::EVENT_SAVE, [
+        $event     = $extension->trigger( static::EVENT_SAVE, [
           'instance'  => $this,
           'namespace' => $namespace,
           'converter' => $converter,
@@ -225,14 +225,14 @@ abstract class Permanent extends Storage implements PermanentInterface {
 
       // trigger before load event for custom storage
       $extension = Extension::instance();
-      $event                               = $extension->trigger( static::EVENT_LOAD, [
+      $event     = $extension->trigger( static::EVENT_LOAD, [
         'instance'  => $this,
         'namespace' => $namespace,
         'converter' => $converter
       ] );
 
-      $content   = $event->get( 'content', null );
-      $converter = $event->get( 'converter', $converter );
+      $content   = $event[ 'content' ];
+      $converter = $event->getObject( 'converter', $converter );
 
       // check the event result
       if( $event->getException() ) throw $event->getException();
@@ -242,7 +242,7 @@ abstract class Permanent extends Storage implements PermanentInterface {
         if( !$event->isPrevented() ) {
 
           $content   = $this->read( $namespace );
-          $converter                       = $this->converter_cache[ $namespace ] ?? null;
+          $converter = $this->converter_cache[ $namespace ] ?? null;
         }
 
         // check the converter
@@ -257,8 +257,7 @@ abstract class Permanent extends Storage implements PermanentInterface {
             else $this->converter_cache[ $namespace ] = $converter;
           }
 
-          $index = $namespace ? ( $namespace . static::SEPARATOR_NAMESPACE ) : '';
-          $this->set( $index, $content );
+          $this[ $namespace ? ( $namespace . static::SEPARATOR_NAMESPACE ) : '' ] = $content;
         }
       }
 
@@ -276,7 +275,7 @@ abstract class Permanent extends Storage implements PermanentInterface {
 
       // trigger before load event for custom storage
       $extension = Extension::instance();
-      $event = $extension->trigger( static::EVENT_REMOVE, [
+      $event     = $extension->trigger( static::EVENT_REMOVE, [
         'instance'  => $this,
         'namespace' => $namespace,
         'converter' => $this->converter_cache[ $namespace ] ?? null
@@ -290,9 +289,7 @@ abstract class Permanent extends Storage implements PermanentInterface {
         if( !$event->isPrevented() ) $this->destroy( $namespace );
 
         // do the rest of the remove
-        $index = $namespace ? ( $namespace . static::SEPARATOR_NAMESPACE ) : '';
-        $this->clear( $index );
-
+        unset( $this[ $namespace ? ( $namespace . static::SEPARATOR_NAMESPACE ) : '' ] );
         unset( $this->converter_cache[ $namespace ] );
       }
 
@@ -306,26 +303,27 @@ abstract class Permanent extends Storage implements PermanentInterface {
   /**
    * @inheritdoc. Setup the autoloader for namespaces
    */
-  protected function search( $index, bool $build = false, bool $is_read = true ) {
+  protected function search( StorageMeta $meta, bool $build = false, bool $is_read = true ): StorageMetaSearch {
 
     // try to load the storage data if there is no already
-    if( $this->isAuto() && !array_key_exists( $index->namespace, $this->converter_cache ) ) {
+    $namespace = $meta->namespace;
+    if( $this->isAuto() && !array_key_exists( $namespace, $this->converter_cache ) ) {
 
-      $this->load( $index->namespace );
+      $this->load( $namespace );
       if( $this->getException() ) {
 
         // log exceptions for autoloading
-        Exception::wrap( $this->getException() )->log();
+        Exception::log( $this->getException(), Application::instance()->getLog() );
       }
     }
 
     // delegate problem to the parent
-    return parent::search( $index, $build, $is_read );
+    return parent::search( $meta, $build, $is_read );
   }
 
   //
-  public function getConverter(): Converter {
-    return $this->_converter;
+  public function getConverterMap(): ConverterMap {
+    return $this->_converter_map;
   }
   //
   public function isAuto(): bool {

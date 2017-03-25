@@ -29,6 +29,7 @@
       <file>FrameworkStoragePermanentTest.php</file>
       <file>FrameworkEventTest.php</file>
       <file>FrameworkExtensionTest.php</file>
+      <file>FrameworkLogTest.php</file>
     </testsuite>
   </testsuites>
 

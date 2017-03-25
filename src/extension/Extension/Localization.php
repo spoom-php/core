@@ -112,9 +112,8 @@ class Localization extends Storage\File implements LocalizationInterface {
           // clear meta/cache/storage when the localization has changed
           if( $this->active != $localization ) {
 
-            $this->_source         = [];
+            $this[ '' ]            = [];
             $this->converter_cache = [];
-            $this->clean();
           }
 
           $this->active = $localization;

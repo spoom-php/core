@@ -25,7 +25,7 @@ class Ini implements ConverterInterface, Helper\AccessableInterface {
     if( !Enumerable::is( $content ) ) $this->setException( new Framework\ConverterExceptionFail( $this, $content ) );
     else {
 
-      $this->flatten( $result, Enumerable::read( $content, false, [] ) );
+      $this->flatten( $result, Enumerable::read( $content, [], true ) );
       foreach( $result as $key => $value ) {
 
         $print    = is_bool( $value ) ? ( $value ? 'true' : 'false' ) : Helper\Text::read( $value );

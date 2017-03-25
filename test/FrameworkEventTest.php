@@ -1,10 +1,9 @@
 <?php namespace Spoom\Framework;
 
 use PHPUnit\Framework\TestCase;
-use Spoom\Framework\Event;
 
 class FrameworkEventTest extends TestCase {
-  
+
   public function testBasic() {
 
     $storage   = new Event\Storage( 'test' );
@@ -55,11 +54,11 @@ class FrameworkEventTest extends TestCase {
    */
   private function _callback( $number ) {
     return function ( EventInterface $event ) use ( $number ) {
-      $event->set( 'callback', $number );
+      $event[ 'callback' ] = $number;
 
       if( $event->get( 'prevent' ) == $number ) {
         $event->setPrevented();
-        $event->set( 'prevented', $number );
+        $event[ 'prevented' ] = $number;
       }
     };
   }

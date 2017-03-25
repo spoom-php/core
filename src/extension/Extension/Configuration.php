@@ -105,9 +105,8 @@ class Configuration extends Storage\File implements ConfigurationInterface {
           // clear meta/cache/storage when the environment has changed
           if( $this->active != $environment ) {
 
-            $this->_source         = [];
+            $this[ '' ]            = [];
             $this->converter_cache = [];
-            $this->clean();
           }
 
           $this->active = $environment;

@@ -1,5 +1,6 @@
 <?php namespace Spoom\Framework\Storage;
 
+use Spoom\Framework\Application;
 use Spoom\Framework\Exception;
 use Spoom\Framework\ConverterInterface;
 use Spoom\Framework\FileInterface;
@@ -40,7 +41,7 @@ class File extends Permanent {
     $this->_directory = $directory;
     $this->_file      = $file;
 
-    parent::__construct( null, $this->isMulti() ? 'default' : null, static::CACHE_NONE, $converters );
+    parent::__construct( [], false, $converters );
   }
 
   //
@@ -53,7 +54,7 @@ class File extends Permanent {
       $previous      = $this->searchFile( $namespace, $previous_meta->getFormat() );
 
     } catch( \Exception $e ) {
-      Exception::wrap( $e )->log();
+      Exception::log( $e, Application::instance()->getLog() );
     }
 
     // do the saving like normal
@@ -86,7 +87,7 @@ class File extends Permanent {
     else {
 
       $result                              = $file->read();
-      $this->converter_cache[ $namespace ] = $this->getConverter()->get( strtolower( pathinfo( $file->getPath(), PATHINFO_EXTENSION ) ) );
+      $this->converter_cache[ $namespace ] = $this->getConverterMap()->get( strtolower( pathinfo( $file->getPath(), PATHINFO_EXTENSION ) ) );
 
       return $result;
     }
@@ -118,7 +119,7 @@ class File extends Permanent {
     else {
 
       $format_list = [];
-      foreach( $this->_converter->get() as $converter ) {
+      foreach( $this->_converter_map->get() as $converter ) {
         $format_list[] = $converter->getFormat();
       }
     }

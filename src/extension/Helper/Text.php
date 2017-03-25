@@ -126,9 +126,7 @@ abstract class Text {
   public static function insert( $text, $insertion, $keep = false ) {
 
     // every insertion converted to data
-    if( !( $insertion instanceof StorageInterface ) ) {
-      $insertion = new Storage( $insertion );
-    }
+    $insertion = Storage::instance( $insertion );
 
     // find patterns iterate trough the matches
     preg_match_all( self::INSERT_REGEXP, $text, $matches, PREG_SET_ORDER );

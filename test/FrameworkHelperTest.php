@@ -66,6 +66,7 @@ class FrameworkHelperTest extends TestCase {
     $this->assertTrue( Helper\Number::equal( 123.6, 123.62 ) );
     $this->assertTrue( Helper\Number::equal( 123.3, 123 ) );
   }
+
   /**
    * Test stream functionalities
    */
@@ -103,7 +104,7 @@ class FrameworkHelperTest extends TestCase {
 
   public function testConverter() {
 
-    $list = new Converter( [
+    $list = new ConverterMap( [
       $converter_json = new Converter\Json(),
       $converter_ini = new Converter\Ini()
     ] );

@@ -1,6 +1,5 @@
 <?php namespace Spoom\Framework;
 
-use Spoom\Framework\Exception;
 use Spoom\Framework\Helper;
 
 /**
@@ -52,12 +51,12 @@ interface ConverterInterface extends Helper\FailableInterface {
   public function getName(): string;
 }
 /**
- * Class Converter
+ * Class ConverterMap
  * @package Framework\Helper
  *
  * @property-read array $map Custom format map to converter formats
  */
-class Converter implements Helper\AccessableInterface {
+class ConverterMap implements Helper\AccessableInterface {
   use Helper\Accessable;
 
   /**

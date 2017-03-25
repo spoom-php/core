@@ -1,8 +1,6 @@
 <?php namespace Spoom\Framework;
 
 use PHPUnit\Framework\TestCase;
-use Spoom\Framework\Converter;
-use Spoom\Framework\File;
 
 class FrameworkStoragePermanentTest extends TestCase {
 
@@ -46,9 +44,9 @@ class FrameworkStoragePermanentTest extends TestCase {
    */
   public function testFile() {
 
-    $storage = $this->getStorage( '', 'test' );
-    $storage->set( 'test1.test2.test3', 3 );
-    $storage->set( 'test1.test4', 4 );
+    $storage                        = $this->getStorage( '', 'test' );
+    $storage[ 'test1.test2.test3' ] = 3;
+    $storage[ 'test1.test4' ]       = 4;
 
     // test file saving
     $storage->save();

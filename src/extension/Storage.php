@@ -11,225 +11,7 @@ use Spoom\Framework\Helper\Text;
  *
  * TODO optimize the 'search' cache format (for non-exists indexes)
  */
-interface StorageInterface extends \ArrayAccess, \JsonSerializable {
-
-  /**
-   * Get indexed value from the storage
-   *
-   * ..or the second parameter if index not exist
-   *
-   * @param string $index   The index in the storage
-   * @param mixed  $default The returned value if index not found
-   *
-   * @return mixed
-   */
-  public function get( string $index, $default = null );
-  /**
-   * Get indexed (only string type) value from the storage
-   *
-   * ..or the second parameter if index not exist or not string
-   *
-   * @param string $index   The index in the storage
-   * @param mixed  $default The returned value if index not found
-   *
-   * @return string|mixed
-   */
-  public function getString( string $index, $default = '' );
-  /**
-   * Get indexed (only number type) value from the storage
-   *
-   * ..or the second parameter if index not exist, not int or
-   * float
-   *
-   * @param string $index   The index in the storage
-   * @param mixed  $default The returned value if index not found
-   *
-   * @return int|float|mixed
-   */
-  public function getNumber( string $index, $default = 0 );
-  /**
-   * Get indexed (only int type) value from the storage
-   *
-   * ..or the second parameter if index not exist, not int or
-   * float
-   *
-   * @param string $index   The index in the storage
-   * @param mixed  $default The returned value if index not found
-   *
-   * @return int|mixed
-   */
-  public function getInteger( string $index, $default = 0 );
-  /**
-   * Get indexed (only float type) value from the storage
-   *
-   * ..or the second parameter if index not exist, not int or
-   * float
-   *
-   * @param string $index   The index in the storage
-   * @param mixed  $default The returned value if index not found
-   *
-   * @return float|mixed
-   */
-  public function getFloat( string $index, $default = 0.0 );
-  /**
-   * Get indexed (only array type) value from the storage
-   *
-   * ..or the second parameter if index not exist or not
-   * enumerable. Object will be typecasted to array
-   *
-   * @param string $index   The index in the storage
-   * @param mixed  $default The returned value if index not found
-   *
-   * @return array|mixed
-   */
-  public function getArray( string $index, $default = [] );
-  /**
-   * Get indexed (only object type) value from the storage
-   *
-   * ..or the second parameter if index not exist or not
-   * enumerable. Arrays will be typecasted to object
-   *
-   * @param string $index   The index in the storage
-   * @param mixed  $default The returned value if index not found
-   *
-   * @return object|mixed
-   */
-  public function getObject( string $index, $default = null );
-  /**
-   * Get indexed (only bool type) value from the storage
-   *
-   * ..or the second parameter if index not exist, not bool
-   * or not 1/0 value
-   *
-   * @param string $index   The index in the storage
-   * @param mixed  $default The returned value if index not found
-   *
-   * @return bool|mixed
-   */
-  public function getBoolean( string $index, $default = false );
-  /**
-   * Get indexed (only callable type) value from the storage
-   *
-   * ..or the second parameter if index not exist or not
-   * callable
-   *
-   * @param string $index   The index in the storage
-   * @param mixed  $default The returned value if index not found
-   *
-   * @return callable|mixed
-   */
-  public function getCallable( string $index, $default = null );
-  /**
-   * Same as the getString method, but insert data to string with Text::insert()
-   *
-   * @param string       $index
-   * @param array|object $insertion
-   * @param string       $default
-   *
-   * @return null|string
-   */
-  public function getPattern( string $index, $insertion, $default = '' );
-
-  /**
-   * Set the index to value and create structure for the index
-   * if it's not exist already
-   *
-   * @param string $index
-   * @param mixed  $value
-   *
-   * @return $this
-   */
-  public function set( string $index, $value );
-  /**
-   * Extend index with data
-   *
-   * There are several options based on the data:
-   *  - Index and data is enumerable ( array or object ), it will merge them
-   *  - Index and data is string, the index concated with data
-   *  - Index and data is numeric, the data will be added to the index
-   *
-   * @param string $index
-   * @param mixed  $data
-   * @param bool   $recursive
-   *
-   * @return $this
-   */
-  public function extend( string $index, $data, bool $recursive = false );
-  /**
-   * Remove an index from the storage. the index can't be null, so with
-   * this function ou cannot clear the storage!
-   *
-   * @param string $index
-   *
-   * @return $this
-   */
-  public function clear( string $index );
-
-  /**
-   * Check index existance
-   *
-   * @param string $index
-   *
-   * @return bool
-   */
-  public function exist( string $index ): bool;
-  /**
-   * Iterate through an index with given function.
-   * The function get value, index, this params
-   * each iteration.
-   * The function parameters are: key, value, index, self
-   *
-   *
-   * @param callable    $function
-   * @param string|null $index
-   *
-   * @return $this
-   */
-  public function each( callable $function, ?string $index = null );
-
-  /**
-   * @return int
-   */
-  public function getCaching(): int;
-  /**
-   * @param int $value
-   */
-  public function setCaching( int $value );
-  /**
-   * @return null|string
-   */
-  public function getNamespace(): ?string;
-  /**
-   * @param null|string $value
-   */
-  public function setNamespace( ?string $value );
-  /**
-   * @return array|object
-   */
-  public function getSource();
-}
-
-/**
- * Class Storage
- * @package Framework
- *
- * @since   0.6.0
- *
- * @property      int         $caching   The cache type. One of the CACHE_* constants
- * @property-read mixed       $source    The storage source variable
- * @property      string|null $namespace The default namespace if not provided. If null, no default namespace is added to the index
- */
-class Storage implements StorageInterface, Helper\AccessableInterface {
-  use Helper\Accessable;
-
-  /**
-   * Disable caching
-   */
-  const CACHE_NONE = 0;
-  /**
-   * Cache only the actual value of the result
-   */
-  const CACHE_SIMPLE = 1;
+interface StorageInterface extends \ArrayAccess, \Iterator, \Countable {
 
   /**
    * Key separator in the indexes
@@ -278,47 +60,186 @@ class Storage implements StorageInterface, Helper\AccessableInterface {
   const TYPE_CALLABLE = 'callable';
 
   /**
-   * Cache for indexes and search results
+   * Get any value from the storage
    *
-   * @var array
+   * @param string $index
+   * @param mixed  $default
+   *
+   * @return mixed
    */
-  private $cache = [
-    'index'  => [],
-    'search' => []
-  ];
+  public function get( string $index, $default = null );
   /**
-   * Cache type
+   * Get indexed (only string type) value from the storage
    *
+   * ..or the second parameter if index not exist or not string
+   *
+   * @param string      $index   The index in the storage
+   * @param string|null $default The returned value if index not found
+   *
+   * @return string|null
+   */
+  public function getString( string $index, ?string $default = '' ): ?string;
+  /**
+   * Get indexed (only number type) value from the storage
+   *
+   * ..or the second parameter if index not exist, not int or
+   * float
+   *
+   * @param string         $index   The index in the storage
+   * @param int|float|null $default The returned value if index not found
+   *
+   * @return int|float|null
+   */
+  public function getNumber( string $index, $default = 0 );
+  /**
+   * Get indexed (only int type) value from the storage
+   *
+   * ..or the second parameter if index not exist, not int or
+   * float
+   *
+   * @param string   $index   The index in the storage
+   * @param int|null $default The returned value if index not found
+   *
+   * @return int|null
+   */
+  public function getInteger( string $index, ?int $default = 0 ): ?int;
+  /**
+   * Get indexed (only float type) value from the storage
+   *
+   * ..or the second parameter if index not exist, not int or
+   * float
+   *
+   * @param string     $index   The index in the storage
+   * @param float|null $default The returned value if index not found
+   *
+   * @return float|null
+   */
+  public function getFloat( string $index, ?float $default = 0.0 ): ?float;
+  /**
+   * Get indexed (only array type) value from the storage
+   *
+   * ..or the second parameter if index not exist or not
+   * enumerable. Object will be typecasted to array
+   *
+   * @param string     $index   The index in the storage
+   * @param array|null $default The returned value if index not found
+   *
+   * @return array|null
+   */
+  public function getArray( string $index, ?array $default = [] ): ?array;
+  /**
+   * Get indexed (only object type) value from the storage
+   *
+   * ..or the second parameter if index not exist or not
+   * enumerable. Arrays will be typecasted to object
+   *
+   * @param string      $index   The index in the storage
+   * @param object|null $default The returned value if index not found
+   *
+   * @return object|null
+   */
+  public function getObject( string $index, $default = null );
+  /**
+   * Get indexed (only bool type) value from the storage
+   *
+   * ..or the second parameter if index not exist, not bool
+   * or not 1/0 value
+   *
+   * @param string    $index   The index in the storage
+   * @param bool|null $default The returned value if index not found
+   *
+   * @return bool|null
+   */
+  public function getBoolean( string $index, ?bool $default = false ): ?bool;
+  /**
+   * Get indexed (only callable type) value from the storage
+   *
+   * ..or the second parameter if index not exist or not
+   * callable
+   *
+   * @param string        $index   The index in the storage
+   * @param callable|null $default The returned value if index not found
+   *
+   * @return callable|null
+   */
+  public function getCallable( string $index, ?callable $default = null ): ?callable;
+  /**
+   * Same as the getString method, but insert data to string with Text::insert()
+   *
+   * @param string       $index
+   * @param array|object $insertion
+   * @param string       $default
+   *
+   * @return string|null
+   */
+  public function getPattern( string $index, $insertion, ?string $default = '' ): ?string;
+
+  /**
+   * @return bool
+   */
+  public function isCaching(): bool;
+  /**
+   * @param bool $value
+   */
+  public function setCaching( bool $value = true );
+  /**
+   * @return array|object
+   */
+  public function getSource();
+}
+
+/**
+ * Class Storage
+ * @package Framework
+ *
+ * @since   0.6.0
+ *
+ * @property      bool         $caching   Enable or disable cacheing
+ * @property-read array|object $source    The storage source variable
+ */
+class Storage implements StorageInterface, Helper\AccessableInterface {
+  use Helper\Accessable;
+
+  /**
+   * Cache for search results
+   *
+   * @var StorageMetaSearch[]
+   */
+  private $cache = [];
+
+  /**
    * @var int
    */
-  private $_caching = self::CACHE_NONE;
-
+  private $iterator_cursor = 0;
   /**
-   * Use a default namespace in the index or not. If it's null, than the indexes without namespace behave
-   * like the storage doesn't have namespaces at all (the index starts from the source root)
-   *
-   * @var string|null
+   * @var array
    */
-  protected $_namespace = null;
+  private $iterator_key = [];
 
   /**
-   * Data storage
+   * Caching flag
+   *
+   * @var bool
+   */
+  private $_caching = false;
+  /**
+   * Internal data storage
    *
    * @var array
    */
-  protected $_source = [];
+  private $_source = [];
 
   /**
-   * @param mixed|null  $data
-   * @param string|null $namespace
-   * @param int         $caching
+   * @param array|object $source
+   * @param bool         $caching
    */
-  public function __construct( $data = null, ?string $namespace = null, int $caching = self::CACHE_SIMPLE ) {
+  public function __construct( $source, bool $caching = true ) {
+    if( !Enumerable::is( $source ) ) throw new \InvalidArgumentException( 'Storage can contain only array or object' );
+    else {
 
-    $this->_caching   = $caching;
-    $this->_namespace = $namespace;
-
-    if( Enumerable::is( $data ) ) $this->_source = $data;
+      $this->_caching = $caching;
+      $this->_source  = $source;
+    }
   }
 
   /**
@@ -327,324 +248,139 @@ class Storage implements StorageInterface, Helper\AccessableInterface {
   public function __clone() {
 
     $this->_source = Enumerable::copy( $this->_source );
-    $this->cache   = [
-      'index'  => [],
-      'search' => []
-    ];
-  }
-
-  //
-  public function set( string $index, $value ) {
-
-    $result = $this->search( $index = $this->index( $index ), true, false );
-    if( $result->exist ) {
-
-      if( $result->key === null ) $result->container = $value;
-      else if( Enumerable::isArrayLike( $result->container ) ) $result->container[ $result->key ] = $value;
-      else $result->container->{$result->key} = $value;
-
-      // clear the cache or the cache index
-      if( $this->_caching != static::CACHE_NONE ) {
-        $this->clean( $index );
-      }
-    }
-
-    return $this;
-  }
-  //
-  public function extend( string $index, $data, bool $recursive = false ) {
-    $result = $this->search( $index = $this->index( $index ), true, false );
-
-    // get the value to extend it
-    if( $result->key === null ) $value = $result->container;
-    else if( Enumerable::isArrayLike( $result->container ) ) $value = $result->container[ $result->key ];
-    else $value = $result->container->{$result->key};
-
-    // handle data manipulation
-    if( !isset( $value ) ) $value = $data;
-    else if( Number::is( $data, true ) && Number::is( $value, true ) ) $value += $data;
-    else if( Text::is( $data, true ) && Text::is( $value, true ) ) $value .= $data;
-    else if( Enumerable::is( $data ) && Enumerable::is( $value ) ) {
-
-      $convert = is_object( $value );
-      $data    = Enumerable::read( $data, false, [] );
-      $value   = Enumerable::read( $value, false, [] );
-
-      $value = $recursive ? array_merge_recursive( $value, $data ) : array_merge( $value, $data );
-      if( $convert ) $value = (object) $value;
-    }
-
-    // set the manipulated value
-    if( $result->key === null ) $result->container = $value;
-    else if( Enumerable::isArrayLike( $result->container ) ) $result->container[ $result->key ] = $value;
-    else $result->container->{$result->key} = $value;
-
-    // clear the cache or the cache index
-    if( $this->_caching != static::CACHE_NONE ) $this->clean( $index );
-
-    return $this;
-  }
-  //
-  public function clear( string $index ) {
-
-    $result = $this->search( $index = $this->index( $index ), false, false );
-    if( $result->exist ) {
-
-      if( $result->key === null ) $result->container = [];
-      else if( Enumerable::isArrayLike( $result->container ) ) unset( $result->container[ $result->key ] );
-      else unset( $result->container->{$result->key} );
-
-      // clear the cache or the cache index
-      if( $this->_caching != static::CACHE_NONE ) $this->clean( $index );
-    }
-
-    return $this;
-  }
-
-  //
-  public function exist( string $index ): bool {
-    return $this->search( $this->index( $index ) )->exist;
-  }
-  //
-  public function each( callable $function, ?string $index = null ) {
-
-    // check result existance
-    $result = $this->search( $index = $this->parse( $index ) );
-    if( $result->exist ) {
-
-      // find the value
-      if( $result->key === null ) $value = $result->container;
-      else if( Enumerable::isArrayLike( $result->container ) ) $value = $result->container[ $result->key ];
-      else $value = $result->container->{$result->key};
-
-      // check the value type
-      if( Enumerable::is( $value ) ) {
-        foreach( $value as $key => $data ) {
-          $full_key = trim( $index->key ) === '' ? ( $index->id . $key ) : ( $index->id . static::SEPARATOR_KEY . $key );
-          $result   = $function( $key, $data, !$index ? $key : $full_key, $this );
-
-          if( $result === false ) break;
-        }
-      }
-    }
-
-    return $this;
+    $this->cache   = [];
   }
 
   //
   public function get( string $index, $default = null ) {
-    return $this->process( $this->index( $index ), $default );
+    $tmp = $this[ $index ];
+    return $tmp ?? $default;
   }
   //
-  public function getString( string $index, $default = '' ) {
-
-    $index       = $this->index( $index );
-    $index->type = static::TYPE_STRING;
-
-    return $this->process( $index, $default );
+  public function getString( string $index, ?string $default = '' ): ?string {
+    $tmp = $this[ $index . static::SEPARATOR_TYPE . static::TYPE_STRING ];
+    return $tmp ?? $default;
   }
   //
   public function getNumber( string $index, $default = 0 ) {
-
-    $index       = $this->index( $index );
-    $index->type = static::TYPE_NUMBER;
-
-    return $this->process( $index, $default );
+    $tmp = $this[ $index . static::SEPARATOR_TYPE . static::TYPE_NUMBER ];
+    return $tmp ?? $default;
   }
   //
-  public function getInteger( string $index, $default = 0 ) {
-
-    $index       = $this->index( $index );
-    $index->type = static::TYPE_INTEGER;
-
-    return $this->process( $index, $default );
+  public function getInteger( string $index, ?int $default = 0 ): ?int {
+    $tmp = $this[ $index . static::SEPARATOR_TYPE . static::TYPE_INTEGER ];
+    return $tmp ?? $default;
   }
   //
-  public function getFloat( string $index, $default = 0 ) {
-
-    $index       = $this->index( $index );
-    $index->type = static::TYPE_FLOAT;
-
-    return $this->process( $index, $default );
+  public function getFloat( string $index, ?float $default = 0.0 ): ?float {
+    $tmp = $this[ $index . static::SEPARATOR_TYPE . static::TYPE_FLOAT ];
+    return $tmp ?? $default;
   }
   //
-  public function getArray( string $index, $default = [] ) {
-
-    $index       = $this->index( $index );
-    $index->type = static::TYPE_ARRAY;
-
-    return $this->process( $index, $default );
+  public function getArray( string $index, ?array $default = [] ): ?array {
+    $tmp = $this[ $index . static::SEPARATOR_TYPE . static::TYPE_ARRAY ];
+    return $tmp ?? $default;
   }
   //
   public function getObject( string $index, $default = null ) {
-
-    $index       = $this->index( $index );
-    $index->type = static::TYPE_OBJECT;
-
-    return $this->process( $index, $default );
+    $tmp = $this[ $index . static::SEPARATOR_TYPE . static::TYPE_OBJECT ];
+    return $tmp ?? $default;
   }
   //
-  public function getBoolean( string $index, $default = false ) {
-
-    $index       = $this->index( $index );
-    $index->type = static::TYPE_BOOLEAN;
-
-    return $this->process( $index, $default );
+  public function getBoolean( string $index, ?bool $default = false ): ?bool {
+    $tmp = $this[ $index . static::SEPARATOR_TYPE . static::TYPE_BOOLEAN ];
+    return $tmp ?? $default;
   }
   //
-  public function getCallable( string $index, $default = null ) {
-
-    $index       = $this->index( $index );
-    $index->type = static::TYPE_CALLABLE;
-
-    return $this->process( $index, $default );
+  public function getCallable( string $index, ?callable $default = null ): ?callable {
+    $tmp = $this[ $index . static::SEPARATOR_TYPE . static::TYPE_CALLABLE ];
+    return $tmp ?? $default;
   }
   //
-  public function getPattern( string $index, $insertion, $default = '' ) {
+  public function getPattern( string $index, $insertion, ?string $default = '' ): ?string {
 
-    $value = $this->getString( $index, $default );
-    return is_string( $value ) ? Text::insert( $value, $insertion ) : $value;
+    $tmp = $this->getString( $index, $default );
+    return $tmp !== null ? Text::insert( $tmp, $insertion ) : $tmp;
   }
 
   /**
-   * Connect a namespace source to an enumerable
+   * @param StorageMeta $meta
+   * @param bool        $build   Build structure if not exist (when true, the third parameter can't be true)
+   * @param bool        $is_read The search result will be used to read or write operation (don't use simple cache for write)
    *
-   * @param array|object $enumerable - the object or array to add
-   * @param string       $namespace  - the namespace to set
-   *
-   * @return $this
+   * @return StorageMetaSearch
    */
-  protected function connect( &$enumerable, string $namespace ) {
-
-    if( Enumerable::is( $enumerable ) ) {
-      $this->_source[ $namespace ] = &$enumerable;
-
-      // clear the cache or the cache index
-      if( $this->_caching != static::CACHE_NONE ) {
-        $this->clean( $this->parse( $namespace . static::SEPARATOR_NAMESPACE ) );
-      }
-    }
-
-    return $this;
-  }
-  /**
-   * Search for the index pointed value, and return the
-   * result in a { exist, container, key }
-   * like object. If the index was false, the key will be null. Otherwise the key always
-   * set.
-   *
-   * @param object $index   The Simple::parse method result
-   * @param bool   $build   Build structure if not exist (when true, the third parameter can't be true)
-   * @param bool   $is_read The search result will be used to read or write operation (don't use simple cache for write)
-   *
-   * @return object
-   */
-  protected function search( $index, bool $build = false, bool $is_read = true ) {
+  protected function search( StorageMeta $meta, bool $build = false, bool $is_read = true ): StorageMetaSearch {
 
     // check the cache. Only load from cache if its getting ( read operation ) because if it's build then the returned value may changed outside
-    if( $this->_caching != static::CACHE_NONE && $is_read && isset( $this->cache[ 'search' ][ $index->id ] ) ) {
-      return (object) [
-        'exist'     => $this->cache[ 'search' ][ $index->id ][ 'exist' ],
-        'container' => $this->cache[ 'search' ][ $index->id ][ 'container' ],
-        'key'       => $this->cache[ 'search' ][ $index->id ][ 'key' ]
-      ];
+    if( $this->_caching && $is_read && isset( $this->cache[ $meta->id ] ) ) return $this->cache[ $meta->id ];
+    else {
+
+      $result = new StorageMetaSearch( $this->_source, $meta->token, $build );
+      if( $this->_caching ) {
+        $this->cache[ $meta->id ] = $result;
+      }
+
+      return $result;
     }
-
-    $result = Enumerable::search( $this->_source, $index->token, $build );
-    switch( $this->_caching ) {
-      case static::CACHE_SIMPLE:
-
-        $this->cache[ 'search' ][ $index->id ] = (array) $result;
-        break;
-    }
-
-    return $result;
-  }
-  /**
-   * Parse the standard index to pieces for easier handling
-   *
-   * @param string $index
-   *
-   * @return object|null
-   */
-  protected function parse( string $index ) {
-
-    $result = (object) [ 'id' => '', 'key' => '', 'token' => [], 'type' => null, 'namespace' => null ];
-    $tmp    = explode( static::SEPARATOR_NAMESPACE, trim( $index, ' ' . static::SEPARATOR_KEY ), 2 );
-
-    // normalize the index to id
-    $part_main  = rtrim( trim( array_pop( $tmp ), ' ' . static::SEPARATOR_KEY ), static::SEPARATOR_TYPE );
-    $result->id = $part_main;
-
-    // define and parse key, type
-    $part_main    = explode( static::SEPARATOR_TYPE, $part_main, 2 );
-    $result->key  = trim( $part_main[ 0 ] );
-    $result->type = empty( $part_main[ 1 ] ) ? null : $part_main[ 1 ];
-
-    // explode key into tokens
-    $result->token = $result->key === '' ? [] : explode( static::SEPARATOR_KEY, $result->key );
-
-    // define the namespace and add it to the token list for the search
-    $result->namespace = array_pop( $tmp ) ?: $this->_namespace;
-    if( $result->namespace ) array_unshift( $result->token, $result->namespace );
-
-    $result->id = ( $result->namespace ? ( $result->namespace . static::SEPARATOR_NAMESPACE ) : '' ) . $result->key;
-    return $result;
   }
   /**
    * Clean the search cache based on the index
    *
-   * @param string|object|null $index The result of `->index()` method or null
+   * @param string|StorageMeta|null $meta
    */
-  protected function clean( $index = null ) {
+  protected function clean( $meta = null ) {
 
-    // parse string index
-    if( $index && !is_object( $index ) ) {
-      $index = $this->index( $index );
+    //
+    if( $meta && !( $meta instanceof StorageMeta ) ) {
+      $meta = $this->getMeta( $meta );
     }
 
     // clear the cache
-    if( !$index || empty( $index->token ) ) $this->cache[ 'search' ] = [];
-    else foreach( $this->cache[ 'search' ] as $i => $_ ) {
+    if( !$meta || empty( $meta->token ) ) $this->cache = [];
+    else foreach( $this->cache as $i => $_ ) {
 
-      if( empty( $i ) || $i == $index->token[ 0 ] || strpos( $i, $index->token[ 0 ] ) === 0 ) {
-        unset( $this->cache[ 'search' ][ $i ] );
+      if( empty( $i ) || $i == $meta->token[ 0 ] || strpos( $i, $meta->token[ 0 ] ) === 0 ) {
+        unset( $this->cache[ $i ] );
       }
     }
   }
 
   /**
-   * Wrapper for index parsing
-   *
    * @param string $index
    *
-   * @return object|null
+   * @return StorageMeta
    */
-  private function index( string $index ) {
-
-    if( !isset( $this->cache[ 'index' ][ $index ] ) ) {
-
-      $result                           = $this->parse( $index );
-      $this->cache[ 'index' ][ $index ] = $result;
-    }
-
-    return clone $this->cache[ 'index' ][ $index ];
+  private function getMeta( string $index ): StorageMeta {
+    return StorageMeta::instance( $index );
   }
-  /**
-   * Process the storage getter result. This will convert the result to the right type
-   *
-   * @param object $index   The result of index() method
-   * @param mixed  $default The default value if no right type cast or existance
-   *
-   * @return mixed
-   */
-  private function process( $index, $default ) {
+
+  //
+  public function isCaching(): bool {
+    return $this->_caching;
+  }
+  //
+  public function setCaching( bool $value = true ) {
+    $this->_caching = $value;
+    $this->clean();
+  }
+  //
+  public function getSource() {
+    return $this->_source;
+  }
+
+  //
+  public function offsetExists( $offset ) {
+    return $this->search( $this->getMeta( $offset ) )->exist;
+  }
+  //
+  public function offsetGet( $offset ) {
 
     // define the default result
-    $tmp = $this->search( $index );
-    if( !$tmp->exist ) $result = $default;
+    $tmp = $this->search( $index = $this->getMeta( $offset ) );
+    if( !$tmp->exist ) $result = null;
     else if( $tmp->key === null ) $result = $tmp->container;
-    else if( $tmp->container instanceof StorageInterface ) $result = $tmp->container->get( $tmp->key . static::SEPARATOR_TYPE . $index->type, $default );
+    else if( $tmp->container instanceof StorageInterface ) $result = $tmp->container[ $tmp->key . static::SEPARATOR_TYPE . $index->type ];
     else if( Enumerable::isArrayLike( $tmp->container ) ) $result = $tmp->container[ $tmp->key ];
     else $result = $tmp->container->{$tmp->key};
 
@@ -654,7 +390,7 @@ class Storage implements StorageInterface, Helper\AccessableInterface {
       case static::TYPE_STRING:
 
         if( $tmp->exist && ( Text::is( $result ) ) ) $result = Text::read( $result );
-        else $result = $default;
+        else $result = null;
 
         break;
 
@@ -662,14 +398,14 @@ class Storage implements StorageInterface, Helper\AccessableInterface {
       case 'num':
       case static::TYPE_NUMBER:
 
-        $result = $tmp->exist ? Number::read( $result, $default ) : $default;
+        $result = $tmp->exist ? Number::read( $result, null ) : null;
         break;
 
       // force integer type
       case 'int':
       case static::TYPE_INTEGER:
 
-        $result = $tmp->exist && Number::is( $result ) ? ( (int) Number::read( $result ) ) : $default;
+        $result = $tmp->exist && Number::is( $result ) ? ( (int) Number::read( $result ) ) : null;
         break;
 
       // force float type
@@ -677,82 +413,275 @@ class Storage implements StorageInterface, Helper\AccessableInterface {
       case 'real':
       case static::TYPE_FLOAT:
 
-        $result = $tmp->exist && Number::is( $result ) ? ( (float) Number::read( $result ) ) : $default;
+        $result = $tmp->exist && Number::is( $result ) ? ( (float) Number::read( $result ) ) : null;
         break;
 
       // force array type
       case static::TYPE_ARRAY:
 
-        $result = $tmp->exist ? Enumerable::read( $result, false, $default ) : $default;
+        $result = $tmp->exist ? Enumerable::read( $result, null ) : null;
         break;
 
       // force object type
       case static::TYPE_OBJECT:
 
-        $result = $tmp->exist ? Enumerable::read( $result, true, $default ) : $default;
+        $result = $tmp->exist ? (object) Enumerable::read( $result, null ) : null;
         break;
 
       // force boolean type
       case 'bool':
       case static::TYPE_BOOLEAN:
 
-        $result = $tmp->exist && ( is_bool( $result ) || in_array( $result, [ 1, 0, '1', '0' ], true ) ) ? (bool) $result : $default;
+        $result = $tmp->exist && ( is_bool( $result ) || in_array( $result, [ 1, 0, '1', '0' ], true ) ) ? (bool) $result : null;
         break;
 
       // force callable type
       case static::TYPE_CALLABLE:
 
-        $result = $tmp->exist && is_callable( $result ) ? $result : $default;
+        $result = $tmp->exist && is_callable( $result ) ? $result : null;
         break;
     }
 
     return $result;
   }
-
-  //
-  public function getCaching(): int {
-    return $this->_caching;
-  }
-  //
-  public function setCaching( int $value ) {
-    $this->_caching = $value;
-    $this->clean();
-  }
-  //
-  public function getNamespace(): ?string {
-    return $this->_namespace;
-  }
-  //
-  public function setNamespace( ?string $value ) {
-    $this->_namespace = $value !== null ? $value : null;
-
-    // clear the index cache to avoid invalid index matches
-    $this->cache[ 'index' ] = [];
-  }
-  //
-  public function getSource() {
-    return $this->_source;
-  }
-
-  //
-  public function jsonSerialize() {
-    return $this->getObject( '' );
-  }
-
-  //
-  public function offsetExists( $offset ) {
-    return $this->exist( $offset );
-  }
-  //
-  public function offsetGet( $offset ) {
-    return $this->get( $offset );
-  }
   //
   public function offsetSet( $offset, $value ) {
-    $this->set( $offset, $value );
+
+    $result = $this->search( $index = $this->getMeta( $offset ), true, false );
+    if( $result->exist ) {
+
+      if( $result->key === null ) $result->container = $value;
+      else if( Enumerable::isArrayLike( $result->container ) ) $result->container[ $result->key ] = $value;
+      else $result->container->{$result->key} = $value;
+
+      // clear the cache or the cache index
+      if( $this->_caching ) $this->clean( $index );
+    }
   }
   //
   public function offsetUnset( $offset ) {
-    $this->clear( $offset );
+
+    $result = $this->search( $index = $this->getMeta( $offset ), false, false );
+    if( $result->exist ) {
+
+      if( $result->key === null ) $result->container = [];
+      else if( Enumerable::isArrayLike( $result->container ) ) unset( $result->container[ $result->key ] );
+      else unset( $result->container->{$result->key} );
+
+      // clear the cache or the cache index
+      if( $this->_caching ) $this->clean( $index );
+    }
+  }
+
+  //
+  public function current() {
+    $tmp = $this->key();
+    return is_object( $this->_source ) ? $this->_source->{$tmp} : $this->_source[ $tmp ];
+  }
+  //
+  public function next() {
+    ++$this->iterator_cursor;
+  }
+  //
+  public function key() {
+    return $this->iterator_key[ $this->iterator_cursor ];
+  }
+  //
+  public function valid() {
+    return isset( $this->iterator_key[ $this->iterator_cursor ] );
+  }
+  //
+  public function rewind() {
+    $this->iterator_cursor = 0;
+    $this->iterator_key    = is_object( $this->_source ) ? get_object_vars( $this->_source ) : array_keys( $this->_source );
+  }
+
+  //
+  public function count() {
+    return count( $this->_source );
+  }
+
+  /**
+   * @param array|object|StorageInterface $data
+   *
+   * @return StorageInterface
+   */
+  public static function instance( $data ) {
+    return $data instanceof StorageInterface ? $data : new static( $data );
+  }
+}
+
+/**
+ * Class StorageMeta
+ * @package Spoom\Framework
+ */
+class StorageMeta {
+
+  /**
+   * @var static[]
+   */
+  protected static $cache = [];
+
+  /**
+   * @var string
+   */
+  public $id = '';
+  /**
+   * @var string|null
+   */
+  public $namespace = null;
+  /**
+   * @var string|null
+   */
+  public $type;
+  /**
+   * @var array
+   */
+  public $token = [];
+
+  /**
+   * @param string $index
+   */
+  public function __construct( string $index ) {
+
+    // trim separators from the index
+    $index = trim( $index, " \t\n\r\0\x0B" . StorageInterface::SEPARATOR_KEY );
+    $index = ltrim( $index, StorageInterface::SEPARATOR_NAMESPACE );
+    $index = rtrim( $index, StorageInterface::SEPARATOR_TYPE );
+
+    // process the index
+    $buffer = '';
+    for( $i = 0, $length = strlen( $index ); $i < $length; ++$i ) {
+      switch( $index{$i} ) {
+
+        // simple token separator
+        case StorageInterface::SEPARATOR_KEY:
+          $this->token[] = $buffer;
+          $buffer        = '';
+          break;
+
+        // namespace definition
+        case StorageInterface::SEPARATOR_NAMESPACE:
+          if( $this->namespace === null ) {
+            $this->namespace = $this->token[] = $buffer;
+            $buffer          = '';
+          }
+          break;
+
+        // type separator at the end
+        case StorageInterface::SEPARATOR_TYPE:
+          $this->type    = substr( $index, $i + 1 );
+          $this->token[] = $buffer;
+          $buffer        = '';
+          break 2;
+
+        default:
+
+          $buffer .= $index{$i};
+      }
+    }
+    if( strlen( $buffer ) > 0 ) $this->token[] = $buffer;
+
+    // define the unique id for this index
+    if( $this->namespace ) $this->id .= $this->namespace . StorageInterface::SEPARATOR_NAMESPACE;
+    $this->id .= implode( StorageInterface::SEPARATOR_KEY, $this->namespace ? array_slice( $this->token, 1 ) : $this->token );
+    if( $this->type ) $this->id .= StorageInterface::SEPARATOR_TYPE . $this->type;
+  }
+
+  /**
+   * @param string $index
+   *
+   * @return static
+   */
+  public static function instance( string $index ) {
+    return static::$cache[ $index ] ?? ( static::$cache[ $index ] = new static( $index ) );
+  }
+}
+/**
+ * Class StorageMetaSearch
+ * @package Spoom\Framework
+ */
+class StorageMetaSearch {
+
+  /**
+   * @var bool
+   */
+  public $exist = true;
+  /**
+   * @var string|null
+   */
+  public $key = null;
+  /**
+   * @var array|object
+   */
+  public $container;
+
+  /**
+   * @param array|object $source
+   * @param array        $token
+   * @param bool         $build
+   */
+  public function __construct( &$source, array $token, bool $build ) {
+
+    $this->container = &$source;
+    if( count( $token ) ) {
+
+      $this->exist = false;
+      for( $count = count( $token ), $i = 0; $i < $count - 1; ++$i ) {
+
+        // check the container type
+        if( !Enumerable::is( $this->container ) ) {
+
+          if( $build ) $this->container = [];
+          else return;
+        }
+
+        // handle new key check for two different data type
+        $key = $token[ $i ];
+        if( is_array( $this->container ) ) { // handle like an array
+
+          if( !isset( $this->container[ $key ] ) ) {
+            if( $build ) $this->container[ $key ] = [];
+            else return;
+          }
+
+          $this->container = &$this->container[ $key ];
+
+        } else if( is_object( $this->container ) ) {   // handle like an object
+
+          if( $this->container instanceof StorageInterface ) break;
+          else {
+
+            if( !isset( $this->container->{$key} ) ) {
+              if( $build ) $this->container->{$key} = [];
+              else return;
+            }
+
+            $this->container = &$this->container->{$key};
+          }
+        }
+      }
+
+      // select key if container exist
+      $key = implode( StorageInterface::SEPARATOR_KEY, array_slice( $token, $i ) );
+      if( Enumerable::is( $this->container ) ) {
+
+        if( is_array( $this->container ) ) {
+          if( !isset( $this->container[ $key ] ) ) {
+            if( $build ) $this->container[ $key ] = null;
+            else return;
+          }
+        } else if( !( $this->container instanceof StorageInterface ) ) {
+          if( !isset( $this->container->{$key} ) ) {
+            if( $build ) $this->container->{$key} = null;
+            else return;
+          }
+        }
+
+        // setup the result
+        $this->key   = $key;
+        $this->exist = true;
+      }
+    }
   }
 }

@@ -58,7 +58,7 @@ class Event extends Storage implements EventInterface, Helper\AccessableInterfac
    * @param mixed|null $data
    */
   public function __construct( string $name, $data = null ) {
-    parent::__construct( $data, null );
+    parent::__construct( $data );
 
     $this->_name = $name;
   }
