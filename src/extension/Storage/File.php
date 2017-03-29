@@ -4,6 +4,7 @@ use Spoom\Framework\Application;
 use Spoom\Framework\Exception;
 use Spoom\Framework\ConverterInterface;
 use Spoom\Framework\FileInterface;
+use Spoom\Framework\Helper\StreamInterface;
 
 /**
  * Class File
@@ -77,7 +78,7 @@ class File extends Permanent {
   //
   protected function write( string $content, ?string $namespace = null ) {
     $file = $this->searchFile( $namespace, $this->converter_cache[ $namespace ]->getFormat() );
-    $file->write( $content, false );
+    $file->stream( StreamInterface::MODE_WRITE )->write( $content );
   }
   //
   protected function read( ?string $namespace = null ): ?string {
@@ -86,7 +87,7 @@ class File extends Permanent {
     if( !$file->exist() ) return null;
     else {
 
-      $result                              = $file->read();
+      $result                              = $file->stream()->read();
       $this->converter_cache[ $namespace ] = $this->getConverterMap()->get( strtolower( pathinfo( $file->getPath(), PATHINFO_EXTENSION ) ) );
 
       return $result;

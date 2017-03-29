@@ -4,7 +4,6 @@ use Spoom\Framework\Application;
 use Spoom\Framework\FileInterface;
 use Spoom\Framework\Storage;
 use Spoom\Framework\Converter;
-use Spoom\Framework\File;
 
 /**
  * Interface ConfigurationInterface
@@ -78,7 +77,7 @@ class Configuration extends Storage\File implements ConfigurationInterface {
 
       // check the environment existance
       $result = $this->getDirectory()->get( $name )->exist( [
-        File\System::META_TYPE => File\System::TYPE_DIRECTORY
+        FileInterface::META_TYPE => FileInterface::TYPE_DIRECTORY
       ] );
 
       // populate the cache

@@ -26,7 +26,7 @@ class FrameworkLogTest extends TestCase {
 
     $log->create( "foo", [], 'basic', Application::SEVERITY_ALERT );
     $this->assertTrue( $log->getFile( $date )->exist() );
-    $this->assertGreaterThan( 0, strlen( $log->getFile( $date )->read() ) );
+    $this->assertGreaterThan( 0, strlen( $log->getFile( $date )->stream()->read() ) );
 
     $log->getFile( $date )->destroy();
   }
@@ -53,9 +53,9 @@ class FrameworkLogTest extends TestCase {
   //
   public function providerDefault() {
 
-    $filesystem = new File\System( __DIR__ );
+    $file = new File( __DIR__ );
     return [
-      [ new Log( $filesystem->get( static::$directory ), 'test', Application::SEVERITY_DEBUG ) ]
+      [ new Log( $file->get( static::$directory ), 'test', Application::SEVERITY_DEBUG ) ]
     ];
   }
 }

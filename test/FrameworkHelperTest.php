@@ -73,7 +73,7 @@ class FrameworkHelperTest extends TestCase {
   public function testStream() {
 
     // test empty writeable stream
-    $rw = Helper\Stream::instance( fopen( static::$directory . 'stream-rw.txt', 'w+' ) );
+    $rw = new Helper\Stream( static::$directory . 'stream-rw.txt', Helper\StreamInterface::MODE_RW );
     $this->assertEquals( 0, $rw->count() );
     $this->assertTrue( $rw->isReadable() && $rw->isWritable() && $rw->isSeekable() );
 
@@ -86,7 +86,7 @@ class FrameworkHelperTest extends TestCase {
     $this->assertEquals( '0123456789', $rw->read( 0, 0 ) );
 
     // test write from stream
-    $a = Helper\Stream::instance( fopen( static::$directory . 'stream-a.txt', 'a+' ) );
+    $a = new Helper\Stream( static::$directory . 'stream-a.txt', Helper\StreamInterface::MODE_RWA );
     $this->assertTrue( $a->isWritable() && $a->isReadable() && $a->isSeekable() );
 
     $a->write( $rw->seek( 0 ) );
@@ -94,7 +94,7 @@ class FrameworkHelperTest extends TestCase {
     $this->assertEquals( '012340123456789', $a->read( 0, 0 ) );
 
     // test read only and read to stream
-    $r = Helper\Stream::instance( fopen( static::$directory . 'stream-r.txt', 'r' ) );
+    $r = new Helper\Stream( static::$directory . 'stream-r.txt', Helper\StreamInterface::MODE_READ );
     $this->assertTrue( !$r->isWritable() && $r->isReadable() && $r->isSeekable() );
 
     $this->assertEquals( '01234', $r->read( 0, 0 ) );

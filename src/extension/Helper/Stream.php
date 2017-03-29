@@ -9,6 +9,32 @@ use Spoom\Framework\Exception;
 interface StreamInterface extends \Countable {
 
   /**
+   * Creates a readable stream
+   */
+  const MODE_READ = 2;
+  /**
+   * Creates a writeable stream
+   */
+  const MODE_WRITE = 4;
+  /**
+   * Create will append not rewrite
+   */
+  const MODE_APPEND = 8;
+
+  /**
+   * Creates a read-writeable stream
+   */
+  const MODE_RW = self::MODE_READ | self::MODE_WRITE;
+  /**
+   * Creates a writeable (append) stream
+   */
+  const MODE_WA = self::MODE_WRITE | self::MODE_APPEND;
+  /**
+   * Creates a read-writeable (append) stream
+   */
+  const MODE_RWA = self::MODE_READ | self::MODE_WRITE | self::MODE_APPEND;
+
+  /**
    * Convert the stream into a string, begin from the current cursor
    *
    * @return string
@@ -98,17 +124,40 @@ class Stream implements StreamInterface, AccessableInterface {
    * @var resource
    */
   private $_resource;
+  /**
+   * Close resource on destruct
+   *
+   * @var bool
+   */
+  private $close;
 
   /**
-   * @param resource $resource
+   * Wrap a resource or create a new one
    *
-   * @throws \InvalidArgumentException
+   * Internally created resource will be closed after destruction
+   *
+   * @param resource|string $uri  Resource or a resource uri for {@see fopen()}
+   * @param int             $mode Resource create mode for string uri-s
    */
-  public function __construct( $resource ) {
-    if( !is_resource( $resource ) ) throw new \InvalidArgumentException( 'Stream source must be a valid resource' );
+  public function __construct( $uri, int $mode = 0 ) {
+
+    $this->close = false;
+    if( is_resource( $uri ) ) $this->_resource = $uri;
     else {
 
-      $this->_resource = $resource;
+      $tmp             = $mode & static::MODE_WRITE ? ( $mode & static::MODE_APPEND ? 'a' : 'w' ) . ( $mode & static::MODE_READ ? '+' : '' ) : 'r';
+      $this->_resource = @fopen( $uri, $tmp );
+
+      if( empty( $this->_resource ) ) throw new \InvalidArgumentException( 'Stream uri must point to a valid resource' );
+      else $this->close = true;
+    }
+  }
+  /**
+   * Close the internally created resource
+   */
+  public function __destruct() {
+    if( $this->close && is_resource( $this->_resource ) ) {
+      @fclose( $this->_resource );
     }
   }
 
@@ -193,7 +242,7 @@ class Stream implements StreamInterface, AccessableInterface {
   }
   //
   public function isReadable(): bool {
-    return true;
+    return is_resource( $this->_resource );
   }
   //
   public function isSeekable(): bool {

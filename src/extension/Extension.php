@@ -6,7 +6,7 @@ use Spoom\Framework\Helper;
  * Interface ExtensionInterface
  * @package Spoom\Framework
  *
- * @property-read File\SystemInterface             $filesystem Filesystem, relative to the extension's root
+ * @property-read FileInterface                    $file       Root directory of the extension
  * @property-read string                           $id         Unique name
  * @property-read Extension\ConfigurationInterface $configuration
  * @property-read Extension\LocalizationInterface  $localization
@@ -65,9 +65,11 @@ interface ExtensionInterface {
    *
    * @since ???
    *
-   * @return File\SystemInterface
+   * @param string $path
+   *
+   * @return FileInterface
    */
-  public function getFilesystem(): File\SystemInterface;
+  public function getFile( string $path = '' ): FileInterface;
   /**
    * @since 0.6.0
    *
@@ -107,7 +109,8 @@ interface ExtensionInterface {
 class Extension implements ExtensionInterface, Helper\AccessableInterface {
   use Helper\Accessable;
 
-  const ID = 'spoom-framework';
+  const ID   = 'spoom-framework';
+  const ROOT = __DIR__ . '/../';
 
   /**
    * Default directory for localization files
@@ -132,7 +135,7 @@ class Extension implements ExtensionInterface, Helper\AccessableInterface {
    *
    * @var FileInterface
    */
-  private $_filesystem;
+  private $_file;
   /**
    * Handle configuration files for the extension
    *
@@ -161,7 +164,7 @@ class Extension implements ExtensionInterface, Helper\AccessableInterface {
    */
   protected function __construct() {
 
-    $this->_filesystem = new File\System( dirname( __DIR__ ) );
+    $this->_file = new File( static::ROOT );
 
     //
     $directory            = Application::instance()->getPublicFile( $this->getId() );
@@ -180,6 +183,7 @@ class Extension implements ExtensionInterface, Helper\AccessableInterface {
    */
   public function __clone() {
 
+    $this->_file          = clone $this->_file;
     $this->_configuration = clone $this->_configuration;
     $this->_localization  = clone $this->_localization;
     $this->_log           = clone $this->_log;
@@ -197,7 +201,7 @@ class Extension implements ExtensionInterface, Helper\AccessableInterface {
   //
   public function file( string $path = '', ?string $pattern = null ) {
 
-    $file = $this->getFilesystem()->get( $path );
+    $file = $this->getFile( $path );
     return empty( $pattern ) ? $file : $file->search( $pattern === '*' ? null : $pattern );
   }
 
@@ -207,13 +211,8 @@ class Extension implements ExtensionInterface, Helper\AccessableInterface {
   }
 
   //
-  public function getFilesystem(): File\SystemInterface {
-
-    if( empty( $this->_filesystem ) ) {
-
-    }
-
-    return $this->_filesystem;
+  public function getFile( string $path = '' ): FileInterface {
+    return $this->_file->get( $path );
   }
   //
   public function getId(): string {

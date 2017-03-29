@@ -8,6 +8,6 @@ use Spoom\Framework\File;
 $spoom = new Application(
   Application::ENVIRONMENT_DEVELOPMENT,
   'en',
-  ( $tmp = new File\System( __DIR__ ) ),
+  ( $tmp = new File( __DIR__ ) ),
   new Framework\Log( $tmp->get( 'tmp/' ), 'unittest', Application::SEVERITY_DEBUG )
 );

@@ -17,17 +17,17 @@ class FrameworkFileTest extends TestCase {
   public function testBasic() {
 
     // test path normalization
-    $this->assertEquals( 'test/', File\System::path( './test/' ) );
-    $this->assertEquals( 'test', File\System::path( './test' ) );
-    $this->assertEquals( 'test', File\System::path( './a/../test' ) );
-    $this->assertEquals( 'test/', File\System::path( 'a/../test/' ) );
-    $this->assertEquals( 'test/', File\System::path( '/a/../test/' ) );
-    $this->assertEquals( '', File\System::path( '/' ) );
+    $this->assertEquals( 'test/', File::path( './test/' ) );
+    $this->assertEquals( 'test', File::path( './test' ) );
+    $this->assertEquals( 'test', File::path( './a/../test' ) );
+    $this->assertEquals( 'test/', File::path( 'a/../test/' ) );
+    $this->assertEquals( 'test/', File::path( '/a/../test/' ) );
+    $this->assertEquals( '', File::path( '/' ) );
 
     // test directory forcing
-    $this->assertEquals( 'a/../test/', File\System::directory( 'a/../test' ) );
-    $this->assertEquals( 'a/../test/', File\System::directory( '/a/../test/' ) );
-    $this->assertEquals( '', File\System::directory( '/' ) );
+    $this->assertEquals( 'a/../test/', File::directory( 'a/../test' ) );
+    $this->assertEquals( 'a/../test/', File::directory( '/a/../test/' ) );
+    $this->assertEquals( '', File::directory( '/' ) );
   }
 
   /**
@@ -38,32 +38,32 @@ class FrameworkFileTest extends TestCase {
   public function testSystem() {
 
     // test local system creation
-    $system = new File\System( $this->root );
-    $this->assertEquals( $this->root, $system->getPath( '' ) );
+    $system = new File( $this->root );
+    $this->assertEquals( $this->root, $system->getPath( true ) );
 
     // test basic meta getters
     $meta = $system->getMeta( '' );
     $this->assertNotEmpty( $meta );
-    $this->assertEquals( File\System::TYPE_DIRECTORY, $meta[ File\System::META_TYPE ] );
-    $this->assertEquals( File\System::TYPE_DIRECTORY, $system->getMeta( '', File\System::META_TYPE ) );
+    $this->assertEquals( FileInterface::TYPE_DIRECTORY, $meta[ FileInterface::META_TYPE ] );
+    $this->assertEquals( FileInterface::TYPE_DIRECTORY, $system->getMeta( FileInterface::META_TYPE ) );
     $this->assertEquals( [
-      File\System::META_TYPE => File\System::TYPE_DIRECTORY
-    ], $system->getMeta( '', [ File\System::META_TYPE ] ) );
+      FileInterface::META_TYPE => FileInterface::TYPE_DIRECTORY
+    ], $system->getMeta( [ FileInterface::META_TYPE ] ) );
 
     // test non-exist path meta
-    $this->assertEquals( File\System::TYPE_DIRECTORY, $system->getMeta( '_a/', File\System::META_TYPE ) );
-    $this->assertEquals( File\System::TYPE_FILE, $system->getMeta( '_a', File\System::META_TYPE ) );
+    $this->assertEquals( FileInterface::TYPE_DIRECTORY, $system->get( '_a/' )->getMeta( FileInterface::META_TYPE ) );
+    $this->assertEquals( FileInterface::TYPE_FILE, $system->get( '_a' )->getMeta( FileInterface::META_TYPE ) );
 
     // test file/directory existance checking
-    $this->assertTrue( $system->exist( 'a.txt' ) );
-    $this->assertTrue( $system->exist( 'a/b.txt' ) );
-    $this->assertFalse( $system->exist( '_a' ) );
+    $this->assertTrue( $system->get( 'a.txt' )->exist() );
+    $this->assertTrue( $system->get( 'a/b.txt' )->exist() );
+    $this->assertFalse( $system->get( '_a' )->exist() );
 
     // test directory listing
-    $this->assertEquals( 4, count( $system->search( '' ) ) );
-    $this->assertEquals( 8, count( $system->search( '', null, true ) ) );
-    $this->assertEquals( 2, count( $system->search( '', '/^[ab]/', false, false ) ) );
-    $this->assertEquals( 3, count( $system->search( '', '/^[ab]/' ) ) );
+    $this->assertEquals( 4, count( $system->search() ) );
+    $this->assertEquals( 8, count( $system->search( null, true ) ) );
+    $this->assertEquals( 2, count( $system->search( '/^[ab]/', false, false ) ) );
+    $this->assertEquals( 3, count( $system->search( '/^[ab]/' ) ) );
   }
   /**
    * Test local filesystem IO operations (read,write,delete)
@@ -71,28 +71,34 @@ class FrameworkFileTest extends TestCase {
    * @depends testSystem
    */
   public function testSystemWrite() {
-    $system = new File\System( $this->root );
+    $system = new File( $this->root );
+
+    $a  = $system->get( 'a.txt' );
+    $b  = $system->get( 'b/' );
+    $d  = $system->get( 'd.txt' );
+    $ab = $system->get( 'a/b.txt' );
+    $bc = $system->get( 'b/c.txt' );
 
     // check basic file reads (simple and from subdirectory)
-    $this->assertEquals( 'a.txt', rtrim( $system->read( 'a.txt' ), "\r\n" ) );
-    $this->assertEquals( 'a/b.txt', rtrim( $system->read( 'a/b.txt' ), "\r\n" ) );
+    $this->assertEquals( 'a.txt', rtrim( $a->stream()->read(), "\r\n" ) );
+    $this->assertEquals( 'a/b.txt', rtrim( $ab->stream()->read(), "\r\n" ) );
 
     // test empty file creation
-    $this->assertFalse( $system->exist( 'd.txt' ) );
-    $system->create( 'd.txt' );
-    $this->assertTrue( $system->exist( 'd.txt' ) );
+    $this->assertFalse( $d->exist() );
+    $d->create();
+    $this->assertTrue( $d->exist() );
 
     // test empty file creation in non-existed subdirectory...which will test the directory creation eventually
-    $this->assertFalse( $system->exist( 'b/' ) );
-    $system->create( 'b/c.txt' );
-    $this->assertTrue( $system->getMeta( 'b/', File\System::META_TYPE ) == File\System::TYPE_DIRECTORY );
-    $this->assertTrue( $system->exist( 'b/c.txt' ) );
+    $this->assertFalse( $b->exist() );
+    $bc->create();
+    $this->assertTrue( $b->getMeta( FileInterface::META_TYPE ) == FileInterface::TYPE_DIRECTORY );
+    $this->assertTrue( $bc->exist() );
 
     // test simple file deletion and directory (with file in it) deletion (this will remove the files created above)
-    $system->destroy( 'd.txt' );
-    $this->assertFalse( $system->exist( 'd.txt' ) );
-    $system->destroy( 'b' );
-    $this->assertFalse( $system->exist( 'b/' ) );
+    $d->destroy();
+    $this->assertFalse( $d->exist() );
+    $b->destroy();
+    $this->assertFalse( $b->exist() );
   }
   /**
    * Test copy and move feature
@@ -100,33 +106,36 @@ class FrameworkFileTest extends TestCase {
    * @depends testSystem
    */
   public function testSystemCopy() {
-    $system = new File\System( $this->root );
+    $system = new File( $this->root );
+
+    $a = $system->get( 'a/' );
+    $c = $system->get( 'c.txt' );
 
     // test simple file copy
-    $system->copy( 'c.txt', 'd.txt' );
-    $this->assertTrue( $system->exist( 'c.txt' ) );
-    $this->assertTrue( $system->exist( 'd.txt' ) );
-    $this->assertFileEquals( (string) new File( $system, 'c.txt' ), (string) new File( $system, 'd.txt' ) );
+    $d = $c->copy( 'd.txt' );
+    $this->assertTrue( $d->exist() );
+    $this->assertTrue( $c->exist() );
+    $this->assertFileEquals( (string) $c, (string) $d );
 
     // test deep directory copy
-    $system->copy( 'a/', 'b/' );
-    $this->assertTrue( $system->exist( 'a/' ) );
-    $this->assertTrue( $system->exist( 'b/' ) );
-    $this->assertTrue( $system->exist( 'b/c.txt' ) );
-    $this->assertFileEquals( (string) new File( $system, 'a/b/c.txt' ), (string) new File( $system, 'b/b/c.txt' ) );
+    $b = $a->copy( 'b/' );
+    $this->assertTrue( $b->exist() );
+    $this->assertTrue( $a->exist() );
+    $this->assertTrue( $a->get( 'c.txt' )->exist() );
+    $this->assertFileEquals( (string) $a->get( 'b/c.txt' ), (string) $b->get( 'b/c.txt' ) );
 
     // test simple file move
-    $system->copy( 'd.txt', 'f.txt', true );
-    $this->assertFalse( $system->exist( 'd.txt' ) );
-    $this->assertTrue( $system->exist( 'f.txt' ) );
+    $f = $d->copy( 'f.txt', true );
+    $this->assertFalse( $d->exist() );
+    $this->assertTrue( $f->exist() );
 
     // test deep directory move
-    $system->copy( 'b/', 'c/', true );
-    $this->assertFalse( $system->exist( 'b/' ) );
-    $this->assertTrue( $system->exist( 'c/' ) );
-    $this->assertTrue( $system->exist( 'c/c.txt' ) );
+    $c = $b->copy( 'c/', true );
+    $this->assertFalse( $b->exist() );
+    $this->assertTrue( $c->exist() );
+    $this->assertTrue( $c->get( 'c.txt' )->exist() );
 
-    $system->destroy( 'f.txt' );
-    $system->destroy( 'c/' );
+    $f->destroy();
+    $c->destroy();
   }
 }

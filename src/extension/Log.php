@@ -198,15 +198,17 @@ class Log implements LogInterface, Helper\AccessableInterface {
           $description = $event->getString( 'description', Helper\Text::insert( $message, $data, true ) );
           $datetime    = $event->getString( 'datetime', $datetime );
 
-          // FIXME this could be done with streaming support
-          $this->getFile( date( 'Ymd', $sec ) )->write( $this->converter->serialize( [
-              'time'        => $datetime,
-              'severity'    => $severity,
-              'namespace'   => $event->getString( 'namespace', $namespace ),
-              'message'     => $message,
-              'description' => $description,
-              'data'        => $data
-            ] ) . "\n" );
+          $stream = $this->getFile( date( 'Ymd', $sec ) )->stream( Helper\StreamInterface::MODE_WA );
+          $this->converter->serialize( [
+            'time'        => $datetime,
+            'severity'    => $severity,
+            'namespace'   => $event->getString( 'namespace', $namespace ),
+            'message'     => $message,
+            'description' => $description,
+            'data'        => $data
+          ], $stream );
+
+          $stream->write( "\n" );
         }
 
       } catch( \Throwable $e ) {

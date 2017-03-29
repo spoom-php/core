@@ -125,7 +125,7 @@ class FrameworkStoragePermanentTest extends TestCase {
   }
 
   private function getStorage( $path, $file = null ) {
-    $storage = new Storage\File( ( new File\System( self::TEST_DIRECTORY ) )->get( $path ), [
+    $storage = new Storage\File( new File( self::TEST_DIRECTORY, $path ), [
       new Converter\Json(),
       new Converter\Xml(),
       new Converter\Ini(),

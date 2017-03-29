@@ -70,7 +70,7 @@ class Application {
    *
    * @var array
    */
-  private static $SEVERITY = [
+  const SEVERITY = [
     self::SEVERITY_NONE      => 0,
     self::SEVERITY_EMERGENCY => 0,
     self::SEVERITY_ALERT     => 0,
@@ -97,23 +97,23 @@ class Application {
   /**
    * App root filesystem
    *
-   * @var File\SystemInterface
+   * @var FileInterface
    */
   private $_root;
   /**
    * Spoom's public directory
    *
-   * @var File\SystemInterface
+   * @var FileInterface
    */
-  private $_filesystem;
+  private $_file;
 
   /**
-   * @param string               $environment
-   * @param string               $localization
-   * @param File\SystemInterface $root
-   * @param LogInterface         $log
+   * @param string        $environment
+   * @param string        $localization
+   * @param FileInterface $root
+   * @param LogInterface  $log
    */
-  public function __construct( string $environment, string $localization, File\SystemInterface $root, LogInterface $log ) {
+  public function __construct( string $environment, string $localization, FileInterface $root, LogInterface $log ) {
 
     if( self::$instance ) throw new \LogicException( 'Unable to create another instance, use ::instance() instead' );
     else if( empty( $environment ) ) throw new \InvalidArgumentException( "Missing configuration: 'environment'" );
@@ -127,7 +127,7 @@ class Application {
       $this->_root = $root;
 
       //
-      $this->_filesystem = new File\System( Autoload::DIRECTORY );
+      $this->_file = new File( Autoload::DIRECTORY );
 
       //
       self::$instance = $this;
@@ -146,7 +146,7 @@ class Application {
         // process the input into standard values
         $level = self::SEVERITY_NONE;
         if( error_reporting() ) {
-          foreach( static::$SEVERITY as $severity => $tmp ) {
+          foreach( static::SEVERITY as $severity => $tmp ) {
             if( $tmp & $code ) {
               $level = $severity;
               break;
@@ -194,7 +194,7 @@ class Application {
    * @return FileInterface
    */
   public function getPublicFile( string $path = '' ): FileInterface {
-    return $this->_filesystem->get( $path );
+    return $this->_file->get( $path );
   }
   /**
    * Default logger of the application
@@ -234,7 +234,7 @@ class Application {
 
     // setup error reporting in PHP
     $reporting = ~E_ALL;
-    foreach( self::$SEVERITY as $key => $value ) {
+    foreach( self::SEVERITY as $key => $value ) {
       if( $key <= $severity ) $reporting |= $value;
     }
     error_reporting( $reporting );
