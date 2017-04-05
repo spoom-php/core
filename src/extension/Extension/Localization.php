@@ -64,8 +64,8 @@ class Localization extends Storage\File implements LocalizationInterface {
    */
   public function __construct( FileInterface $directory ) {
     parent::__construct( $directory, [
-      new Converter\Json( JSON_PRETTY_PRINT ),
-      new Converter\Ini()
+      'json' => new Converter\Json( JSON_PRETTY_PRINT ),
+      'ini'  => new Converter\Ini()
     ] );
   }
 

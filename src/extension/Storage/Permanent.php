@@ -2,7 +2,6 @@
 
 use Spoom\Framework\Application;
 use Spoom\Framework\ConverterInterface;
-use Spoom\Framework\ConverterMap;
 use Spoom\Framework\Exception;
 use Spoom\Framework\Extension;
 use Spoom\Framework\Helper;
@@ -47,11 +46,11 @@ interface PermanentInterface extends StorageInterface, Helper\FailableInterface 
   public function remove( ?string $namespace = null );
 
   /**
-   * Get the converter object that store format handlers
+   * Get the available converters (value) for formats (key)
    *
-   * @return ConverterMap
+   * @return ConverterInterface[]
    */
-  public function getConverterMap(): ConverterMap;
+  public function getConverterMap(): array;
   /**
    * Autoload the namespaces or not
    *
@@ -87,10 +86,10 @@ interface PermanentInterface extends StorageInterface, Helper\FailableInterface 
  * TODO add write- and readable feature
  * TODO add support for full index save/load/remove?!
  *
- * @property-read Exception|null $exception The latest exception object
- * @property-read ConverterMap   $converter The converter object that parse and build the input and output object/string
- * @property      bool           $auto      Autoload the namespaces or not
- * @property      string         $format    The default format for saving
+ * @property-read Exception|null       $exception The latest exception object
+ * @property-read ConverterInterface[] $converter_map
+ * @property      bool                 $auto      Autoload the namespaces or not
+ * @property      string               $format    The default format for saving
  */
 abstract class Permanent extends Storage implements PermanentInterface {
   use Helper\Failable;
@@ -125,9 +124,9 @@ abstract class Permanent extends Storage implements PermanentInterface {
    */
   protected $converter_cache = [];
   /**
-   * The converter list. Store the available converters
+   * The converter list. Store the available converters (value) for formats (key)
    *
-   * @var ConverterMap
+   * @var ConverterInterface[]
    */
   protected $_converter_map;
   /**
@@ -152,8 +151,13 @@ abstract class Permanent extends Storage implements PermanentInterface {
     parent::__construct( $source, $caching );
 
     // setup the converters
-    $this->_converter_map = new ConverterMap( $converters );
-    if( count( $converters ) ) $this->setFormat( $converters[ 0 ]->getFormat() );
+    $this->_converter_map = $converters;
+    if( count( $converters ) ) {
+
+      // first will be the default format
+      reset( $converters );
+      $this->setFormat( key( $converters ) );
+    }
   }
 
   /**
@@ -162,7 +166,7 @@ abstract class Permanent extends Storage implements PermanentInterface {
   public function __clone() {
     parent::__clone();
 
-    $this->_converter_map  = clone $this->_converter_map;
+    $this->_converter_map  = Enumerable::copy( $this->_converter_map );
     $this->converter_cache = Enumerable::copy( $this->converter_cache );
   }
 
@@ -173,8 +177,8 @@ abstract class Permanent extends Storage implements PermanentInterface {
     try {
 
       // get or create the converter
-      $tmp       = $this->_converter_map->get( $format ?: $this->_format );
-      $converter = $this->converter_cache[ $namespace ] ?? null;
+      $tmp       = $this->_converter_map[ $format ?: $this->_format ];
+      $converter = $this->converter_cache[ $namespace ][ 'converter' ] ?? null;
       if( $converter != $tmp ) $converter = clone $tmp;
 
       if( empty( $converter ) ) throw new PermanentExceptionConverter( $namespace );
@@ -201,7 +205,7 @@ abstract class Permanent extends Storage implements PermanentInterface {
           // save and perform the conversion
           $content = $converter->serialize( $content );
           if( $converter->getException() ) throw $converter->getException();
-          else $this->converter_cache[ $namespace ] = $converter;
+          else $this->converter_cache[ $namespace ] = [ 'format' => $format ?: $this->_format, 'converter' => $converter ];
 
           // do the native saving
           $this->write( $content, $namespace );
@@ -220,7 +224,7 @@ abstract class Permanent extends Storage implements PermanentInterface {
 
     try {
 
-      $converter                           = $this->converter_cache[ $namespace ] ?? null;
+      $cache                               = $this->converter_cache[ $namespace ] ?? null;
       $this->converter_cache[ $namespace ] = null;
 
       // trigger before load event for custom storage
@@ -228,11 +232,11 @@ abstract class Permanent extends Storage implements PermanentInterface {
       $event     = $extension->trigger( static::EVENT_LOAD, [
         'instance'  => $this,
         'namespace' => $namespace,
-        'converter' => $converter
+        'converter' => $cache[ 'converter' ]
       ] );
 
-      $content   = $event[ 'content' ];
-      $converter = $event->getObject( 'converter', $converter );
+      $content              = $event[ 'content' ];
+      $cache[ 'converter' ] = $event->getObject( 'converter', $cache[ 'converter' ] );
 
       // check the event result
       if( $event->getException() ) throw $event->getException();
@@ -241,20 +245,20 @@ abstract class Permanent extends Storage implements PermanentInterface {
         // read the namespace's data, and check for the converter
         if( !$event->isPrevented() ) {
 
-          $content   = $this->read( $namespace );
-          $converter = $this->converter_cache[ $namespace ] ?? null;
+          $content = $this->read( $namespace );
+          $cache   = $this->converter_cache[ $namespace ] ?? null;
         }
 
         // check the converter
-        if( !empty( $content ) && !( $converter instanceof ConverterInterface ) ) throw new PermanentExceptionConverter( $namespace );
+        if( !empty( $content ) && !( $cache[ 'converter' ] instanceof ConverterInterface ) ) throw new PermanentExceptionConverter( $namespace );
         else {
 
           // convert and set the namespace's data
           if( !empty( $content ) ) {
 
-            $content = $converter->unserialize( $content );
-            if( $converter->getException() ) throw $converter->getException();
-            else $this->converter_cache[ $namespace ] = $converter;
+            $content = $cache[ 'converter' ]->unserialize( $content );
+            if( $cache[ 'converter' ]->getException() ) throw $cache[ 'converter' ]->getException();
+            else $this->converter_cache[ $namespace ] = $cache;
           }
 
           $this[ $namespace ? ( $namespace . static::SEPARATOR_NAMESPACE ) : '' ] = $content;
@@ -278,7 +282,7 @@ abstract class Permanent extends Storage implements PermanentInterface {
       $event     = $extension->trigger( static::EVENT_REMOVE, [
         'instance'  => $this,
         'namespace' => $namespace,
-        'converter' => $this->converter_cache[ $namespace ] ?? null
+        'converter' => $this->converter_cache[ $namespace ][ 'converter' ] ?? null
       ] );
 
       // check the event result
@@ -322,7 +326,7 @@ abstract class Permanent extends Storage implements PermanentInterface {
   }
 
   //
-  public function getConverterMap(): ConverterMap {
+  public function getConverterMap(): array {
     return $this->_converter_map;
   }
   //

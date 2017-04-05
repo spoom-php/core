@@ -11,9 +11,6 @@ class Native implements Framework\ConverterInterface, Helper\AccessableInterface
   use Helper\Accessable;
   use Helper\Failable;
 
-  const FORMAT = 'pser';
-  const NAME   = 'native';
-
   //
   public function serialize( $content, ?Helper\StreamInterface $stream = null ):?string {
     $this->setException();
@@ -59,14 +56,5 @@ class Native implements Framework\ConverterInterface, Helper\AccessableInterface
   //
   public function setMeta( $value ) {
     return $this;
-  }
-
-  //
-  public function getFormat(): string {
-    return static::FORMAT;
-  }
-  //
-  public function getName(): string {
-    return static::NAME;
   }
 }

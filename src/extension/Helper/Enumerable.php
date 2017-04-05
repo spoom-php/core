@@ -48,6 +48,27 @@ abstract class Enumerable {
   }
 
   /**
+   * Recursive merge of two arrays. This is like the array_merge_recursive() without the strange array-creating thing
+   *
+   * @param array   $destination
+   * @param array[] $sources
+   *
+   * @return array
+   */
+  public static function merge( array $destination, array ...$sources ) {
+
+    $result = $destination;
+    foreach( $sources as $source ) {
+      foreach( $source as $key => &$value ) {
+        if( !is_array( $value ) || !isset( $result[ $key ] ) || !is_array( $result[ $key ] ) ) $result[ $key ] = $value;
+        else $result[ $key ] = static::merge( $result[ $key ], $value );
+      }
+    }
+
+    return $result;
+  }
+
+  /**
    * Deep copy of an array or an object
    *
    * @param array|object $input

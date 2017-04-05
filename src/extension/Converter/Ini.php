@@ -14,9 +14,6 @@ class Ini implements ConverterInterface, Helper\AccessableInterface {
   use Helper\Accessable;
   use Helper\Failable;
 
-  const FORMAT = 'ini';
-  const NAME   = 'ini';
-
   //
   public function serialize( $content, ?Helper\StreamInterface $stream = null ):?string {
     $this->setException();
@@ -99,14 +96,5 @@ class Ini implements ConverterInterface, Helper\AccessableInterface {
   //
   public function setMeta( $value ) {
     return $this;
-  }
-
-  //
-  public function getFormat(): string {
-    return static::FORMAT;
-  }
-  //
-  public function getName(): string {
-    return static::NAME;
   }
 }

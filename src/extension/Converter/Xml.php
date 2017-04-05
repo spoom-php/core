@@ -13,9 +13,6 @@ class Xml implements Framework\ConverterInterface, Helper\AccessableInterface {
   use Helper\Accessable;
   use Helper\Failable;
 
-  const FORMAT = 'xml';
-  const NAME   = 'xml';
-
   /**
    * @var XmlMeta
    */
@@ -200,15 +197,6 @@ class Xml implements Framework\ConverterInterface, Helper\AccessableInterface {
     else $this->_meta = $value;
 
     return $this;
-  }
-
-  //
-  public function getFormat(): string {
-    return static::FORMAT;
-  }
-  //
-  public function getName(): string {
-    return static::NAME;
   }
 }
 /**

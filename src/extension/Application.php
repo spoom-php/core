@@ -1,6 +1,9 @@
 <?php namespace Spoom\Framework;
 
 use Spoom\Composer\Autoload;
+use Spoom\Framework\Helper;
+use Spoom\Framework\Helper\AccessableInterface;
+use Spoom\Framework\Helper\Text;
 
 /**
  * Class Application
@@ -8,8 +11,16 @@ use Spoom\Composer\Autoload;
  * TODO create Unittests
  *
  * @package Framework
+ *
+ * @property-read string        $environment
+ * @property-read LogInterface  $log
+ * @property-read FileInterface $root_file
+ * @property-read FileInterface $public_file
+ * @property      string        $localization
+ * @property-read string        $id
  */
-class Application {
+class Application implements AccessableInterface {
+  use Helper\Accessable;
 
   /**
    * Production environment
@@ -85,6 +96,10 @@ class Application {
   /**
    * @var string
    */
+  private $_id;
+  /**
+   * @var string
+   */
   private $_environment;
   /**
    * @var string
@@ -99,21 +114,23 @@ class Application {
    *
    * @var FileInterface
    */
-  private $_root;
+  private $root;
   /**
    * Spoom's public directory
    *
    * @var FileInterface
    */
-  private $_file;
+  private $file;
 
   /**
    * @param string        $environment
    * @param string        $localization
    * @param FileInterface $root
    * @param LogInterface  $log
+   * @param string|null   $id
    */
-  public function __construct( string $environment, string $localization, FileInterface $root, LogInterface $log ) {
+  public function __construct( string $environment, string $localization, FileInterface $root, LogInterface $log, ?string $id = null ) {
+    $this->_id = $id ?? Text::unique( 8, '', false );
 
     if( self::$instance ) throw new \LogicException( 'Unable to create another instance, use ::instance() instead' );
     else if( empty( $environment ) ) throw new \InvalidArgumentException( "Missing configuration: 'environment'" );
@@ -124,10 +141,10 @@ class Application {
       $this->_environment  = $environment;
       $this->_localization = $localization;
       $this->_log          = $log;
-      $this->_root = $root;
+      $this->root          = $root;
 
       //
-      $this->_file = new File( Autoload::DIRECTORY );
+      $this->file = new File( Autoload::DIRECTORY );
 
       //
       self::$instance = $this;
@@ -169,6 +186,14 @@ class Application {
   }
 
   /**
+   * Random identifier of the Application
+   *
+   * @return string
+   */
+  public function getId() {
+    return $this->_id;
+  }
+  /**
    * Environment of the application
    *
    * @return string
@@ -184,7 +209,7 @@ class Application {
    * @return FileInterface
    */
   public function getRootFile( string $path = '' ): FileInterface {
-    return $this->_root->get( $path );
+    return $this->root->get( $path );
   }
   /**
    * File from the Spoom's public directory
@@ -194,7 +219,7 @@ class Application {
    * @return FileInterface
    */
   public function getPublicFile( string $path = '' ): FileInterface {
-    return $this->_file->get( $path );
+    return $this->file->get( $path );
   }
   /**
    * Default logger of the application
@@ -261,6 +286,7 @@ class Application {
    */
   public static function instance() {
     if( empty( self::$instance ) ) throw new \LogicException( 'There is no Application instance right now' );
+    else if( !( self::$instance instanceof static ) ) throw new \LogicException( 'Wrong type of Application instance, should be ' . self::class );
     else return self::$instance;
   }
 }

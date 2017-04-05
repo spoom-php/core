@@ -52,7 +52,7 @@ class File extends Permanent {
     if( isset( $this->converter_cache[ $namespace ] ) ) try {
 
       $previous_meta = $this->converter_cache[ $namespace ];
-      $previous      = $this->searchFile( $namespace, $previous_meta->getFormat() );
+      $previous      = $this->searchFile( $namespace, $previous_meta[ 'format' ] );
 
     } catch( \Exception $e ) {
       Exception::log( $e, Application::instance()->getLog() );
@@ -63,7 +63,7 @@ class File extends Permanent {
     if( !$this->getException() ) {
 
       // clean the previous file, if there is no need for it
-      if( isset( $previous ) && isset( $previous_meta ) && $previous_meta != $this->converter_cache[ $namespace ] ) try {
+      if( isset( $previous ) && isset( $previous_meta ) && $previous_meta[ 'format' ] != $this->converter_cache[ $namespace ][ 'format' ] ) try {
 
         $previous->destroy();
 
@@ -77,7 +77,7 @@ class File extends Permanent {
 
   //
   protected function write( string $content, ?string $namespace = null ) {
-    $file = $this->searchFile( $namespace, $this->converter_cache[ $namespace ]->getFormat() );
+    $file = $this->searchFile( $namespace, $this->converter_cache[ $namespace ][ 'format' ] );
     $file->stream( StreamInterface::MODE_WRITE )->write( $content );
   }
   //
@@ -87,8 +87,10 @@ class File extends Permanent {
     if( !$file->exist() ) return null;
     else {
 
-      $result                              = $file->stream()->read();
-      $this->converter_cache[ $namespace ] = $this->getConverterMap()->get( strtolower( pathinfo( $file->getPath(), PATHINFO_EXTENSION ) ) );
+      $result = $file->stream()->read();
+
+      $format                              = strtolower( pathinfo( $file->getPath(), PATHINFO_EXTENSION ) );
+      $this->converter_cache[ $namespace ] = [ 'format' => $format, 'converter' => $this->converter_map[ $format ] ?? null ];
 
       return $result;
     }
@@ -120,8 +122,8 @@ class File extends Permanent {
     else {
 
       $format_list = [];
-      foreach( $this->_converter_map->get() as $converter ) {
-        $format_list[] = $converter->getFormat();
+      foreach( $this->_converter_map as $format => $converter ) {
+        $format_list[] = $format;
       }
     }
 

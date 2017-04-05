@@ -102,45 +102,11 @@ class FrameworkHelperTest extends TestCase {
     $this->assertEquals( '0123401234', $rw->read( 0, 0 ) );
   }
 
-  public function testConverter() {
-
-    $list = new ConverterMap( [
-      $converter_json = new Converter\Json(),
-      $converter_ini = new Converter\Ini()
-    ] );
-
-    // basic converter tests
-    $this->assertEquals( 2, count( $list->get() ) );
-    $this->assertTrue( $list->get( Converter\Json::FORMAT ) instanceof Converter\Json );
-    $this->assertEquals( 512, $list->get( Converter\Json::FORMAT )->getMeta()->depth );
-
-    // test converter overwrite
-    $list->add( new Converter\Json( 0, 256 ), false );
-    $this->assertEquals( 512, $list->get( Converter\Json::FORMAT )->getMeta()->depth );
-    $list->add( new Converter\Json( 0, 256 ), true );
-    $this->assertEquals( 256, $list->get( Converter\Json::FORMAT )->getMeta()->depth );
-
-    // test converter remove
-    $list->remove( Converter\Json::FORMAT );
-    $this->assertNull( $list->get( Converter\Json::FORMAT ) );
-
-    // test for format mapping
-    $list->add( $converter_json );
-    $list->setMap( [
-      'format-test0' => Converter\Json::FORMAT,
-      'format-test1' => Converter\Json::FORMAT
-    ] );
-
-    $this->assertEquals( $converter_json, $list->get( 'format-test0' ) );
-    $this->assertEquals( $converter_json, $list->get( Converter\Json::FORMAT ) );
-    $this->assertNull( $list->get( 'format-test2' ) );
-  }
   /**
    * @dataProvider providerConverter
    *
    * @param ConverterInterface $converter
    *
-   * @depends      testConverter
    * @depends      testStream
    */
   public function testConverterType( ConverterInterface $converter ) {

@@ -56,9 +56,9 @@ class Configuration extends Storage\File implements ConfigurationInterface {
    */
   public function __construct( FileInterface $directory ) {
     parent::__construct( $directory, [
-      new Converter\Json( JSON_PRETTY_PRINT ),
-      new Converter\Xml(),
-      new Converter\Ini()
+      'json' => new Converter\Json( JSON_PRETTY_PRINT ),
+      'xml'  => new Converter\Xml(),
+      'ini'  => new Converter\Ini()
     ] );
   }
 
