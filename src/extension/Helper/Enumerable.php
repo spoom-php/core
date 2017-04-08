@@ -2,6 +2,9 @@
 
 /**
  * Class Enumerable
+ *
+ * TODO define tests
+ * 
  * @package Framework\Helper
  */
 abstract class Enumerable {
@@ -14,7 +17,7 @@ abstract class Enumerable {
    * @return bool True if the test is an enumerable
    */
   public static function is( $test ): bool {
-    return self::isArrayLike( $test ) || is_object( $test );
+    return is_object( $test ) || is_array( $test );
   }
   /**
    * Check for the input is a real numeric array
@@ -121,7 +124,7 @@ abstract class Enumerable {
         $tmp[ $k ] = $deep && static::is( $t ) ? static::read( $t, null, $deep ) : $t;
       }
 
-      return $input;
+      return $tmp;
     }
   }
 }

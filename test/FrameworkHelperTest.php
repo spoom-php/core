@@ -68,6 +68,19 @@ class FrameworkHelperTest extends TestCase {
   }
 
   /**
+   * @dataProvider providerIO
+   *
+   * @param Helper\IO $io
+   * @param array     $expect
+   * @param           $input
+   */
+  public function testIO( $io, array $expect, $input ) {
+
+    $tmp = $io::instance( $input );
+    $this->assertEquals( $expect, Helper\Enumerable::read( $tmp, null, true ) );
+  }
+  
+  /**
    * Test stream functionalities
    */
   public function testStream() {
@@ -142,4 +155,69 @@ class FrameworkHelperTest extends TestCase {
       [ new Converter\Native() ]
     ];
   }
+  public function providerIO() {
+    // IO, expect, input
+    return [
+      [ FrameworkHelperTestIO1::class, [
+        'test00' => '00',
+        'test01' => '0',
+        'test11' => '11',
+        'test22' => 2,
+        'test4'  => [ 'test1' => 'test' ],
+        'test5'  => [
+          'a' => [ 'test1' => 'testa' ],
+          'b' => [ 'test1' => 'testb' ]
+        ]
+      ], [
+        'test0' => '0',
+        'test1' => [
+          'test11' => '11'
+        ],
+        'test2' => '2',
+        'test4' => [ 'test' => 'test' ],
+        'test5' => [
+          'a' => [ 'test' => 'testa' ],
+          'b' => [ 'test' => 'testb' ]
+        ]
+      ] ]
+    ];
+  }
+}
+
+class FrameworkHelperTestIO1 extends Helper\IO {
+
+  const PROPERTY_MAP  = [
+    // simple mapping
+    'test0'        => 'test01',
+    // deep mapping
+    'test1.test11' => 'test11',
+
+    // simple map with type forcing
+    'test2!int'    => 'test22'
+  ];
+  const PROPERTY_WRAP = [
+    // wrap in a class
+    'test4' => FrameworkHelperTestIO2::class,
+    // wrap every subelement in a class
+    'test5' => '[]' . FrameworkHelperTestIO2::class
+  ] + parent::PROPERTY_WRAP;
+
+  // it must be remain untouched
+  public $test00 = '00';
+
+  public $test01;
+  public $test11;
+
+  public $test22;
+
+  public $test4;
+  public $test5;
+}
+class FrameworkHelperTestIO2 extends Helper\IO {
+
+  const PROPERTY_MAP = [
+    'test' => 'test1'
+  ];
+
+  public $test1;
 }
