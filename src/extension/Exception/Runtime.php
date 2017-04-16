@@ -2,16 +2,22 @@
 
 use Spoom\Framework\Application;
 use Spoom\Framework\ExceptionInterface;
-use Spoom\Framework\Helper\Enumerable;
+use Spoom\Framework\Helper;
+use Spoom\Framework\Helper\Collection;
 
 /**
  * Exception for unpredictable and unfixable problems. An offline database, missing file permission...something like that
  *
  * @package Framework\Exception
+ *
+ * @property-read string $id
+ * @property-read int    $severity
+ * @property-read array  $context
  */
-class Runtime extends \RuntimeException implements ExceptionInterface {
+class Runtime extends \RuntimeException implements ExceptionInterface, Helper\AccessableInterface {
+  use Helper\Accessable;
 
-  const ID = '0#framework';
+  const ID = '0#spoom-framework';
 
   /**
    * The unique identifier of the exception
@@ -43,7 +49,7 @@ class Runtime extends \RuntimeException implements ExceptionInterface {
     parent::__construct( $message, (int) $id, $previous );
 
     $this->_id       = $id;
-    $this->_context  = Enumerable::read( $context, [] );
+    $this->_context  = Collection::read( $context, [] );
     $this->_severity = (int) $severity;
   }
 
@@ -63,17 +69,5 @@ class Runtime extends \RuntimeException implements ExceptionInterface {
   //
   public function getSeverity() {
     return $this->_severity;
-  }
-
-  //
-  public function jsonSerialize() {
-    return [
-      'id'      => $this->getId(),
-      'code'    => $this->getCode(),
-      'message' => $this->getMessage(),
-      'context' => $this->getContext(),
-
-      'line' => $this->getFile() . ':' . $this->getLine()
-    ];
   }
 }

@@ -8,7 +8,7 @@ use Spoom\Framework\Helper\Text;
 /**
  * Class Application
  *
- * TODO create Unittests
+ * TODO create tests
  *
  * @package Framework
  *
@@ -298,7 +298,7 @@ class Application implements AccessableInterface {
  */
 class ApplicationExceptionFeature extends Exception\Runtime {
 
-  const ID = '0#framework';
+  const ID = '0#spoom-framework';
 
   /**
    * @param string $feature Extension or feature name

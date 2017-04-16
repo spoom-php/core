@@ -7,7 +7,7 @@ use Spoom\Framework;
  * Class Xml
  * @package Framework\Converter
  *
- * @property XmlMeta     $meta
+ * @property XmlMeta $meta
  */
 class Xml implements Framework\ConverterInterface, Helper\AccessableInterface {
   use Helper\Accessable;
@@ -40,7 +40,7 @@ class Xml implements Framework\ConverterInterface, Helper\AccessableInterface {
     $dom = new \DOMDocument( $this->_meta->version, $this->_meta->encoding );
     $dom->appendChild( $root = $dom->createElement( $this->_meta->root ) );
 
-    // walk trough the enumerable and build the xml
+    // walk trough the collection and build the xml
     $this->write( $dom, $root, $content, $this->_meta->root, '' );
 
     // create xml from dom
@@ -92,7 +92,7 @@ class Xml implements Framework\ConverterInterface, Helper\AccessableInterface {
   protected function write( \DOMDocument &$dom, \DOMElement &$element, $data, string $name, string $key ) {
 
     // handle xml "leaf"
-    if( !Helper\Enumerable::is( $data ) ) {
+    if( !Helper\Collection::is( $data ) ) {
 
       if( $data === null ) $value = 'NULL';
       else if( $data === true ) $value = 'TRUE';
@@ -110,7 +110,7 @@ class Xml implements Framework\ConverterInterface, Helper\AccessableInterface {
 
       // handle attributes, arrays and properties (in this order)
       if( in_array( $key . '.' . $index, $this->_meta->attributes ) ) $this->write( $dom, $element, $value, $index, $key . '.' . $index );
-      else if( Helper\Enumerable::isArray( $value, false ) ) $this->write( $dom, $element, $value, $index, $key . '.' . $index );
+      else if( Helper\Collection::isArrayNumeric( $value, false ) ) $this->write( $dom, $element, $value, $index, $key . '.' . $index );
       else {
         $child = $dom->createElement( is_int( $index ) ? $name : $index );
 

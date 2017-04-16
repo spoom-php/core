@@ -2,9 +2,9 @@
 
 use PHPUnit\Framework\TestCase;
 
-class FrameworkLogTest extends TestCase {
+class LogTest extends TestCase {
 
-  private static $directory = 'FrameworkLogTest/';
+  private static $directory = 'LogTest/';
 
   /**
    * Test severity usage (filtering)
@@ -28,7 +28,7 @@ class FrameworkLogTest extends TestCase {
     $this->assertTrue( $log->getFile( $date )->exist() );
     $this->assertGreaterThan( 0, strlen( $log->getFile( $date )->stream()->read() ) );
 
-    $log->getFile( $date )->destroy();
+    $log->getFile( $date )->remove();
   }
 
   /**

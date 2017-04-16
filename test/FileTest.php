@@ -3,13 +3,13 @@
 use PHPUnit\Framework\TestCase;
 
 /**
- * Class FrameworkFileTest
+ * Class FileTest
  *
  * TODO cleanup leftover files
  */
-class FrameworkFileTest extends TestCase {
+class FileTest extends TestCase {
 
-  private $root = __DIR__ . DIRECTORY_SEPARATOR . 'FrameworkFileTest' . DIRECTORY_SEPARATOR;
+  private $root = __DIR__ . DIRECTORY_SEPARATOR . 'FileTest' . DIRECTORY_SEPARATOR;
 
   /**
    * Test basix filesystem operations
@@ -66,7 +66,7 @@ class FrameworkFileTest extends TestCase {
     $this->assertEquals( 3, count( $system->search( '/^[ab]/' ) ) );
   }
   /**
-   * Test local filesystem IO operations (read,write,delete)
+   * Test local filesystem Structure operations (read,write,delete)
    *
    * @depends testSystem
    */
@@ -95,9 +95,9 @@ class FrameworkFileTest extends TestCase {
     $this->assertTrue( $bc->exist() );
 
     // test simple file deletion and directory (with file in it) deletion (this will remove the files created above)
-    $d->destroy();
+    $d->remove();
     $this->assertFalse( $d->exist() );
-    $b->destroy();
+    $b->remove();
     $this->assertFalse( $b->exist() );
   }
   /**
@@ -135,7 +135,7 @@ class FrameworkFileTest extends TestCase {
     $this->assertTrue( $c->exist() );
     $this->assertTrue( $c->get( 'c.txt' )->exist() );
 
-    $f->destroy();
-    $c->destroy();
+    $f->remove();
+    $c->remove();
   }
 }

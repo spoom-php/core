@@ -3,13 +3,13 @@
 use PHPUnit\Framework\TestCase;
 
 /**
- * Class FrameworkExtensionTest
+ * Class ExtensionTest
  *
  * TODO add Configuration and Localization tests
  *
  * @package Spoom\Framework
  */
-class FrameworkExtensionTest extends TestCase {
+class ExtensionTest extends TestCase {
 
   /**
    * @param ExtensionInterface $extension

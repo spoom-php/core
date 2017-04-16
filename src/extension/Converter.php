@@ -46,7 +46,7 @@ interface ConverterInterface extends Helper\FailableInterface {
  */
 class ConverterExceptionFail extends Exception\Logic {
 
-  const ID = '29#framework';
+  const ID = '29#spoom-framework';
 
   /**
    * @param ConverterInterface $instance

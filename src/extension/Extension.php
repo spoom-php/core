@@ -5,13 +5,6 @@ use Spoom\Framework\Helper;
 /**
  * Interface ExtensionInterface
  * @package Spoom\Framework
- *
- * @property-read FileInterface                    $file       Root directory of the extension
- * @property-read string                           $id         Unique name
- * @property-read Extension\ConfigurationInterface $configuration
- * @property-read Extension\LocalizationInterface  $localization
- * @property-read LogInterface                     $log
- * @property-read Event\StorageInterface           $event_storage
  */
 interface ExtensionInterface {
 
@@ -97,14 +90,21 @@ interface ExtensionInterface {
   /**
    * @since ??
    *
-   * @return Event\StorageInterface
+   * @return Event\EmitterInterface
    */
-  public function getEventStorage(): Event\StorageInterface;
+  public function getEmitter(): Event\EmitterInterface;
 }
 
 /**
  * Class Extension
  * @package Spoom\Framework
+ *
+ * @property-read FileInterface                    $file          Root directory of the extension
+ * @property-read string                           $id            Unique name
+ * @property-read Extension\ConfigurationInterface $configuration
+ * @property-read Extension\LocalizationInterface  $localization
+ * @property-read LogInterface                     $log
+ * @property-read Event\EmitterInterface           $emitter
  */
 class Extension implements ExtensionInterface, Helper\AccessableInterface {
   use Helper\Accessable;
@@ -151,9 +151,9 @@ class Extension implements ExtensionInterface, Helper\AccessableInterface {
   /**
    * Handle event triggers for the extension
    *
-   * @var Event\StorageInterface
+   * @var Event\EmitterInterface
    */
-  private $_event_storage;
+  private $_emitter;
   /**
    * @var LogInterface
    */
@@ -170,7 +170,7 @@ class Extension implements ExtensionInterface, Helper\AccessableInterface {
     $directory            = Application::instance()->getPublicFile( $this->getId() );
     $this->_configuration = new Extension\Configuration( $directory->get( static::DIRECTORY_CONFIGURATION ) );
     $this->_localization  = new Extension\Localization( $directory->get( static::DIRECTORY_LOCALIZATION ) );
-    $this->_event_storage = new Event\Storage( $this->getId() );
+    $this->_emitter       = new Event\Emitter( $this->getId() );
 
     $this->_log = clone Application::instance()->getLog();
     $this->_log->setChannel( $this->getId() );
@@ -207,7 +207,7 @@ class Extension implements ExtensionInterface, Helper\AccessableInterface {
 
   //
   public function trigger( string $name, $data = [] ): EventInterface {
-    return $this->getEventStorage()->trigger( new Event( $name, $data ) );
+    return $this->getEmitter()->trigger( new Event( $name, $data ) );
   }
 
   //
@@ -231,8 +231,8 @@ class Extension implements ExtensionInterface, Helper\AccessableInterface {
     return $this->_log;
   }
   //
-  public function getEventStorage(): Event\StorageInterface {
-    return $this->_event_storage;
+  public function getEmitter(): Event\EmitterInterface {
+    return $this->_emitter;
   }
 
   /**

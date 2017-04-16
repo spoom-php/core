@@ -2,16 +2,22 @@
 
 use Spoom\Framework\Application;
 use Spoom\Framework\ExceptionInterface;
-use Spoom\Framework\Helper\Enumerable;
+use Spoom\Framework\Helper;
+use Spoom\Framework\Helper\Collection;
 
 /**
- * Exception for developers and indicates problems that can be fixed with (more careful) coding
+ * Exception for developers and indicates problems that can be fixed with coding
  *
  * @package Framework\Exception
+ *
+ * @property-read string $id
+ * @property-read int    $severity
+ * @property-read array  $context
  */
-class Logic extends \LogicException implements ExceptionInterface {
+class Logic extends \LogicException implements ExceptionInterface, Helper\AccessableInterface {
+  use Helper\Accessable;
 
-  const ID = '0#framework';
+  const ID = '0#spoom-framework';
 
   /**
    * The unique identifier of the exception
@@ -43,7 +49,7 @@ class Logic extends \LogicException implements ExceptionInterface {
     parent::__construct( $message, (int) $id, $previous );
 
     $this->_id       = $id;
-    $this->_context  = Enumerable::read( $context, [] );
+    $this->_context  = Collection::read( $context, [] );
     $this->_severity = (int) $severity;
   }
 
@@ -63,17 +69,5 @@ class Logic extends \LogicException implements ExceptionInterface {
   //
   public function getSeverity() {
     return $this->_severity;
-  }
-
-  //
-  public function jsonSerialize() {
-    return [
-      'id'      => $this->getId(),
-      'code'    => $this->getCode(),
-      'message' => $this->getMessage(),
-      'context' => $this->getContext(),
-
-      'line' => $this->getFile() . ':' . $this->getLine()
-    ];
   }
 }

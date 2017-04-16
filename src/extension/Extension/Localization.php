@@ -37,7 +37,7 @@ interface LocalizationInterface extends Storage\PermanentInterface {
  * Class Localization
  * @package Framework\Extension
  *
- * @property      string $localization The current localization name
+ * @property string $localization The current localization name
  */
 class Localization extends Storage\File implements LocalizationInterface {
 

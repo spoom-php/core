@@ -4,10 +4,10 @@ use Spoom\Framework\Storage;
 use Spoom\Framework\StorageInterface;
 
 /**
- * Class IO
+ * Class Structure
  * @package Spoom\Framework\Helper
  */
-class IO {
+class Structure {
 
   /**
    * Rename or copy input elements
@@ -21,7 +21,7 @@ class IO {
   /**
    * Wrap input elements to classes
    *
-   * The key is the input element and the value is the class to wrap in. The class MUST BE a subclass of `IO` and the input element's value will be the input
+   * The key is the input element and the value is the class to wrap in. The class MUST BE a subclass of `Structure` and the input element's value will be the input
    * for that class's `::instance()` method. You can use the [] prefix to wrap the input element's every iterable subelement instead of the whole value
    *
    * @var array
@@ -34,7 +34,7 @@ class IO {
   protected function __construct( $input ) {
 
     // preprocess the input to be able to resolve "deep object links" in mapping
-    $input = $input instanceof StorageInterface ? clone $input : new Storage( Enumerable::read( $input, [] ) );
+    $input = $input instanceof StorageInterface ? clone $input : new Storage( Collection::read( $input, [] ) );
 
     // perform renames and copies in the input
     $this->map( $input, static::PROPERTY_MAP );
@@ -86,7 +86,7 @@ class IO {
       else {
 
         $list = [];
-        if( Enumerable::is( $value ) ) {
+        if( Collection::is( $value ) ) {
           foreach( $value as $i => $t ) {
             $list[ $i ] = $class::instance( $t );
           }

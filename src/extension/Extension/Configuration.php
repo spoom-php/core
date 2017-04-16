@@ -29,7 +29,7 @@ interface ConfigurationInterface extends Storage\PermanentInterface {
  * Class Configuration
  * @package Framework\Extension
  *
- * @property      string|null $environment The actual environment's name
+ * @property string|null $environment The actual environment's name
  */
 class Configuration extends Storage\File implements ConfigurationInterface {
 

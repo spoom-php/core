@@ -21,7 +21,7 @@ abstract class Text {
    *  - objects with __toString() method (with $simple == false)
    *
    * @param mixed $input
-   * @param bool  $simple True strings or converted
+   * @param bool  $simple True strings or can be converted to string
    *
    * @return bool
    */
@@ -39,7 +39,7 @@ abstract class Text {
    *
    * @return string|null
    */
-  public static function read( $input, string $default = null ) {
+  public static function read( $input, ?string $default = null ): ?string {
     switch( true ) {
       case is_string( $input ):
         return $input;
@@ -85,7 +85,7 @@ abstract class Text {
 
         // log: warning
         Application::instance()->getLog()->warning( 'Cannot use random_bytes due to an error', [ 'error' => $e ], static::class );
-        
+
       }
 
       // hash the generated string
@@ -97,6 +97,8 @@ abstract class Text {
   }
   /**
    * Generates hash with the basic PHP hash() function but handles the error with exception
+   *
+   * TODO add optional $length parameter
    *
    * @param string $raw       The input for the hash
    * @param string $algorithm The hashing algorithm name
@@ -117,23 +119,26 @@ abstract class Text {
   /**
    * Insert variables to the input from insertion array used the regexp constant of class
    *
-   * @param string                        $text      Input string to insert
-   * @param array|object|StorageInterface $insertion The insertion variables
-   * @param bool                          $keep      Keep the missing insertions, or replace them with empty string
+   * TODO rewrite without preg-s (with simple for)
+   * TODO implement condition and loop support
+   *
+   * @param string                        $text    Input string to insert
+   * @param array|object|StorageInterface $context The insertion variables
+   * @param bool                          $keep    Keep the missing insertions, or replace them with empty string
    *
    * @return array|string
    */
-  public static function insert( $text, $insertion, $keep = false ) {
+  public static function insert( string $text, $context, bool $keep = false ) {
 
     // every insertion converted to data
-    $insertion = Storage::instance( $insertion );
+    $context = Storage::instance( $context );
 
     // find patterns iterate trough the matches
     preg_match_all( self::INSERT_REGEXP, $text, $matches, PREG_SET_ORDER );
     foreach( $matches as $value ) {
 
       // replace the pattern
-      $text = str_replace( $value[ 0 ], $insertion->getString( $value[ 1 ], $keep ? $value[ 0 ] : '' ), $text );
+      $text = str_replace( $value[ 0 ], $context->getString( $value[ 1 ], $keep ? $value[ 0 ] : '' ), $text );
     }
 
     return $text;
@@ -146,7 +151,7 @@ abstract class Text {
    *
    * @return string
    */
-  public static function reduce( $text, $chars = ' ' ) {
+  public static function reduce( string $text, string $chars = ' ' ): string {
     $text = preg_replace( '/[' . $chars . ']{2,}/', ' ', $text );
     return $text;
   }
@@ -161,7 +166,7 @@ abstract class Text {
    *
    * @return string
    */
-  public static function toName( $name, $separator = '.' ) {
+  public static function camelify( string $name, $separator = '.' ): string {
 
     // preprocess the separator and the name inputs
     $separator = is_array( $separator ) ? $separator : [ $separator ];
@@ -187,22 +192,33 @@ abstract class Text {
    *
    * @return string
    */
-  public static function toLink( $text ) {
+  public static function linkify( string $text ): string {
 
-    $source = [
-      '/á/i', '/é/i', '/ű|ú|ü/i', '/ő|ó|ö/i', '/í/i',     // accented characters
-      '/[\s]+/',                                          // whitespaces
-      '/[^\w\+]+/iu',                                     // special characters
-      '/[\-]+/i',                                         // shrink multiple separators
-      '/[\+]+/i',
-      '/(\-\+)|(\+\-)/i'                                  // change the separators next to each other
-    ];
-    $target = [ 'a', 'e', 'u', 'o', 'i', '+', '-', '-', '+', '+' ];
+    // lowercase
+    $text = mb_convert_case( $text, MB_CASE_LOWER, 'UTF-8' );
 
-    // convert text
-    $text = mb_convert_case( $text, MB_CASE_LOWER, 'UTF-8' );   // lowercase
-    $text = preg_replace( $source, $target, $text );            // change the chars
-    $text = trim( $text, ' -+' );                               // trim special chars the beginning or end of the string
+    // change the chars
+    $text = preg_replace( [
+      // accented characters
+      '/á/i', '/é/i', '/ű|ú|ü/i', '/ő|ó|ö/i', '/í/i',
+      // whitespaces
+      '/[\s]+/',
+      // special characters
+      '/[^\w\+]+/iu',
+      // shrink multiple separators
+      '/[\-]+/i', '/[\+]+/i',
+      // change the separators next to each other
+      '/(\-\+)|(\+\-)/i'
+    ], [
+      'a', 'e', 'u', 'o', 'i',
+      '+',
+      '-',
+      '-', '+',
+      '+'
+    ], $text );
+
+    // trim special chars the beginning or end of the string
+    $text = trim( $text, ' -+' );
 
     return $text;
   }

@@ -2,6 +2,10 @@
 
 use Spoom\Framework\Helper;
 
+/**
+ * Interface EventInterface
+ * @package Spoom\Framework
+ */
 interface EventInterface extends StorageInterface, Helper\FailableInterface {
 
   /**

@@ -4,10 +4,10 @@ use Spoom\Framework\EventInterface;
 use Spoom\Framework\Helper;
 
 /**
- * Interface StorageInterface
+ * Interface EmitterInterface
  * @package Framework\Event
  */
-interface StorageInterface {
+interface EmitterInterface {
 
   /**
    * Execute the event in this storage context
@@ -61,22 +61,26 @@ interface StorageInterface {
    * @param string|null $event
    * @param array       $priority
    *
-   * @return \callable[]
+   * @return callable[]
    */
   public function getCallbackList( ?string $event = null, array &$priority = [] ): array;
 
   /**
-   * Storage (mostly unique) name
+   * Emitter (mostly unique) name
    *
    * @return string
    */
   public function getName(): string;
 }
 /**
- * Class Storage
+ * Class Emitter
  * @package Framework\Event
+ *
+ * @property-read string     $name
+ * @property-read callable[] $callback_list
+ * @property-read string[]   $event_list
  */
-class Storage implements StorageInterface, Helper\AccessableInterface {
+class Emitter implements EmitterInterface, Helper\AccessableInterface {
   use Helper\Accessable;
 
   /**

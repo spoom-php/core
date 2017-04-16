@@ -7,7 +7,7 @@ use Spoom\Framework;
  * Class Json
  * @package Framework\Converter
  *
- * @property JsonMeta    $meta
+ * @property JsonMeta $meta
  */
 class Json implements Framework\ConverterInterface, Helper\AccessableInterface {
   use Helper\Accessable;

@@ -2,7 +2,7 @@
 
 use PHPUnit\Framework\TestCase;
 
-class FrameworkStorageTest extends TestCase {
+class StorageTest extends TestCase {
 
   /**
    * @dataProvider provider

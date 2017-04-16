@@ -105,7 +105,7 @@ trait Accessable {
  */
 class AccessibleExceptionMissing extends Exception\Logic {
 
-  const ID = '20#framework';
+  const ID = '20#spoom-framework';
 
   /**
    * @param object $instance

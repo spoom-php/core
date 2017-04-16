@@ -5,7 +5,7 @@ use Spoom\Framework\ConverterInterface;
 use Spoom\Framework\Exception;
 use Spoom\Framework\Extension;
 use Spoom\Framework\Helper;
-use Spoom\Framework\Helper\Enumerable;
+use Spoom\Framework\Helper\Collection;
 use Spoom\Framework\Storage;
 use Spoom\Framework\StorageInterface;
 use Spoom\Framework\StorageMeta;
@@ -83,7 +83,7 @@ interface PermanentInterface extends StorageInterface, Helper\FailableInterface 
  * @since   0.6.0
  *
  * TODO add static cache for the load mechanism to optimize the process
- * TODO add write- and readable feature
+ * TODO add write- and readable features
  * TODO add support for full index save/load/remove?!
  *
  * @property-read Exception|null       $exception The latest exception object
@@ -166,8 +166,8 @@ abstract class Permanent extends Storage implements PermanentInterface {
   public function __clone() {
     parent::__clone();
 
-    $this->_converter_map  = Enumerable::copy( $this->_converter_map );
-    $this->converter_cache = Enumerable::copy( $this->converter_cache );
+    $this->_converter_map  = Collection::copy( $this->_converter_map );
+    $this->converter_cache = Collection::copy( $this->converter_cache );
   }
 
   //
@@ -290,7 +290,7 @@ abstract class Permanent extends Storage implements PermanentInterface {
       else {
 
         // call the native destroy if not prevented
-        if( !$event->isPrevented() ) $this->destroy( $namespace );
+        if( !$event->isPrevented() ) $this->delete( $namespace );
 
         // do the rest of the remove
         unset( $this[ $namespace ? ( $namespace . static::SEPARATOR_NAMESPACE ) : '' ] );
@@ -366,7 +366,7 @@ abstract class Permanent extends Storage implements PermanentInterface {
    *
    * @param string|null $namespace The namespace
    */
-  abstract protected function destroy( ?string $namespace = null );
+  abstract protected function delete( ?string $namespace = null );
 }
 
 /**
@@ -376,7 +376,7 @@ abstract class Permanent extends Storage implements PermanentInterface {
  */
 class PermanentExceptionConverter extends Exception\Logic {
 
-  const ID = '23#framework';
+  const ID = '23#spoom-framework';
 
   /**
    * @param string|null $namespace The namespace that has no converter

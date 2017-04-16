@@ -23,13 +23,13 @@
 
   <testsuites>
     <testsuite name="">
-      <file>FrameworkHelperTest.php</file>
-      <file>FrameworkFileTest.php</file>
-      <file>FrameworkStorageTest.php</file>
-      <file>FrameworkStoragePermanentTest.php</file>
-      <file>FrameworkEventTest.php</file>
-      <file>FrameworkExtensionTest.php</file>
-      <file>FrameworkLogTest.php</file>
+      <file>HelperTest.php</file>
+      <file>FileTest.php</file>
+      <file>StorageTest.php</file>
+      <file>StoragePermanentTest.php</file>
+      <file>EventTest.php</file>
+      <file>ExtensionTest.php</file>
+      <file>LogTest.php</file>
     </testsuite>
   </testsuites>
 

@@ -1,20 +1,22 @@
 <?php namespace Spoom\Framework\Helper;
 
 /**
- * Class Enumerable
+ * Class Collection
  *
- * TODO define tests
- * 
+ * TODO create tests
+ *
  * @package Framework\Helper
  */
-abstract class Enumerable {
+abstract class Collection {
 
   /**
-   * Test if the variable is an enumerable (array or object)
+   * Test if the variable is a collection (array or object)
+   *
+   * TODO this should check (optionally) that the object is \SdtClass or implements \Traversable
    *
    * @param mixed $test
    *
-   * @return bool True if the test is an enumerable
+   * @return bool True if the test is an array or object
    */
   public static function is( $test ): bool {
     return is_object( $test ) || is_array( $test );
@@ -27,7 +29,7 @@ abstract class Enumerable {
    *
    * @return bool true, if the $data was a real array with numeric indexes
    */
-  public static function isArray( $test, bool $ordered = true ): bool {
+  public static function isArrayNumeric( $test, bool $ordered = true ): bool {
 
     if( !is_array( $test ) ) return false;
     else if( $ordered ) for( $i = 0; $i < count( $test ); ++$i ) {
@@ -72,7 +74,7 @@ abstract class Enumerable {
   }
 
   /**
-   * Deep copy of an array or an object
+   * Deep copy of a collection
    *
    * @param array|object $input
    *
@@ -105,7 +107,7 @@ abstract class Enumerable {
     return $input;
   }
   /**
-   * Convert any the input into array. On error/invalid input returns the $default parameter
+   * Convert any input into array. On error/invalid input returns the $default parameter
    *
    * @since ?
    *
@@ -115,7 +117,7 @@ abstract class Enumerable {
    *
    * @return array|null
    */
-  public static function read( $input, ?array $default = null, bool $deep = false ) {
+  public static function read( $input, ?array $default = null, bool $deep = false ): ?array {
     if( !static::is( $input ) ) return $default;
     else {
 

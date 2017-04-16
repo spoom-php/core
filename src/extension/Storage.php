@@ -1,6 +1,6 @@
 <?php namespace Spoom\Framework;
 
-use Spoom\Framework\Helper\Enumerable;
+use Spoom\Framework\Helper\Collection;
 use Spoom\Framework\Helper;
 use Spoom\Framework\Helper\Number;
 use Spoom\Framework\Helper\Text;
@@ -8,8 +8,6 @@ use Spoom\Framework\Helper\Text;
 /**
  * Interface StorageInterface
  * @package Framework\Storage
- *
- * TODO optimize the 'search' cache format (for non-exists indexes)
  */
 interface StorageInterface extends \ArrayAccess, \Iterator, \Countable {
 
@@ -118,8 +116,8 @@ interface StorageInterface extends \ArrayAccess, \Iterator, \Countable {
   /**
    * Get indexed (only array type) value from the storage
    *
-   * ..or the second parameter if index not exist or not
-   * enumerable. Object will be typecasted to array
+   * ..or the second parameter if index not exist or not a
+   * collection. Object will be typecasted to array
    *
    * @param string     $index   The index in the storage
    * @param array|null $default The returned value if index not found
@@ -130,8 +128,8 @@ interface StorageInterface extends \ArrayAccess, \Iterator, \Countable {
   /**
    * Get indexed (only object type) value from the storage
    *
-   * ..or the second parameter if index not exist or not
-   * enumerable. Arrays will be typecasted to object
+   * ..or the second parameter if index not exist or not a
+   * collection. Arrays will be typecasted to object
    *
    * @param string      $index   The index in the storage
    * @param object|null $default The returned value if index not found
@@ -234,7 +232,7 @@ class Storage implements StorageInterface, Helper\AccessableInterface {
    * @param bool         $caching
    */
   public function __construct( $source, bool $caching = true ) {
-    if( !Enumerable::is( $source ) ) throw new \InvalidArgumentException( 'Storage can contain only array or object' );
+    if( !Collection::is( $source ) ) throw new \InvalidArgumentException( 'Storage can contain only array or object' );
     else {
 
       $this->_caching = $caching;
@@ -247,7 +245,7 @@ class Storage implements StorageInterface, Helper\AccessableInterface {
    */
   public function __clone() {
 
-    $this->_source = Enumerable::copy( $this->_source );
+    $this->_source = Collection::copy( $this->_source );
     $this->cache   = [];
   }
 
@@ -381,7 +379,7 @@ class Storage implements StorageInterface, Helper\AccessableInterface {
     if( !$tmp->exist ) $result = null;
     else if( $tmp->key === null ) $result = $tmp->container;
     else if( $tmp->container instanceof StorageInterface ) $result = $tmp->container[ $tmp->key . static::SEPARATOR_TYPE . $index->type ];
-    else if( Enumerable::isArrayLike( $tmp->container ) ) $result = $tmp->container[ $tmp->key ];
+    else if( Collection::isArrayLike( $tmp->container ) ) $result = $tmp->container[ $tmp->key ];
     else $result = $tmp->container->{$tmp->key};
 
     // switch result based on the type
@@ -419,13 +417,13 @@ class Storage implements StorageInterface, Helper\AccessableInterface {
       // force array type
       case static::TYPE_ARRAY:
 
-        $result = $tmp->exist ? Enumerable::read( $result, null ) : null;
+        $result = $tmp->exist ? Collection::read( $result, null ) : null;
         break;
 
       // force object type
       case static::TYPE_OBJECT:
 
-        $result = $tmp->exist ? (object) Enumerable::read( $result, null ) : null;
+        $result = $tmp->exist ? (object) Collection::read( $result, null ) : null;
         break;
 
       // force boolean type
@@ -451,7 +449,7 @@ class Storage implements StorageInterface, Helper\AccessableInterface {
     if( $result->exist ) {
 
       if( $result->key === null ) $result->container = $value;
-      else if( Enumerable::isArrayLike( $result->container ) ) $result->container[ $result->key ] = $value;
+      else if( Collection::isArrayLike( $result->container ) ) $result->container[ $result->key ] = $value;
       else $result->container->{$result->key} = $value;
 
       // clear the cache or the cache index
@@ -465,7 +463,7 @@ class Storage implements StorageInterface, Helper\AccessableInterface {
     if( $result->exist ) {
 
       if( $result->key === null ) $result->container = [];
-      else if( Enumerable::isArrayLike( $result->container ) ) unset( $result->container[ $result->key ] );
+      else if( Collection::isArrayLike( $result->container ) ) unset( $result->container[ $result->key ] );
       else unset( $result->container->{$result->key} );
 
       // clear the cache or the cache index
@@ -630,7 +628,7 @@ class StorageMetaSearch {
       for( $count = count( $token ), $i = 0; $i < $count - 1; ++$i ) {
 
         // check the container type
-        if( !Enumerable::is( $this->container ) ) {
+        if( !Collection::is( $this->container ) ) {
 
           if( $build ) $this->container = [];
           else return;
@@ -664,7 +662,7 @@ class StorageMetaSearch {
 
       // select key if container exist
       $key = implode( StorageInterface::SEPARATOR_KEY, array_slice( $token, $i ) );
-      if( Enumerable::is( $this->container ) ) {
+      if( Collection::is( $this->container ) ) {
 
         if( is_array( $this->container ) ) {
           if( !isset( $this->container[ $key ] ) ) {

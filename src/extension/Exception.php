@@ -1,13 +1,13 @@
 <?php namespace Spoom\Framework;
 
-use Spoom\Framework\Helper\Enumerable;
+use Spoom\Framework\Helper\Collection;
 use Spoom\Framework\Helper;
 
 /**
  * Interface ExceptionInterface
  * @package Framework
  */
-interface ExceptionInterface extends \Throwable, \JsonSerializable {
+interface ExceptionInterface extends \Throwable {
 
   /**
    * Unique identifier of the exception
@@ -42,7 +42,7 @@ interface ExceptionInterface extends \Throwable, \JsonSerializable {
 class Exception extends \Exception implements ExceptionInterface, Helper\AccessableInterface {
   use Helper\Accessable;
 
-  const ID = '0#framework';
+  const ID = '0#spoom-framework';
 
   /**
    * The unique identifier of the exception
@@ -74,7 +74,7 @@ class Exception extends \Exception implements ExceptionInterface, Helper\Accessa
     parent::__construct( $message, (int) $id, $previous );
 
     $this->_id       = $id;
-    $this->_context  = Enumerable::read( $context, [] );
+    $this->_context  = Collection::read( $context, [] );
     $this->_severity = (int) $severity;
   }
 
@@ -96,35 +96,28 @@ class Exception extends \Exception implements ExceptionInterface, Helper\Accessa
     return $this->_severity;
   }
 
-  //
-  public function jsonSerialize() {
-    return [
-      'id'      => $this->getId(),
-      'code'    => $this->getCode(),
-      'message' => $this->getMessage(),
-      'context' => $this->getContext(),
-
-      'line' => $this->getFile() . ':' . $this->getLine()
-    ];
-  }
-
   /**
+   * Log the `\Throwable` with the proper severity and message
+   *
    * @param \Throwable   $throwable
    * @param LogInterface $instance
-   * @param array        $data
+   * @param array        $context
+   *
+   * @return \Throwable The input `\Throwable`
    */
-  public static function log( \Throwable $throwable, ?LogInterface $instance = null, $data = [] ) {
-
+  public static function log( \Throwable $throwable, ?LogInterface $instance = null, array $context = [] ): \Throwable {
     $instance = $instance ?? Application::instance()->getLog();
 
     // extend data
-    $data                = Enumerable::read( $data, [] );
-    $data[ 'exception' ] = $throwable;
-    $data[ 'backtrace' ] = false;
+    $context                = Collection::read( $context, [] );
+    $context[ 'exception' ] = $throwable;
+    $context[ 'backtrace' ] = false;
 
     $severity  = $throwable instanceof ExceptionInterface ? $throwable->getSeverity() : Application::SEVERITY_CRITICAL;
     $namespace = get_class( $throwable ) . ':' . ( $throwable instanceof ExceptionInterface ? $throwable->getId() : $throwable->getCode() );
-    $instance->create( $throwable->getMessage(), $data, $namespace, $severity );
+    $instance->create( $throwable->getMessage(), $context, $namespace, $severity );
+
+    return $throwable;
   }
   /**
    * Wrap native exceptions/errors
@@ -136,13 +129,16 @@ class Exception extends \Exception implements ExceptionInterface, Helper\Accessa
   public static function wrap( \Throwable $throwable ): ExceptionInterface {
 
     switch( true ) {
+      //
       case $throwable instanceof ExceptionInterface:
         return $throwable;
 
+      //
       case $throwable instanceof \LogicException:
       case $throwable instanceof \Error:
         return new Exception\Logic( $throwable->getMessage(), Exception\Logic::ID, [], $throwable );
 
+      //
       case $throwable instanceof \RuntimeException:
         return new Exception\Runtime( $throwable->getMessage(), Exception\Runtime::ID, [], $throwable );
     }

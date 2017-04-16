@@ -112,10 +112,24 @@ interface StreamInterface extends \Countable {
    * @return bool
    */
   public function isSeekable(): bool;
+  /**
+   * Check if the offset is at the end of the stream
+   *
+   * @return bool
+   */
+  public function isEnd(): bool;
 }
 /**
  * Class Stream
  * @package Framework\Helper
+ *
+ * @property-read resource $resource
+ * @property-read int      $offset
+ * @property-read array    $meta
+ * @property-read bool     $writable
+ * @property-read bool     $readable
+ * @property-read bool     $seekable
+ * @property-read bool     $end
  */
 class Stream implements StreamInterface, AccessableInterface {
   use Accessable;
@@ -146,7 +160,7 @@ class Stream implements StreamInterface, AccessableInterface {
     else {
 
       $tmp             = $mode & static::MODE_WRITE ? ( $mode & static::MODE_APPEND ? 'a' : 'w' ) . ( $mode & static::MODE_READ ? '+' : '' ) : 'r';
-      $this->_resource = @fopen( $uri, $tmp );
+      $this->_resource = fopen( $uri, $tmp );
 
       if( empty( $this->_resource ) ) throw new \InvalidArgumentException( 'Stream uri must point to a valid resource' );
       else $this->close = true;
@@ -157,7 +171,7 @@ class Stream implements StreamInterface, AccessableInterface {
    */
   public function __destruct() {
     if( $this->close && is_resource( $this->_resource ) ) {
-      @fclose( $this->_resource );
+      fclose( $this->_resource );
     }
   }
 
@@ -248,6 +262,10 @@ class Stream implements StreamInterface, AccessableInterface {
   public function isSeekable(): bool {
     return (bool) $this->getMeta( 'seekable' );
   }
+  //
+  public function isEnd(): bool {
+    return $this->_resource ? feof( $this->_resource ) : true;
+  }
 
   /**
    * @param StreamInterface|resource $value
@@ -267,7 +285,7 @@ class Stream implements StreamInterface, AccessableInterface {
  */
 class StreamExceptionInvalid extends Exception\Logic {
 
-  const ID = '0#framework';
+  const ID = '0#spoom-framework';
 
   /**
    * @param StreamInterface $stream

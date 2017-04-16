@@ -3,14 +3,14 @@
 use PHPUnit\Framework\TestCase;
 use Spoom\Framework\Helper;
 
-class FrameworkHelperTest extends TestCase {
+class HelperTest extends TestCase {
 
   private static $directory;
 
   public static function setUpBeforeClass() {
 
     // reset stream test files
-    static::$directory = __DIR__ . '/FrameworkHelperTest/';
+    static::$directory = __DIR__ . '/HelperTest/';
     @file_put_contents( static::$directory . 'stream-a.txt', '01234' );
     @file_put_contents( static::$directory . 'stream-r.txt', '01234' );
   }
@@ -68,16 +68,16 @@ class FrameworkHelperTest extends TestCase {
   }
 
   /**
-   * @dataProvider providerIO
+   * @dataProvider providerStructure
    *
-   * @param Helper\IO $io
-   * @param array     $expect
+   * @param Helper\Structure $io
+   * @param array            $expect
    * @param           $input
    */
-  public function testIO( $io, array $expect, $input ) {
+  public function testStructure( $io, array $expect, $input ) {
 
     $tmp = $io::instance( $input );
-    $this->assertEquals( $expect, Helper\Enumerable::read( $tmp, null, true ) );
+    $this->assertEquals( $expect, Helper\Collection::read( $tmp, null, true ) );
   }
   
   /**
@@ -155,10 +155,10 @@ class FrameworkHelperTest extends TestCase {
       [ new Converter\Native() ]
     ];
   }
-  public function providerIO() {
-    // IO, expect, input
+  public function providerStructure() {
+    // Structure, expect, input
     return [
-      [ FrameworkHelperTestIO1::class, [
+      [ FrameworkHelperTestStructure1::class, [
         'test00' => '00',
         'test01' => '0',
         'test11' => '11',
@@ -184,7 +184,7 @@ class FrameworkHelperTest extends TestCase {
   }
 }
 
-class FrameworkHelperTestIO1 extends Helper\IO {
+class FrameworkHelperTestStructure1 extends Helper\Structure {
 
   const PROPERTY_MAP  = [
     // simple mapping
@@ -197,9 +197,9 @@ class FrameworkHelperTestIO1 extends Helper\IO {
   ];
   const PROPERTY_WRAP = [
     // wrap in a class
-    'test4' => FrameworkHelperTestIO2::class,
+    'test4' => FrameworkHelperTestStructure2::class,
     // wrap every subelement in a class
-    'test5' => '[]' . FrameworkHelperTestIO2::class
+    'test5' => '[]' . FrameworkHelperTestStructure2::class
   ] + parent::PROPERTY_WRAP;
 
   // it must be remain untouched
@@ -213,7 +213,7 @@ class FrameworkHelperTestIO1 extends Helper\IO {
   public $test4;
   public $test5;
 }
-class FrameworkHelperTestIO2 extends Helper\IO {
+class FrameworkHelperTestStructure2 extends Helper\Structure {
 
   const PROPERTY_MAP = [
     'test' => 'test1'

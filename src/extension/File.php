@@ -8,13 +8,6 @@ use Spoom\Framework\Helper\Text;
 /**
  * Interface FileInterface
  * @package Framework
- *
- * @property      string $path
- * @property      array  $meta
- * @property-read string $root
- * @property-read bool   $directory
- * @property-read bool   $readable
- * @property-read bool   $writeable
  */
 interface FileInterface {
 
@@ -128,7 +121,7 @@ interface FileInterface {
    * @throws FileExceptionPermission If the path is not writeable
    * @throws FileException Unsuccessful operation, due to the underlying system
    */
-  public function destroy();
+  public function remove();
 
   /**
    * Copy the content (or a directory with sub-content) to the destination
@@ -199,6 +192,13 @@ interface FileInterface {
 /**
  * Class File
  * @package Framework
+ *
+ * @property      string $path
+ * @property      array  $meta
+ * @property-read string $root
+ * @property-read bool   $directory
+ * @property-read bool   $readable
+ * @property-read bool   $writeable
  */
 class File implements FileInterface {
 
@@ -378,7 +378,7 @@ class File implements FileInterface {
     return $this;
   }
   //
-  public function destroy() {
+  public function remove() {
     if( $this->exist() ) {
 
       // check for permissions
@@ -393,7 +393,7 @@ class File implements FileInterface {
           // remove contents first
           $list = $this->search();
           foreach( $list as $file ) {
-            $file->destroy();
+            $file->remove();
           }
 
           // remove the directory itself lasts
@@ -705,7 +705,7 @@ interface FileExceptionInterface extends Framework\ExceptionInterface {
  */
 class FileException extends Exception\Runtime implements FileExceptionInterface {
 
-  const ID = '32#framework';
+  const ID = '32#spoom-framework';
 
   /**
    * @param string          $path
@@ -725,7 +725,7 @@ class FileException extends Exception\Runtime implements FileExceptionInterface 
  */
 class FileExceptionRootInvalid extends Exception\Runtime implements FileExceptionInterface {
 
-  const ID = '36#framework';
+  const ID = '36#spoom-framework';
 
   /**
    * @param string $path The invalid path
@@ -749,7 +749,7 @@ class FileExceptionRootInvalid extends Exception\Runtime implements FileExceptio
  */
 class FileExceptionPathInvalid extends Exception\Runtime implements FileExceptionInterface {
 
-  const ID = '35#framework';
+  const ID = '35#spoom-framework';
 
   /**
    * @param string $path The invalid path
@@ -766,7 +766,7 @@ class FileExceptionPathInvalid extends Exception\Runtime implements FileExceptio
  */
 class FileExceptionTypeInvalid extends Exception\Logic implements FileExceptionInterface {
 
-  const ID = '34#framework';
+  const ID = '34#spoom-framework';
 
   /**
    * @param string $path
@@ -791,7 +791,7 @@ class FileExceptionTypeInvalid extends Exception\Logic implements FileExceptionI
  */
 class FileExceptionPermission extends Exception\Runtime implements FileExceptionInterface {
 
-  const ID = '33#framework';
+  const ID = '33#spoom-framework';
 
   /**
    * @param string $path

@@ -15,7 +15,8 @@ use Spoom\Framework\Helper\StreamInterface;
  * TODO implement multi storage null namespace support (synced namespace save/load/remove)
  *
  * @property FileInterface $directory
- * @property-read string   $file
+ * @property string        $file
+ * @property-read bool     $multi
  */
 class File extends Permanent {
 
@@ -65,7 +66,7 @@ class File extends Permanent {
       // clean the previous file, if there is no need for it
       if( isset( $previous ) && isset( $previous_meta ) && $previous_meta[ 'format' ] != $this->converter_cache[ $namespace ][ 'format' ] ) try {
 
-        $previous->destroy();
+        $previous->remove();
 
       } catch( \Exception $e ) {
         $this->setException( $e );
@@ -96,10 +97,10 @@ class File extends Permanent {
     }
   }
   //
-  protected function destroy( ?string $namespace = null ) {
+  protected function delete( ?string $namespace = null ) {
 
     $file = $this->searchFile( $namespace );
-    if( $file ) $file->destroy();
+    if( $file ) $file->remove();
   }
 
   /**

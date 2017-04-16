@@ -2,9 +2,9 @@
 
 use PHPUnit\Framework\TestCase;
 
-class FrameworkStoragePermanentTest extends TestCase {
+class StoragePermanentTest extends TestCase {
 
-  const TEST_DIRECTORY = __DIR__ . DIRECTORY_SEPARATOR . 'FrameworkStoragePermanentTest' . DIRECTORY_SEPARATOR;
+  const TEST_DIRECTORY = __DIR__ . DIRECTORY_SEPARATOR . 'StoragePermanentTest' . DIRECTORY_SEPARATOR;
 
   public static function setUpBeforeClass() {
 

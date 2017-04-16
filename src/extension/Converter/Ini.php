@@ -2,7 +2,7 @@
 
 use Spoom\Framework;
 use Spoom\Framework\Helper;
-use Spoom\Framework\Helper\Enumerable;
+use Spoom\Framework\Helper\Collection;
 use Spoom\Framework\Helper\Number;
 use Spoom\Framework\ConverterInterface;
 
@@ -19,10 +19,10 @@ class Ini implements ConverterInterface, Helper\AccessableInterface {
     $this->setException();
 
     $result = [];
-    if( !Enumerable::is( $content ) ) $this->setException( new Framework\ConverterExceptionFail( $this, $content ) );
+    if( !Collection::is( $content ) ) $this->setException( new Framework\ConverterExceptionFail( $this, $content ) );
     else {
 
-      $this->flatten( $result, Enumerable::read( $content, [], true ) );
+      $this->flatten( $result, Collection::read( $content, [], true ) );
       foreach( $result as $key => $value ) {
 
         $print    = is_bool( $value ) ? ( $value ? 'true' : 'false' ) : Helper\Text::read( $value );
@@ -77,14 +77,14 @@ class Ini implements ConverterInterface, Helper\AccessableInterface {
    * TODO extract the dot separator into meta option
    *
    * @param array        $input
-   * @param object|array $enumerable
+   * @param object|array $collection
    * @param string       $root
    */
-  protected function flatten( array &$input, $enumerable, string $root = '' ) {
-    foreach( $enumerable as $key => $value ) {
+  protected function flatten( array &$input, $collection, string $root = '' ) {
+    foreach( $collection as $key => $value ) {
 
       $key = $root . ( empty( $root ) ? '' : '.' ) . $key;
-      if( !Enumerable::is( $value ) ) $input[ $key ] = $value;
+      if( !Collection::is( $value ) ) $input[ $key ] = $value;
       else $this->flatten( $input, $value, $key );
     }
   }

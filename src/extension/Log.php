@@ -2,14 +2,11 @@
 
 use Spoom\Framework\Converter\Json;
 use Spoom\Framework\Helper;
-use Spoom\Framework\Helper\Enumerable;
+use Spoom\Framework\Helper\Collection;
 
 /**
  * Interface LogInterface
  * @package Framework\Helper
- *
- * @property string $channel  The name of the logger
- * @property int    $severity Maximum severity level that will be logged
  */
 interface LogInterface {
 
@@ -109,7 +106,9 @@ interface LogInterface {
  * Class Log
  * @package Framework\Helper
  *
- * @property-read FileInterface $file The default log file
+ * @property      string        $channel  The name of the logger
+ * @property      int           $severity Maximum severity level that will be logged
+ * @property-read FileInterface $file     The default log file
  */
 class Log implements LogInterface, Helper\AccessableInterface {
   use Helper\Accessable;
@@ -141,9 +140,9 @@ class Log implements LogInterface, Helper\AccessableInterface {
   /**
    * Event storage for triggering the LogInterface::EVENT_CREATE
    *
-   * @var Event\StorageInterface
+   * @var Event\EmitterInterface
    */
-  protected $event_storage;
+  protected $emitter;
   /**
    * @var ConverterInterface
    */
@@ -179,11 +178,11 @@ class Log implements LogInterface, Helper\AccessableInterface {
         $datetime = date( 'Y-m-d\TH:i:s', $sec ) . '.' . substr( $usec, 2, 4 ) . date( 'O', $sec );
 
         // add backtrace for the data, if needed
-        $data = Enumerable::read( $data, [] );
+        $data = Collection::read( $data, [] );
         if( !isset( $data[ 'backtrace' ] ) ) $data[ 'backtrace' ] = array_slice( debug_backtrace(), 1 );
 
         // trigger event for the log entry
-        $event = $this->getEventStorage()->trigger( new Event( static::EVENT_CREATE, [
+        $event = $this->getEmitter()->trigger( new Event( static::EVENT_CREATE, [
           'instance'  => $this,
           'namespace' => $namespace,
           'severity'  => $severity,
@@ -221,31 +220,31 @@ class Log implements LogInterface, Helper\AccessableInterface {
 
   //
   public function debug( string $message, $data = [], string $namespace = '' ) {
-    return $this->create( $message, $data, $namespace, Application::SEVERITY_DEBUG );
+    $this->create( $message, $data, $namespace, Application::SEVERITY_DEBUG );
   }
   //
   public function info( string $message, $data = [], string $namespace = '' ) {
-    return $this->create( $message, $data, $namespace, Application::SEVERITY_INFO );
+    $this->create( $message, $data, $namespace, Application::SEVERITY_INFO );
   }
   //
   public function notice( string $message, $data = [], string $namespace = '' ) {
-    return $this->create( $message, $data, $namespace, Application::SEVERITY_NOTICE );
+    $this->create( $message, $data, $namespace, Application::SEVERITY_NOTICE );
   }
   //
   public function warning( string $message, $data = [], string $namespace = '' ) {
-    return $this->create( $message, $data, $namespace, Application::SEVERITY_WARNING );
+    $this->create( $message, $data, $namespace, Application::SEVERITY_WARNING );
   }
   //
   public function error( string $message, $data = [], string $namespace = '' ) {
-    return $this->create( $message, $data, $namespace, Application::SEVERITY_ERROR );
+    $this->create( $message, $data, $namespace, Application::SEVERITY_ERROR );
   }
   //
   public function critical( string $message, $data = [], string $namespace = '' ) {
-    return $this->create( $message, $data, $namespace, Application::SEVERITY_CRITICAL );
+    $this->create( $message, $data, $namespace, Application::SEVERITY_CRITICAL );
   }
   //
   public function alert( string $message, $data = [], string $namespace = '' ) {
-    return $this->create( $message, $data, $namespace, Application::SEVERITY_ALERT );
+    $this->create( $message, $data, $namespace, Application::SEVERITY_ALERT );
   }
   //
   public function emergency( string $message, $data = [], string $namespace = '' ) {
@@ -264,7 +263,7 @@ class Log implements LogInterface, Helper\AccessableInterface {
    */
   public function wrap( $data, $deep = 10 ) {
 
-    if( --$deep < 0 || !Enumerable::is( $data ) ) return $data;
+    if( --$deep < 0 || !Collection::is( $data ) ) return $data;
     else {
 
       // handle custom classes
@@ -303,16 +302,16 @@ class Log implements LogInterface, Helper\AccessableInterface {
     return $this->_directory->get( ( $prefix ? ( $prefix . '-' ) : '' ) . $this->getChannel() . '.log' );
   }
   /**
-   * @return Event\StorageInterface
+   * @return Event\EmitterInterface
    */
-  public function getEventStorage(): Event\StorageInterface {
+  public function getEmitter(): Event\EmitterInterface {
 
     //
-    if( empty( $this->event_storage ) ) {
-      $this->event_storage = Extension::instance()->getEventStorage();
+    if( empty( $this->emitter ) ) {
+      $this->emitter = Extension::instance()->getEmitter();
     }
 
-    return $this->event_storage;
+    return $this->emitter;
   }
 
   //
