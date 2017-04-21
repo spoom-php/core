@@ -1,11 +1,10 @@
-<?php namespace Spoom\Framework;
+<?php namespace Spoom\Core;
 
-use Spoom\Framework\Helper\Collection;
-use Spoom\Framework\Helper;
+use Spoom\Core\Helper\Collection;
+use Spoom\Core\Helper;
 
 /**
  * Interface ExceptionInterface
- * @package Framework
  */
 interface ExceptionInterface extends \Throwable {
 
@@ -33,7 +32,6 @@ interface ExceptionInterface extends \Throwable {
  * Exception for public display, usually for the user. This can be a missfilled form field warning, bad request
  * parameter or a deeper exception (Logic or Runtime) public version
  *
- * @package Framework
  *
  * @property-read string $id           The unique identifier
  * @property-read array  $data         The data attached to the exception
@@ -42,7 +40,7 @@ interface ExceptionInterface extends \Throwable {
 class Exception extends \Exception implements ExceptionInterface, Helper\AccessableInterface {
   use Helper\Accessable;
 
-  const ID = '0#spoom-framework';
+  const ID = '0#spoom-core';
 
   /**
    * The unique identifier of the exception

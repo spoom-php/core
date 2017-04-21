@@ -1,15 +1,14 @@
-<?php namespace Spoom\Framework\Converter;
+<?php namespace Spoom\Core\Converter;
 
-use Spoom\Framework\Helper;
-use Spoom\Framework;
+use Spoom\Core\Helper;
+use Spoom\Core;
 
 /**
  * Class Json
- * @package Framework\Converter
  *
  * @property JsonMeta $meta
  */
-class Json implements Framework\ConverterInterface, Helper\AccessableInterface {
+class Json implements Core\ConverterInterface, Helper\AccessableInterface {
   use Helper\Accessable;
   use Helper\Failable;
 
@@ -44,7 +43,7 @@ class Json implements Framework\ConverterInterface, Helper\AccessableInterface {
       if( json_last_error() != JSON_ERROR_NONE ) {
 
         $result = null;
-        throw new Framework\ConverterExceptionFail( $this, $content, [ json_last_error(), json_last_error_msg() ] );
+        throw new Core\ConverterExceptionFail( $this, $content, [ json_last_error(), json_last_error_msg() ] );
       }
 
     } catch( \Exception $e ) {
@@ -73,7 +72,7 @@ class Json implements Framework\ConverterInterface, Helper\AccessableInterface {
       $result = json_decode( $content, $this->_meta->associative, $this->_meta->depth, $this->_meta->options );
       if( json_last_error() != JSON_ERROR_NONE ) {
         $result = null;
-        throw new Framework\ConverterExceptionFail( $this, $content, [ json_last_error(), json_last_error_msg() ] );
+        throw new Core\ConverterExceptionFail( $this, $content, [ json_last_error(), json_last_error_msg() ] );
       }
 
     } catch( \Exception $e ) {
@@ -103,7 +102,6 @@ class Json implements Framework\ConverterInterface, Helper\AccessableInterface {
 }
 /**
  * Class JsonMeta
- * @package Framework\Converter
  */
 class JsonMeta {
 

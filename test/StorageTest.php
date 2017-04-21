@@ -1,4 +1,4 @@
-<?php namespace Spoom\Framework;
+<?php namespace Spoom\Core;
 
 use PHPUnit\Framework\TestCase;
 

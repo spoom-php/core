@@ -1,10 +1,9 @@
-<?php namespace Spoom\Framework\Helper;
+<?php namespace Spoom\Core\Helper;
 
-use Spoom\Framework\Exception;
+use Spoom\Core\Exception;
 
 /**
  * Interface StreamInterface
- * @package Framework\Helper
  */
 interface StreamInterface extends \Countable {
 
@@ -121,7 +120,6 @@ interface StreamInterface extends \Countable {
 }
 /**
  * Class Stream
- * @package Framework\Helper
  *
  * @property-read resource $resource
  * @property-read int      $offset
@@ -281,11 +279,10 @@ class Stream implements StreamInterface, AccessableInterface {
 /**
  * Not a valid stream for write/read operation
  *
- * @package Framework\Helper
  */
 class StreamExceptionInvalid extends Exception\Logic {
 
-  const ID = '0#spoom-framework';
+  const ID = '0#spoom-core';
 
   /**
    * @param StreamInterface $stream

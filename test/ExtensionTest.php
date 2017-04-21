@@ -1,4 +1,4 @@
-<?php namespace Spoom\Framework;
+<?php namespace Spoom\Core;
 
 use PHPUnit\Framework\TestCase;
 
@@ -7,7 +7,6 @@ use PHPUnit\Framework\TestCase;
  *
  * TODO add Configuration and Localization tests
  *
- * @package Spoom\Framework
  */
 class ExtensionTest extends TestCase {
 

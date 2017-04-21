@@ -1,10 +1,9 @@
-<?php namespace Spoom\Framework;
+<?php namespace Spoom\Core;
 
-use Spoom\Framework\Helper;
+use Spoom\Core\Helper;
 
 /**
  * Interface ExtensionInterface
- * @package Spoom\Framework
  */
 interface ExtensionInterface {
 
@@ -97,7 +96,6 @@ interface ExtensionInterface {
 
 /**
  * Class Extension
- * @package Spoom\Framework
  *
  * @property-read FileInterface                    $file          Root directory of the extension
  * @property-read string                           $id            Unique name
@@ -109,7 +107,7 @@ interface ExtensionInterface {
 class Extension implements ExtensionInterface, Helper\AccessableInterface {
   use Helper\Accessable;
 
-  const ID   = 'spoom-framework';
+  const ID   = 'spoom-core';
   const ROOT = __DIR__ . '/../';
 
   /**

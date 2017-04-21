@@ -1,8 +1,7 @@
-<?php namespace Spoom\Framework\Helper;
+<?php namespace Spoom\Core\Helper;
 
 /**
  * Interface FailableInterface
- * @package Framework\Helper
  *
  * @propert \Throwable $exception
  */
@@ -21,7 +20,6 @@ interface FailableInterface {
 }
 /**
  * Trait Failable
- * @package Framework\Helper
  */
 trait Failable {
 

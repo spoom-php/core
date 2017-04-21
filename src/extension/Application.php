@@ -1,16 +1,14 @@
-<?php namespace Spoom\Framework;
+<?php namespace Spoom\Core;
 
 use Spoom\Composer\Autoload;
-use Spoom\Framework\Helper;
-use Spoom\Framework\Helper\AccessableInterface;
-use Spoom\Framework\Helper\Text;
+use Spoom\Core\Helper;
+use Spoom\Core\Helper\AccessableInterface;
+use Spoom\Core\Helper\Text;
 
 /**
  * Class Application
  *
  * TODO create tests
- *
- * @package Framework
  *
  * @property-read string        $environment
  * @property-read LogInterface  $log
@@ -123,13 +121,13 @@ class Application implements AccessableInterface {
   private $file;
 
   /**
-   * @param string        $environment
-   * @param string        $localization
-   * @param FileInterface $root
-   * @param LogInterface  $log
-   * @param string|null   $id
+   * @param string            $environment
+   * @param string            $localization
+   * @param FileInterface     $root
+   * @param LogInterface|null $log
+   * @param string|null       $id
    */
-  public function __construct( string $environment, string $localization, FileInterface $root, LogInterface $log, ?string $id = null ) {
+  public function __construct( string $environment, string $localization, FileInterface $root, ?LogInterface $log = null, ?string $id = null ) {
     $this->_id = $id ?? Text::unique( 8, '', false );
 
     if( self::$instance ) throw new \LogicException( 'Unable to create another instance, use ::instance() instead' );
@@ -140,7 +138,7 @@ class Application implements AccessableInterface {
       //
       $this->_environment  = $environment;
       $this->_localization = $localization;
-      $this->_log          = $log;
+      $this->_log          = $log ?? new LogVoid();
       $this->root          = $root;
 
       //
@@ -250,7 +248,7 @@ class Application implements AccessableInterface {
   /**
    * Global setup of the PHP environment
    *
-   * This SHOULD be done before the framework...or anything else in the PHP code
+   * This SHOULD be done before the application...or anything else in the PHP code
    *
    * @param int   $severity Maximum severity level tht should be reported
    * @param array $configuration
@@ -294,11 +292,10 @@ class Application implements AccessableInterface {
 /**
  * General exception for a missing (but needed) PHP extension/feature
  *
- * @package Framework
  */
 class ApplicationExceptionFeature extends Exception\Runtime {
 
-  const ID = '0#spoom-framework';
+  const ID = '0#spoom-core';
 
   /**
    * @param string $feature Extension or feature name

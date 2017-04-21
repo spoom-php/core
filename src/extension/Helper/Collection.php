@@ -1,11 +1,10 @@
-<?php namespace Spoom\Framework\Helper;
+<?php namespace Spoom\Core\Helper;
 
 /**
  * Class Collection
  *
  * TODO create tests
  *
- * @package Framework\Helper
  */
 abstract class Collection {
 

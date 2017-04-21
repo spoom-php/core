@@ -1,14 +1,13 @@
-<?php namespace Spoom\Framework\Storage;
+<?php namespace Spoom\Core\Storage;
 
-use Spoom\Framework\Application;
-use Spoom\Framework\Exception;
-use Spoom\Framework\ConverterInterface;
-use Spoom\Framework\FileInterface;
-use Spoom\Framework\Helper\StreamInterface;
+use Spoom\Core\Application;
+use Spoom\Core\Exception;
+use Spoom\Core\ConverterInterface;
+use Spoom\Core\FileInterface;
+use Spoom\Core\Helper\StreamInterface;
 
 /**
  * Class File
- * @package Framework\Storage
  *
  * @since   0.6.0
  *

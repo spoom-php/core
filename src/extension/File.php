@@ -1,13 +1,12 @@
-<?php namespace Spoom\Framework;
+<?php namespace Spoom\Core;
 
-use Spoom\Framework\Helper\Stream;
-use Spoom\Framework\Helper\StreamInterface;
-use Spoom\Framework;
-use Spoom\Framework\Helper\Text;
+use Spoom\Core\Helper\Stream;
+use Spoom\Core\Helper\StreamInterface;
+use Spoom\Core;
+use Spoom\Core\Helper\Text;
 
 /**
  * Interface FileInterface
- * @package Framework
  */
 interface FileInterface {
 
@@ -191,7 +190,6 @@ interface FileInterface {
 }
 /**
  * Class File
- * @package Framework
  *
  * @property      string $path
  * @property      array  $meta
@@ -556,7 +554,7 @@ class File implements FileInterface {
             else {
 
               $tmp = class_exists( '\finfo' ) || function_exists( 'mime_content_type' );
-              if( !$tmp ) throw new Framework\ApplicationExceptionFeature( 'fileinfo', '0.1.0' );
+              if( !$tmp ) throw new Core\ApplicationExceptionFeature( 'fileinfo', '0.1.0' );
               else if( !class_exists( '\finfo' ) ) $meta = mime_content_type( $_path );
               else {
 
@@ -694,18 +692,16 @@ class File implements FileInterface {
 /**
  * Interface for all File related exceptions
  *
- * @package Framework\File
  */
-interface FileExceptionInterface extends Framework\ExceptionInterface {
+interface FileExceptionInterface extends Core\ExceptionInterface {
 }
 /**
  * Basic file operation failures
  *
- * @package Framework\File
  */
 class FileException extends Exception\Runtime implements FileExceptionInterface {
 
-  const ID = '32#spoom-framework';
+  const ID = '32#spoom-core';
 
   /**
    * @param string          $path
@@ -721,11 +717,10 @@ class FileException extends Exception\Runtime implements FileExceptionInterface 
 /**
  * Missing, not a directory or not readable root path
  *
- * @package Framework\File
  */
 class FileExceptionRootInvalid extends Exception\Runtime implements FileExceptionInterface {
 
-  const ID = '36#spoom-framework';
+  const ID = '36#spoom-core';
 
   /**
    * @param string $path The invalid path
@@ -738,35 +733,33 @@ class FileExceptionRootInvalid extends Exception\Runtime implements FileExceptio
       static::ID,
       $data,
       null,
-      Framework\Application::SEVERITY_WARNING
+      Core\Application::SEVERITY_WARNING
     );
   }
 }
 /**
  * The given path is outside the root
  *
- * @package Framework\File
  */
 class FileExceptionPathInvalid extends Exception\Runtime implements FileExceptionInterface {
 
-  const ID = '35#spoom-framework';
+  const ID = '35#spoom-core';
 
   /**
    * @param string $path The invalid path
    */
   public function __construct( string $path ) {
     $data = [ 'path' => $path ];
-    parent::__construct( Text::insert( 'Path is outside the root: \'{path}\'', $data ), static::ID, $data, null, Framework\Application::SEVERITY_WARNING );
+    parent::__construct( Text::insert( 'Path is outside the root: \'{path}\'', $data ), static::ID, $data, null, Core\Application::SEVERITY_WARNING );
   }
 }
 /**
  * The path's type is not suitable for the operation
  *
- * @package Framework\File
  */
 class FileExceptionTypeInvalid extends Exception\Logic implements FileExceptionInterface {
 
-  const ID = '34#spoom-framework';
+  const ID = '34#spoom-core';
 
   /**
    * @param string $path
@@ -780,18 +773,17 @@ class FileExceptionTypeInvalid extends Exception\Logic implements FileExceptionI
       static::ID,
       $data,
       null,
-      Framework\Application::SEVERITY_NOTICE
+      Core\Application::SEVERITY_NOTICE
     );
   }
 }
 /**
  * Don't have enough permission for the operation
  *
- * @package Framework\File
  */
 class FileExceptionPermission extends Exception\Runtime implements FileExceptionInterface {
 
-  const ID = '33#spoom-framework';
+  const ID = '33#spoom-core';
 
   /**
    * @param string $path
@@ -805,7 +797,7 @@ class FileExceptionPermission extends Exception\Runtime implements FileException
       static::ID,
       $data,
       null,
-      Framework\Application::SEVERITY_CRITICAL
+      Core\Application::SEVERITY_CRITICAL
     );
   }
 }

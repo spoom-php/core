@@ -1,10 +1,9 @@
-<?php namespace Spoom\Framework;
+<?php namespace Spoom\Core;
 
-use Spoom\Framework\Helper;
+use Spoom\Core\Helper;
 
 /**
  * Interface EventInterface
- * @package Spoom\Framework
  */
 interface EventInterface extends StorageInterface, Helper\FailableInterface {
 
@@ -33,7 +32,6 @@ interface EventInterface extends StorageInterface, Helper\FailableInterface {
 
 /**
  * Class Event
- * @package Spoom\Framework
  *
  * @property      bool   $stopped This flag doesn't stop the listener calls, but the listeners MUST respect it internally
  * @property      bool   $prevented

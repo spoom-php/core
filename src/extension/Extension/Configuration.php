@@ -1,13 +1,12 @@
-<?php namespace Spoom\Framework\Extension;
+<?php namespace Spoom\Core\Extension;
 
-use Spoom\Framework\Application;
-use Spoom\Framework\FileInterface;
-use Spoom\Framework\Storage;
-use Spoom\Framework\Converter;
+use Spoom\Core\Application;
+use Spoom\Core\FileInterface;
+use Spoom\Core\Storage;
+use Spoom\Core\Converter;
 
 /**
  * Interface ConfigurationInterface
- * @package Framework\Extension
  *
  * @since   0.6.0
  */
@@ -27,7 +26,6 @@ interface ConfigurationInterface extends Storage\PermanentInterface {
 
 /**
  * Class Configuration
- * @package Framework\Extension
  *
  * @property string|null $environment The actual environment's name
  */

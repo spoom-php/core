@@ -1,8 +1,7 @@
-<?php namespace Spoom\Framework\Helper;
+<?php namespace Spoom\Core\Helper;
 
 /**
  * Class Number
- * @package Framework\Helper
  */
 abstract class Number {
 

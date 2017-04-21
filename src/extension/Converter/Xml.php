@@ -1,15 +1,14 @@
-<?php namespace Spoom\Framework\Converter;
+<?php namespace Spoom\Core\Converter;
 
-use Spoom\Framework\Helper;
-use Spoom\Framework;
+use Spoom\Core\Helper;
+use Spoom\Core;
 
 /**
  * Class Xml
- * @package Framework\Converter
  *
  * @property XmlMeta $meta
  */
-class Xml implements Framework\ConverterInterface, Helper\AccessableInterface {
+class Xml implements Core\ConverterInterface, Helper\AccessableInterface {
   use Helper\Accessable;
   use Helper\Failable;
 
@@ -67,7 +66,7 @@ class Xml implements Framework\ConverterInterface, Helper\AccessableInterface {
     $dom    = new \DOMDocument();
     $result = (object) [];
 
-    if( !$dom->loadXML( $content ) ) $this->setException( new Framework\ConverterExceptionFail( $this, $content, libxml_get_last_error() ) );
+    if( !$dom->loadXML( $content ) ) $this->setException( new Core\ConverterExceptionFail( $this, $content, libxml_get_last_error() ) );
     else {
 
       $this->_meta->version  = $dom->xmlVersion;
@@ -201,7 +200,6 @@ class Xml implements Framework\ConverterInterface, Helper\AccessableInterface {
 }
 /**
  * Class XmlMeta
- * @package Framework\Converter
  */
 class XmlMeta {
 

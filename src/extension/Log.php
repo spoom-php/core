@@ -1,12 +1,11 @@
-<?php namespace Spoom\Framework;
+<?php namespace Spoom\Core;
 
-use Spoom\Framework\Converter\Json;
-use Spoom\Framework\Helper;
-use Spoom\Framework\Helper\Collection;
+use Spoom\Core\Converter\Json;
+use Spoom\Core\Helper;
+use Spoom\Core\Helper\Collection;
 
 /**
  * Interface LogInterface
- * @package Framework\Helper
  */
 interface LogInterface {
 
@@ -103,8 +102,8 @@ interface LogInterface {
 }
 
 /**
- * Class Log
- * @package Framework\Helper
+ * This logger will add entries to files
+ *
  *
  * @property      string        $channel  The name of the logger
  * @property      int           $severity Maximum severity level that will be logged
@@ -330,4 +329,43 @@ class Log implements LogInterface, Helper\AccessableInterface {
   public function setSeverity( int $severity ) {
     $this->_severity = $severity;
   }
+}
+
+/**
+ * This logger will add entries to the void
+ *
+ */
+class LogVoid implements LogInterface {
+
+  //
+  public function create( string $message, $data = [], string $namespace = '', int $severity = Application::SEVERITY_DEBUG ) { }
+  //
+  public function debug( string $message, $data = [], string $namespace = '' ) { }
+  //
+  public function info( string $message, $data = [], string $namespace = '' ) { }
+  //
+  public function notice( string $message, $data = [], string $namespace = '' ) { }
+  //
+  public function warning( string $message, $data = [], string $namespace = '' ) { }
+  //
+  public function error( string $message, $data = [], string $namespace = '' ) { }
+  //
+  public function critical( string $message, $data = [], string $namespace = '' ) { }
+  //
+  public function alert( string $message, $data = [], string $namespace = '' ) { }
+  //
+  public function emergency( string $message, $data = [], string $namespace = '' ) { }
+
+  //
+  public function getChannel(): string {
+    return '';
+  }
+  //
+  public function setChannel( string $value ) { }
+  //
+  public function getSeverity(): int {
+    return Application::SEVERITY_NONE;
+  }
+  //
+  public function setSeverity( int $value ) { }
 }

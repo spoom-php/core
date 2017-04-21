@@ -1,13 +1,12 @@
-<?php namespace Spoom\Framework\Converter;
+<?php namespace Spoom\Core\Converter;
 
-use Spoom\Framework\Helper;
-use Spoom\Framework;
+use Spoom\Core\Helper;
+use Spoom\Core;
 
 /**
  * Class Native
- * @package Framework\Converter
  */
-class Native implements Framework\ConverterInterface, Helper\AccessableInterface {
+class Native implements Core\ConverterInterface, Helper\AccessableInterface {
   use Helper\Accessable;
   use Helper\Failable;
 

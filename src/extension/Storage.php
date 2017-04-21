@@ -1,13 +1,12 @@
-<?php namespace Spoom\Framework;
+<?php namespace Spoom\Core;
 
-use Spoom\Framework\Helper\Collection;
-use Spoom\Framework\Helper;
-use Spoom\Framework\Helper\Number;
-use Spoom\Framework\Helper\Text;
+use Spoom\Core\Helper\Collection;
+use Spoom\Core\Helper;
+use Spoom\Core\Helper\Number;
+use Spoom\Core\Helper\Text;
 
 /**
  * Interface StorageInterface
- * @package Framework\Storage
  */
 interface StorageInterface extends \ArrayAccess, \Iterator, \Countable {
 
@@ -188,7 +187,6 @@ interface StorageInterface extends \ArrayAccess, \Iterator, \Countable {
 
 /**
  * Class Storage
- * @package Framework
  *
  * @since   0.6.0
  *
@@ -511,7 +509,6 @@ class Storage implements StorageInterface, Helper\AccessableInterface {
 
 /**
  * Class StorageMeta
- * @package Spoom\Framework
  */
 class StorageMeta {
 
@@ -597,7 +594,6 @@ class StorageMeta {
 }
 /**
  * Class StorageMetaSearch
- * @package Spoom\Framework
  */
 class StorageMetaSearch {
 

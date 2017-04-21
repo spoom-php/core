@@ -1,14 +1,13 @@
-<?php namespace Spoom\Framework\Converter;
+<?php namespace Spoom\Core\Converter;
 
-use Spoom\Framework;
-use Spoom\Framework\Helper;
-use Spoom\Framework\Helper\Collection;
-use Spoom\Framework\Helper\Number;
-use Spoom\Framework\ConverterInterface;
+use Spoom\Core;
+use Spoom\Core\Helper;
+use Spoom\Core\Helper\Collection;
+use Spoom\Core\Helper\Number;
+use Spoom\Core\ConverterInterface;
 
 /**
  * Class Ini
- * @package Framework\Converter
  */
 class Ini implements ConverterInterface, Helper\AccessableInterface {
   use Helper\Accessable;
@@ -19,7 +18,7 @@ class Ini implements ConverterInterface, Helper\AccessableInterface {
     $this->setException();
 
     $result = [];
-    if( !Collection::is( $content ) ) $this->setException( new Framework\ConverterExceptionFail( $this, $content ) );
+    if( !Collection::is( $content ) ) $this->setException( new Core\ConverterExceptionFail( $this, $content ) );
     else {
 
       $this->flatten( $result, Collection::read( $content, [], true ) );
@@ -50,7 +49,7 @@ class Ini implements ConverterInterface, Helper\AccessableInterface {
 
     $result = (object) [];
     $ini    = parse_ini_string( $content, false );
-    if( !is_array( $ini ) ) $this->setException( new Framework\ConverterExceptionFail( $this, $content, error_get_last() ) );
+    if( !is_array( $ini ) ) $this->setException( new Core\ConverterExceptionFail( $this, $content, error_get_last() ) );
     else foreach( $ini as $key => $value ) {
 
       $keys = explode( '.', $key );

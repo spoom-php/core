@@ -1,10 +1,9 @@
-<?php namespace Spoom\Framework;
+<?php namespace Spoom\Core;
 
-use Spoom\Framework\Helper;
+use Spoom\Core\Helper;
 
 /**
  * Interface ConverterInterface
- * @package Framework\Helper
  */
 interface ConverterInterface extends Helper\FailableInterface {
 
@@ -42,11 +41,10 @@ interface ConverterInterface extends Helper\FailableInterface {
 /**
  * Failed (de-)serialization
  *
- * @package Framework
  */
 class ConverterExceptionFail extends Exception\Logic {
 
-  const ID = '29#spoom-framework';
+  const ID = '29#spoom-core';
 
   /**
    * @param ConverterInterface $instance

@@ -1,19 +1,18 @@
-<?php namespace Spoom\Framework\Storage;
+<?php namespace Spoom\Core\Storage;
 
-use Spoom\Framework\Application;
-use Spoom\Framework\ConverterInterface;
-use Spoom\Framework\Exception;
-use Spoom\Framework\Extension;
-use Spoom\Framework\Helper;
-use Spoom\Framework\Helper\Collection;
-use Spoom\Framework\Storage;
-use Spoom\Framework\StorageInterface;
-use Spoom\Framework\StorageMeta;
-use Spoom\Framework\StorageMetaSearch;
+use Spoom\Core\Application;
+use Spoom\Core\ConverterInterface;
+use Spoom\Core\Exception;
+use Spoom\Core\Extension;
+use Spoom\Core\Helper;
+use Spoom\Core\Helper\Collection;
+use Spoom\Core\Storage;
+use Spoom\Core\StorageInterface;
+use Spoom\Core\StorageMeta;
+use Spoom\Core\StorageMetaSearch;
 
 /**
  * Interface PermanentInterface
- * @package Framework\Storage
  *
  * @since   0.6.0
  */
@@ -78,7 +77,6 @@ interface PermanentInterface extends StorageInterface, Helper\FailableInterface 
 }
 /**
  * Class Permanent
- * @package Framework\Storage
  *
  * @since   0.6.0
  *
@@ -372,11 +370,10 @@ abstract class Permanent extends Storage implements PermanentInterface {
 /**
  * There is no converter for a namespace to able to read/write the data
  *
- * @package Framework\Storage
  */
 class PermanentExceptionConverter extends Exception\Logic {
 
-  const ID = '23#spoom-framework';
+  const ID = '23#spoom-core';
 
   /**
    * @param string|null $namespace The namespace that has no converter

@@ -1,11 +1,10 @@
-<?php namespace Spoom\Framework\Helper;
+<?php namespace Spoom\Core\Helper;
 
-use Spoom\Framework\Storage;
-use Spoom\Framework\StorageInterface;
+use Spoom\Core\Storage;
+use Spoom\Core\StorageInterface;
 
 /**
  * Class Structure
- * @package Spoom\Framework\Helper
  */
 class Structure {
 

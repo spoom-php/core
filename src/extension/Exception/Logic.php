@@ -1,14 +1,13 @@
-<?php namespace Spoom\Framework\Exception;
+<?php namespace Spoom\Core\Exception;
 
-use Spoom\Framework\Application;
-use Spoom\Framework\ExceptionInterface;
-use Spoom\Framework\Helper;
-use Spoom\Framework\Helper\Collection;
+use Spoom\Core\Application;
+use Spoom\Core\ExceptionInterface;
+use Spoom\Core\Helper;
+use Spoom\Core\Helper\Collection;
 
 /**
  * Exception for developers and indicates problems that can be fixed with coding
  *
- * @package Framework\Exception
  *
  * @property-read string $id
  * @property-read int    $severity
@@ -17,7 +16,7 @@ use Spoom\Framework\Helper\Collection;
 class Logic extends \LogicException implements ExceptionInterface, Helper\AccessableInterface {
   use Helper\Accessable;
 
-  const ID = '0#spoom-framework';
+  const ID = '0#spoom-core';
 
   /**
    * The unique identifier of the exception

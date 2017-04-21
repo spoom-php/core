@@ -1,11 +1,10 @@
-<?php namespace Spoom\Framework\Helper;
+<?php namespace Spoom\Core\Helper;
 
-use Spoom\Framework\Application;
-use Spoom\Framework\Exception;
+use Spoom\Core\Application;
+use Spoom\Core\Exception;
 
 /**
  * Interface AccessableInterface
- * @package Framework\Helper
  */
 interface AccessableInterface {
 
@@ -40,7 +39,6 @@ interface AccessableInterface {
 
 /**
  * Class Accessable
- * @package Framework\Helper
  */
 trait Accessable {
 
@@ -101,11 +99,10 @@ trait Accessable {
 /**
  * There is no getter or setter for the requested property
  *
- * @package Framework\Helper
  */
 class AccessibleExceptionMissing extends Exception\Logic {
 
-  const ID = '20#spoom-framework';
+  const ID = '20#spoom-core';
 
   /**
    * @param object $instance

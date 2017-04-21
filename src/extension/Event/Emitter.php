@@ -1,11 +1,10 @@
-<?php namespace Spoom\Framework\Event;
+<?php namespace Spoom\Core\Event;
 
-use Spoom\Framework\EventInterface;
-use Spoom\Framework\Helper;
+use Spoom\Core\EventInterface;
+use Spoom\Core\Helper;
 
 /**
  * Interface EmitterInterface
- * @package Framework\Event
  */
 interface EmitterInterface {
 
@@ -74,7 +73,6 @@ interface EmitterInterface {
 }
 /**
  * Class Emitter
- * @package Framework\Event
  *
  * @property-read string     $name
  * @property-read callable[] $callback_list

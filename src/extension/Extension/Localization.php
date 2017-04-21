@@ -1,13 +1,12 @@
-<?php namespace Spoom\Framework\Extension;
+<?php namespace Spoom\Core\Extension;
 
-use Spoom\Framework\Application;
-use Spoom\Framework\FileInterface;
-use Spoom\Framework\Storage;
-use Spoom\Framework\Converter;
+use Spoom\Core\Application;
+use Spoom\Core\FileInterface;
+use Spoom\Core\Storage;
+use Spoom\Core\Converter;
 
 /**
  * Interface LocalizationInterface
- * @package Framework\Extension
  *
  * @since   0.6.0
  */
@@ -35,7 +34,6 @@ interface LocalizationInterface extends Storage\PermanentInterface {
 
 /**
  * Class Localization
- * @package Framework\Extension
  *
  * @property string $localization The current localization name
  */

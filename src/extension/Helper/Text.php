@@ -1,12 +1,11 @@
-<?php namespace Spoom\Framework\Helper;
+<?php namespace Spoom\Core\Helper;
 
-use Spoom\Framework\Application;
-use Spoom\Framework\Storage;
-use Spoom\Framework\StorageInterface;
+use Spoom\Core\Application;
+use Spoom\Core\Storage;
+use Spoom\Core\StorageInterface;
 
 /**
  * Class Text
- * @package Framework\Helper
  */
 abstract class Text {
 

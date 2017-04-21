@@ -1,7 +1,7 @@
-<?php namespace Spoom\Framework;
+<?php namespace Spoom\Core;
 
 use PHPUnit\Framework\TestCase;
-use Spoom\Framework\Helper;
+use Spoom\Core\Helper;
 
 class HelperTest extends TestCase {
 
@@ -158,7 +158,7 @@ class HelperTest extends TestCase {
   public function providerStructure() {
     // Structure, expect, input
     return [
-      [ FrameworkHelperTestStructure1::class, [
+      [ HelperTestStructure1::class, [
         'test00' => '00',
         'test01' => '0',
         'test11' => '11',
@@ -184,7 +184,7 @@ class HelperTest extends TestCase {
   }
 }
 
-class FrameworkHelperTestStructure1 extends Helper\Structure {
+class HelperTestStructure1 extends Helper\Structure {
 
   const PROPERTY_MAP  = [
     // simple mapping
@@ -197,9 +197,9 @@ class FrameworkHelperTestStructure1 extends Helper\Structure {
   ];
   const PROPERTY_WRAP = [
     // wrap in a class
-    'test4' => FrameworkHelperTestStructure2::class,
+    'test4' => HelperTestStructure2::class,
     // wrap every subelement in a class
-    'test5' => '[]' . FrameworkHelperTestStructure2::class
+    'test5' => '[]' . HelperTestStructure2::class
   ] + parent::PROPERTY_WRAP;
 
   // it must be remain untouched
@@ -213,7 +213,7 @@ class FrameworkHelperTestStructure1 extends Helper\Structure {
   public $test4;
   public $test5;
 }
-class FrameworkHelperTestStructure2 extends Helper\Structure {
+class HelperTestStructure2 extends Helper\Structure {
 
   const PROPERTY_MAP = [
     'test' => 'test1'
