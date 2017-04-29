@@ -91,7 +91,7 @@ class Xml implements Core\ConverterInterface, Helper\AccessableInterface {
   protected function write( \DOMDocument &$dom, \DOMElement &$element, $data, string $name, string $key ) {
 
     // handle xml "leaf"
-    if( !Helper\Collection::is( $data ) ) {
+    if( !Helper\Collection::is( $data, true ) ) {
 
       if( $data === null ) $value = 'NULL';
       else if( $data === true ) $value = 'TRUE';

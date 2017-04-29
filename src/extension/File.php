@@ -711,7 +711,7 @@ class FileException extends Exception\Runtime implements FileExceptionInterface 
   public function __construct( string $path, $error, ?\Throwable $previous = null ) {
 
     $data = [ 'path' => $path, 'error' => $error ];
-    parent::__construct( Text::insert( 'Failed file operation for \'{path}\'', $data ), static::ID, $data, $previous );
+    parent::__construct( Text::apply( 'Failed file operation for \'{path}\'', $data ), static::ID, $data, $previous );
   }
 }
 /**
@@ -729,7 +729,7 @@ class FileExceptionRootInvalid extends Exception\Runtime implements FileExceptio
 
     $data = [ 'path' => $path ];
     parent::__construct(
-      Text::insert( 'Missing or invalid filesystem root: \'{path}\'', $data ),
+      Text::apply( 'Missing or invalid filesystem root: \'{path}\'', $data ),
       static::ID,
       $data,
       null,
@@ -750,7 +750,7 @@ class FileExceptionPathInvalid extends Exception\Runtime implements FileExceptio
    */
   public function __construct( string $path ) {
     $data = [ 'path' => $path ];
-    parent::__construct( Text::insert( 'Path is outside the root: \'{path}\'', $data ), static::ID, $data, null, Core\Application::SEVERITY_WARNING );
+    parent::__construct( Text::apply( 'Path is outside the root: \'{path}\'', $data ), static::ID, $data, null, Core\Application::SEVERITY_WARNING );
   }
 }
 /**
@@ -769,7 +769,7 @@ class FileExceptionTypeInvalid extends Exception\Logic implements FileExceptionI
 
     $data = [ 'path' => $path, 'allow' => implode( ',', $allow ) ];
     parent::__construct(
-      Text::insert( 'Path (\'{path}\') must be {allow} for this operation', $data ),
+      Text::apply( 'Path (\'{path}\') must be {allow} for this operation', $data ),
       static::ID,
       $data,
       null,
@@ -793,7 +793,7 @@ class FileExceptionPermission extends Exception\Runtime implements FileException
 
     $data = [ 'path' => $path, 'allow' => $allow ];
     parent::__construct(
-      Text::insert( 'Failed operation, due to insufficient permission for \'{path}\'', $data ),
+      Text::apply( 'Failed operation, due to insufficient permission for \'{path}\'', $data ),
       static::ID,
       $data,
       null,

@@ -296,7 +296,7 @@ class Storage implements StorageInterface, Helper\AccessableInterface {
   public function getPattern( string $index, $insertion, ?string $default = '' ): ?string {
 
     $tmp = $this->getString( $index, $default );
-    return $tmp !== null ? Text::insert( $tmp, $insertion ) : $tmp;
+    return $tmp !== null ? Text::apply( $tmp, $insertion ) : $tmp;
   }
 
   /**
@@ -489,7 +489,7 @@ class Storage implements StorageInterface, Helper\AccessableInterface {
   //
   public function rewind() {
     $this->iterator_cursor = 0;
-    $this->iterator_key    = is_object( $this->_source ) ? get_object_vars( $this->_source ) : array_keys( $this->_source );
+    $this->iterator_key    = array_keys( is_object( $this->_source ) ? get_object_vars( $this->_source ) : $this->_source );
   }
 
   //

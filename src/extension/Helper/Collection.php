@@ -11,14 +11,13 @@ abstract class Collection {
   /**
    * Test if the variable is a collection (array or object)
    *
-   * TODO this should check (optionally) that the object is \SdtClass or implements \Traversable
-   *
    * @param mixed $test
+   * @param bool  $strict Only traversable, or any object
    *
-   * @return bool True if the test is an array or object
+   * @return bool True if the test is an array or (a traversable) object
    */
-  public static function is( $test ): bool {
-    return is_object( $test ) || is_array( $test );
+  public static function is( $test, bool $strict = false ): bool {
+    return is_array( $test ) || ( is_object( $test ) && ( !$strict || $test instanceof \StdClass || $test instanceof \Traversable ) );
   }
   /**
    * Check for the input is a real numeric array
@@ -117,12 +116,12 @@ abstract class Collection {
    * @return array|null
    */
   public static function read( $input, ?array $default = null, bool $deep = false ): ?array {
-    if( !static::is( $input ) ) return $default;
+    if( !static::is( $input, true ) ) return $default;
     else {
 
       $tmp = [];
       foreach( $input as $k => $t ) {
-        $tmp[ $k ] = $deep && static::is( $t ) ? static::read( $t, null, $deep ) : $t;
+        $tmp[ $k ] = $deep && static::is( $t, true ) ? static::read( $t, null, $deep ) : $t;
       }
 
       return $tmp;

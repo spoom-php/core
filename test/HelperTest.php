@@ -25,6 +25,13 @@ class HelperTest extends TestCase {
     // test unqiue string generation length
     $this->assertEquals( 542, strlen( Helper\Text::unique( 542 ) ) );
 
+    // test context insertion
+    $this->assertEquals( 'This is bar', Helper\Text::apply( 'This is {foo}', [ 'foo' => 'bar' ] ) );
+    $this->assertEquals( 'This is "{foo}"', Helper\Text::apply( 'This is "{foo}"', [ 'foo' => 'bar' ], '"\'' ) );
+    $this->assertEquals( 'This is 1 foo and 2 bar', Helper\Text::apply( 'This is {foo} foo and {bar} bar', [], '', function ( $name ) {
+      return $name == 'foo' ? 1 : 2;
+    } ) );
+
     // TODO test uncovered String methods
   }
   public function testNumber() {
@@ -72,14 +79,14 @@ class HelperTest extends TestCase {
    *
    * @param Helper\Structure $io
    * @param array            $expect
-   * @param           $input
+   * @param                  $input
    */
   public function testStructure( $io, array $expect, $input ) {
 
     $tmp = $io::instance( $input );
     $this->assertEquals( $expect, Helper\Collection::read( $tmp, null, true ) );
   }
-  
+
   /**
    * Test stream functionalities
    */
@@ -131,7 +138,7 @@ class HelperTest extends TestCase {
 
     // check for stream support
     $content = (object) [ 'test1' => (object) [ 'test2' => (object) [ 'test3' => 3 ], 'test4' => 4 ] ];
-    $tmp = Helper\Stream::instance( fopen( 'php://memory', 'w+' ) );
+    $tmp     = Helper\Stream::instance( fopen( 'php://memory', 'w+' ) );
 
     $converter->serialize( $content, $tmp );
     $tmp->seek( 0 );

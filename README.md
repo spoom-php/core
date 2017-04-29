@@ -26,7 +26,7 @@ Spoom Core (and most official library) works with PHP 7.1 or above
 Here is a basic example to initialize the framework with the `Core\Application`:
 
 ```php
-<?php 
+<?php require 'vendor/autoload.php';
 
 use Spoom\Core\Application;
 use Spoom\Core\File;

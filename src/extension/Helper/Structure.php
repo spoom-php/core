@@ -6,7 +6,7 @@ use Spoom\Core\StorageInterface;
 /**
  * Class Structure
  */
-class Structure {
+class Structure implements \Iterator {
 
   /**
    * Rename or copy input elements
@@ -28,6 +28,15 @@ class Structure {
   const PROPERTY_WRAP = [];
 
   /**
+   * @var int
+   */
+  private $iterator_cursor = 0;
+  /**
+   * @var array
+   */
+  private $iterator_key = [];
+
+  /**
    * @param array|object $input
    */
   protected function __construct( $input ) {
@@ -42,8 +51,7 @@ class Structure {
     $this->wrap( $input, static::PROPERTY_WRAP );
 
     // fill the object properties from the input
-    $tmp = get_object_vars( $this );
-    foreach( $tmp as $property => $value ) {
+    foreach( $this as $property => $value ) {
       $this->{$property} = $input[ $property ] ?? $value;
     }
   }
@@ -85,7 +93,7 @@ class Structure {
       else {
 
         $list = [];
-        if( Collection::is( $value ) ) {
+        if( Collection::is( $value, true ) ) {
           foreach( $value as $i => $t ) {
             $list[ $i ] = $class::instance( $t );
           }
@@ -96,6 +104,32 @@ class Structure {
     }
   }
 
+  //
+  public function current() {
+    return $this->{$this->key()};
+  }
+  //
+  public function next() {
+    ++$this->iterator_cursor;
+  }
+  //
+  public function key() {
+    return $this->iterator_key[ $this->iterator_cursor ];
+  }
+  //
+  public function valid() {
+    return isset( $this->iterator_key[ $this->iterator_cursor ] );
+  }
+  //
+  public function rewind() {
+    $this->iterator_cursor = 0;
+    $this->iterator_key    = [];
+
+    // FIXME this can be slow
+    $tmp = ( new \ReflectionObject( $this ) )->getProperties( \ReflectionProperty::IS_PUBLIC );
+    foreach( $tmp as $t ) $this->iterator_key[] = $t->getName();
+  }
+  
   /**
    * @param array|object $input
    *

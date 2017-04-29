@@ -109,7 +109,7 @@ abstract class Text {
 
     $tmp = @hash( $algorithm, $raw );
     if( !empty( $tmp ) ) return $tmp;
-    else throw new \InvalidArgumentException( Text::insert( 'Invalid hash algorithm: {algorithm}; avaliable {list}', [
+    else throw new \InvalidArgumentException( Text::apply( 'Invalid hash algorithm: {algorithm}; avaliable {list}', [
       'algorithm' => $algorithm,
       'list'      => implode( ',', hash_algos() )
     ] ) );
@@ -118,29 +118,45 @@ abstract class Text {
   /**
    * Insert variables to the input from insertion array used the regexp constant of class
    *
-   * TODO rewrite without preg-s (with simple for)
    * TODO implement condition and loop support
    *
-   * @param string                        $text    Input string to insert
-   * @param array|object|StorageInterface $context The insertion variables
-   * @param bool                          $keep    Keep the missing insertions, or replace them with empty string
+   * @param string                        $text     Input string to insert
+   * @param array|object|StorageInterface $context  The insertion variables
+   * @param string                        $skip     Opener (and closer) characters for blocks in the text that will not processed
+   * @param callable|null                 $callback callback to process replaces
    *
-   * @return array|string
+   * @return string
    */
-  public static function insert( string $text, $context, bool $keep = false ) {
+  public static function apply( string $text, $context, string $skip = '', ?callable $callback = null ): string {
 
-    // every insertion converted to data
+    //
     $context = Storage::instance( $context );
 
-    // find patterns iterate trough the matches
-    preg_match_all( self::INSERT_REGEXP, $text, $matches, PREG_SET_ORDER );
-    foreach( $matches as $value ) {
+    $output    = '';
+    $delimiter = null;
+    for( $i = 0, $length = strlen( $text ); $i < $length; ++$i ) {
 
-      // replace the pattern
-      $text = str_replace( $value[ 0 ], $context->getString( $value[ 1 ], $keep ? $value[ 0 ] : '' ), $text );
+      // detect skipped blocks (start and end)
+      if( $delimiter == $text{$i} ) $delimiter = null;
+      else if( !$delimiter && strpos( $skip, $text{$i} ) !== false ) $delimiter = $text{$i};
+
+      // try to process the insertion
+      if( !$delimiter && $text{$i} == '{' ) {
+
+        $buffer = '';
+        for( $j = $i + 1; $j < $length && $text{$j} != '}'; ++$j ) {
+          $buffer .= $text{$j};
+        }
+        $i = $j;
+
+        $output .= $callback ? $callback( $buffer, $context ) : $context[ $buffer ];
+        continue;
+      }
+
+      $output .= $text{$i};
     }
 
-    return $text;
+    return $output;
   }
   /**
    * Clear multiply occurance of chars from text and leave only one

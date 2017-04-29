@@ -291,6 +291,6 @@ class StreamExceptionInvalid extends Exception\Logic {
   public function __construct( StreamInterface $stream, $operation = null ) {
 
     $data = [ 'meta' => $stream->getMeta(), 'operation' => $operation ];
-    parent::__construct( Text::insert( 'Stream is not suitable for {operation}', $data ), static::ID, $data );
+    parent::__construct( Text::apply( 'Stream is not suitable for {operation}', $data ), static::ID, $data );
   }
 }

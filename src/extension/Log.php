@@ -193,7 +193,7 @@ class Log implements LogInterface, Helper\AccessableInterface {
 
           $message     = $event->getString( 'message', $message );
           $data        = $event[ 'data' ] ?? $this->wrap( $data );
-          $description = $event->getString( 'description', Helper\Text::insert( $message, $data, true ) );
+          $description = $event->getString( 'description', Helper\Text::apply( $message, $data, true ) );
           $datetime    = $event->getString( 'datetime', $datetime );
 
           $stream = $this->getFile( date( 'Ymd', $sec ) )->stream( Helper\StreamInterface::MODE_WA );
