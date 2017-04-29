@@ -1,4 +1,4 @@
-<?php require '../vendor/autoload.php';
+<?php require __DIR__ . '/../vendor/autoload.php';
 
 use Spoom\Core\Application;
 use Spoom\Core\File;

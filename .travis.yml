@@ -20,7 +20,7 @@ matrix:
 
 before_script:
       - composer self-update
-      - composer install --prefer-dist --no-interaction --dev
+      - composer install --prefer-dist --no-interaction
 
 script:
     - vendor/bin/phpunit -c test/phpunit.xml
