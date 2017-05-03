@@ -20,7 +20,7 @@ class HelperTest extends TestCase {
     @unlink( static::$directory . 'stream-rw.txt' );
   }
 
-  public function testString() {
+  public function testText() {
 
     // test unqiue string generation length
     $this->assertEquals( 542, strlen( Helper\Text::unique( 542 ) ) );
@@ -33,6 +33,41 @@ class HelperTest extends TestCase {
     } ) );
 
     // TODO test uncovered String methods
+  }
+  public function testCollectionBasic() {
+
+    $this->assertTrue( Helper\Collection::is( new Storage( [] ), true, true ) );
+    $this->assertTrue( Helper\Collection::is( new \StdClass(), true ) );
+    $this->assertFalse( Helper\Collection::is( new \StdClass(), true, true ) );
+
+    $this->assertTrue( Helper\Collection::isArrayNumeric( [ 'a', 'b', 'c' ] ) );
+    $this->assertTrue( Helper\Collection::isArrayNumeric( [ 'a', 'b', 'c' ], false ) );
+    $this->assertTrue( Helper\Collection::isArrayNumeric( [ 1 => 'a', 'b', 'c' ], false ) );
+    $this->assertTrue( Helper\Collection::isArrayNumeric( [ '0' => 'a', 'b', 'c' ] ) );
+    $this->assertFalse( Helper\Collection::isArrayNumeric( [ 'a' => 'a', 'b', 'c' ] ) );
+
+    // TODO test read
+  }
+  public function testCollectionExtra() {
+
+    // test iterable merging
+    $a = [ 'a' => 'a', 'b' => [ 'c' => [ 'e' => 'e' ] ] ];
+    $b = [ 'd' => 'd', 'b' => [ 'f' => 'f' ] ];
+    $this->assertEquals( array_merge_recursive( $a, $b ), Helper\Collection::merge( $a, $b ) );
+    $this->assertEquals( array_merge( $a, $b ), Helper\Collection::merge( $a, $b, false ) );
+
+    // 
+    $c          = [ 'b' => [ 'c' => 'c' ] ];
+    $tmp        = $a;
+    $tmp[ 'b' ] = $c[ 'b' ];
+    $this->assertEquals( $tmp, Helper\Collection::merge( $a, $c ) );
+
+    // test input type keeping and storage support (of merging)
+    $tmp = new Storage( $a );
+    $this->assertTrue( $tmp === Helper\Collection::merge( $tmp, $b ) );
+    $this->assertEquals( array_merge_recursive( $a, $b ), Helper\Collection::read( Helper\Collection::merge( $tmp, $b ), [], true ) );
+
+    // TODO test copy
   }
   public function testNumber() {
 

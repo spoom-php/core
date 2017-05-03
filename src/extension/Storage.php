@@ -377,7 +377,7 @@ class Storage implements StorageInterface, Helper\AccessableInterface {
     if( !$tmp->exist ) $result = null;
     else if( $tmp->key === null ) $result = $tmp->container;
     else if( $tmp->container instanceof StorageInterface ) $result = $tmp->container[ $tmp->key . static::SEPARATOR_TYPE . $index->type ];
-    else if( Collection::isArrayLike( $tmp->container ) ) $result = $tmp->container[ $tmp->key ];
+    else if( Collection::is( $tmp->container, false, true ) ) $result = $tmp->container[ $tmp->key ];
     else $result = $tmp->container->{$tmp->key};
 
     // switch result based on the type
@@ -447,7 +447,7 @@ class Storage implements StorageInterface, Helper\AccessableInterface {
     if( $result->exist ) {
 
       if( $result->key === null ) $result->container = $value;
-      else if( Collection::isArrayLike( $result->container ) ) $result->container[ $result->key ] = $value;
+      else if( Collection::is( $result->container, false, true ) ) $result->container[ $result->key ] = $value;
       else $result->container->{$result->key} = $value;
 
       // clear the cache or the cache index
@@ -461,7 +461,7 @@ class Storage implements StorageInterface, Helper\AccessableInterface {
     if( $result->exist ) {
 
       if( $result->key === null ) $result->container = [];
-      else if( Collection::isArrayLike( $result->container ) ) unset( $result->container[ $result->key ] );
+      else if( Collection::is( $result->container, false, true ) ) unset( $result->container[ $result->key ] );
       else unset( $result->container->{$result->key} );
 
       // clear the cache or the cache index

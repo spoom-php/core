@@ -1,72 +1,34 @@
 <?php namespace Spoom\Core\Exception;
 
 use Spoom\Core\Application;
-use Spoom\Core\ExceptionInterface;
 use Spoom\Core\Helper;
 use Spoom\Core\Helper\Collection;
 
 /**
  * Exception for unpredictable and unfixable problems. An offline database, missing file permission...something like that
  *
- *
  * @property-read string $id
  * @property-read int    $severity
  * @property-read array  $context
  */
-class Runtime extends \RuntimeException implements ExceptionInterface, Helper\AccessableInterface {
+class Runtime extends \RuntimeException implements Helper\ThrowableInterface, Helper\AccessableInterface {
+  use Helper\Throwable;
   use Helper\Accessable;
 
   const ID = '0#spoom-core';
 
   /**
-   * The unique identifier of the exception
-   *
-   * @var string
-   */
-  private $_id;
-
-  /**
-   * The severity level of the exception
-   *
-   * @var int
-   */
-  private $_severity = Application::SEVERITY_ERROR;
-
-  /**
-   * @var array
-   */
-  private $_context = [];
-
-  /**
    * @param string          $message
-   * @param int             $id
+   * @param string|int      $id
    * @param array           $context
    * @param \Throwable|null $previous
    * @param int             $severity
    */
-  public function __construct( $message, $id, $context = [], \Throwable $previous = null, $severity = Application::SEVERITY_CRITICAL ) {
+  public function __construct( string $message, $id, $context = [], \Throwable $previous = null, int $severity = Application::SEVERITY_CRITICAL ) {
     parent::__construct( $message, (int) $id, $previous );
 
     $this->_id       = $id;
     $this->_context  = Collection::read( $context, [] );
-    $this->_severity = (int) $severity;
-  }
-
-  //
-  public function __toString() {
-    return $this->getId() . ": '" . $this->getMessage() . "'";
-  }
-
-  //
-  public function getId() {
-    return $this->_id;
-  }
-  //
-  public function getContext() {
-    return $this->_context;
-  }
-  //
-  public function getSeverity() {
-    return $this->_severity;
+    $this->_severity = $severity;
   }
 }

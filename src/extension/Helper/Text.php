@@ -174,8 +174,6 @@ abstract class Text {
   /**
    * Create camelCase version of the input string along the separator(s)
    *
-   * @since {?} Add support for multiple separator
-   *
    * @param string          $name
    * @param string|string[] $separator
    *

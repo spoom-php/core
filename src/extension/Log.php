@@ -290,7 +290,6 @@ class Log implements LogInterface, Helper\AccessableInterface {
   }
 
   /**
-   * @since ???
    * @since 0.6.0
    *
    * @param string|null $prefix

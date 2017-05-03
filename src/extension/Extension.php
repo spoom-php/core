@@ -54,9 +54,6 @@ interface ExtensionInterface {
   public function trigger( string $name, $data = [] ): EventInterface;
 
   /**
-   *
-   * @since ???
-   *
    * @param string $path
    *
    * @return FileInterface
@@ -87,8 +84,6 @@ interface ExtensionInterface {
    */
   public function getLog(): LogInterface;
   /**
-   * @since ??
-   *
    * @return Event\EmitterInterface
    */
   public function getEmitter(): Event\EmitterInterface;

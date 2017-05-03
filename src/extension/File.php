@@ -693,7 +693,7 @@ class File implements FileInterface {
  * Interface for all File related exceptions
  *
  */
-interface FileExceptionInterface extends Core\ExceptionInterface {
+interface FileExceptionInterface extends Helper\ThrowableInterface {
 }
 /**
  * Basic file operation failures

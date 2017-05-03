@@ -141,16 +141,12 @@ class File extends Permanent {
     return empty( $this->_file );
   }
   /**
-   * @since ???
-   *
    * @return FileInterface
    */
   public function getDirectory(): FileInterface {
     return $this->_directory;
   }
   /**
-   * @since ???
-   *
    * @param FileInterface $value
    */
   public function setDirectory( FileInterface $value ) {
@@ -158,16 +154,12 @@ class File extends Permanent {
   }
 
   /**
-   * @since ???
-   *
    * @return string
    */
   public function getFile(): string {
     return $this->_file;
   }
   /**
-   * @since ???
-   *
    * @param string $value
    */
   public function setFile( string $value ) {
