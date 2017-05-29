@@ -126,7 +126,7 @@ class Configuration extends Storage\File implements ConfigurationInterface {
 
   //
   public function getEnvironment( bool $active = false ):?string {
-    return $active ? $this->cache : $this->_environment;
+    return $active ? $this->active : $this->_environment;
   }
   //
   public function setEnvironment( ?string $value = null ) {

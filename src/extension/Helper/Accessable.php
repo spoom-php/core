@@ -14,7 +14,7 @@ interface AccessableInterface {
    * @param string $property
    *
    * @return mixed
-   * @throws AccessibleExceptionMissing
+   * @throws AccessibleMissingException
    */
   public function __get( $property );
   /**
@@ -24,7 +24,7 @@ interface AccessableInterface {
    * @param mixed  $value
    *
    * @return void
-   * @throws AccessibleExceptionMissing
+   * @throws AccessibleMissingException
    */
   public function __set( $property, $value );
   /**
@@ -67,7 +67,7 @@ trait Accessable {
 
     $method = self::$accessible_cache[ $cache ];
     if( $method ) return $this->{$method}();
-    else throw new AccessibleExceptionMissing( $this, $property );
+    else throw new AccessibleMissingException( $this, $property );
   }
   //
   public function __set( $property, $value ) {
@@ -83,14 +83,14 @@ trait Accessable {
     }
 
     $method = self::$accessible_cache[ $cache ];
-    if( !$method ) throw new AccessibleExceptionMissing( $this, $property );
+    if( !$method ) throw new AccessibleMissingException( $this, $property );
     else $this->{$method}( $value );
   }
   //
   public function __isset( $property ) {
     try {
       return $this->__get( $property ) !== null;
-    } catch( AccessibleExceptionMissing $e ) {
+    } catch( AccessibleMissingException $e ) {
       return false;
     }
   }
@@ -100,7 +100,7 @@ trait Accessable {
  * There is no getter or setter for the requested property
  *
  */
-class AccessibleExceptionMissing extends Exception\Logic {
+class AccessibleMissingException extends Exception\Logic {
 
   const ID = '20#spoom-core';
 

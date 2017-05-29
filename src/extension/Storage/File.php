@@ -78,7 +78,7 @@ class File extends Permanent {
   //
   protected function write( string $content, ?string $namespace = null ) {
     $file = $this->searchFile( $namespace, $this->converter_cache[ $namespace ][ 'format' ] );
-    $file->stream( StreamInterface::MODE_WRITE )->write( $content );
+    $file->stream( StreamInterface::MODE_WT )->write( $content );
   }
   //
   protected function read( ?string $namespace = null ): ?string {

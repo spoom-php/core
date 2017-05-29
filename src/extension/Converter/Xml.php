@@ -66,7 +66,7 @@ class Xml implements Core\ConverterInterface, Helper\AccessableInterface {
     $dom    = new \DOMDocument();
     $result = (object) [];
 
-    if( !$dom->loadXML( $content ) ) $this->setException( new Core\ConverterExceptionFail( $this, $content, libxml_get_last_error() ) );
+    if( !$dom->loadXML( $content ) ) $this->setException( new Core\ConverterFailException( $this, $content, libxml_get_last_error() ) );
     else {
 
       $this->_meta->version  = $dom->xmlVersion;
@@ -190,9 +190,10 @@ class Xml implements Core\ConverterInterface, Helper\AccessableInterface {
    * @param XmlMeta $value
    *
    * @return $this
+   * @throws \TypeError Wrong type of meta
    */
   public function setMeta( $value ) {
-    if( !( $value instanceof XmlMeta ) ) throw new \InvalidArgumentException( 'Meta must be a subclass of ' . XmlMeta::class, $value );
+    if( !( $value instanceof XmlMeta ) ) throw new \TypeError( 'Meta must be a subclass of ' . XmlMeta::class, $value );
     else $this->_meta = $value;
 
     return $this;

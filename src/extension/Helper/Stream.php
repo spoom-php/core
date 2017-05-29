@@ -5,31 +5,43 @@ use Spoom\Core\Exception;
 /**
  * Interface StreamInterface
  */
-interface StreamInterface extends \Countable {
+interface StreamInterface {
 
   /**
    * Creates a readable stream
    */
   const MODE_READ = 2;
   /**
-   * Creates a writeable stream
+   * Creates a writeable stream (without truncate!) and place the pointer at the beggining of the stream
    */
   const MODE_WRITE = 4;
   /**
-   * Create will append not rewrite
+   * Change the write behavior and place the pointer to the end of the stream
    */
   const MODE_APPEND = 8;
+  /**
+   * Change the write behavior and truncate the stream to zero length
+   */
+  const MODE_TRUNCATE = 16;
 
   /**
-   * Creates a read-writeable stream
+   * Creates a read-writeable stream (without truncate!) and place the pointer at the beggining of the stream
    */
   const MODE_RW = self::MODE_READ | self::MODE_WRITE;
   /**
-   * Creates a writeable (append) stream
+   * Creates a read-writeable stream, truncate it to zero length and place the pointer at the beggining of the stream
+   */
+  const MODE_RWT = self::MODE_READ | self::MODE_WRITE | self::MODE_TRUNCATE;
+  /**
+   * Creates a writeable stream and place the pointer at the end of the stream
    */
   const MODE_WA = self::MODE_WRITE | self::MODE_APPEND;
   /**
-   * Creates a read-writeable (append) stream
+   * Creates a writeable empty stream
+   */
+  const MODE_WT = self::MODE_WRITE | self::MODE_TRUNCATE;
+  /**
+   * Creates a read-writeable (append) stream (without truncate!) and place the pointer at the end of the stream
    */
   const MODE_RWA = self::MODE_READ | self::MODE_WRITE | self::MODE_APPEND;
 
@@ -47,7 +59,7 @@ interface StreamInterface extends \Countable {
    * @param int|null               $offset  Offset in the stream where to write. Default (===null) is the current cursor
    *
    * @return static
-   * @throws StreamExceptionInvalid Invalid input or instance stream
+   * @throws StreamInvalidException Invalid input or instance stream
    */
   public function write( $content, int $offset = null );
   /**
@@ -58,9 +70,19 @@ interface StreamInterface extends \Countable {
    * @param StreamInterface|null $stream Output stream if specified
    *
    * @return string
-   * @throws StreamExceptionInvalid Invalid input or instance stream
+   * @throws StreamInvalidException Invalid input or instance stream
    */
-  public function read( int $length = 0, int $offset = null, StreamInterface $stream = null );
+  public function read( int $length = 0, ?int $offset = null, StreamInterface $stream = null );
+  /**
+   * Truncate the stream to length
+   *
+   * @see ftruncate()
+   *
+   * @param int|null $length NULL is the current offset
+   *
+   * @return static
+   */
+  public function truncate( ?int $length = null );
 
   /**
    * Move the internal cursor within the stream
@@ -84,6 +106,14 @@ interface StreamInterface extends \Countable {
    * @return int
    */
   public function getOffset(): int;
+  /**
+   * Get the stream size in bytes
+   *
+   * @param bool $unreaded Get only the unreaded bytes
+   *
+   * @return int|null null if the size is unknown
+   */
+  public function getSize( bool $unreaded = false ): ?int;
   /**
    * Get the raw metadata of the stream
    *
@@ -123,6 +153,7 @@ interface StreamInterface extends \Countable {
  *
  * @property-read resource $resource
  * @property-read int      $offset
+ * @property-read int|null $size
  * @property-read array    $meta
  * @property-read bool     $writable
  * @property-read bool     $readable
@@ -148,18 +179,27 @@ class Stream implements StreamInterface, AccessableInterface {
    *
    * Internally created resource will be closed after destruction
    *
-   * @param resource|string $uri  Resource or a resource uri for {@see fopen()}
-   * @param int             $mode Resource create mode for string uri-s
+   * @param resource|string $uri   Resource or a resource uri for {@see fopen()}
+   * @param int             $mode  Resource create mode for string uri-s
+   * @param bool            $close Close the resource after destruction (only works with resource type $uri)
+   *
+   * @throws \InvalidArgumentException
    */
-  public function __construct( $uri, int $mode = 0 ) {
+  public function __construct( $uri, int $mode = 0, bool $close = false ) {
 
-    $this->close = false;
+    $this->close = $close;
     if( is_resource( $uri ) ) $this->_resource = $uri;
     else {
 
-      $tmp             = $mode & static::MODE_WRITE ? ( $mode & static::MODE_APPEND ? 'a' : 'w' ) . ( $mode & static::MODE_READ ? '+' : '' ) : 'r';
-      $this->_resource = fopen( $uri, $tmp );
+      // define stream open flags
+      if( !( $mode & static::MODE_WRITE ) ) $tmp = 'r';
+      else {
 
+        $tmp = $mode & static::MODE_TRUNCATE ? 'w' : ( $mode & static::MODE_APPEND ? 'a' : 'c' );
+        if( $mode & static::MODE_READ ) $tmp .= '+';
+      }
+
+      $this->_resource = fopen( $uri, $tmp );
       if( empty( $this->_resource ) ) throw new \InvalidArgumentException( 'Stream uri must point to a valid resource' );
       else $this->close = true;
     }
@@ -180,7 +220,7 @@ class Stream implements StreamInterface, AccessableInterface {
 
   //
   public function write( $content, int $offset = null ) {
-    if( !$this->isWritable() ) throw new StreamExceptionInvalid( $this, 'write' );
+    if( !$this->isWritable() ) throw new StreamInvalidException( $this, 'write' );
     else {
 
       // seek to a position if given
@@ -190,15 +230,15 @@ class Stream implements StreamInterface, AccessableInterface {
 
       // write the content
       if( !( $content instanceof StreamInterface ) ) fwrite( $this->_resource, $content );
-      else if( !$content->isReadable() ) throw new StreamExceptionInvalid( $content, 'read' );
+      else if( !$content->isReadable() ) throw new StreamInvalidException( $content, 'read' );
       else stream_copy_to_stream( $content->getResource(), $this->_resource );
 
       return $this;
     }
   }
   //
-  public function read( int $length = 0, int $offset = null, StreamInterface $stream = null ) {
-    if( !$this->isReadable() ) throw new StreamExceptionInvalid( $this, 'read' );
+  public function read( int $length = 0, ?int $offset = null, StreamInterface $stream = null ) {
+    if( !$this->isReadable() ) throw new StreamInvalidException( $this, 'read' );
     else {
 
       // seek to a position if given
@@ -208,7 +248,7 @@ class Stream implements StreamInterface, AccessableInterface {
 
       // read the content
       if( !$stream ) return stream_get_contents( $this->_resource, $length > 0 ? $length : -1 );
-      else if( !( $stream instanceof StreamInterface ) || !$stream->isWritable() ) throw new StreamExceptionInvalid( $stream, 'write' );
+      else if( !( $stream instanceof StreamInterface ) || !$stream->isWritable() ) throw new StreamInvalidException( $stream, 'write' );
       else {
 
         stream_copy_to_stream( $this->_resource, $stream->getResource(), $length > 0 ? $length : -1 );
@@ -216,19 +256,25 @@ class Stream implements StreamInterface, AccessableInterface {
       }
     }
   }
+  //
+  public function truncate( ?int $length = null, bool $seek = true ) {
+    if( !$this->isWritable() ) throw new StreamInvalidException( $this, 'write' );
+    else {
 
+      $length = $length === null ? $this->getOffset() : $length;
+      ftruncate( $this->_resource, $length );
+      if( $seek ) $this->seek( $length );
+
+      return $this;
+    }
+  }
   //
   public function seek( int $offset = 0 ) {
-    if( !$this->isSeekable() ) throw new StreamExceptionInvalid( $this, 'seek' );
+    if( !$this->isSeekable() ) throw new StreamInvalidException( $this, 'seek' );
     else if( $offset < 0 ) throw new \InvalidArgumentException( 'Offset must be non-negative' );
     else fseek( $this->_resource, $offset );
 
     return $this;
-  }
-
-  //
-  public function count() {
-    return $this->_resource ? fstat( $this->_resource )[ 'size' ] : 0;
   }
 
   //
@@ -238,6 +284,32 @@ class Stream implements StreamInterface, AccessableInterface {
   //
   public function getOffset(): int {
     return $this->_resource ? ftell( $this->_resource ) : 0;
+  }
+  //
+  public function getSize( bool $unreaded = false ): ?int {
+    if( !is_resource( $this->_resource ) ) return null;
+    else {
+
+      // check simple stat first
+      // TODO find better ways to determine the stream length
+      $tmp = fstat( $this->_resource );
+      if( isset( $tmp[ 'size' ] ) ) return $tmp[ 'size' ] - ( $unreaded ? $this->getOffset() : 0 );
+      else if( !$this->isSeekable() ) return null;
+      else {
+
+        // backup current position in the string (seek to the begining if needed)
+        $offset = $this->getOffset();
+        if( !$unreaded ) fseek( $this->_resource, 0 );
+
+        // read every bytes
+        $size = 0;
+        while( fgetc( $this->_resource ) !== false ) ++$size;
+
+        // reset the pointer
+        fseek( $this->_resource, $offset );
+        return $size;
+      }
+    }
   }
   //
   public function getMeta( string $key = null ) {
@@ -250,7 +322,7 @@ class Stream implements StreamInterface, AccessableInterface {
   //
   public function isWritable(): bool {
     $tmp = $this->getMeta( 'mode' );
-    return $tmp && preg_match( '/(r\+|w\+?|a\+?|x\+?)/i', $tmp );
+    return $tmp && preg_match( '/(r\+|w\+?|a\+?|x\+?|c\+?)/i', $tmp );
   }
   //
   public function isReadable(): bool {
@@ -280,7 +352,7 @@ class Stream implements StreamInterface, AccessableInterface {
  * Not a valid stream for write/read operation
  *
  */
-class StreamExceptionInvalid extends Exception\Logic {
+class StreamInvalidException extends Exception\Logic {
 
   const ID = '0#spoom-core';
 

@@ -228,9 +228,11 @@ class Storage implements StorageInterface, Helper\AccessableInterface {
   /**
    * @param array|object $source
    * @param bool         $caching
+   *
+   * @throws \TypeError Wrong type of source
    */
   public function __construct( $source, bool $caching = true ) {
-    if( !Collection::is( $source ) ) throw new \InvalidArgumentException( 'Storage can contain only array or object' );
+    if( !Collection::is( $source ) ) throw new \TypeError( 'Storage can contain only array or object' );
     else {
 
       $this->_caching = $caching;

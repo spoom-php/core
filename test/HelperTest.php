@@ -129,12 +129,12 @@ class HelperTest extends TestCase {
 
     // test empty writeable stream
     $rw = new Helper\Stream( static::$directory . 'stream-rw.txt', Helper\StreamInterface::MODE_RW );
-    $this->assertEquals( 0, $rw->count() );
+    $this->assertEquals( 0, $rw->getSize() );
     $this->assertTrue( $rw->isReadable() && $rw->isWritable() && $rw->isSeekable() );
 
     // test basic read/write operations
     $rw->write( '0123--6789' );
-    $this->assertEquals( 10, $rw->count() );
+    $this->assertEquals( 10, $rw->getSize() );
     $rw->seek( 4 );
     $this->assertEquals( 4, $rw->getOffset() );
     $rw->write( '45' );
@@ -145,7 +145,7 @@ class HelperTest extends TestCase {
     $this->assertTrue( $a->isWritable() && $a->isReadable() && $a->isSeekable() );
 
     $a->write( $rw->seek( 0 ) );
-    $this->assertEquals( 15, $a->count() );
+    $this->assertEquals( 15, $a->getSize() );
     $this->assertEquals( '012340123456789', $a->read( 0, 0 ) );
 
     // test read only and read to stream
@@ -155,6 +155,12 @@ class HelperTest extends TestCase {
     $this->assertEquals( '01234', $r->read( 0, 0 ) );
     $r->read( 0, 0, $rw->seek( 5 ) );
     $this->assertEquals( '0123401234', $rw->read( 0, 0 ) );
+
+    // test size check
+    // TODO test with different streams
+    $this->assertEquals( 5, $r->getSize() );
+    $this->assertEquals( 3, $r->seek( 2 )->getSize( true ) );
+    $this->assertEquals( 5, $r->getSize() );
   }
 
   /**

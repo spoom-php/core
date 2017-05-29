@@ -43,7 +43,7 @@ class Json implements Core\ConverterInterface, Helper\AccessableInterface {
       if( json_last_error() != JSON_ERROR_NONE ) {
 
         $result = null;
-        throw new Core\ConverterExceptionFail( $this, $content, [ json_last_error(), json_last_error_msg() ] );
+        throw new Core\ConverterFailException( $this, $content, [ json_last_error(), json_last_error_msg() ] );
       }
 
     } catch( \Exception $e ) {
@@ -72,7 +72,7 @@ class Json implements Core\ConverterInterface, Helper\AccessableInterface {
       $result = json_decode( $content, $this->_meta->associative, $this->_meta->depth, $this->_meta->options );
       if( json_last_error() != JSON_ERROR_NONE ) {
         $result = null;
-        throw new Core\ConverterExceptionFail( $this, $content, [ json_last_error(), json_last_error_msg() ] );
+        throw new Core\ConverterFailException( $this, $content, [ json_last_error(), json_last_error_msg() ] );
       }
 
     } catch( \Exception $e ) {
@@ -92,9 +92,10 @@ class Json implements Core\ConverterInterface, Helper\AccessableInterface {
    * @param JsonMeta $value
    *
    * @return $this
+   * @throws \TypeError Wrong type of meta
    */
   public function setMeta( $value ) {
-    if( !( $value instanceof JsonMeta ) ) throw new \InvalidArgumentException( 'Meta must be a subclass of ' . JsonMeta::class, $value );
+    if( !( $value instanceof JsonMeta ) ) throw new \TypeError( 'Meta must be a subclass of ' . JsonMeta::class, $value );
     else $this->_meta = $value;
 
     return $this;

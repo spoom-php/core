@@ -97,8 +97,8 @@ interface FileInterface {
    * @param bool        $directory Include or exclude directories
    *
    * @return FileInterface[]
-   * @throws FileExceptionTypeInvalid If the path is a file not a directory
-   * @throws FileExceptionPermission If the path is not readable
+   * @throws FileTypeInvalidException If the path is a file not a directory
+   * @throws FilePermissionException If the path is not readable
    * @throws FileException Unsuccessful operation, due to the underlying system
    */
   public function search( ?string $pattern = null, bool $recursive = false, bool $directory = true ): array;
@@ -108,7 +108,7 @@ interface FileInterface {
    * @param array $meta The newly created path meta
    *
    * @return FileInterface
-   * @throws FileExceptionPermission If the path is not writeable
+   * @throws FilePermissionException If the path is not writeable
    * @throws FileException Unsuccessful operation, due to the underlying system
    */
   public function create( array $meta = [] ): FileInterface;
@@ -117,7 +117,7 @@ interface FileInterface {
    *
    * This will remove the directory AND ALL the contents in it
    *
-   * @throws FileExceptionPermission If the path is not writeable
+   * @throws FilePermissionException If the path is not writeable
    * @throws FileException Unsuccessful operation, due to the underlying system
    */
   public function remove();
@@ -127,14 +127,14 @@ interface FileInterface {
    *
    * Overwrites the destination silently
    *
-   * @param string $destination
-   * @param bool   $move Remove the source after the successful copy
+   * @param string|FileInterface $destination
+   * @param bool                 $move Remove the source after the successful copy
    *
    * @return FileInterface
-   * @throws FileExceptionPermission If the path is not readable or the destination is not writeable
+   * @throws FilePermissionException If the path is not readable or the destination is not writeable
    * @throws FileException Unsuccessful operation, due to the underlying system
    */
-  public function copy( string $destination, bool $move = false ): FileInterface;
+  public function copy( $destination, bool $move = false ): FileInterface;
 
   /**
    * Get the relative path
@@ -233,12 +233,12 @@ class File implements FileInterface {
    * @param string $root The root path for the filesystem. It MUST exists!
    * @param string $path
    *
-   * @throws FileExceptionRootInvalid Invalid root path
+   * @throws FileRootInvalidException Invalid root path
    */
   public function __construct( string $root, string $path = '' ) {
 
-    $_root = is_link( $root ) ? realpath( $root ) : $root;
-    if( $_root === false || !is_dir( $_root ) || !is_readable( $_root ) ) throw new FileExceptionRootInvalid( $root );
+    $_root = realpath( $root );
+    if( $_root === false || !is_dir( $_root ) || !is_readable( $_root ) ) throw new FileRootInvalidException( $root );
     else {
 
       $this->_root = rtrim( $_root, DIRECTORY_SEPARATOR ) . DIRECTORY_SEPARATOR;
@@ -276,11 +276,11 @@ class File implements FileInterface {
   public function stream( int $mode = StreamInterface::MODE_READ, array $meta = [] ): StreamInterface {
 
     $_meta = $this->getMeta();
-    if( $_meta[ static::META_TYPE ] != static::TYPE_FILE ) throw new FileExceptionTypeInvalid( $this->getPath( true ), [ static::TYPE_FILE ] );
+    if( $_meta[ static::META_TYPE ] != static::TYPE_FILE ) throw new FileTypeInvalidException( $this, [ static::TYPE_FILE ] );
     else if( $mode & StreamInterface::MODE_WRITE && !$_meta[ static::META_PERMISSION_WRITE ] ) {
-      throw new FileExceptionPermission( $this->getPath( true ), static::META_PERMISSION_WRITE );
+      throw new FilePermissionException( $this, static::META_PERMISSION_WRITE );
     } else if( $mode & StreamInterface::MODE_READ && !$_meta[ static::META_PERMISSION_READ ] ) {
-      throw new FileExceptionPermission( $this->getPath( true ), static::META_PERMISSION_READ );
+      throw new FilePermissionException( $this, static::META_PERMISSION_READ );
     } else {
 
       // create the the file before write
@@ -292,9 +292,9 @@ class File implements FileInterface {
 
       // create write operation pointer
       try {
-        return new Stream( $this->exist() ? $this->getPath( true ) : 'php://memory', $mode );
+        return new Stream( $this->exist() ? (string) $this : 'php://memory', $mode );
       } catch( \InvalidArgumentException $e ) {
-        throw new FileException( $this->getPath( true ), error_get_last(), $e );
+        throw new FileException( $this, error_get_last(), $e );
       }
     }
   }
@@ -313,8 +313,8 @@ class File implements FileInterface {
   public function search( ?string $pattern = null, bool $recursive = false, bool $directory = true ): array {
 
     $meta = $this->getMeta();
-    if( $meta[ static::META_TYPE ] != static::TYPE_DIRECTORY ) throw new FileExceptionTypeInvalid( $this->getPath( true ), [ static::TYPE_DIRECTORY ] );
-    else if( !$meta[ static::META_PERMISSION_READ ] ) throw new FileExceptionPermission( $this->getPath( true ), static::META_PERMISSION_READ );
+    if( $meta[ static::META_TYPE ] != static::TYPE_DIRECTORY ) throw new FileTypeInvalidException( $this, [ static::TYPE_DIRECTORY ] );
+    else if( !$meta[ static::META_PERMISSION_READ ] ) throw new FilePermissionException( $this, static::META_PERMISSION_READ );
     else if( !$this->exist() ) return [];
     else {
 
@@ -350,7 +350,7 @@ class File implements FileInterface {
 
       // check for permissions
       $_meta = $this->getMeta();
-      if( !$_meta[ static::META_PERMISSION_WRITE ] ) throw new FileExceptionPermission( $this->getPath( true ), static::META_PERMISSION_WRITE );
+      if( !$_meta[ static::META_PERMISSION_WRITE ] ) throw new FilePermissionException( $this, static::META_PERMISSION_WRITE );
       else {
 
         $_path = $this->getPath( true );
@@ -364,7 +364,7 @@ class File implements FileInterface {
           $result = @touch( $_path );
         }
 
-        if( !$result ) throw new FileException( $this->getPath( true ), error_get_last() );
+        if( !$result ) throw new FileException( $this, error_get_last() );
         else {
 
           // apply metadata for the new path
@@ -381,7 +381,7 @@ class File implements FileInterface {
 
       // check for permissions
       $_meta = $this->getMeta();
-      if( !$_meta[ static::META_PERMISSION_WRITE ] ) throw new FileExceptionPermission( $this->getPath( true ), static::META_PERMISSION_WRITE );
+      if( !$_meta[ static::META_PERMISSION_WRITE ] ) throw new FilePermissionException( $this, static::META_PERMISSION_WRITE );
       else {
 
         $_path = $this->getPath( true );
@@ -399,55 +399,63 @@ class File implements FileInterface {
         }
 
         if( !$result ) {
-          throw new FileException( $this->getPath( true ), error_get_last() );
+          throw new FileException( $this, error_get_last() );
         }
       }
     }
   }
 
   //
-  public function copy( string $destination, bool $move = false ): FileInterface {
+  public function copy( $destination, bool $move = false ): FileInterface {
 
-    $destination = new static( $this->getRoot(), $destination );
+    $destination = $destination instanceof FileInterface ? $destination : new static( $this->getRoot(), $destination );
     if( $this->exist() ) {
 
       // check for permissions
       $_meta             = $this->getMeta();
       $_meta_destination = $destination->getMeta();
-      if( !$_meta[ static::META_PERMISSION_READ ] ) throw new FileExceptionPermission( $this->getPath( true ), static::META_PERMISSION_READ );
-      else if( !$_meta_destination[ static::META_PERMISSION_WRITE ] ) {
-        throw new FileExceptionPermission( $destination->getPath( true ), static::META_PERMISSION_WRITE );
-      } else if( $_meta_destination[ static::META_TYPE ] != $_meta[ static::META_TYPE ] ) {
-        throw new FileExceptionTypeInvalid( $destination->getPath( true ), [ $_meta[ static::META_TYPE ] ] );
+      if( !$_meta[ static::META_PERMISSION_READ ] ) throw new FilePermissionException( $this, static::META_PERMISSION_READ );
+      else if( !$_meta_destination[ static::META_PERMISSION_WRITE ] ) throw new FilePermissionException( $destination, static::META_PERMISSION_WRITE );
+      else if( $_meta_destination[ static::META_TYPE ] != $_meta[ static::META_TYPE ] ) {
+
+        throw new FileTypeInvalidException( $destination, [ $_meta[ static::META_TYPE ] ] );
+
       } else {
 
         $_path        = $this->getPath( true );
         $_destination = $destination->getPath( true );
-        if( $move ) $result = @rename( $_path, $_destination );
+
+        $internal = $destination instanceof static;
+        if( $internal && $move ) $result = @rename( $_path, $_destination );
         else {
 
           // handle simple file copy
-          if( $_meta[ static::META_TYPE ] != static::TYPE_DIRECTORY ) $result = @copy( $_path, $_destination );
-          else {
+          if( $_meta[ static::META_TYPE ] != static::TYPE_DIRECTORY ) {
+
+            if( $internal ) $result = @copy( $_path, $_destination );
+            else {
+
+              $destination->stream( Stream::MODE_WT )->write( $this->stream() );
+              $result = true;
+            }
+
+          } else {
 
             // copy base directory
-            $result = $destination->create();
+            $result = $destination->create( $_meta );
             if( $result ) {
 
               // copy all contents from the directory
               $list = $this->search();
               foreach( $list as $file ) {
-                $file->copy( static::directory( $destination->getPath() ) . substr( $file->getPath(), strlen( $this->getPath() ) ) );
+                $file->copy( $destination->get( substr( $file->getPath(), strlen( $this->getPath() ) ) ) );
               }
             }
           }
         }
 
-        if( !$result ) throw new FileException( $this->getPath( true ), error_get_last() );
-        else {
-
-          $destination->setMeta( $_meta );
-        }
+        if( !$result ) throw new FileException( $this, error_get_last() );
+        else if( $move && !$internal ) $this->remove();
       }
     }
 
@@ -554,7 +562,7 @@ class File implements FileInterface {
             else {
 
               $tmp = class_exists( '\finfo' ) || function_exists( 'mime_content_type' );
-              if( !$tmp ) throw new Core\ApplicationExceptionFeature( 'fileinfo', '0.1.0' );
+              if( !$tmp ) throw new \RuntimeException( 'Missing PHP extension: fileinfo@0.1.0' );
               else if( !class_exists( '\finfo' ) ) $meta = mime_content_type( $_path );
               else {
 
@@ -643,7 +651,7 @@ class File implements FileInterface {
    * @param string $path Standard path string
    *
    * @return string
-   * @throws FileExceptionPathInvalid The path begins with static::DIRECTORY_PREVIOUS, which will voilate the root
+   * @throws FilePathInvalidException The path begins with static::DIRECTORY_PREVIOUS, which will voilate the root
    */
   public static function path( string $path ): string {
 
@@ -667,7 +675,7 @@ class File implements FileInterface {
 
       // check for root voilation
       if( preg_match( addcslashes( '#^' . static::DIRECTORY_PREVIOUS . '(' . static::DIRECTORY_SEPARATOR . '|$)#', './' ), $_path ) ) {
-        throw new FileExceptionPathInvalid( $path );
+        throw new FilePathInvalidException( $path );
       }
 
       self::$cache[ $path ] = $_path;
@@ -704,13 +712,13 @@ class FileException extends Exception\Runtime implements FileExceptionInterface 
   const ID = '32#spoom-core';
 
   /**
-   * @param string          $path
+   * @param FileInterface   $file
    * @param mixed           $error
    * @param \Throwable|null $previous
    */
-  public function __construct( string $path, $error, ?\Throwable $previous = null ) {
+  public function __construct( FileInterface $file, $error, ?\Throwable $previous = null ) {
 
-    $data = [ 'path' => $path, 'error' => $error ];
+    $data = [ 'path' => (string) $file, 'error' => $error ];
     parent::__construct( Text::apply( 'Failed file operation for \'{path}\'', $data ), static::ID, $data, $previous );
   }
 }
@@ -718,7 +726,7 @@ class FileException extends Exception\Runtime implements FileExceptionInterface 
  * Missing, not a directory or not readable root path
  *
  */
-class FileExceptionRootInvalid extends Exception\Runtime implements FileExceptionInterface {
+class FileRootInvalidException extends Exception\Runtime implements FileExceptionInterface {
 
   const ID = '36#spoom-core';
 
@@ -741,7 +749,7 @@ class FileExceptionRootInvalid extends Exception\Runtime implements FileExceptio
  * The given path is outside the root
  *
  */
-class FileExceptionPathInvalid extends Exception\Runtime implements FileExceptionInterface {
+class FilePathInvalidException extends Exception\Runtime implements FileExceptionInterface {
 
   const ID = '35#spoom-core';
 
@@ -757,17 +765,17 @@ class FileExceptionPathInvalid extends Exception\Runtime implements FileExceptio
  * The path's type is not suitable for the operation
  *
  */
-class FileExceptionTypeInvalid extends Exception\Logic implements FileExceptionInterface {
+class FileTypeInvalidException extends Exception\Logic implements FileExceptionInterface {
 
   const ID = '34#spoom-core';
 
   /**
-   * @param string $path
-   * @param array  $allow Allowed path types
+   * @param FileInterface $file
+   * @param array         $allow Allowed path types
    */
-  public function __construct( string $path, array $allow ) {
+  public function __construct( FileInterface $file, array $allow ) {
 
-    $data = [ 'path' => $path, 'allow' => implode( ',', $allow ) ];
+    $data = [ 'path' => (string) $file, 'allow' => implode( ',', $allow ) ];
     parent::__construct(
       Text::apply( 'Path (\'{path}\') must be {allow} for this operation', $data ),
       static::ID,
@@ -781,17 +789,17 @@ class FileExceptionTypeInvalid extends Exception\Logic implements FileExceptionI
  * Don't have enough permission for the operation
  *
  */
-class FileExceptionPermission extends Exception\Runtime implements FileExceptionInterface {
+class FilePermissionException extends Exception\Runtime implements FileExceptionInterface {
 
   const ID = '33#spoom-core';
 
   /**
-   * @param string $path
-   * @param string $allow Required permission meta name
+   * @param FileInterface $file
+   * @param string        $allow Required permission meta name
    */
-  public function __construct( string $path, string $allow ) {
+  public function __construct( FileInterface $file, string $allow ) {
 
-    $data = [ 'path' => $path, 'allow' => $allow ];
+    $data = [ 'path' => (string) $file, 'allow' => $allow ];
     parent::__construct(
       Text::apply( 'Failed operation, due to insufficient permission for \'{path}\'', $data ),
       static::ID,

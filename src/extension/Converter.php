@@ -42,7 +42,7 @@ interface ConverterInterface extends Helper\FailableInterface {
  * Failed (de-)serialization
  *
  */
-class ConverterExceptionFail extends Exception\Logic {
+class ConverterFailException extends Exception\Logic {
 
   const ID = '29#spoom-core';
 

@@ -18,7 +18,7 @@ class Ini implements ConverterInterface, Helper\AccessableInterface {
     $this->setException();
 
     $result = [];
-    if( !Collection::is( $content, true ) ) $this->setException( new Core\ConverterExceptionFail( $this, $content ) );
+    if( !Collection::is( $content, true ) ) $this->setException( new Core\ConverterFailException( $this, $content ) );
     else {
 
       $this->flatten( $result, Collection::read( $content, [], true ) );
@@ -49,7 +49,7 @@ class Ini implements ConverterInterface, Helper\AccessableInterface {
 
     $result = (object) [];
     $ini    = parse_ini_string( $content, false );
-    if( !is_array( $ini ) ) $this->setException( new Core\ConverterExceptionFail( $this, $content, error_get_last() ) );
+    if( !is_array( $ini ) ) $this->setException( new Core\ConverterFailException( $this, $content, error_get_last() ) );
     else foreach( $ini as $key => $value ) {
 
       $keys = explode( '.', $key );

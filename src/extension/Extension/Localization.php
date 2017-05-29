@@ -131,7 +131,7 @@ class Localization extends Storage\File implements LocalizationInterface {
 
   //
   public function getLocalization( bool $active = false ):?string {
-    return $active ? $this->cache : $this->_localization;
+    return $active ? $this->active : $this->_localization;
   }
   //
   public function setLocalization( ?string $value = null ) {

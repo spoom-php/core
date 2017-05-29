@@ -126,6 +126,9 @@ class Application implements AccessableInterface {
    * @param FileInterface     $root
    * @param LogInterface|null $log
    * @param string|null       $id
+   *
+   * @throws \InvalidArgumentException Empty environment or localization
+   * @throws \LogicException There is already an Application instance
    */
   public function __construct( string $environment, string $localization, FileInterface $root, ?LogInterface $log = null, ?string $id = null ) {
     $this->_id = $id ?? Text::unique( 8, '', false );
@@ -286,24 +289,5 @@ class Application implements AccessableInterface {
     if( empty( self::$instance ) ) throw new \LogicException( 'There is no Application instance right now' );
     else if( !( self::$instance instanceof static ) ) throw new \LogicException( 'Wrong type of Application instance, should be ' . self::class );
     else return self::$instance;
-  }
-}
-
-/**
- * General exception for a missing (but needed) PHP extension/feature
- *
- */
-class ApplicationExceptionFeature extends Exception\Runtime {
-
-  const ID = '0#spoom-core';
-
-  /**
-   * @param string $feature Extension or feature name
-   * @param string $version Minimum required version
-   */
-  public function __construct( string $feature, string $version ) {
-
-    $data = [ 'feature' => $feature, 'version' => $version ];
-    parent::__construct( '(Un)serialization failed, due to an error', static::ID, $data, null, Application::SEVERITY_CRITICAL );
   }
 }
