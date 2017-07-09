@@ -10,7 +10,7 @@ use Spoom\Core\Converter;
  *
  * @since   0.6.0
  */
-interface ConfigurationInterface extends Storage\PermanentInterface {
+interface ConfigurationInterface extends Storage\PersistentInterface {
 
   /**
    * @param bool $active Return the currenty active or the desired value

@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/spoom-php/core.svg?branch=development)](https://travis-ci.org/spoom-php/core)  
+
 # Spoom Framework
 Spoom is a collection of cooperative libraries (extensions), which you can use to "build" a framework that suits your needs.
 

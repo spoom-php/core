@@ -10,7 +10,6 @@ use Spoom\Core;
  */
 class Json implements Core\ConverterInterface, Helper\AccessableInterface {
   use Helper\Accessable;
-  use Helper\Failable;
 
   /**
    * @var JsonMeta
@@ -34,21 +33,11 @@ class Json implements Core\ConverterInterface, Helper\AccessableInterface {
 
   //
   public function serialize( $content, ?Helper\StreamInterface $stream = null ):?string {
-    $this->setException();
-
-    $result = null;
-    try {
 
       $result = json_encode( $content, $this->_meta->options );
       if( json_last_error() != JSON_ERROR_NONE ) {
-
-        $result = null;
         throw new Core\ConverterFailException( $this, $content, [ json_last_error(), json_last_error_msg() ] );
       }
-
-    } catch( \Exception $e ) {
-      $this->setException( $e );
-    }
 
     if( !$stream ) return $result;
     else {
@@ -59,25 +48,16 @@ class Json implements Core\ConverterInterface, Helper\AccessableInterface {
   }
   //
   public function unserialize( $content ) {
-    $this->setException();
 
     // handle stream input
     if( $content instanceof Helper\StreamInterface ) {
       $content = $content->read();
     }
 
-    $result = null;
-    try {
-
       $result = json_decode( $content, $this->_meta->associative, $this->_meta->depth, $this->_meta->options );
       if( json_last_error() != JSON_ERROR_NONE ) {
-        $result = null;
         throw new Core\ConverterFailException( $this, $content, [ json_last_error(), json_last_error_msg() ] );
       }
-
-    } catch( \Exception $e ) {
-      $this->setException( $e );
-    }
 
     return $result;
   }

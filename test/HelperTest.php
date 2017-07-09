@@ -174,7 +174,6 @@ class HelperTest extends TestCase {
 
     $content = (object) [ 'test1' => (object) [ 'test2' => (object) [ 'test3' => 3 ], 'test4' => 4 ] ];
     $tmp     = $converter->serialize( $content );
-    $this->assertNull( $converter->getException() );
     $this->assertEquals( $content, $converter->unserialize( $tmp ) );
 
     // check for stream support
@@ -183,7 +182,6 @@ class HelperTest extends TestCase {
 
     $converter->serialize( $content, $tmp );
     $tmp->seek( 0 );
-    $this->assertNull( $converter->getException() );
     $this->assertEquals( $content, $converter->unserialize( $tmp ) );
   }
   public function testConverterTypeIni() {

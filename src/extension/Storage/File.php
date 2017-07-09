@@ -1,6 +1,5 @@
 <?php namespace Spoom\Core\Storage;
 
-use Spoom\Core\Application;
 use Spoom\Core\Exception;
 use Spoom\Core\ConverterInterface;
 use Spoom\Core\FileInterface;
@@ -17,7 +16,7 @@ use Spoom\Core\Helper\StreamInterface;
  * @property string        $file
  * @property-read bool     $multi
  */
-class File extends Permanent {
+class File extends Persistent {
 
   /**
    * Root directory source
@@ -55,21 +54,19 @@ class File extends Permanent {
       $previous      = $this->searchFile( $namespace, $previous_meta[ 'format' ] );
 
     } catch( \Exception $e ) {
-      Exception::log( $e, Application::instance()->getLog() );
+      Exception::log( $e );
     }
 
     // do the saving like normal
     parent::save( $namespace, $format );
-    if( !$this->getException() ) {
 
-      // clean the previous file, if there is no need for it
-      if( isset( $previous ) && isset( $previous_meta ) && $previous_meta[ 'format' ] != $this->converter_cache[ $namespace ][ 'format' ] ) try {
+    // clean the previous file, if there is no need for it
+    if( isset( $previous ) && isset( $previous_meta ) && $previous_meta[ 'format' ] != $this->converter_cache[ $namespace ][ 'format' ] ) try {
 
-        $previous->remove();
+      $previous->remove();
 
-      } catch( \Exception $e ) {
-        $this->setException( $e );
-      }
+    } catch( \Exception $e ) {
+      Exception::log( $e );
     }
 
     return $this;

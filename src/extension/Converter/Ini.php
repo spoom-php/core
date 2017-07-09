@@ -11,14 +11,12 @@ use Spoom\Core\ConverterInterface;
  */
 class Ini implements ConverterInterface, Helper\AccessableInterface {
   use Helper\Accessable;
-  use Helper\Failable;
 
   //
   public function serialize( $content, ?Helper\StreamInterface $stream = null ):?string {
-    $this->setException();
 
     $result = [];
-    if( !Collection::is( $content, true ) ) $this->setException( new Core\ConverterFailException( $this, $content ) );
+    if( !Collection::is( $content, true ) ) throw new Core\ConverterFailException( $this, $content );
     else {
 
       $this->flatten( $result, Collection::read( $content, [], true ) );
@@ -40,7 +38,6 @@ class Ini implements ConverterInterface, Helper\AccessableInterface {
   }
   //
   public function unserialize( $content ) {
-    $this->setException();
 
     // handle stream input
     if( $content instanceof Helper\StreamInterface ) {
@@ -49,7 +46,7 @@ class Ini implements ConverterInterface, Helper\AccessableInterface {
 
     $result = (object) [];
     $ini    = parse_ini_string( $content, false );
-    if( !is_array( $ini ) ) $this->setException( new Core\ConverterFailException( $this, $content, error_get_last() ) );
+    if( !is_array( $ini ) ) throw new Core\ConverterFailException( $this, $content, error_get_last() );
     else foreach( $ini as $key => $value ) {
 
       $keys = explode( '.', $key );

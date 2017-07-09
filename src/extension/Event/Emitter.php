@@ -121,7 +121,7 @@ class Emitter implements EmitterInterface, Helper\AccessableInterface {
   public function trigger( EventInterface $event ): EventInterface {
 
     if( $event->getName() == static::EVENT_GLOBAL ) throw new \InvalidArgumentException( 'Global event is not triggerable' );
-    else try {
+    else {
 
       // call the global event handlers
       $list = $this->getCallbackList();
@@ -134,9 +134,6 @@ class Emitter implements EmitterInterface, Helper\AccessableInterface {
       foreach( $list as $callback ) {
         call_user_func_array( $callback, [ $event, $this ] );
       }
-
-    } catch( \Exception $e ) {
-      $event->setException( $e );
     }
 
     return $event;

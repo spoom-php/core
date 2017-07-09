@@ -5,7 +5,7 @@ use Spoom\Core\Helper;
 /**
  * Interface ConverterInterface
  */
-interface ConverterInterface extends Helper\FailableInterface {
+interface ConverterInterface {
 
   /**
    * Serialize the content to a formatted (based on the meta property) string
@@ -14,6 +14,7 @@ interface ConverterInterface extends Helper\FailableInterface {
    * @param Helper\StreamInterface|null $stream  Optional output stream
    *
    * @return string|null
+   * @throws ConverterFailException Failed serialization
    */
   public function serialize( $content, ?Helper\StreamInterface $stream = null ): ?string;
   /**
@@ -22,6 +23,7 @@ interface ConverterInterface extends Helper\FailableInterface {
    * @param string|Helper\StreamInterface $content The content (can be a stream) to unserialize
    *
    * @return mixed
+   * @throws ConverterFailException Failed unserialization
    */
   public function unserialize( $content );
 
@@ -40,9 +42,8 @@ interface ConverterInterface extends Helper\FailableInterface {
 
 /**
  * Failed (de-)serialization
- *
  */
-class ConverterFailException extends Exception\Logic {
+class ConverterFailException extends Exception\Runtime {
 
   const ID = '29#spoom-core';
 

@@ -43,8 +43,7 @@ class LogTest extends TestCase {
     $tmp = new Converter\Json();
     $this->assertEquals(
       '{"__CLASS__":"Spoom\\\\Core\\\\Converter\\\\Json","-_meta":{' .
-      '"__CLASS__":"Spoom\\\\Core\\\\Converter\\\\JsonMeta","+associative":false,"+depth":512,"+options":512},' .
-      '"#_exception":null' .
+      '"__CLASS__":"Spoom\\\\Core\\\\Converter\\\\JsonMeta","+associative":false,"+depth":512,"+options":512}' .
       '}',
       json_encode( $log->wrap( $tmp ) )
     );

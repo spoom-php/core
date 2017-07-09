@@ -4,7 +4,6 @@ use Spoom\Core\Application;
 use Spoom\Core\ConverterInterface;
 use Spoom\Core\Exception;
 use Spoom\Core\Extension;
-use Spoom\Core\Helper;
 use Spoom\Core\Helper\Collection;
 use Spoom\Core\Storage;
 use Spoom\Core\StorageInterface;
@@ -12,11 +11,11 @@ use Spoom\Core\StorageMeta;
 use Spoom\Core\StorageMetaSearch;
 
 /**
- * Interface PermanentInterface
+ * Interface PersistentInterface
  *
  * @since   0.6.0
  */
-interface PermanentInterface extends StorageInterface, Helper\FailableInterface {
+interface PersistentInterface extends StorageInterface {
 
   /**
    * Save the namespace's actual storage data
@@ -76,7 +75,7 @@ interface PermanentInterface extends StorageInterface, Helper\FailableInterface 
   public function setFormat( string $value );
 }
 /**
- * Class Permanent
+ * Class Persistent
  *
  * @since   0.6.0
  *
@@ -89,12 +88,11 @@ interface PermanentInterface extends StorageInterface, Helper\FailableInterface 
  * @property      bool                 $auto      Autoload the namespaces or not
  * @property      string               $format    The default format for saving
  */
-abstract class Permanent extends Storage implements PermanentInterface {
-  use Helper\Failable;
+abstract class Persistent extends Storage implements PersistentInterface {
 
   /**
    * Triggered before the namespace saving. The save can be prevented. Arguments:
-   * - instance [Permanent]: The storage instance
+   * - instance [Persistent]: The storage instance
    * - namespace [string|null]: The namespace to save
    * - &meta [ConverterMeta]: The content meta data
    * - &content [mixed]: The content to save
@@ -102,14 +100,14 @@ abstract class Permanent extends Storage implements PermanentInterface {
   const EVENT_SAVE = 'storage.permanent.save';
   /**
    * Triggered before the namespace loading. The load can be prevented. Arguments:
-   * - instance [Permanent]: The storage instance
+   * - instance [Persistent]: The storage instance
    * - namespace [string|null]: The namespace to load
    * - &meta [ConverterMeta|null]: The content output meta data
    */
   const EVENT_LOAD = 'storage.permanent.load';
   /**
    * Triggered before the namespace removing. The remove can be prevented. Arguments:
-   * - instance [Permanent]: The storage instance
+   * - instance [Persistent]: The storage instance
    * - namespace [string|null]: The namespace to remove
    * - &meta [ConverterMeta|null]: The content meta data if available
    */
@@ -170,9 +168,6 @@ abstract class Permanent extends Storage implements PermanentInterface {
 
   //
   public function save( ?string $namespace = null, ?string $format = null ) {
-    $this->setException();
-
-    try {
 
       // get or create the converter
       $tmp       = $this->_converter_map[ $format ?: $this->_format ];
@@ -197,30 +192,21 @@ abstract class Permanent extends Storage implements PermanentInterface {
         $content   = $event->get( 'content', $content );
 
         // check the event result
-        if( $event->getException() ) throw $event->getException();
-        else if( !$event->isPrevented() ) {
+        if( !$event->isPrevented() ) {
 
           // save and perform the conversion
-          $content = $converter->serialize( $content );
-          if( $converter->getException() ) throw $converter->getException();
-          else $this->converter_cache[ $namespace ] = [ 'format' => $format ?: $this->_format, 'converter' => $converter ];
+          $content                             = $converter->serialize( $content );
+          $this->converter_cache[ $namespace ] = [ 'format' => $format ?: $this->_format, 'converter' => $converter ];
 
           // do the native saving
           $this->write( $content, $namespace );
         }
       }
 
-    } catch( \Exception $e ) {
-      $this->setException( $e );
-    }
-
     return $this;
   }
   //
   public function load( ?string $namespace = null ) {
-    $this->setException();
-
-    try {
 
       $cache                               = $this->converter_cache[ $namespace ] ?? null;
       $this->converter_cache[ $namespace ] = null;
@@ -236,11 +222,7 @@ abstract class Permanent extends Storage implements PermanentInterface {
       $content              = $event[ 'content' ];
       $cache[ 'converter' ] = $event->getObject( 'converter', $cache[ 'converter' ] );
 
-      // check the event result
-      if( $event->getException() ) throw $event->getException();
-      else {
-
-        // read the namespace's data, and check for the converter
+    // read the namespace's data, and check for the converter
         if( !$event->isPrevented() ) {
 
           $content = $this->read( $namespace );
@@ -254,28 +236,19 @@ abstract class Permanent extends Storage implements PermanentInterface {
           // convert and set the namespace's data
           if( !empty( $content ) ) {
 
-            $content = $cache[ 'converter' ]->unserialize( $content );
-            if( $cache[ 'converter' ]->getException() ) throw $cache[ 'converter' ]->getException();
-            else $this->converter_cache[ $namespace ] = $cache;
+            $content                             = $cache[ 'converter' ]->unserialize( $content );
+            $this->converter_cache[ $namespace ] = $cache;
           }
 
           $this[ $namespace ? ( $namespace . static::SEPARATOR_NAMESPACE ) : '' ] = $content;
         }
-      }
-
-    } catch( \Exception $e ) {
-      $this->setException( $e );
-    }
 
     return $this;
   }
   //
   public function remove( ?string $namespace = null ) {
-    $this->setException();
 
-    try {
-
-      // trigger before load event for custom storage
+    // trigger before load event for custom storage
       $extension = Extension::instance();
       $event     = $extension->trigger( static::EVENT_REMOVE, [
         'instance'  => $this,
@@ -283,21 +256,13 @@ abstract class Permanent extends Storage implements PermanentInterface {
         'converter' => $this->converter_cache[ $namespace ][ 'converter' ] ?? null
       ] );
 
-      // check the event result
-      if( $event->getException() ) throw $event->getException();
-      else {
-
-        // call the native destroy if not prevented
+    // call the native destroy if not prevented
         if( !$event->isPrevented() ) $this->delete( $namespace );
 
         // do the rest of the remove
         unset( $this[ $namespace ? ( $namespace . static::SEPARATOR_NAMESPACE ) : '' ] );
         unset( $this->converter_cache[ $namespace ] );
-      }
 
-    } catch( \Exception $e ) {
-      $this->setException( $e );
-    }
 
     return $this;
   }
@@ -312,11 +277,6 @@ abstract class Permanent extends Storage implements PermanentInterface {
     if( $this->isAuto() && !array_key_exists( $namespace, $this->converter_cache ) ) {
 
       $this->load( $namespace );
-      if( $this->getException() ) {
-
-        // log exceptions for autoloading
-        Exception::log( $this->getException(), Application::instance()->getLog() );
-      }
     }
 
     // delegate problem to the parent

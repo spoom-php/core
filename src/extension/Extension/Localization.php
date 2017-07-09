@@ -10,7 +10,7 @@ use Spoom\Core\Converter;
  *
  * @since   0.6.0
  */
-interface LocalizationInterface extends Storage\PermanentInterface {
+interface LocalizationInterface extends Storage\PersistentInterface {
 
   /**
    * Get the current localization name

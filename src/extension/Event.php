@@ -5,7 +5,7 @@ use Spoom\Core\Helper;
 /**
  * Interface EventInterface
  */
-interface EventInterface extends StorageInterface, Helper\FailableInterface {
+interface EventInterface extends StorageInterface {
 
   /**
    * @return string
@@ -38,7 +38,6 @@ interface EventInterface extends StorageInterface, Helper\FailableInterface {
  * @property-read string $name
  */
 class Event extends Storage implements EventInterface, Helper\AccessableInterface {
-  use Helper\Failable;
   use Helper\Accessable;
 
   /**

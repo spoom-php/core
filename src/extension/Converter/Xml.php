@@ -10,7 +10,6 @@ use Spoom\Core;
  */
 class Xml implements Core\ConverterInterface, Helper\AccessableInterface {
   use Helper\Accessable;
-  use Helper\Failable;
 
   /**
    * @var XmlMeta
@@ -33,7 +32,6 @@ class Xml implements Core\ConverterInterface, Helper\AccessableInterface {
 
   //
   public function serialize( $content, ?Helper\StreamInterface $stream = null ):?string {
-    $this->setException();
 
     // create dom and the root element
     $dom = new \DOMDocument( $this->_meta->version, $this->_meta->encoding );
@@ -53,7 +51,6 @@ class Xml implements Core\ConverterInterface, Helper\AccessableInterface {
   }
   //
   public function unserialize( $content ) {
-    $this->setException();
 
     // handle stream input
     if( $content instanceof Helper\StreamInterface ) {
@@ -64,9 +61,7 @@ class Xml implements Core\ConverterInterface, Helper\AccessableInterface {
 
     // collect encoding and version from xml data
     $dom    = new \DOMDocument();
-    $result = (object) [];
-
-    if( !$dom->loadXML( $content ) ) $this->setException( new Core\ConverterFailException( $this, $content, libxml_get_last_error() ) );
+    if( !$dom->loadXML( $content ) ) throw new Core\ConverterFailException( $this, $content, libxml_get_last_error() );
     else {
 
       $this->_meta->version  = $dom->xmlVersion;
@@ -75,10 +70,8 @@ class Xml implements Core\ConverterInterface, Helper\AccessableInterface {
 
       // create root element and start the parsing
       $root   = simplexml_load_string( $content );
-      $result = $this->read( $root, '' );
+      return $this->read( $root, '' );
     }
-
-    return $result;
   }
 
   /**

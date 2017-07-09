@@ -88,25 +88,21 @@ class StoragePermanentTest extends TestCase {
 
     // write out all data again to check the serialize
     $storage->save( 'test-json', 'json' );
-    $this->assertEquals( null, $storage->getException() );
     $this->assertJsonFileEqualsJsonFile(
       self::TEST_DIRECTORY . 'test/sample.json',
       self::TEST_DIRECTORY . 'test/test-json.json'
     );
     $storage->save( 'test-xml', 'xml' );
-    $this->assertEquals( null, $storage->getException() );
     $this->assertXmlFileEqualsXmlFile(
       self::TEST_DIRECTORY . 'test/sample.xml',
       self::TEST_DIRECTORY . 'test/test-xml.xml'
     );
     $storage->save( 'test-ini', 'ini' );
-    $this->assertEquals( null, $storage->getException() );
     $this->assertEquals(
       parse_ini_file( self::TEST_DIRECTORY . 'test/sample.ini' ),
       parse_ini_file( self::TEST_DIRECTORY . 'test/test-ini.ini' )
     );
     $storage->save( 'test-native', 'pser' );
-    $this->assertEquals( null, $storage->getException() );
     $this->assertEquals(
       trim( file_get_contents( self::TEST_DIRECTORY . 'test/sample.pser' ) ),
       trim( file_get_contents( self::TEST_DIRECTORY . 'test/test-native.pser' ) )
