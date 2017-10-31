@@ -102,7 +102,7 @@ class Xml implements Core\ConverterInterface, Helper\AccessableInterface {
 
       // handle attributes, arrays and properties (in this order)
       if( in_array( $key . '.' . $index, $this->_meta->attributes ) ) $this->write( $dom, $element, $value, $index, $key . '.' . $index );
-      else if( Helper\Collection::isArrayNumeric( $value, false ) ) $this->write( $dom, $element, $value, $index, $key . '.' . $index );
+      else if( Helper\Collection::isNumeric( $value, false ) ) $this->write( $dom, $element, $value, $index, $key . '.' . $index );
       else {
         $child = $dom->createElement( is_int( $index ) ? $name : $index );
 
@@ -170,7 +170,7 @@ class Xml implements Core\ConverterInterface, Helper\AccessableInterface {
       }
     }
 
-    return (object) $container;
+    return $container;
   }
 
   /**

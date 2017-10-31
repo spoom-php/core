@@ -21,7 +21,7 @@ class Json implements Core\ConverterInterface, Helper\AccessableInterface {
    * @param int          $depth
    * @param bool         $associative
    */
-  public function __construct( $options = JSON_PARTIAL_OUTPUT_ON_ERROR, int $depth = 512, bool $associative = false ) {
+  public function __construct( $options = JSON_PARTIAL_OUTPUT_ON_ERROR, int $depth = 512, bool $associative = true ) {
     $this->_meta = $options instanceof JsonMeta ? $options : new JsonMeta( $options, $depth, $associative );
   }
   /**
@@ -93,7 +93,7 @@ class JsonMeta {
    *
    * @var bool
    */
-  public $associative = false;
+  public $associative = true;
   /**
    * Maximum depth for decoding
    *
@@ -114,7 +114,7 @@ class JsonMeta {
    * @param int  $depth
    * @param bool $associative
    */
-  public function __construct( int $options = JSON_PARTIAL_OUTPUT_ON_ERROR, int $depth = 512, bool $associative = false ) {
+  public function __construct( int $options = JSON_PARTIAL_OUTPUT_ON_ERROR, int $depth = 512, bool $associative = true ) {
     $this->options     = $options;
     $this->depth       = $depth;
     $this->associative = $associative;

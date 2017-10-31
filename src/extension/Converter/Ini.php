@@ -44,7 +44,7 @@ class Ini implements ConverterInterface, Helper\AccessableInterface {
       $content = $content->read();
     }
 
-    $result = (object) [];
+    $result = [];
     $ini    = parse_ini_string( $content, false );
     if( !is_array( $ini ) ) throw new Core\ConverterFailException( $this, $content, error_get_last() );
     else foreach( $ini as $key => $value ) {
@@ -56,12 +56,12 @@ class Ini implements ConverterInterface, Helper\AccessableInterface {
         if( empty( $keys ) ) break;
         else {
 
-          if( !isset( $tmp->{$key} ) ) $tmp->{$key} = (object) [];
-          $tmp = &$tmp->{$key};
+          if( !isset( $tmp[ $key ] ) ) $tmp[ $key ] = [];
+          $tmp = &$tmp[ $key ];
         }
       }
 
-      $tmp->{$key} = $value;
+      $tmp[ $key ] = $value;
     }
 
     return $result;

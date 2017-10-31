@@ -40,23 +40,25 @@ class HelperTest extends TestCase {
     $this->assertTrue( Helper\Collection::is( new \StdClass(), true ) );
     $this->assertFalse( Helper\Collection::is( new \StdClass(), true, true ) );
 
-    $this->assertTrue( Helper\Collection::isArrayNumeric( [ 'a', 'b', 'c' ] ) );
-    $this->assertTrue( Helper\Collection::isArrayNumeric( [ 'a', 'b', 'c' ], false ) );
-    $this->assertTrue( Helper\Collection::isArrayNumeric( [ 1 => 'a', 'b', 'c' ], false ) );
-    $this->assertTrue( Helper\Collection::isArrayNumeric( [ '0' => 'a', 'b', 'c' ] ) );
-    $this->assertFalse( Helper\Collection::isArrayNumeric( [ 'a' => 'a', 'b', 'c' ] ) );
+    $this->assertTrue( Helper\Collection::isNumeric( [ 'a', 'b', 'c' ] ) );
+    $this->assertTrue( Helper\Collection::isNumeric( [ 'a', 'b', 'c' ], false ) );
+    $this->assertTrue( Helper\Collection::isNumeric( [ 1 => 'a', 'b', 'c' ], false ) );
+    $this->assertTrue( Helper\Collection::isNumeric( [ '0' => 'a', 'b', 'c' ] ) );
+    $this->assertFalse( Helper\Collection::isNumeric( [ 'a' => 'a', 'b', 'c' ] ) );
 
     // TODO test read
   }
   public function testCollectionExtra() {
 
     // test iterable merging
-    $a = [ 'a' => 'a', 'b' => [ 'c' => [ 'e' => 'e' ] ] ];
-    $b = [ 'd' => 'd', 'b' => [ 'f' => 'f' ] ];
+    $a = [ 'a' => 'a', 'b' => [ 'c' => [ 'e' => 'e' ] ], 'numeric' => [ 0, 1, 2, 3, 4, 5 ] ];
+    $b = [ 'd' => 'd', 'b' => [ 'f' => 'f' ], 'numeric' => [ 6, 7, 8, 9, 10 ] ];
     $this->assertEquals( array_merge_recursive( $a, $b ), Helper\Collection::merge( $a, $b ) );
     $this->assertEquals( array_merge( $a, $b ), Helper\Collection::merge( $a, $b, false ) );
 
-    // 
+    //
+    $a          = [ 'a' => 'a', 'b' => [ 'c' => [ 'e' => 'e' ] ] ];
+    $b          = [ 'd' => 'd', 'b' => [ 'f' => 'f' ] ];
     $c          = [ 'b' => [ 'c' => 'c' ] ];
     $tmp        = $a;
     $tmp[ 'b' ] = $c[ 'b' ];
@@ -172,12 +174,12 @@ class HelperTest extends TestCase {
    */
   public function testConverterType( ConverterInterface $converter ) {
 
-    $content = (object) [ 'test1' => (object) [ 'test2' => (object) [ 'test3' => 3 ], 'test4' => 4 ] ];
+    $content = [ 'test1' => [ 'test2' => [ 'test3' => 3 ], 'test4' => 4 ] ];
     $tmp     = $converter->serialize( $content );
     $this->assertEquals( $content, $converter->unserialize( $tmp ) );
 
     // check for stream support
-    $content = (object) [ 'test1' => (object) [ 'test2' => (object) [ 'test3' => 3 ], 'test4' => 4 ] ];
+    $content = [ 'test1' => [ 'test2' => [ 'test3' => 3 ], 'test4' => 4 ] ];
     $tmp     = Helper\Stream::instance( fopen( 'php://memory', 'w+' ) );
 
     $converter->serialize( $content, $tmp );

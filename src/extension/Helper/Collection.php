@@ -23,15 +23,15 @@ abstract class Collection {
     else return ( !$iterable || $test instanceof \StdClass || $test instanceof \Traversable ) && ( !$arraylike || $test instanceof \ArrayAccess );
   }
   /**
-   * Check for the input is a real numeric array
+   * Check for the input is a numeric array(like)
    *
    * @param mixed $test
    * @param bool  $ordered it will check the index ordering, not just the type
    *
-   * @return bool true, if the $data was a real array with numeric indexes
+   * @return bool true, if the $data was a array(like) with numeric indexes
    */
-  public static function isArrayNumeric( $test, bool $ordered = true ): bool {
-    if( !is_array( $test ) ) return false;
+  public static function isNumeric( $test, bool $ordered = true ): bool {
+    if( !static::is( $test, true, true ) ) return false;
     else {
 
       $i = 0;
@@ -44,25 +44,37 @@ abstract class Collection {
   }
 
   /**
-   * Recursive merge of two arrays. This is like the array_merge_recursive() without the strange array-creating thing
+   * Recursive merge of two arrays
+   *
+   * This is like the array_merge_recursive() without the strange array-creating thing
    *
    * @param array|object $destination
    * @param array|object $source
    * @param bool         $deep
+   * @param bool         $assoc Handle numeric arrays like associative (overwrite keys, not extend)
    *
    * @return array|object The extended destination
    * @throws \TypeError
    */
-  public static function merge( $destination, $source, bool $deep = true ) {
+  public static function merge( $destination, $source, bool $deep = true, bool $assoc = false ) {
 
-    if( !static::is( $destination, true, true ) ) throw new \TypeError( 'Destination must be array(like)' );
+    if( !static::is( $destination, false, true ) ) throw new \TypeError( 'Destination must be array(like)' );
     else if( !static::is( $source, true ) ) throw new \TypeError( 'Source must be iterable' );
     else {
 
+      // handle special case when both arrays are completly numeric
+      if( !$assoc && static::isNumeric( $source ) && static::isNumeric( $destination ) ) {
+
+        $index = -1;
+        foreach( $destination as $tmp => $_ ) $index = max( $index, $tmp );
+      }
+
       $result = $destination;
       foreach( $source as $key => $value ) {
-        if( !$deep || !static::is( $value, true ) || !static::is( $result[ $key ] ?? null, true ) ) $result[ $key ] = $value;
-        else $result[ $key ] = static::merge( $result[ $key ], $value, $deep );
+
+        $tmp = isset( $index ) ? ++$index : $key;
+        if( !$deep || !static::is( $value, true ) || !static::is( $result[ $tmp ] ?? null, true ) ) $result[ $tmp ] = $value;
+        else $result[ $tmp ] = static::merge( $result[ $tmp ], $value, $deep );
       }
     }
 
@@ -73,37 +85,40 @@ abstract class Collection {
    * Deep copy of a collection
    *
    * @param array|object $input
+   * @param bool         $deep Deep copy or not
    *
    * @return array|object
    */
-  public static function copy( $input ) {
+  public static function copy( $input, bool $deep = true ) {
 
-    if( is_array( $input ) ) {
+    if( !static::is( $input ) ) return $input;
+    else {
 
-      $tmp = [];
-      foreach( $input as $k => $e ) {
-        $tmp[ $k ] = static::is( $e ) ? static::copy( $e ) : $e;
-      }
+      if( is_array( $input ) ) {
 
-      $input = $tmp;
-
-    } else if( is_object( $input ) ) {
-
-      if( !( $input instanceof \stdClass ) ) $input = clone $input;
-      else {
-
-        $tmp = new \stdClass();
+        $result = [];
         foreach( $input as $k => $e ) {
-          $tmp->{$k} = static::is( $e ) ? static::copy( $e ) : $e;
+          $result[ $k ] = $deep ? static::copy( $e, $deep ) : $e;
         }
-        $input = $tmp;
-      }
-    }
 
-    return $input;
+      } else {
+
+        // handle (and detect non-)cloneable object (private __clone method is considered non-cloneable)
+        if( method_exists( $input, '__clone' ) ) $result = is_callable( [ $input, '__clone' ] ) ? clone $input : $input;
+        else if( static::is( $input, true ) ) {
+
+          $result = new \stdClass();
+          foreach( $input as $k => $e ) {
+            $result->{$k} = $deep ? static::copy( $e, $deep ) : $e;
+          }
+        }
+      }
+
+      return $result ?? $input;
+    }
   }
   /**
-   * Convert any input into array. On error/invalid input returns the $default parameter
+   * Convert any input into arrayOn error/invalid input returns the $default parameter
    *
    * @param mixed      $input
    * @param array|null $default

@@ -316,7 +316,7 @@ class Storage implements StorageInterface, Helper\AccessableInterface {
 
       $result = new StorageMetaSearch( $this->_source, $meta->token, $build );
       if( $this->_caching ) {
-        $this->cache[ $meta->id ] = $result;
+        $this->cache[ $meta->id ] = Collection::copy( $result, false );
       }
 
       return $result;
@@ -641,6 +641,7 @@ class StorageMetaSearch {
             else return;
           }
 
+          // FIXME this reference will ruin your life! DO NOT USE IT! EVER!
           $this->container = &$this->container[ $key ];
 
         } else if( is_object( $this->container ) ) {   // handle like an object
