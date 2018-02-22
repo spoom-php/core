@@ -83,7 +83,7 @@ abstract class Text {
       } catch( \Exception $e ) {
 
         // log: warning
-        Application::instance()->getLog()->warning( 'Cannot use random_bytes due to an error', [ 'error' => $e ], static::class );
+        Application::instance()->getLogger()->warning( 'Cannot use random_bytes due to an error', [ 'error' => $e ], static::class );
 
       }
 

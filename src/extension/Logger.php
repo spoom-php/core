@@ -5,14 +5,17 @@ use Spoom\Core\Helper;
 use Spoom\Core\Helper\Collection;
 
 /**
- * Interface LogInterface
+ * Interface LoggerInterface
+ *
+ * TODO add ability to collect and commit or rollback entries based on their severity
+ * TODO add ability to filter entries by message/data/namespace
  */
-interface LogInterface {
+interface LoggerInterface {
 
   /**
    * This event MUST be called before every new log entry. This can prevent the log
    *
-   * @param LogInterface     $instance    The Log instance that call this event
+   * @param LoggerInterface  $instance    The Logger instance that call this event
    * @param string           $namespace   *The log entry namespace
    * @param int              $severity    The log entry type
    * @param string           $datetime    *'Y-m-d\TH:i:s.uO' format
@@ -20,7 +23,7 @@ interface LogInterface {
    * @param string           $message     *The raw message
    * @param StorageInterface $data        *The raw data
    */
-  const EVENT_CREATE = 'log.create';
+  const EVENT_CREATE = 'logger.create';
 
   /**
    * @param string               $message   The log message pattern
@@ -109,7 +112,7 @@ interface LogInterface {
  * @property      int           $severity Maximum severity level that will be logged
  * @property-read FileInterface $file     The default log file
  */
-class Log implements LogInterface, Helper\AccessableInterface {
+class Logger implements LoggerInterface, Helper\AccessableInterface {
   use Helper\Accessable;
 
   /**
@@ -137,7 +140,7 @@ class Log implements LogInterface, Helper\AccessableInterface {
   private $_severity;
 
   /**
-   * Event storage for triggering the LogInterface::EVENT_CREATE
+   * Event storage for triggering the LoggerInterface::EVENT_CREATE
    *
    * @var Event\EmitterInterface
    */
@@ -334,7 +337,7 @@ class Log implements LogInterface, Helper\AccessableInterface {
  * This logger will add entries to the void
  *
  */
-class LogVoid implements LogInterface {
+class LoggerVoid implements LoggerInterface {
 
   //
   public function create( string $message, $data = [], string $namespace = '', int $severity = Application::SEVERITY_DEBUG ) { }

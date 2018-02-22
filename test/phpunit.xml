@@ -16,7 +16,7 @@
       <file>StoragePermanentTest.php</file>
       <file>EventTest.php</file>
       <file>ExtensionTest.php</file>
-      <file>LogTest.php</file>
+      <file>LoggerTest.php</file>
     </testsuite>
   </testsuites>
 

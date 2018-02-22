@@ -10,12 +10,12 @@ use Spoom\Core\Helper\Text;
  *
  * TODO create tests
  *
- * @property-read string        $environment
- * @property-read LogInterface  $log
- * @property-read FileInterface $root_file
- * @property-read FileInterface $public_file
- * @property      string        $localization
- * @property-read string        $id
+ * @property-read string          $environment
+ * @property-read LoggerInterface $logger
+ * @property-read FileInterface   $root_file
+ * @property-read FileInterface   $public_file
+ * @property      string          $localization
+ * @property-read string          $id
  */
 class Application implements AccessableInterface {
   use Helper\Accessable;
@@ -104,9 +104,9 @@ class Application implements AccessableInterface {
    */
   private $_localization;
   /**
-   * @var LogInterface
+   * @var LoggerInterface
    */
-  private $_log;
+  private $_logger;
   /**
    * App root filesystem
    *
@@ -121,16 +121,16 @@ class Application implements AccessableInterface {
   private $file;
 
   /**
-   * @param string            $environment
-   * @param string            $localization
-   * @param FileInterface     $root
-   * @param LogInterface|null $log
-   * @param string|null       $id
+   * @param string               $environment
+   * @param string               $localization
+   * @param FileInterface        $root
+   * @param LoggerInterface|null $logger
+   * @param string|null          $id
    *
    * @throws \InvalidArgumentException Empty environment or localization
    * @throws \LogicException There is already an Application instance
    */
-  public function __construct( string $environment, string $localization, FileInterface $root, ?LogInterface $log = null, ?string $id = null ) {
+  public function __construct( string $environment, string $localization, FileInterface $root, ?LoggerInterface $logger = null, ?string $id = null ) {
     $this->_id = $id ?? Text::unique( 8, '', false );
 
     if( self::$instance ) throw new \LogicException( 'Unable to create another instance, use ::instance() instead' );
@@ -141,7 +141,7 @@ class Application implements AccessableInterface {
       //
       $this->_environment  = $environment;
       $this->_localization = $localization;
-      $this->_log          = $log ?? new LogVoid();
+      $this->_logger       = $logger ?? new LoggerVoid();
       $this->root          = $root;
 
       //
@@ -173,7 +173,7 @@ class Application implements AccessableInterface {
         }
 
         // log the fail
-        $this->getLog()->create( 'Unexpected code failure: #{code} with \'{message}\' message, at \'{file}\'', [
+        $this->getLogger()->create( 'Unexpected code failure: #{code} with \'{message}\' message, at \'{file}\'', [
           'code'    => $code,
           'message' => $message,
           'file'    => $file . ':' . $line
@@ -225,10 +225,10 @@ class Application implements AccessableInterface {
   /**
    * Default logger of the application
    *
-   * @return LogInterface
+   * @return LoggerInterface
    */
-  public function getLog(): LogInterface {
-    return $this->_log;
+  public function getLogger(): LoggerInterface {
+    return $this->_logger;
   }
 
   /**

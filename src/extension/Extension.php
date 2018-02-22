@@ -80,9 +80,9 @@ interface ExtensionInterface {
   /**
    * @since 0.6.0
    *
-   * @return LogInterface
+   * @return LoggerInterface
    */
-  public function getLog(): LogInterface;
+  public function getLogger(): LoggerInterface;
   /**
    * @return Event\EmitterInterface
    */
@@ -96,7 +96,7 @@ interface ExtensionInterface {
  * @property-read string                           $id            Unique name
  * @property-read Extension\ConfigurationInterface $configuration
  * @property-read Extension\LocalizationInterface  $localization
- * @property-read LogInterface                     $log
+ * @property-read LoggerInterface                  $logger
  * @property-read Event\EmitterInterface           $emitter
  */
 class Extension implements ExtensionInterface, Helper\AccessableInterface {
@@ -148,9 +148,9 @@ class Extension implements ExtensionInterface, Helper\AccessableInterface {
    */
   private $_emitter;
   /**
-   * @var LogInterface
+   * @var LoggerInterface
    */
-  private $_log;
+  private $_logger;
 
   /**
    *
@@ -165,8 +165,8 @@ class Extension implements ExtensionInterface, Helper\AccessableInterface {
     $this->_localization  = new Extension\Localization( $directory->get( static::DIRECTORY_LOCALIZATION ) );
     $this->_emitter       = new Event\Emitter( $this->getId() );
 
-    $this->_log = clone Application::instance()->getLog();
-    $this->_log->setChannel( $this->getId() );
+    $this->_logger = clone Application::instance()->getLogger();
+    $this->_logger->setChannel( $this->getId() );
   }
 
   /**
@@ -179,7 +179,7 @@ class Extension implements ExtensionInterface, Helper\AccessableInterface {
     $this->_file          = clone $this->_file;
     $this->_configuration = clone $this->_configuration;
     $this->_localization  = clone $this->_localization;
-    $this->_log           = clone $this->_log;
+    $this->_logger        = clone $this->_logger;
   }
 
   //
@@ -220,8 +220,8 @@ class Extension implements ExtensionInterface, Helper\AccessableInterface {
     return $this->_localization;
   }
   //
-  public function getLog(): LogInterface {
-    return $this->_log;
+  public function getLogger(): LoggerInterface {
+    return $this->_logger;
   }
   //
   public function getEmitter(): Event\EmitterInterface {

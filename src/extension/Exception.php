@@ -33,16 +33,16 @@ class Exception extends \Exception implements Helper\ThrowableInterface, Helper\
   }
 
   /**
-   * Log the `\Throwable` with the proper severity and message
+   * Logger the `\Throwable` with the proper severity and message
    *
-   * @param \Throwable   $throwable
-   * @param LogInterface $instance
-   * @param array        $context
+   * @param \Throwable      $throwable
+   * @param LoggerInterface $instance
+   * @param array           $context
    *
    * @return \Throwable The input `\Throwable`
    */
-  public static function log( \Throwable $throwable, ?LogInterface $instance = null, array $context = [] ): \Throwable {
-    $instance = $instance ?? Application::instance()->getLog();
+  public static function log( \Throwable $throwable, ?LoggerInterface $instance = null, array $context = [] ): \Throwable {
+    $instance = $instance ?? Application::instance()->getLogger();
 
     // extend data
     $context                = Collection::read( $context, [] );
