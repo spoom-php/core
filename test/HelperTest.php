@@ -69,6 +69,30 @@ class HelperTest extends TestCase {
     $this->assertTrue( $tmp === Helper\Collection::merge( $tmp, $b ) );
     $this->assertEquals( array_merge_recursive( $a, $b ), Helper\Collection::read( Helper\Collection::merge( $tmp, $b ), [], true ) );
 
+    // test array and single item remapping
+    $tmp = [ 'x' => [ 'y' => 'z', 'yy' => 'zz' ], 'xx' => [ 'y' => 'xz', 'yy' => 'xzz' ] ];
+    $this->assertEquals(
+      [ 'x' => 'z', 'xx' => 'xz' ],
+      Helper\Collection::remapAll( $tmp, 'y' ),
+      "This should be map x => [ y => z ] into x => z on every element"
+    );
+    $this->assertEquals(
+      [ 'zz' => 'z', 'xzz' => 'xz' ],
+      Helper\Collection::remapAll( $tmp, 'y', 'yy' ),
+      "This should be map x => [ y => z, yy => zz ] into zz => z on every element"
+    );
+
+    $this->assertEquals(
+      [ 'x' => [ '_y' => 'z', '__y' => 'z' ], 'xx' => [ '_y' => 'xz', '__y' => 'xz' ] ],
+      Helper\Collection::remapAll( $tmp, [ 'y' => [ '_y', '__y' ] ] ),
+      "This should be map x => [ y => z, yy => zz ] into x => [ _y => z, __y => z ] on every element"
+    );
+    $this->assertEquals(
+      [ '_y' => 'z', '__y' => 'z' ],
+      Helper\Collection::remap( $tmp[ 'x' ], [], [ 'y' => [ '_y', '__y' ] ] ),
+      "This should be map [ y => z ] into [ _y => z, __y => z ]"
+    );
+
     // TODO test copy
   }
   public function testNumber() {
@@ -112,13 +136,13 @@ class HelperTest extends TestCase {
   }
 
   /**
-   * @dataProvider providerStructure
+   * @dataProvider providerWrapper
    *
-   * @param Helper\Structure $io
+   * @param Helper\Wrapper   $io
    * @param array            $expect
    * @param                  $input
    */
-  public function testStructure( $io, array $expect, $input ) {
+  public function testWrapper( $io, array $expect, $input ) {
 
     $tmp = $io::instance( $input );
     $this->assertEquals( $expect, Helper\Collection::read( $tmp, null, true ) );
@@ -203,10 +227,10 @@ class HelperTest extends TestCase {
       [ new Converter\Native() ]
     ];
   }
-  public function providerStructure() {
-    // Structure, expect, input
+  public function providerWrapper() {
+    // Wrapper, expect, input
     return [
-      [ HelperTestStructure1::class, [
+      [ HelperTestWrapper1::class, [
         'test00' => '00',
         'test01' => '0',
         'test11' => '11',
@@ -232,7 +256,7 @@ class HelperTest extends TestCase {
   }
 }
 
-class HelperTestStructure1 extends Helper\Structure {
+class HelperTestWrapper1 extends Helper\Wrapper {
 
   const PROPERTY_MAP  = [
     // simple mapping
@@ -245,9 +269,9 @@ class HelperTestStructure1 extends Helper\Structure {
   ];
   const PROPERTY_WRAP = [
     // wrap in a class
-    'test4' => HelperTestStructure2::class,
+    'test4' => HelperTestWrapper2::class,
     // wrap every subelement in a class
-    'test5' => '[]' . HelperTestStructure2::class
+    'test5' => '[]' . HelperTestWrapper2::class
   ] + parent::PROPERTY_WRAP;
 
   // it must be remain untouched
@@ -261,7 +285,7 @@ class HelperTestStructure1 extends Helper\Structure {
   public $test4;
   public $test5;
 }
-class HelperTestStructure2 extends Helper\Structure {
+class HelperTestWrapper2 extends Helper\Wrapper {
 
   const PROPERTY_MAP = [
     'test' => 'test1'

@@ -73,6 +73,7 @@ class Localization extends Storage\File implements LocalizationInterface {
    * @param string $name The localization name to check
    *
    * @return bool
+   * @throws \Spoom\Core\FileException
    */
   protected function validate( string $name ): bool {
 

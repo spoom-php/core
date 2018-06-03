@@ -66,6 +66,7 @@ class Configuration extends Storage\File implements ConfigurationInterface {
    * @param string $name The environment name
    *
    * @return bool
+   * @throws \Spoom\Core\FileException
    */
   protected function validate( string $name ): bool {
 

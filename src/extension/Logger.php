@@ -269,7 +269,7 @@ class Logger implements LoggerInterface, Helper\AccessableInterface {
     else {
 
       // handle custom classes
-      if( is_object( $data ) && !( $data instanceof \StdClass ) ) {
+      if( is_object( $data ) && !( $data instanceof \StdClass ) ) try {
 
         $reflection = new \ReflectionClass( $data );
         $tmp        = [ '__CLASS__' => $reflection->getName() ];
@@ -284,6 +284,8 @@ class Logger implements LoggerInterface, Helper\AccessableInterface {
         }
 
         $data = $tmp;
+      } catch( \ReflectionException $e ) {
+        // can't do anything
       }
 
       //

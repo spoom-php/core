@@ -1,6 +1,5 @@
 <?php namespace Spoom\Core\Helper;
 
-use Spoom\Core\Application;
 use Spoom\Core\Storage;
 use Spoom\Core\StorageInterface;
 
@@ -55,44 +54,46 @@ abstract class Text {
   }
 
   /**
-   * Generate unique string from available sources and hash it for normalization. Use $secure = true parameter to ensure
+   * Generate unique string from available sources and base64 encode it for normalization (by default). Use $secure = true parameter to ensure
    * unpredicatable string is being generated (this is the default, but it's slower)
    *
-   * @param int|null $length The length of the result. This will be the default length of the hashing method if NULL
-   * @param string   $prefix Custom prefix that helps the uniqueness
-   * @param bool     $secure Add unpredictable random values (from available sources) to the raw data or not
-   * @param string   $hash   The hashing method name
-   * @param int      $seeds  The minimum length of the secure random seeds (only used when the $secure param is true)
+   * @param int  $length The exact length of the result
+   * @param bool $secure Use unpredictable random values (from available sources)
+   * @param bool $hex    Don't use normalized base64, just encode it to hex string
    *
    * @return string The unique string
-   * @throws \InvalidArgumentException Throws when the hashing algorithm is invalid
    */
-  public static function unique( int $length = null, string $prefix = '', bool $secure = true, string $hash = 'sha256', int $seeds = 64 ): string {
+  public static function unique( int $length = 64, bool $secure = true, bool $hex = false ): string {
 
-    $result = '';
-    do {
+    if( $hex ) $result = bin2hex( static::random( ceil( $length / 2 + 1 ), $secure ) );
+    else {
 
-      // add a basic random id with predictable random number prefix for more uniqueness
-      $raw = $prefix . uniqid( mt_rand(), true );
-
-      // add some unpredictable random strings for available sources
-      if( $secure ) try {
-
-        $raw .= random_bytes( $seeds );
-
-      } catch( \Exception $e ) {
-
-        // log: warning
-        Application::instance()->getLogger()->warning( 'Cannot use random_bytes due to an error', [ 'error' => $e ], static::class );
-
-      }
-
-      // hash the generated string
-      $result .= self::hash( $raw, $hash );
-
-    } while( $length && strlen( $result ) < $length );
+      $result = base64_encode( static::random( ceil( $length * 3 / 4 + 1 ), $secure ) );
+      $result = str_replace( [ '/', '+', '=' ], [ '.', '-', '_' ], $result );
+    }
 
     return $length ? substr( $result, 0, $length ) : $result;
+  }
+  /**
+   * Generate (secure) random bytes
+   *
+   * @param int  $length
+   * @param bool $secure Generate secure random values (but maybe a bit slower)
+   *
+   * @return string
+   */
+  public static function random( int $length, bool $secure = true ): string {
+
+    if( $secure ) return random_bytes( $length );
+    else {
+
+      $result = '';
+      for( $i = 0; $i < $length; ++$i ) {
+        $result .= chr( mt_rand( 0, 255 ) );
+      }
+
+      return $result;
+    }
   }
   /**
    * Generates hash with the basic PHP hash() function but handles the error with exception

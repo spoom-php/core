@@ -3,10 +3,8 @@
 use Spoom\Core\Storage;
 use Spoom\Core\StorageInterface;
 
-/**
- * Class Structure
- */
-class Structure implements \Iterator {
+//
+class Wrapper implements \Iterator {
 
   /**
    * Rename or copy input elements
@@ -20,7 +18,7 @@ class Structure implements \Iterator {
   /**
    * Wrap input elements to classes
    *
-   * The key is the input element and the value is the class to wrap in. The class MUST BE a subclass of `Structure` and the input element's value will be the input
+   * The key is the input element and the value is the class to wrap in. The class MUST BE a subclass of `Wrapper` and the input element's value will be the input
    * for that class's `::instance()` method. You can use the [] prefix to wrap the input element's every iterable subelement instead of the whole value
    *
    * @var array
@@ -38,6 +36,8 @@ class Structure implements \Iterator {
 
   /**
    * @param array|object $input
+   *
+   * @throws \TypeError
    */
   protected function __construct( $input ) {
 
@@ -63,20 +63,15 @@ class Structure implements \Iterator {
    * @param array            $definition Defined operations
    */
   protected function map( StorageInterface $input, array $definition ) {
-    foreach( $definition as $source => $properties ) {
-
-      $value      = isset( $input[ $source ] ) ? $input[ $source ] : null;
-      $properties = is_array( $properties ) ? $properties : [ $properties ];
-      foreach( $properties as $property ) {
-        $input[ $property ] = $value;
-      }
-    }
+    Collection::remap( $input, $input, $definition );
   }
   /**
    * Wrap input elements in classes
    *
    * @param StorageInterface $input
    * @param array            $definition Defined operations
+   *
+   * @throws \TypeError
    */
   protected function wrap( StorageInterface $input, array $definition ) {
     foreach( $definition as $property => $class ) {
@@ -129,13 +124,14 @@ class Structure implements \Iterator {
     $tmp = ( new \ReflectionObject( $this ) )->getProperties( \ReflectionProperty::IS_PUBLIC );
     foreach( $tmp as $t ) $this->iterator_key[] = $t->getName();
   }
-  
+
   /**
-   * @param array|object $input
+   * @param mixed $input
    *
    * @return static|null
+   * @throws \TypeError
    */
   public static function instance( $input ) {
-    return $input ? new static( $input ) : null;
+    return $input !== null ? new static( $input ) : null;
   }
 }

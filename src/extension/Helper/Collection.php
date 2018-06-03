@@ -80,6 +80,64 @@ abstract class Collection {
 
     return $result;
   }
+  /**
+   * Re-map an array of arraylikes into a new array
+   *
+   * @param array[]              $list
+   * @param string|array|array[] $map
+   * @param string|null          $key
+   *
+   * @return array[]
+   */
+  public static function remapAll( $list, $map, ?string $key = null ): array {
+
+    if( !static::is( $list, true ) ) throw new \TypeError( 'The $list must be iterable' );
+    else {
+
+      $_list = [];
+      foreach( $list as $index => $item ) {
+
+        if( !static::is( $item, false, true ) ) throw new \TypeError( 'All $list element must be arraylike' );
+        else {
+
+          $_key = $key ? $item[ $key ] : $index;
+          if( !static::is( $map, true, true ) ) $_list[ $_key ] = $item[ $map ] ?? null;
+          else $_list[ $_key ] = static::remap( $item, [], $map );
+        }
+      }
+
+      return $_list;
+    }
+  }
+  /**
+   * Re-map $source into $destination based on the map
+   *
+   * @param array|\ArrayAccess $source
+   * @param array|\ArrayAccess $destination
+   * @param iterable           $map
+   *
+   * @return array|\ArrayAccess The $destination
+   */
+  public static function remap( $source, $destination, iterable $map ) {
+
+    // sanity check
+    if( !static::is( $source, false, true ) ) throw new \TypeError( 'The $source must be arraylike' );
+    else if( !static::is( $destination, false, true ) ) throw new \TypeError( 'The $destination must be arraylike' );
+    else {
+
+      // iterate $map and fill the destination based on it
+      foreach( $map as $key => $key_list ) {
+
+        $value    = $source[ Number::is( $key ) ? $key_list : $key ] ?? null;
+        $key_list = static::read( $key_list, [ $key_list ] );
+        foreach( $key_list as $_key ) {
+          $destination[ $_key ] = $value;
+        }
+      }
+
+      return $destination;
+    }
+  }
 
   /**
    * Deep copy of a collection
@@ -104,8 +162,9 @@ abstract class Collection {
       } else {
 
         // handle (and detect non-)cloneable object (private __clone method is considered non-cloneable)
-        if( method_exists( $input, '__clone' ) ) $result = is_callable( [ $input, '__clone' ] ) ? clone $input : $input;
-        else if( static::is( $input, true ) ) {
+        if( method_exists( $input, '__clone' ) && !is_callable( [ $input, '__clone' ] ) ) $result = $input;
+        else if( !( $input instanceof \StdClass ) ) $result = clone $input;
+        else {
 
           $result = new \stdClass();
           foreach( $input as $k => $e ) {

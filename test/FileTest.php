@@ -66,7 +66,7 @@ class FileTest extends TestCase {
     $this->assertEquals( 3, count( $system->search( '/^[ab]/' ) ) );
   }
   /**
-   * Test local filesystem Structure operations (read,write,delete)
+   * Test local filesystem structure operations (read,write,delete)
    *
    * @depends testSystem
    */

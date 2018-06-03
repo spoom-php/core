@@ -503,6 +503,7 @@ class Storage implements StorageInterface, Helper\AccessableInterface {
    * @param array|object|StorageInterface $data
    *
    * @return StorageInterface
+   * @throws \TypeError
    */
   public static function instance( $data ) {
     return $data instanceof StorageInterface ? $data : new static( $data );
