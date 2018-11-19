@@ -6,14 +6,10 @@ use Spoom\Core\Helper\AccessableInterface;
 use Spoom\Core\Helper\Text;
 
 /**
- * Class Application
- *
  * TODO create tests
  *
  * @property-read string          $environment
  * @property-read LoggerInterface $logger
- * @property-read FileInterface   $root_file
- * @property-read FileInterface   $public_file
  * @property      string          $localization
  * @property-read string          $id
  */
@@ -25,7 +21,11 @@ class Application implements AccessableInterface {
    */
   const ENVIRONMENT_PRODUCTION = 'production';
   /**
-   * Main test environment
+   * Pre-production environment
+   */
+  const ENVIRONMENT_STAGING = 'staging';
+  /**
+   * Test environment
    */
   const ENVIRONMENT_TEST = 'test';
   /**
@@ -107,18 +107,19 @@ class Application implements AccessableInterface {
    * @var LoggerInterface
    */
   private $_logger;
+
   /**
    * App root filesystem
    *
    * @var FileInterface
    */
-  private $root;
+  private $file;
   /**
-   * Spoom's public directory
+   * Spoom's resource filesystem
    *
    * @var FileInterface
    */
-  private $file;
+  private $file_resource;
 
   /**
    * @param string               $environment
@@ -142,10 +143,10 @@ class Application implements AccessableInterface {
       $this->_environment  = $environment;
       $this->_localization = $localization;
       $this->_logger       = $logger ?? new LoggerVoid();
-      $this->root          = $root;
+      $this->file          = $root;
 
       //
-      $this->file = new File( Autoload::DIRECTORY );
+      $this->file_resource = new File( Autoload::DIRECTORY );
 
       //
       self::$instance = $this;
@@ -209,18 +210,18 @@ class Application implements AccessableInterface {
    *
    * @return FileInterface
    */
-  public function getRootFile( string $path = '' ): FileInterface {
-    return $this->root->get( $path );
+  public function getFile( string $path = '' ): FileInterface {
+    return $this->file->get( $path );
   }
   /**
-   * File from the Spoom's public directory
+   * File from the Spoom's resource directory
    *
    * @param string $path
    *
    * @return FileInterface
    */
-  public function getPublicFile( string $path = '' ): FileInterface {
-    return $this->file->get( $path );
+  public function getResource( string $path = '' ): FileInterface {
+    return $this->file_resource->get( $path );
   }
   /**
    * Default logger of the application

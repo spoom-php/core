@@ -41,7 +41,7 @@ abstract class Number {
    * @return bool
    */
   public static function isReal( $input ): bool {
-    return is_float( self::read( $input ) );
+    return is_float( self::cast( $input ) );
   }
 
   /**
@@ -49,21 +49,30 @@ abstract class Number {
    *
    * @param mixed          $input
    * @param int|float|null $default Return value on error/invalid input
+   * @param int|null       $precision
    *
-   * @return int|float|null
+   * @return int|float|mixed
    */
-  public static function read( $input, $default = null ) {
+  public static function cast( $input, $default = null, ?int $precision = null ) {
+
+    $result = null;
     switch( true ) {
       case is_int( $input ) || is_float( $input ):
-        return $input;
+        $result = $input;
+        break;
+
       case is_bool( $input ):
-        return $input ? 1 : 0;
+        $result = $input ? 1 : 0;
+        break;
+
       case Text::is( $input, true ) && strlen( $input ) > 0 && ltrim( $input, '+-,.e0123456789' ) == '':
-        $tmp = floatval( str_replace( ',', '.', $input ) );
-        return self::isInteger( $tmp ) ? (int) $tmp : $tmp;
+        $tmp    = floatval( str_replace( ',', '.', $input ) );
+        $result = strpos( $input, '.' ) === false && strpos( $input, ',' ) === false ? intval( $tmp ) : $tmp;
+        break;
     }
 
-    return $default;
+    if( $result === null ) return $default;
+    else return $precision === null ? $result : ( $precision === 0 ? intval( $result ) : round( $result, $precision ) );
   }
   /**
    * Convert numbers to string
@@ -78,7 +87,7 @@ abstract class Number {
     if( !self::is( $input ) ) return $default;
     else {
 
-      $input = self::read( $input );
+      $input = self::cast( $input );
       if( is_int( $precision ) ) return number_format( $input, $precision, '.', '' );
       else if( is_int( $input ) ) return (string) $input;
       else return str_replace( ',', '.', (string) $input );
@@ -95,6 +104,6 @@ abstract class Number {
    * @return bool
    */
   public static function equal( $a, $b, int $precision = 0 ): bool {
-    return self::write( $a, $precision ) == self::write( $b, $precision );
+    return self::write( $a, $precision ) === self::write( $b, $precision );
   }
 }

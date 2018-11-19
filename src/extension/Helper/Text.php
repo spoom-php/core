@@ -37,7 +37,7 @@ abstract class Text {
    *
    * @return string|null
    */
-  public static function read( $input, ?string $default = null ): ?string {
+  public static function cast( $input, ?string $default = null ): ?string {
     switch( true ) {
       case is_string( $input ):
         return $input;
@@ -200,13 +200,15 @@ abstract class Text {
     return $return;
   }
   /**
-   * Convert input text into a link
+   * Convert input text into a simplde form, without special characters
    *
    * @param string $text
+   * @param string $whitespace
+   * @param string $any
    *
    * @return string
    */
-  public static function linkify( string $text ): string {
+  public static function simplify( string $text, string $whitespace = '+', string $any = '-' ): string {
 
     // lowercase
     $text = mb_convert_case( $text, MB_CASE_LOWER, 'UTF-8' );
@@ -225,14 +227,14 @@ abstract class Text {
       '/(\-\+)|(\+\-)/i'
     ], [
       'a', 'e', 'u', 'o', 'i',
-      '+',
-      '-',
-      '-', '+',
-      '+'
+      $whitespace,
+      $any,
+      $any, $whitespace,
+      $whitespace
     ], $text );
 
     // trim special chars the beginning or end of the string
-    $text = trim( $text, ' -+' );
+    $text = trim( $text, $whitespace . $any );
 
     return $text;
   }

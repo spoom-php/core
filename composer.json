@@ -12,6 +12,10 @@
 
   "require": {
     "php": "^7.1.0",
+    "ext-mbstring": "*",
+    "ext-fileinfo": "*",
+    "ext-json": "*",
+
     "spoom-php/composer": "^1.0.0"
   },
   "require-dev": {

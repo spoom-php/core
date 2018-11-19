@@ -9,6 +9,14 @@ use Spoom\Core\Helper;
 interface EmitterInterface {
 
   /**
+   * This makes the emitter itself a callback to use
+   *
+   * @param EventInterface   $event
+   * @param EmitterInterface $emitter
+   */
+  public function __invoke( EventInterface $event, EmitterInterface $emitter );
+
+  /**
    * Execute the event in this storage context
    *
    * @param EventInterface $event
@@ -115,6 +123,13 @@ class Emitter implements EmitterInterface, Helper\AccessableInterface {
    */
   public function __construct( $name ) {
     $this->_name = $name;
+  }
+
+  //
+  public function __invoke( EventInterface $event, EmitterInterface $emitter ) {
+    if( $event->getName() != static::EVENT_GLOBAL ) {
+      $this->trigger( $event );
+    }
   }
 
   //

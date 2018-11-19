@@ -28,7 +28,7 @@ class Exception extends \Exception implements Helper\ThrowableInterface, Helper\
     parent::__construct( $message, (int) $id, $previous );
 
     $this->_id       = $id;
-    $this->_context  = Collection::read( $context, [] );
+    $this->_context  = Collection::cast( $context, [] );
     $this->_severity = $severity;
   }
 
@@ -45,7 +45,7 @@ class Exception extends \Exception implements Helper\ThrowableInterface, Helper\
     $instance = $instance ?? Application::instance()->getLogger();
 
     // extend data
-    $context                = Collection::read( $context, [] );
+    $context                = Collection::cast( $context, [] );
     $context[ 'exception' ] = $throwable;
     $context[ 'backtrace' ] = false;
 

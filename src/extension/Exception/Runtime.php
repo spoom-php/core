@@ -28,7 +28,7 @@ class Runtime extends \RuntimeException implements Helper\ThrowableInterface, He
     parent::__construct( $message, (int) $id, $previous );
 
     $this->_id       = $id;
-    $this->_context  = Collection::read( $context, [] );
+    $this->_context  = Collection::cast( $context, [] );
     $this->_severity = $severity;
   }
 }

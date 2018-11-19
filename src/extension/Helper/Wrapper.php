@@ -42,7 +42,7 @@ class Wrapper implements \Iterator {
   protected function __construct( $input ) {
 
     // preprocess the input to be able to resolve "deep object links" in mapping
-    $input = $input instanceof StorageInterface ? clone $input : new Storage( Collection::read( $input, [] ) );
+    $input = $input instanceof StorageInterface ? clone $input : new Storage( Collection::cast( $input, [] ) );
 
     // perform renames and copies in the input
     $this->map( $input, static::PROPERTY_MAP );
@@ -63,7 +63,7 @@ class Wrapper implements \Iterator {
    * @param array            $definition Defined operations
    */
   protected function map( StorageInterface $input, array $definition ) {
-    Collection::remap( $input, $input, $definition );
+    Collection::map( $input, $input, $definition );
   }
   /**
    * Wrap input elements in classes

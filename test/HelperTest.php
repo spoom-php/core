@@ -32,7 +32,11 @@ class HelperTest extends TestCase {
       return $name == 'foo' ? 1 : 2;
     } ) );
 
-    // TODO test uncovered String methods
+    // test simplify
+    $this->assertEquals( 'this+will+be+a+very-fancy+link', Helper\Text::simplify( 'This will be a [(very#fancy)] link!' ) );
+    $this->assertEquals( 'trimmed+and+simp-lified', Helper\Text::simplify( '!!!trimmed   and simp......lified' ) );
+
+    // TODO test uncovered Text methods
   }
   public function testCollectionBasic() {
 
@@ -67,29 +71,29 @@ class HelperTest extends TestCase {
     // test input type keeping and storage support (of merging)
     $tmp = new Storage( $a );
     $this->assertTrue( $tmp === Helper\Collection::merge( $tmp, $b ) );
-    $this->assertEquals( array_merge_recursive( $a, $b ), Helper\Collection::read( Helper\Collection::merge( $tmp, $b ), [], true ) );
+    $this->assertEquals( array_merge_recursive( $a, $b ), Helper\Collection::cast( Helper\Collection::merge( $tmp, $b ), [], true ) );
 
     // test array and single item remapping
     $tmp = [ 'x' => [ 'y' => 'z', 'yy' => 'zz' ], 'xx' => [ 'y' => 'xz', 'yy' => 'xzz' ] ];
     $this->assertEquals(
       [ 'x' => 'z', 'xx' => 'xz' ],
-      Helper\Collection::remapAll( $tmp, 'y' ),
+      Helper\Collection::mapList( $tmp, 'y' ),
       "This should be map x => [ y => z ] into x => z on every element"
     );
     $this->assertEquals(
       [ 'zz' => 'z', 'xzz' => 'xz' ],
-      Helper\Collection::remapAll( $tmp, 'y', 'yy' ),
+      Helper\Collection::mapList( $tmp, 'y', 'yy' ),
       "This should be map x => [ y => z, yy => zz ] into zz => z on every element"
     );
 
     $this->assertEquals(
       [ 'x' => [ '_y' => 'z', '__y' => 'z' ], 'xx' => [ '_y' => 'xz', '__y' => 'xz' ] ],
-      Helper\Collection::remapAll( $tmp, [ 'y' => [ '_y', '__y' ] ] ),
+      Helper\Collection::mapList( $tmp, [ 'y' => [ '_y', '__y' ] ] ),
       "This should be map x => [ y => z, yy => zz ] into x => [ _y => z, __y => z ] on every element"
     );
     $this->assertEquals(
       [ '_y' => 'z', '__y' => 'z' ],
-      Helper\Collection::remap( $tmp[ 'x' ], [], [ 'y' => [ '_y', '__y' ] ] ),
+      Helper\Collection::map( $tmp[ 'x' ], [], [ 'y' => [ '_y', '__y' ] ] ),
       "This should be map [ y => z ] into [ _y => z, __y => z ]"
     );
 
@@ -124,10 +128,10 @@ class HelperTest extends TestCase {
     $this->assertEquals( "1.2346", Helper\Number::write( 1.23456789, 4 ) );
     $this->assertEquals( [ 'a' ], Helper\Number::write( [ 'a' ], null, [ 'a' ] ) );
 
-    $this->assertEquals( 123456789, Helper\Number::read( "123456789" ) );
-    $this->assertEquals( 1.23456789, Helper\Number::read( "1.23456789" ) );
-    $this->assertEquals( 1.23456789, Helper\Number::read( "1,23456789" ) );
-    $this->assertEquals( -1, Helper\Number::read( [ 'a' ], -1 ) );
+    $this->assertEquals( 123456789, Helper\Number::cast( "123456789" ) );
+    $this->assertEquals( 1.23456789, Helper\Number::cast( "1.23456789" ) );
+    $this->assertEquals( 1.23456789, Helper\Number::cast( "1,23456789" ) );
+    $this->assertEquals( -1, Helper\Number::cast( [ 'a' ], -1 ) );
 
     $this->assertTrue( Helper\Number::equal( "123456789", 123456789 ) );
     $this->assertTrue( Helper\Number::equal( "123.456789", 123.4568, 4 ) );
@@ -145,7 +149,7 @@ class HelperTest extends TestCase {
   public function testWrapper( $io, array $expect, $input ) {
 
     $tmp = $io::instance( $input );
-    $this->assertEquals( $expect, Helper\Collection::read( $tmp, null, true ) );
+    $this->assertEquals( $expect, Helper\Collection::cast( $tmp, null, true ) );
   }
 
   /**
@@ -210,20 +214,10 @@ class HelperTest extends TestCase {
     $tmp->seek( 0 );
     $this->assertEquals( $content, $converter->unserialize( $tmp ) );
   }
-  public function testConverterTypeIni() {
-    // TODO add detailed converter tests
-    $this->assertTrue( true );
-  }
-  public function testConverterTypeXml() {
-    // TODO add detailed converter tests
-    $this->assertTrue( true );
-  }
 
   public function providerConverter() {
     return [
       [ new Converter\Json() ],
-      [ new Converter\Ini() ],
-      [ new Converter\Xml() ],
       [ new Converter\Native() ]
     ];
   }

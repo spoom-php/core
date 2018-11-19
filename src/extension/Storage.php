@@ -5,9 +5,7 @@ use Spoom\Core\Helper;
 use Spoom\Core\Helper\Number;
 use Spoom\Core\Helper\Text;
 
-/**
- * Interface StorageInterface
- */
+//
 interface StorageInterface extends \ArrayAccess, \Iterator, \Countable {
 
   /**
@@ -185,14 +183,7 @@ interface StorageInterface extends \ArrayAccess, \Iterator, \Countable {
   public function getSource();
 }
 
-/**
- * Class Storage
- *
- * @since   0.6.0
- *
- * @property      bool         $caching   Enable or disable cacheing
- * @property-read array|object $source    The storage source variable
- */
+//
 class Storage implements StorageInterface, Helper\AccessableInterface {
   use Helper\Accessable;
 
@@ -213,7 +204,7 @@ class Storage implements StorageInterface, Helper\AccessableInterface {
   private $iterator_key = [];
 
   /**
-   * Caching flag
+   * Use caching or not
    *
    * @var bool
    */
@@ -387,7 +378,7 @@ class Storage implements StorageInterface, Helper\AccessableInterface {
       // force string type
       case static::TYPE_STRING:
 
-        if( $tmp->exist && ( Text::is( $result ) ) ) $result = Text::read( $result );
+        if( $tmp->exist && ( Text::is( $result ) ) ) $result = Text::cast( $result );
         else $result = null;
 
         break;
@@ -396,14 +387,14 @@ class Storage implements StorageInterface, Helper\AccessableInterface {
       case 'num':
       case static::TYPE_NUMBER:
 
-        $result = $tmp->exist ? Number::read( $result, null ) : null;
+        $result = $tmp->exist ? Number::cast( $result, null ) : null;
         break;
 
       // force integer type
       case 'int':
       case static::TYPE_INTEGER:
 
-        $result = $tmp->exist && Number::is( $result ) ? ( (int) Number::read( $result ) ) : null;
+        $result = $tmp->exist && Number::is( $result ) ? ( (int) Number::cast( $result ) ) : null;
         break;
 
       // force float type
@@ -411,19 +402,19 @@ class Storage implements StorageInterface, Helper\AccessableInterface {
       case 'real':
       case static::TYPE_FLOAT:
 
-        $result = $tmp->exist && Number::is( $result ) ? ( (float) Number::read( $result ) ) : null;
+        $result = $tmp->exist && Number::is( $result ) ? ( (float) Number::cast( $result ) ) : null;
         break;
 
       // force array type
       case static::TYPE_ARRAY:
 
-        $result = $tmp->exist ? Collection::read( $result, null ) : null;
+        $result = $tmp->exist ? Collection::cast( $result, null ) : null;
         break;
 
       // force object type
       case static::TYPE_OBJECT:
 
-        $result = $tmp->exist ? (object) Collection::read( $result, null ) : null;
+        $result = $tmp->exist ? (object) Collection::cast( $result, null ) : null;
         break;
 
       // force boolean type
@@ -510,9 +501,7 @@ class Storage implements StorageInterface, Helper\AccessableInterface {
   }
 }
 
-/**
- * Class StorageMeta
- */
+//
 class StorageMeta {
 
   /**
@@ -554,8 +543,8 @@ class StorageMeta {
 
         // simple token separator
         case StorageInterface::SEPARATOR_KEY:
-          $this->token[] = $buffer;
-          $buffer        = '';
+          if( $buffer !== '' ) $this->token[] = $buffer;
+          $buffer = '';
           break;
 
         // namespace definition
@@ -568,9 +557,9 @@ class StorageMeta {
 
         // type separator at the end
         case StorageInterface::SEPARATOR_TYPE:
-          $this->type    = substr( $index, $i + 1 );
-          $this->token[] = $buffer;
-          $buffer        = '';
+          $this->type = substr( $index, $i + 1 );
+          if( $buffer !== '' ) $this->token[] = $buffer;
+          $buffer = '';
           break 2;
 
         default:
@@ -578,7 +567,7 @@ class StorageMeta {
           $buffer .= $index{$i};
       }
     }
-    if( strlen( $buffer ) > 0 ) $this->token[] = $buffer;
+    if( $buffer !== '' ) $this->token[] = $buffer;
 
     // define the unique id for this index
     if( $this->namespace ) $this->id .= $this->namespace . StorageInterface::SEPARATOR_NAMESPACE;
@@ -595,9 +584,7 @@ class StorageMeta {
     return static::$cache[ $index ] ?? ( static::$cache[ $index ] = new static( $index ) );
   }
 }
-/**
- * Class StorageMetaSearch
- */
+//
 class StorageMetaSearch {
 
   /**

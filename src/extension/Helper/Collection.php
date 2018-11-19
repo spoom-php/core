@@ -89,7 +89,7 @@ abstract class Collection {
    *
    * @return array[]
    */
-  public static function remapAll( $list, $map, ?string $key = null ): array {
+  public static function mapList( $list, $map, ?string $key = null ): array {
 
     if( !static::is( $list, true ) ) throw new \TypeError( 'The $list must be iterable' );
     else {
@@ -102,7 +102,7 @@ abstract class Collection {
 
           $_key = $key ? $item[ $key ] : $index;
           if( !static::is( $map, true, true ) ) $_list[ $_key ] = $item[ $map ] ?? null;
-          else $_list[ $_key ] = static::remap( $item, [], $map );
+          else $_list[ $_key ] = static::map( $item, [], $map );
         }
       }
 
@@ -118,7 +118,7 @@ abstract class Collection {
    *
    * @return array|\ArrayAccess The $destination
    */
-  public static function remap( $source, $destination, iterable $map ) {
+  public static function map( $source, $destination, iterable $map ) {
 
     // sanity check
     if( !static::is( $source, false, true ) ) throw new \TypeError( 'The $source must be arraylike' );
@@ -129,7 +129,7 @@ abstract class Collection {
       foreach( $map as $key => $key_list ) {
 
         $value    = $source[ Number::is( $key ) ? $key_list : $key ] ?? null;
-        $key_list = static::read( $key_list, [ $key_list ] );
+        $key_list = static::cast( $key_list, [ $key_list ] );
         foreach( $key_list as $_key ) {
           $destination[ $_key ] = $value;
         }
@@ -185,7 +185,7 @@ abstract class Collection {
    *
    * @return array|null
    */
-  public static function read( $input, ?array $default = null, bool $deep = false ): ?array {
+  public static function cast( $input, ?array $default = null, bool $deep = false ): ?array {
     if( !static::is( $input, true ) ) return $default;
     else {
 
@@ -198,7 +198,7 @@ abstract class Collection {
 
       $tmp = [];
       foreach( $input as $k => $t ) {
-        $tmp[ $k ] = $deep && static::is( $t, true ) ? static::read( $t, null, $deep ) : $t;
+        $tmp[ $k ] = $deep && static::is( $t, true ) ? static::cast( $t, null, $deep ) : $t;
       }
 
       return $tmp;

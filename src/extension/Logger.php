@@ -180,7 +180,7 @@ class Logger implements LoggerInterface, Helper\AccessableInterface {
         $datetime = date( 'Y-m-d\TH:i:s', $sec ) . '.' . substr( $usec, 2, 4 ) . date( 'O', $sec );
 
         // add backtrace for the data, if needed
-        $data = Collection::read( $data, [] );
+        $data = Collection::cast( $data, [] );
         if( !isset( $data[ 'backtrace' ] ) ) $data[ 'backtrace' ] = array_slice( debug_backtrace(), 1 );
 
         // trigger event for the log entry
