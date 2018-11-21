@@ -41,8 +41,7 @@ class Exception extends \Exception implements Helper\ThrowableInterface, Helper\
    *
    * @return \Throwable The input `\Throwable`
    */
-  public static function log( \Throwable $throwable, ?LoggerInterface $instance = null, array $context = [] ): \Throwable {
-    $instance = $instance ?? Application::instance()->getLogger();
+  public static function log( \Throwable $throwable, LoggerInterface $instance, array $context = [] ): \Throwable {
 
     // extend data
     $context                = Collection::cast( $context, [] );

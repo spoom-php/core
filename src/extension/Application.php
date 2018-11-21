@@ -155,7 +155,7 @@ class Application implements AccessableInterface {
       set_exception_handler( function ( $exception ) {
 
         // log the exception
-        if( $exception ) Exception::log( $exception );
+        if( $exception ) Exception::log( $exception, $this->getLogger() );
 
       } );
 

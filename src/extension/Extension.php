@@ -1,10 +1,10 @@
 <?php namespace Spoom\Core;
 
+use Spoom\Core\Event\Emitter;
 use Spoom\Core\Helper;
+use Spoom\Core\Storage\PersistentInterface;
 
-/**
- * Interface ExtensionInterface
- */
+//
 interface ExtensionInterface {
 
   /**
@@ -68,15 +68,15 @@ interface ExtensionInterface {
   /**
    * @since 0.6.0
    *
-   * @return Extension\ConfigurationInterface
+   * @return PersistentInterface|null
    */
-  public function getConfiguration(): Extension\ConfigurationInterface;
+  public function getConfiguration(): ?PersistentInterface;
   /**
    * @since 0.6.0
    *
-   * @return Extension\LocalizationInterface
+   * @return PersistentInterface|null
    */
-  public function getLocalization(): Extension\LocalizationInterface;
+  public function getLocalization(): ?PersistentInterface;
   /**
    * @since 0.6.0
    *
@@ -90,14 +90,12 @@ interface ExtensionInterface {
 }
 
 /**
- * Class Extension
- *
- * @property-read FileInterface                    $file          Root directory of the extension
- * @property-read string                           $id            Unique name
- * @property-read Extension\ConfigurationInterface $configuration
- * @property-read Extension\LocalizationInterface  $localization
- * @property-read LoggerInterface                  $logger
- * @property-read Event\EmitterInterface           $emitter
+ * @property-read FileInterface            $file          Root directory of the extension
+ * @property-read string                   $id            Unique name
+ * @property-read PersistentInterface|null $configuration
+ * @property-read PersistentInterface|null $localization
+ * @property-read LoggerInterface          $logger
+ * @property-read Event\EmitterInterface   $emitter
  */
 class Extension implements ExtensionInterface, Helper\AccessableInterface {
   use Helper\Accessable;
@@ -128,67 +126,45 @@ class Extension implements ExtensionInterface, Helper\AccessableInterface {
    *
    * @var FileInterface
    */
-  private $_file;
+  protected $_file;
   /**
    * Handle configuration files for the extension
    *
-   * @var Extension\ConfigurationInterface
+   * @var PersistentInterface|null
    */
-  private $_configuration;
+  protected $_configuration;
   /**
    * Handle localization files for the extension
    *
-   * @var Extension\LocalizationInterface
+   * @var PersistentInterface|null
    */
-  private $_localization;
+  protected $_localization;
   /**
    * Handle event triggers for the extension
    *
    * @var Event\EmitterInterface
    */
-  private $_emitter;
+  protected $_emitter;
   /**
-   * @var LoggerInterface
+   * @var LoggerInterface|null
    */
-  private $_logger;
+  protected $_logger;
 
   /**
    *
    */
   protected function __construct() {
-
-    $this->_file = new File( static::ROOT );
-
-    //
-    $directory            = Application::instance()->getPublicFile( $this->getId() );
-    $this->_configuration = new Extension\Configuration( $directory->get( static::DIRECTORY_CONFIGURATION ) );
-    $this->_localization  = new Extension\Localization( $directory->get( static::DIRECTORY_LOCALIZATION ) );
-    $this->_emitter       = new Event\Emitter( $this->getId() );
-
-    $this->_logger = clone Application::instance()->getLogger();
-    $this->_logger->setChannel( $this->getId() );
-  }
-
-  /**
-   * Clone the configuration and localization properties
-   *
-   * @since 0.6.0
-   */
-  public function __clone() {
-
-    $this->_file          = clone $this->_file;
-    $this->_configuration = clone $this->_configuration;
-    $this->_localization  = clone $this->_localization;
-    $this->_logger        = clone $this->_logger;
+    $this->_file    = new File( static::ROOT );
+    $this->_emitter = new Emitter( $this->getId() );
   }
 
   //
   public function text( string $index, $insertion = null, string $default = '' ): string {
-    return $this->getLocalization()->getPattern( $index, $insertion, $default );
+    return $this->getLocalization() ? $this->getLocalization()->getPattern( $index, $insertion, $default ) : $default;
   }
   //
   public function option( string $index, $default = null ) {
-    return $this->getConfiguration()->get( $index, $default );
+    return $this->getConfiguration() ? $this->getConfiguration()->get( $index, $default ) : $default;
   }
 
   //
@@ -212,11 +188,11 @@ class Extension implements ExtensionInterface, Helper\AccessableInterface {
     return static::ID;
   }
   //
-  public function getConfiguration(): Extension\ConfigurationInterface {
+  public function getConfiguration(): ?PersistentInterface {
     return $this->_configuration;
   }
   //
-  public function getLocalization(): Extension\LocalizationInterface {
+  public function getLocalization(): ?PersistentInterface {
     return $this->_localization;
   }
   //

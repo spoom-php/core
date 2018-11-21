@@ -13,7 +13,7 @@
       <file>HelperTest.php</file>
       <file>FileTest.php</file>
       <file>StorageTest.php</file>
-      <file>StoragePermanentTest.php</file>
+      <file>StoragePersistentTest.php</file>
       <file>EventTest.php</file>
       <file>ExtensionTest.php</file>
       <file>LoggerTest.php</file>

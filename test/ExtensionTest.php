@@ -2,12 +2,7 @@
 
 use PHPUnit\Framework\TestCase;
 
-/**
- * Class ExtensionTest
- *
- * TODO add Configuration and Localization tests
- *
- */
+//
 class ExtensionTest extends TestCase {
 
   /**
@@ -19,10 +14,6 @@ class ExtensionTest extends TestCase {
 
     // test instancing
     $this->assertTrue( Extension::instance() === $extension );
-
-    // check cloning
-    $extension2 = clone $extension;
-    $this->assertFalse( $extension2->getConfiguration() === $extension );
   }
   /**
    * @param ExtensionInterface $extension
@@ -33,7 +24,7 @@ class ExtensionTest extends TestCase {
 
     // check file access
     $this->assertTrue( $extension->file( 'extension/Extension.php' )->exist() );
-    $this->assertEquals( 2, count( $extension->file( 'extension/Extension/', '*' ) ) );
+    $this->assertEquals( 2, count( $extension->file( 'extension/Exception/', '*' ) ) );
   }
   /**
    * @return array

@@ -25,7 +25,7 @@ $ composer require spoom-php/core
 Spoom Core (and most official library) works with PHP 7.1 or above
 
 ## Usage
-Here is a basic example to initialize the framework with the `Core\Application`:
+Here is a basic example to initialize the `Core\Application`:
 
 ```php
 <?php require __DIR__ . '/vendor/autoload.php';
@@ -46,9 +46,8 @@ Application::environment( Application::SEVERITY_DEBUG, [
   'timezone' => 'UTC'
 ]);
 
-// create an application before you use the Framework. Storing to variable is
-// optional, you can access the application anywhere using
-// `Application::instance()` static method
+// create an application (if you wish, it's also optional in most cases) to store some globals for your application. Storing it in a variable is
+// optional, you can access the application anywhere using the `Application::instance()` static method
 $spoom = new Application(
   
   // used environment's name

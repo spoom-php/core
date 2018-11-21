@@ -357,6 +357,21 @@ class Storage implements StorageInterface, Helper\AccessableInterface {
   public function getSource() {
     return $this->_source;
   }
+  /**
+   * Set the source directly (mostly for resets)
+   *
+   * @param \StdClass|\Traversable|array|null $value
+   * @param null|string                       $key
+   */
+  protected function setSource( $value, ?string $key = null ) {
+    if( $key === null ) $this->_source = $value === null ? [] : $value;
+    else if( $value === null ) unset( $this->_source[ $key ] );
+    else $this->_source[ $key ] = $value;
+
+    // reset iterations and clean caches
+    $this->rewind();
+    $this->clean();
+  }
 
   //
   public function offsetExists( $offset ) {

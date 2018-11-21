@@ -1,282 +1,152 @@
 <?php namespace Spoom\Core\Storage;
 
-use Spoom\Core\Application;
-use Spoom\Core\ConverterInterface;
-use Spoom\Core\Exception;
-use Spoom\Core\Extension;
-use Spoom\Core\Helper\Collection;
 use Spoom\Core\Storage;
 use Spoom\Core\StorageInterface;
 use Spoom\Core\StorageMeta;
 use Spoom\Core\StorageMetaSearch;
 
-/**
- * Interface PersistentInterface
- *
- * @since   0.6.0
- */
+//
 interface PersistentInterface extends StorageInterface {
 
   /**
-   * Save the namespace's actual storage data
+   * Save (all) namespaces to the persistent storage
    *
-   * @param string|null $namespace The namespace to save
-   * @param string|null $format
+   * This will save storage data associated with the namespaces to the persistent storage (disk, database, etc..)
    *
-   * @return $this
+   * @param array|null $namespace_list
+   *
+   * @return static
+   * @throws \LogicException Trying to save a readonly namespace
    */
-  public function save( ?string $namespace = null, ?string $format = null );
+  public function save( ?array $namespace_list = null );
   /**
-   * Load a namespace into the storage
+   * Load (all) namespaces from the persistent storage
    *
-   * @param string|null $namespace The namespace to load
+   * This will load saved data (on disk, database, etc..) for associated namespaces into the storage
    *
-   * @return $this
+   * @param array|null $namespace_list
+   *
+   * @return static
    */
-  public function load( ?string $namespace = null );
+  public function load( ?array $namespace_list = null );
   /**
-   * Remove the namespace data from the storage and from the permanent storage
+   * Remove (all) namespaces from the persistent storage
    *
-   * @param string|null $namespace
+   * This will clear any saved data (on disk, database, etc..) associated with the namespaces, and clear the storage as well
    *
-   * @return $this
+   * @param array|null $namespace_list
+   *
+   * @return static
    */
-  public function remove( ?string $namespace = null );
+  public function remove( ?array $namespace_list = null );
 
   /**
-   * Get the available converters (value) for formats (key)
+   * Get (all) namespace(s) options
    *
-   * @return ConverterInterface[]
+   * @param null|string $name The namespace or NULL for all namespaces
+   *
+   * @return array Array of options or an array of [ namespace => options, ... ] arrays
    */
-  public function getConverterMap(): array;
+  public function getNamespace( ?string $name = null ): array;
   /**
-   * Autoload the namespaces or not
+   * Add, edit or remove namespace options
    *
-   * @return bool
+   * @param string     $name The namespace
+   * @param array|null $meta The new options for the namespace or NULL to remove the namespace completly
+   *
+   * @return static
    */
-  public function isAuto(): bool;
+  public function setNamespace( string $name, ?array $meta = null );
+
   /**
-   * Set new value to autoload the namespaces or not
+   * Get the current enviroment
    *
-   * @param bool $value
+   * @return null|string
    */
-  public function setAuto( bool $value );
+  public function getEnvironment(): ?string;
   /**
-   * Get the default converter format
+   * Set a new environment
    *
-   * @return string
-   */
-  public function getFormat(): string;
-  /**
-   * Set the default converter format
+   * @param null|string $value The new environment or NULL to disable the feature
+   * @param bool        $reset Reset the storage after the change, or leave the data intact
    *
-   * @param string $value
+   * @return static
    */
-  public function setFormat( string $value );
+  public function setEnvironment( ?string $value, bool $reset = true );
 }
-/**
- * Class Persistent
- *
- * @since   0.6.0
- *
- * TODO add static cache for the load mechanism to optimize the process
- * TODO add write- and readable features
- * TODO add support for full index save/load/remove?!
- *
- * @property-read Exception|null       $exception The latest exception object
- * @property-read ConverterInterface[] $converter_map
- * @property      bool                 $auto      Autoload the namespaces or not
- * @property      string               $format    The default format for saving
- */
+
+//
 abstract class Persistent extends Storage implements PersistentInterface {
 
   /**
-   * Triggered before the namespace saving. The save can be prevented. Arguments:
-   * - instance [Persistent]: The storage instance
-   * - namespace [string|null]: The namespace to save
-   * - &meta [ConverterMeta]: The content meta data
-   * - &content [mixed]: The content to save
+   * Default options for namespaces
    */
-  const EVENT_SAVE = 'storage.permanent.save';
-  /**
-   * Triggered before the namespace loading. The load can be prevented. Arguments:
-   * - instance [Persistent]: The storage instance
-   * - namespace [string|null]: The namespace to load
-   * - &meta [ConverterMeta|null]: The content output meta data
-   */
-  const EVENT_LOAD = 'storage.permanent.load';
-  /**
-   * Triggered before the namespace removing. The remove can be prevented. Arguments:
-   * - instance [Persistent]: The storage instance
-   * - namespace [string|null]: The namespace to remove
-   * - &meta [ConverterMeta|null]: The content meta data if available
-   */
-  const EVENT_REMOVE = 'storage.permanent.remove';
+  const NAMESPACE_DEFAULT = [
+    'autoload' => true,
+    'readonly' => false
+  ];
 
   /**
-   * Store converters for loaded namespaces
+   * This will prevent endless recursion with 'autoload' namespaces
    *
-   * @var ConverterInterface[]
-   */
-  protected $converter_cache = [];
-  /**
-   * The converter list. Store the available converters (value) for formats (key)
+   * Array of namespaces which must be ignored on search operations to pervent endless recursion
    *
-   * @var ConverterInterface[]
+   * @var array
    */
-  protected $_converter_map;
-  /**
-   * Auto-load the namespaces or not
-   *
-   * @var bool
-   */
-  protected $_auto = true;
-  /**
-   * The default format for saving
-   *
-   * @var string
-   */
-  protected $_format = null;
+  private $protect = [];
 
   /**
-   * @param object|array         $source     The initial data
-   * @param bool                 $caching
-   * @param ConverterInterface[] $converters Default converters for the permanent storage. The first converter will be the default format
+   * @var string|null
    */
-  public function __construct( $source, bool $caching = true, array $converters = [] ) {
+  protected $_environment = null;
+  /**
+   * Namespaces options
+   *
+   * The key is the namespace and the value is the array of options
+   *
+   * @var array
+   */
+  protected $_namespace_list = [];
+
+  /**
+   * @param array|object $source         Inital data for the storage
+   * @param array        $namespace_list List of namespaces options
+   * @param bool         $caching        Use cacheing or not
+   */
+  public function __construct( $source, array $namespace_list = [], bool $caching = true ) {
     parent::__construct( $source, $caching );
 
-    // setup the converters
-    $this->_converter_map = $converters;
-    if( count( $converters ) ) {
-
-      // first will be the default format
-      reset( $converters );
-      $this->setFormat( key( $converters ) );
+    //
+    foreach( $namespace_list as $namespace => $meta ) {
+      $this->setNamespace( $namespace, $meta );
     }
   }
 
   /**
-   * Clone the converter and all of the stored meta
-   */
-  public function __clone() {
-    parent::__clone();
-
-    $this->_converter_map  = Collection::copy( $this->_converter_map );
-    $this->converter_cache = Collection::copy( $this->converter_cache );
-  }
-
-  //
-  public function save( ?string $namespace = null, ?string $format = null ) {
-
-      // get or create the converter
-      $tmp       = $this->_converter_map[ $format ?: $this->_format ];
-      $converter = $this->converter_cache[ $namespace ][ 'converter' ] ?? null;
-      if( $converter != $tmp ) $converter = clone $tmp;
-
-      if( empty( $converter ) ) throw new PermanentExceptionConverter( $namespace );
-      else {
-
-        $content = $this[ $namespace ? ( $namespace . static::SEPARATOR_NAMESPACE ) : '' ];
-
-        // trigger before save event for custom storage
-        $extension = Extension::instance();
-        $event     = $extension->trigger( static::EVENT_SAVE, [
-          'instance'  => $this,
-          'namespace' => $namespace,
-          'converter' => $converter,
-          'content'   => $content
-        ] );
-
-        $converter = $event->get( 'converter', $converter );
-        $content   = $event->get( 'content', $content );
-
-        // check the event result
-        if( !$event->isPrevented() ) {
-
-          // save and perform the conversion
-          $content                             = $converter->serialize( $content );
-          $this->converter_cache[ $namespace ] = [ 'format' => $format ?: $this->_format, 'converter' => $converter ];
-
-          // do the native saving
-          $this->write( $content, $namespace );
-        }
-      }
-
-    return $this;
-  }
-  //
-  public function load( ?string $namespace = null ) {
-
-      $cache                               = $this->converter_cache[ $namespace ] ?? null;
-      $this->converter_cache[ $namespace ] = null;
-
-      // trigger before load event for custom storage
-      $extension = Extension::instance();
-      $event     = $extension->trigger( static::EVENT_LOAD, [
-        'instance'  => $this,
-        'namespace' => $namespace,
-        'converter' => $cache[ 'converter' ]
-      ] );
-
-      $content              = $event[ 'content' ];
-      $cache[ 'converter' ] = $event->getObject( 'converter', $cache[ 'converter' ] );
-
-    // read the namespace's data, and check for the converter
-        if( !$event->isPrevented() ) {
-
-          $content = $this->read( $namespace );
-          $cache   = $this->converter_cache[ $namespace ] ?? null;
-        }
-
-        // check the converter
-        if( !empty( $content ) && !( $cache[ 'converter' ] instanceof ConverterInterface ) ) throw new PermanentExceptionConverter( $namespace );
-        else {
-
-          // convert and set the namespace's data
-          if( !empty( $content ) ) {
-
-            $content                             = $cache[ 'converter' ]->unserialize( $content );
-            $this->converter_cache[ $namespace ] = $cache;
-          }
-
-          $this[ $namespace ? ( $namespace . static::SEPARATOR_NAMESPACE ) : '' ] = $content;
-        }
-
-    return $this;
-  }
-  //
-  public function remove( ?string $namespace = null ) {
-
-    // trigger before load event for custom storage
-      $extension = Extension::instance();
-      $event     = $extension->trigger( static::EVENT_REMOVE, [
-        'instance'  => $this,
-        'namespace' => $namespace,
-        'converter' => $this->converter_cache[ $namespace ][ 'converter' ] ?? null
-      ] );
-
-    // call the native destroy if not prevented
-        if( !$event->isPrevented() ) $this->delete( $namespace );
-
-        // do the rest of the remove
-        unset( $this[ $namespace ? ( $namespace . static::SEPARATOR_NAMESPACE ) : '' ] );
-        unset( $this->converter_cache[ $namespace ] );
-
-
-    return $this;
-  }
-
-  /**
-   * @inheritdoc. Setup the autoloader for namespaces
+   * {@inheritDoc}
+   *
+   * Setup the autoloader for namespaces and prevent modification of the readonly namespaces
+   *
+   * @throws \LogicException Trying to change a readonly namespace
    */
   protected function search( StorageMeta $meta, bool $build = false, bool $is_read = true ): StorageMetaSearch {
+    $namespace = $this->getNamespace( $meta->namespace );
+
+    // prevent every write operation if the namespace is 'readonly'
+    if( !$is_read && ( $namespace[ 'readonly' ] ?? false ) ) {
+      throw new \LogicException( "Failed to edit the storage, the '{$meta->namespace}' is readonly" );
+    }
 
     // try to load the storage data if there is no already
-    $namespace = $meta->namespace;
-    if( $this->isAuto() && !array_key_exists( $namespace, $this->converter_cache ) ) {
+    if( ( $namespace[ 'autoload' ] ?? true ) && !in_array( $meta->namespace, $this->protect ) ) {
+      $this->protect[] = $meta->namespace;
 
-      $this->load( $namespace );
+      if( !isset( $this[ $meta->namespace . static::SEPARATOR_NAMESPACE ] ) ) {
+        $this->load( [ $meta->namespace ] );
+      }
+
+      // release protection
+      array_pop( $this->protect );
     }
 
     // delegate problem to the parent
@@ -284,63 +154,29 @@ abstract class Persistent extends Storage implements PersistentInterface {
   }
 
   //
-  public function getConverterMap(): array {
-    return $this->_converter_map;
+  public function getNamespace( ?string $name = null ): array {
+
+    if( $name === null ) return $this->_namespace_list;
+    else if( !array_key_exists( $name, $this->_namespace_list ) ) throw new \LogicException( "There is no '${name}' namespace in the Persistent storage" );
+    else return $this->_namespace_list[ $name ];
   }
   //
-  public function isAuto(): bool {
-    return $this->_auto;
+  public function setNamespace( string $name, ?array $meta = null ) {
+    if( $meta === null ) unset( $this->_namespace_list[ $name ] );
+    else $this->_namespace_list[ $name ] = $meta + static::NAMESPACE_DEFAULT;
+
+    return $this;
+  }
+
+  //
+  public function getEnvironment(): ?string {
+    return $this->_environment;
   }
   //
-  public function setAuto( bool $value ) {
-    $this->_auto = $value;
-  }
-  //
-  public function getFormat(): string {
-    return $this->_format;
-  }
-  //
-  public function setFormat( string $value ) {
-    $this->_format = $value;
-  }
+  public function setEnvironment( ?string $value, bool $reset = true ) {
+    $this->_environment = $value;
 
-  /**
-   * Write out the string content to the permantent storage. The meta for the namespace MAY available through the meta property
-   *
-   * @param string      $content   The content to write out
-   * @param string|null $namespace The namespace of the content
-   */
-  abstract protected function write( string $content, ?string $namespace = null );
-  /**
-   * Read a namespace data from the permanent storage. The meta for the namespace MAY available through the meta property
-   *
-   * @param string|null $namespace The namespace
-   *
-   * @return null|string
-   */
-  abstract protected function read( ?string $namespace = null ): ?string;
-  /**
-   * Destroy a namespace's permanent storage. The meta for the namespace MAY available through the meta property
-   *
-   * @param string|null $namespace The namespace
-   */
-  abstract protected function delete( ?string $namespace = null );
-}
-
-/**
- * There is no converter for a namespace to able to read/write the data
- *
- */
-class PermanentExceptionConverter extends Exception\Logic {
-
-  const ID = '23#spoom-core';
-
-  /**
-   * @param string|null $namespace The namespace that has no converter
-   */
-  public function __construct( ?string $namespace ) {
-
-    $data = [ 'namespace' => $namespace ];
-    parent::__construct( '(Un)serialization failed, due to an error', static::ID, $data, null, Application::SEVERITY_WARNING );
+    if( $reset ) $this->setSource( [] );
+    return $this;
   }
 }

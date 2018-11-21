@@ -1,142 +1,173 @@
 <?php namespace Spoom\Core\Storage;
 
-use Spoom\Core\Exception;
 use Spoom\Core\ConverterInterface;
 use Spoom\Core\FileInterface;
 use Spoom\Core\Helper\StreamInterface;
 
 /**
- * Class File
- *
- * @since   0.6.0
- *
- * TODO implement multi storage null namespace support (synced namespace save/load/remove)
- *
- * @property FileInterface $directory
- * @property string        $file
- * @property-read bool     $multi
+ * @since 0.6.0
  */
 class File extends Persistent {
 
   /**
-   * Root directory source
+   * Root directory of the storage
+   *
+   * Namespaces will be files in this directory, or subdirectory if there is any environment
    *
    * @var FileInterface
    */
   private $_directory;
 
   /**
-   * File name in the directory (if any)
+   * Directory for the current environment
    *
-   * @var string
+   * @var FileInterface
    */
-  private $_file;
+  private $path;
 
   /**
-   * @param FileInterface        $directory  Root directory for the storage
-   * @param ConverterInterface[] $converters Default converters for the permanent storage. The first converter will be the default format
-   * @param string|null          $file       Single file storage in the root directory
+   * @param FileInterface $directory
+   * @param array         $namespace_list
+   *
+   * @throws \LogicException $directory is not a valid directory
    */
-  public function __construct( FileInterface $directory, array $converters = [], ?string $file = null ) {
-    $this->_directory = $directory;
-    $this->_file      = $file;
+  public function __construct( FileInterface $directory, array $namespace_list = [] ) {
 
-    parent::__construct( [], false, $converters );
+    if( !$directory->isDirectory() ) throw new \LogicException( '$directory must be a valid directory' );
+    else {
+
+      $this->_directory = $this->path = $directory;
+
+      parent::__construct( [], $namespace_list );
+    }
   }
 
   //
-  public function save( ?string $namespace = null, ?string $format = null ) {
+  public function save( ?array $namespace_list = null ) {
 
-    // save previous file data for later
-    if( isset( $this->converter_cache[ $namespace ] ) ) try {
-
-      $previous_meta = $this->converter_cache[ $namespace ];
-      $previous      = $this->searchFile( $namespace, $previous_meta[ 'format' ] );
-
-    } catch( \Exception $e ) {
-      Exception::log( $e );
+    // we have to check namespace saving pre-requirements before the actual saving loop to prevent (or at least minimalize) half written situations
+    $namespace_list = $namespace_list ?? array_keys( $this->getNamespace() );
+    foreach( $namespace_list as $namespace ) {
+      $_namespace = $this->getNamespace( $namespace );
+      if( $_namespace[ 'readonly' ] ?? false ) throw new \LogicException( "Failed to save the storage, the '{$namespace}' is readonly" );
     }
 
-    // do the saving like normal
-    parent::save( $namespace, $format );
+    // actual saving loop
+    foreach( $namespace_list as $namespace ) {
 
-    // clean the previous file, if there is no need for it
-    if( isset( $previous ) && isset( $previous_meta ) && $previous_meta[ 'format' ] != $this->converter_cache[ $namespace ][ 'format' ] ) try {
+      $meta = $this->getNamespace( $namespace );
+      $file = $this->file( $namespace );
 
-      $previous->remove();
+      /** @var ConverterInterface $converter */
+      $converter = $meta[ 'converter' ];
+      $content   = $converter->serialize( $this[ $namespace . static::SEPARATOR_NAMESPACE ] );
 
-    } catch( \Exception $e ) {
-      Exception::log( $e );
+      $file->stream( StreamInterface::MODE_WT )->write( $content );
+    }
+
+    return $this;
+  }
+  //
+  public function load( ?array $namespace_list = null ) {
+
+    $namespace_list = $namespace_list ?? array_keys( $this->getNamespace() );
+    foreach( $namespace_list as $namespace ) {
+      $meta = $this->getNamespace( $namespace );
+
+      $file = $this->file( $namespace );
+      if( $file->exist() ) {
+
+        /** @var ConverterInterface $converter */
+        $converter = $meta[ 'converter' ];
+        $content   = $converter->unserialize( $file->stream()->read() );
+
+        $this->setSource( $content, $namespace );
+      }
+    }
+
+    return $this;
+  }
+  //
+  public function remove( ?array $namespace_list = null ) {
+
+    $namespace_list = $namespace_list ?? array_keys( $this->getNamespace() );
+    foreach( $namespace_list as $namespace ) {
+
+      $file = $this->file( $namespace );
+      if( $file ) $file->remove();
+
+      $this->setSource( null, $namespace );
     }
 
     return $this;
   }
 
-  //
-  protected function write( string $content, ?string $namespace = null ) {
-    $file = $this->searchFile( $namespace, $this->converter_cache[ $namespace ][ 'format' ] );
-    $file->stream( StreamInterface::MODE_WT )->write( $content );
-  }
-  //
-  protected function read( ?string $namespace = null ): ?string {
+  /**
+   * Get storage file for the given namespace
+   *
+   * @param string $namespace
+   *
+   * @return FileInterface
+   * @throws \LogicException
+   */
+  protected function file( string $namespace ): FileInterface {
 
-    $file = $this->searchFile( $namespace );
-    if( !$file->exist() ) return null;
-    else {
-
-      $result = $file->stream()->read();
-
-      $format                              = strtolower( pathinfo( $file->getPath(), PATHINFO_EXTENSION ) );
-      $this->converter_cache[ $namespace ] = [ 'format' => $format, 'converter' => $this->converter_map[ $format ] ?? null ];
-
-      return $result;
-    }
-  }
-  //
-  protected function delete( ?string $namespace = null ) {
-
-    $file = $this->searchFile( $namespace );
-    if( $file ) $file->remove();
+    $meta = $this->getNamespace( $namespace );
+    return $this->path->get( $namespace . '.' . $meta[ 'format' ] );
   }
 
   /**
-   * Get file by namespace and format
+   * Directory for the current environment
    *
-   * @param string|null $namespace The namespace
-   * @param string|null $format    Force extension for the file
-   *
-   * @return FileInterface The file MAY not exists
-   * @throws \InvalidArgumentException Empty namespace with multi storage
+   * @return FileInterface
    */
-  protected function searchFile( ?string $namespace, ?string $format = null ): FileInterface {
-
-    // define and check the namespace
-    $namespace = !$this->isMulti() ? $this->_file : $namespace;
-    if( $namespace === null ) throw new \InvalidArgumentException( 'Namespace cannot be NULL' );
-
-    // collect available formats
-    if( !empty( $format ) ) $format_list = [ $format ];
-    else {
-
-      $format_list = [];
-      foreach( $this->_converter_map as $format => $converter ) {
-        $format_list[] = $format;
-      }
-    }
-
-    // search for the file in the directory
-    $file = $this->_directory->search( '/' . $namespace . '\.(' . implode( '|', $format_list ) . ')$/i' );
-    return !empty( $file ) ? $file[ 0 ] : $this->_directory->get( $namespace . '.' . ( $format ?: $this->getFormat() ) );
+  protected function getPath(): FileInterface {
+    return $this->path;
   }
 
   /**
-   * Use namespaces or not (directory or simple file storage)
+   * {@inheritDoc}
    *
-   * @return bool
+   * Check environment named subdirectory existence before the change
+   *
+   * @param null|string $value The new environment's name
+   * @param bool        $reset Clear the storage after a successful change or keep the data as is
+   *
+   * @return static
+   * @throws \InvalidArgumentException Missing subdirectory
    */
-  public function isMulti(): bool {
-    return empty( $this->_file );
+  public function setEnvironment( ?string $value, bool $reset = true ) {
+
+    //
+    $directory = $this->getDirectory()->get( $value ?? '' );
+    if( !$directory->exist( [ FileInterface::META_TYPE => FileInterface::TYPE_DIRECTORY ] ) ) {
+      throw new \InvalidArgumentException( "Unable to set environment '{$value}', cause the directory '{$directory->getPath( true )}' doesn't exists" );
+    }
+
+    // change working directory and reset the storage
+    $this->path = $directory;
+    return parent::setEnvironment( $value, $reset );
   }
+
+  /**
+   * {@inheritDoc} Checks the meta for missing or invalid values
+   *
+   * @param string     $name
+   * @param array|null $meta
+   *
+   * @return static
+   * @throws \LogicException Missing 'converter' or 'format' option in the $meta
+   */
+  public function setNamespace( string $name, array $meta = null ) {
+
+    // 'converter' enables text file conversion, 'format' is used to create files with the correct extension
+    if( $meta !== null && ( empty( $meta[ 'converter' ] ) || empty( $meta[ 'format' ] ) ) ) {
+      throw new \LogicException( "There must be a 'converter' and a 'format' in the namespace meta" );
+    }
+
+    return parent::setNamespace( $name, $meta );
+  }
+
   /**
    * @return FileInterface
    */
@@ -148,18 +179,5 @@ class File extends Persistent {
    */
   public function setDirectory( FileInterface $value ) {
     $this->_directory = $value;
-  }
-
-  /**
-   * @return string
-   */
-  public function getFile(): string {
-    return $this->_file;
-  }
-  /**
-   * @param string $value
-   */
-  public function setFile( string $value ) {
-    $this->_file = $value;
   }
 }
