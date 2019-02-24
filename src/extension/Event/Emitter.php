@@ -22,6 +22,7 @@ interface EmitterInterface {
    * @param EventInterface $event
    *
    * @return EventInterface
+   * @throws \InvalidArgumentException Calling with static::EVENT_GLOBAL event
    */
   public function trigger( EventInterface $event ): EventInterface;
 

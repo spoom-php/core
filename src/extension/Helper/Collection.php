@@ -35,7 +35,7 @@ abstract class Collection {
     else {
 
       $i = 0;
-      foreach( $test as $key => $value ) {
+      foreach( $test as $key => $_ ) {
         if( !is_int( $key ) || ( $ordered && $key != $i++ ) ) return false;
       }
     }

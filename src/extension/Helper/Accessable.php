@@ -90,7 +90,7 @@ trait Accessable {
   public function __isset( $property ) {
     try {
       return $this->__get( $property ) !== null;
-    } catch( AccessibleMissingException $e ) {
+    } catch( AccessibleMissingException $_ ) {
       return false;
     }
   }

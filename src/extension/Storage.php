@@ -163,7 +163,7 @@ interface StorageInterface extends \ArrayAccess, \Iterator, \Countable {
    *
    * @param string       $index
    * @param array|object $insertion
-   * @param string       $default
+   * @param string|null  $default
    *
    * @return string|null
    */

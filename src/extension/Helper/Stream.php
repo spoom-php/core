@@ -69,10 +69,10 @@ interface StreamInterface {
    * @param int|null             $offset Offset in the stream to read from. Default (===null) is the current cursor
    * @param StreamInterface|null $stream Output stream if specified
    *
-   * @return string
+   * @return string|null
    * @throws StreamInvalidException Invalid input or instance stream
    */
-  public function read( int $length = 0, ?int $offset = null, StreamInterface $stream = null );
+  public function read( int $length = 0, ?int $offset = null, StreamInterface $stream = null ): ?string;
   /**
    * Truncate the stream to length
    *
@@ -84,6 +84,12 @@ interface StreamInterface {
    */
   public function truncate( ?int $length = null );
 
+  /**
+   * Flush any buffered content to the stream
+   *
+   * @return static
+   */
+  public function flush();
   /**
    * Move the internal cursor within the stream
    *
@@ -215,7 +221,7 @@ class Stream implements StreamInterface, AccessableInterface {
 
   //
   public function __toString() {
-    return $this->isReadable() ? $this->read() : "";
+    return (string) ($this->isReadable() ? $this->read() : "");
   }
 
   //
@@ -237,7 +243,7 @@ class Stream implements StreamInterface, AccessableInterface {
     }
   }
   //
-  public function read( int $length = 0, ?int $offset = null, StreamInterface $stream = null ) {
+  public function read( int $length = 0, ?int $offset = null, StreamInterface $stream = null ) : ?string {
     if( !$this->isReadable() ) throw new StreamInvalidException( $this, 'read' );
     else {
 
@@ -255,6 +261,12 @@ class Stream implements StreamInterface, AccessableInterface {
         return null;
       }
     }
+  }
+  //
+  public function flush() {
+
+    if( $this->_resource ) fflush( $this->_resource );
+    return $this;
   }
   //
   public function truncate( ?int $length = null, bool $seek = true ) {

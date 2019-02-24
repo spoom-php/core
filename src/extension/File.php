@@ -583,16 +583,16 @@ class File implements FileInterface {
 
           case static::META_PERMISSION:
 
-            $meta = fileperms( $file ) & 0777;
+            $meta = $file !== null ? fileperms( $file ) & 0777 : 0;
             break;
           case static::META_PERMISSION_READ:
 
-            $meta = is_readable( $file );
+            $meta = $file !== null && is_readable( $file );
             break;
 
           case static::META_PERMISSION_WRITE:
 
-            $meta = is_writeable( $file );
+            $meta = $file !== null && is_writeable( $file );
             break;
         }
 

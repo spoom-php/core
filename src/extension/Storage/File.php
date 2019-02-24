@@ -1,6 +1,5 @@
 <?php namespace Spoom\Core\Storage;
 
-use Spoom\Core\ConverterInterface;
 use Spoom\Core\FileInterface;
 use Spoom\Core\Helper\StreamInterface;
 
