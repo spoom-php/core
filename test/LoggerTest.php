@@ -4,57 +4,39 @@ use PHPUnit\Framework\TestCase;
 
 class LoggerTest extends TestCase {
 
-  private static $directory = 'LoggerTest/';
-
   /**
    * Test severity usage (filtering)
-   *
-   * @param Logger $logger
-   *
-   * @dataProvider providerDefault
    */
-  public function testSeverity( Logger $logger ) {
-    $date = date( 'Ymd' );
+  public function testSeverity() {
+    $logger = new Logger( 'test' );
 
     $logger->setSeverity( Application::SEVERITY_NONE );
-    $logger->create( "noop", [], 'basic', Application::SEVERITY_EMERGENCY );
-    $this->assertFalse( $logger->getFile( $date )->exist() );
+    $logger->create( "noop", null, 'basic', Application::SEVERITY_EMERGENCY );
+    $this->assertEmpty( $logger->getList(), "There shouldn't be any buffered entry, due to `Application::SEVERITY_NONE` severity" );
 
     $logger->setSeverity( Application::SEVERITY_CRITICAL );
-    $logger->create( "noop", [], 'basic', Application::SEVERITY_ERROR );
-    $this->assertFalse( $logger->getFile( $date )->exist() );
+    $logger->create( "noop", null, 'basic', Application::SEVERITY_ERROR );
+    $this->assertEmpty( $logger->getList(), "There shouldn't be any buffered entry, due to `Application::SEVERITY_CRITICAL` severity which is higher than `Application::SEVERITY_ERROR`" );
 
-    $logger->create( "foo", [], 'basic', Application::SEVERITY_ALERT );
-    $this->assertTrue( $logger->getFile( $date )->exist() );
-    $this->assertGreaterThan( 0, strlen( $logger->getFile( $date )->stream()->read() ) );
-
-    $logger->getFile( $date )->remove();
+    $logger->create( "foo", null, 'basic', Application::SEVERITY_ALERT );
+    $this->assertNotEmpty( $logger->getList(), "There should be an entry because `Application::SEVERITY_ALERT` higher than `Application::SEVERITY_CRITICAL`" );
   }
 
   /**
-   * Test data pre-processing
-   *
-   * @param Logger $logger
-   *
-   * @dataProvider providerDefault
+   * Test buffering mechanism and file flushing with the File logger
    */
-  public function testWrap( Logger $logger ) {
+  public function testFile() {
+    $logger = new Logger\File( new File( __DIR__ . '/LoggerTest/' ), 'file' );
 
-    $tmp = new Converter\Json();
-    $this->assertEquals(
-      '{"__CLASS__":"Spoom\\\\Core\\\\Converter\\\\Json","-_meta":{' .
-      '"__CLASS__":"Spoom\\\\Core\\\\Converter\\\\JsonMeta","+associative":true,"+depth":512,"+options":832}' .
-      '}',
-      json_encode( $logger->wrap( $tmp ) )
-    );
-  }
+    // remove any remain file log
+    $logger->getFile()->remove();
 
-  //
-  public function providerDefault() {
+    $logger->debug( 'foo{bar}', [ 'bar' => 'BAR' ] );
+    $this->assertFileNotExists( (string) $logger->getFile(), "There shouldn't be any file due to buffering" );
+    $logger->flush();
+    $this->assertFileExists( (string) $logger->getFile(), "There must be a file with the entry after flushing" );
 
-    $file = new File( __DIR__ );
-    return [
-      [ new Logger( $file->get( static::$directory ), 'test', Application::SEVERITY_DEBUG ) ]
-    ];
+    // remove the file to cleanup
+    $logger->getFile()->remove();
   }
 }

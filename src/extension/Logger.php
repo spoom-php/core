@@ -1,86 +1,114 @@
 <?php namespace Spoom\Core;
 
-use Spoom\Core\Converter\Json;
+use Spoom\Core\Event\EmitterInterface;
 use Spoom\Core\Helper;
 use Spoom\Core\Helper\Collection;
 
 /**
- * Interface LoggerInterface
- *
  * TODO add ability to collect and commit or rollback entries based on their severity
- * TODO add ability to filter entries by message/data/namespace
  */
 interface LoggerInterface {
 
   /**
    * This event MUST be called before every new log entry. This can prevent the log
-   *
-   * @param LoggerInterface  $instance    The Logger instance that call this event
-   * @param string           $namespace   *The log entry namespace
-   * @param int              $severity    The log entry type
-   * @param string           $datetime    *'Y-m-d\TH:i:s.uO' format
-   * @param string           $description *The message with the inserted data
-   * @param string           $message     *The raw message
-   * @param StorageInterface $data        *The raw data
    */
   const EVENT_CREATE = 'logger.create';
 
   /**
-   * @param string               $message   The log message pattern
-   * @param array|object|Storage $data      The pattern insertion or additional data
-   * @param string               $namespace The namespace for the log entry
-   * @param int                  $severity  The log level
+   * The logger must be cloneable to use the instance as a "factory" for the new individual instances
    */
-  public function create( string $message, $data = [], string $namespace = '', int $severity = Application::SEVERITY_DEBUG );
+  public function __clone();
 
   /**
-   * @param string               $message   The log message pattern
-   * @param array|object|Storage $data      The pattern insertion or additional data
-   * @param string               $namespace The namespace for the log entry
+   * Flush out buffered log entries
+   *
+   * @param int $limit Limit the flushed entries, or flush it all (by default)
+   *
+   * @return static
    */
-  public function debug( string $message, $data = [], string $namespace = '' );
+  public function flush( int $limit = 0 );
   /**
-   * @param string               $message   The log message pattern
-   * @param array|object|Storage $data      The pattern insertion or additional data
-   * @param string               $namespace The namespace for the log entry
+   * Clear (all) entires from the buffer, without saving it
+   *
+   * @param int $limit Limit the cleared entries, or all (by default)
+   *
+   * @return static
    */
-  public function info( string $message, $data = [], string $namespace = '' );
+  public function clear( int $limit = 0 );
+
   /**
-   * @param string               $message   The log message pattern
-   * @param array|object|Storage $data      The pattern insertion or additional data
-   * @param string               $namespace The namespace for the log entry
+   * @param string                $message   The log message pattern
+   * @param array|object|callable|null $context   The pattern insertion or additional data, or a callable that will run only if the entry will be added for the buffer list
+   * @param string                $namespace The namespace for the log entry. This is useful for searching or filtering
+   * @param int                   $severity  The log level
+   *
+   * @return static
    */
-  public function notice( string $message, $data = [], string $namespace = '' );
+  public function create( string $message, $context = null, string $namespace = '', int $severity = Application::SEVERITY_DEBUG );
   /**
-   * @param string               $message   The log message pattern
-   * @param array|object|Storage $data      The pattern insertion or additional data
-   * @param string               $namespace The namespace for the log entry
+   * @param string                $message   The log message pattern
+   * @param array|object|callable|null $context   The pattern insertion or additional data, or a callable that will run only if the entry will be added for the buffer list
+   * @param string                $namespace The namespace for the log entry. This is useful for searching or filtering
+   *
+   * @return static
    */
-  public function warning( string $message, $data = [], string $namespace = '' );
+  public function debug( string $message, $context = null, string $namespace = '' );
   /**
-   * @param string               $message   The log message pattern
-   * @param array|object|Storage $data      The pattern insertion or additional data
-   * @param string               $namespace The namespace for the log entry
+   * @param string                $message   The log message pattern
+   * @param array|object|callable|null $context   The pattern insertion or additional data, or a callable that will run only if the entry will be added for the buffer list
+   * @param string                $namespace The namespace for the log entry. This is useful for searching or filtering
+   *
+   * @return static
    */
-  public function error( string $message, $data = [], string $namespace = '' );
+  public function info( string $message, $context = null, string $namespace = '' );
   /**
-   * @param string               $message   The log message pattern
-   * @param array|object|Storage $data      The pattern insertion or additional data
-   * @param string               $namespace The namespace for the log entry
+   * @param string                $message   The log message pattern
+   * @param array|object|callable|null $context   The pattern insertion or additional data, or a callable that will run only if the entry will be added for the buffer list
+   * @param string                $namespace The namespace for the log entry. This is useful for searching or filtering
+   *
+   * @return static
    */
-  public function critical( string $message, $data = [], string $namespace = '' );
+  public function notice( string $message, $context = null, string $namespace = '' );
   /**
-   * @param string               $message   The log message pattern
-   * @param array|object|Storage $data      The pattern insertion or additional data
-   * @param string               $namespace The namespace for the log entry
+   * @param string                $message   The log message pattern
+   * @param array|object|callable|null $context   The pattern insertion or additional data, or a callable that will run only if the entry will be added for the buffer list
+   * @param string                $namespace The namespace for the log entry. This is useful for searching or filtering
+   *
+   * @return static
    */
-  public function alert( string $message, $data = [], string $namespace = '' );
+  public function warning( string $message, $context = null, string $namespace = '' );
   /**
-   * @param string               $message   The log message pattern
-   * @param array|object|Storage $data      The pattern insertion or additional data
-   * @param string               $namespace The namespace for the log entry
+   * @param string                $message   The log message pattern
+   * @param array|object|callable|null $context   The pattern insertion or additional data, or a callable that will run only if the entry will be added for the buffer list
+   * @param string                $namespace The namespace for the log entry. This is useful for searching or filtering
+   *
+   * @return static
    */
-  public function emergency( string $message, $data = [], string $namespace = '' );
+  public function error( string $message, $context = null, string $namespace = '' );
+  /**
+   * @param string                $message   The log message pattern
+   * @param array|object|callable|null $context   The pattern insertion or additional data, or a callable that will run only if the entry will be added for the buffer list
+   * @param string                $namespace The namespace for the log entry. This is useful for searching or filtering
+   *
+   * @return static
+   */
+  public function critical( string $message, $context = null, string $namespace = '' );
+  /**
+   * @param string                $message   The log message pattern
+   * @param array|object|callable|null $context   The pattern insertion or additional data, or a callable that will run only if the entry will be added for the buffer list
+   * @param string                $namespace The namespace for the log entry. This is useful for searching or filtering
+   *
+   * @return static
+   */
+  public function alert( string $message, $context = null, string $namespace = '' );
+  /**
+   * @param string                $message   The log message pattern
+   * @param array|object|callable|null $context   The pattern insertion or additional data, or a callable that will run only if the entry will be added for the buffer list
+   * @param string                $namespace The namespace for the log entry. This is useful for searching or filtering
+   *
+   * @return static
+   */
+  public function emergency( string $message, $context = null, string $namespace = '' );
 
   /**
    * The name of the logger
@@ -104,14 +132,7 @@ interface LoggerInterface {
   public function setSeverity( int $value );
 }
 
-/**
- * This logger will add entries to files
- *
- *
- * @property      string        $channel  The name of the logger
- * @property      int           $severity Maximum severity level that will be logged
- * @property-read FileInterface $file     The default log file
- */
+//
 class Logger implements LoggerInterface, Helper\AccessableInterface {
   use Helper\Accessable;
 
@@ -120,14 +141,8 @@ class Logger implements LoggerInterface, Helper\AccessableInterface {
    *
    * @var bool
    */
-  private static $protect = false;
+  private $protect = false;
 
-  /**
-   * Directory for the log files
-   *
-   * @var FileInterface
-   */
-  private $_directory = null;
   /**
    * Filename base for the logs
    *
@@ -142,178 +157,135 @@ class Logger implements LoggerInterface, Helper\AccessableInterface {
   /**
    * Event storage for triggering the LoggerInterface::EVENT_CREATE
    *
-   * @var Event\EmitterInterface
+   * @var Event\EmitterInterface|null
    */
   protected $emitter;
-  /**
-   * @var ConverterInterface
-   */
-  protected $converter;
 
   /**
-   * @param FileInterface $directory
-   * @param string        $channel
-   * @param int           $severity
+   * List of buffered log entries
+   *
+   * @var array[]
    */
-  public function __construct( FileInterface $directory, string $channel, int $severity ) {
+  protected $_list = [];
 
-    $this->_directory = $directory;
-    $this->_channel   = $channel;
-    $this->_severity  = $severity;
+  /**
+   * @param string                $channel
+   * @param int                   $severity
+   * @param null|EmitterInterface $emitter
+   */
+  public function __construct( string $channel, int $severity = Application::SEVERITY_DEBUG, ?EmitterInterface $emitter = null ) {
 
-    //
-    $this->converter = new Json();
+    $this->_channel  = $channel;
+    $this->_severity = $severity;
+
+    $this->emitter = $emitter;
   }
 
   //
-  public function create( string $message, $data = [], string $namespace = '', int $severity = Application::SEVERITY_DEBUG ) {
+  public function __clone() {
+
+    // the entry buffer must be empty after cloning to start fresh
+    $this->_list = [];
+  }
+
+  //
+  public function flush( int $_ = 0 ) {
+
+    // there is nowhere to flush, it's a memory buffer!
+
+    return $this;
+  }
+  //
+  public function clear( int $limit = 0 ) {
+
+    $this->_list = $limit < 1 ? [] : array_slice( $this->_list, 0, $limit );
+    return $this;
+  }
+
+  //
+  public function create( string $message, $context = null, string $namespace = '', int $severity = Application::SEVERITY_DEBUG ) {
+
+    // build storable entry from the input to easily manipulate and pass as argument later
+    $entry = [
+      'time'      => microtime( true ),
+      'namespace' => $namespace,
+      'message'   => $message,
+      'context'   => $context,
+      'severity'  => $severity
+    ];
 
     // check type against logging level
-    if( !self::$protect && $severity > Application::SEVERITY_NONE && $severity <= $this->getSeverity() ) {
-      self::$protect = true;
+    if( !$this->protect && static::filter( $entry, $this->_severity ) ) {
+      $this->protect = true;
 
       // log MUST NOT throw any exception!
       try {
 
-        // define the log entry datetime (with microsec!)
-        list( $usec, $sec ) = explode( ' ', microtime() );
-        $datetime = date( 'Y-m-d\TH:i:s', $sec ) . '.' . substr( $usec, 2, 4 ) . date( 'O', $sec );
+        // before we store the entry, trigger an event for it and let the event handlers change the entry or prevent the storing
+        $event = new Event( static::EVENT_CREATE, [ 'instance' => $this ] + $entry );
+        if( !$this->getEmitter() || !$this->getEmitter()->trigger( $event )->isPrevented() ) {
 
-        // add backtrace for the data, if needed
-        $data = Collection::cast( $data, [] );
-        if( !isset( $data[ 'backtrace' ] ) ) $data[ 'backtrace' ] = array_slice( debug_backtrace(), 1 );
+          // map modified entry values back from the event
+          $entry = Collection::map( $event, $entry, [ 'namespace', 'message', 'context' ] );
+          if( is_callable( $entry['context'] ) ) $entry['context'] = $entry['context']();
+          $this->_list[] = $entry;
 
-        // trigger event for the log entry
-        $event = $this->getEmitter()->trigger( new Event( static::EVENT_CREATE, [
-          'instance'  => $this,
-          'namespace' => $namespace,
-          'severity'  => $severity,
-          'datetime'  => $datetime,
-          'message'   => $message,
-          'data'      => $data
-        ] ) );
-        if( !$event->isPrevented() ) {
-
-          $message     = $event->getString( 'message', $message );
-          $data        = $event[ 'data' ] ?? $this->wrap( $data );
-          $description = $event->getString( 'description', Helper\Text::apply( $message, $data, true ) );
-          $datetime    = $event->getString( 'datetime', $datetime );
-
-          $stream = $this->getFile( date( 'Ymd', $sec ) )->stream( Helper\StreamInterface::MODE_WA );
-          $this->converter->serialize( [
-            'time'        => $datetime,
-            'severity'    => $severity,
-            'namespace'   => $event->getString( 'namespace', $namespace ),
-            'message'     => $message,
-            'description' => $description,
-            'data'        => $data
-          ], $stream );
-
-          $stream->write( "\n" );
+          // TODO it should try to flush entries after every X addition or maybe after a (short) timeout
         }
 
-      } catch( \Throwable $e ) {
+      } catch( \Throwable $_ ) {
         // suppress exceptions for the logger
       }
 
-      self::$protect = false;
+      $this->protect = false;
     }
+
+    return $this;
   }
 
   //
-  public function debug( string $message, $data = [], string $namespace = '' ) {
-    $this->create( $message, $data, $namespace, Application::SEVERITY_DEBUG );
+  public function debug( string $message, $context = null, string $namespace = '' ) {
+    return $this->create( $message, $context, $namespace, Application::SEVERITY_DEBUG );
   }
   //
-  public function info( string $message, $data = [], string $namespace = '' ) {
-    $this->create( $message, $data, $namespace, Application::SEVERITY_INFO );
+  public function info( string $message, $context = null, string $namespace = '' ) {
+    return $this->create( $message, $context, $namespace, Application::SEVERITY_INFO );
   }
   //
-  public function notice( string $message, $data = [], string $namespace = '' ) {
-    $this->create( $message, $data, $namespace, Application::SEVERITY_NOTICE );
+  public function notice( string $message, $context = null, string $namespace = '' ) {
+    return $this->create( $message, $context, $namespace, Application::SEVERITY_NOTICE );
   }
   //
-  public function warning( string $message, $data = [], string $namespace = '' ) {
-    $this->create( $message, $data, $namespace, Application::SEVERITY_WARNING );
+  public function warning( string $message, $context = null, string $namespace = '' ) {
+    return $this->create( $message, $context, $namespace, Application::SEVERITY_WARNING );
   }
   //
-  public function error( string $message, $data = [], string $namespace = '' ) {
-    $this->create( $message, $data, $namespace, Application::SEVERITY_ERROR );
+  public function error( string $message, $context = null, string $namespace = '' ) {
+    return $this->create( $message, $context, $namespace, Application::SEVERITY_ERROR );
   }
   //
-  public function critical( string $message, $data = [], string $namespace = '' ) {
-    $this->create( $message, $data, $namespace, Application::SEVERITY_CRITICAL );
+  public function critical( string $message, $context = null, string $namespace = '' ) {
+    return $this->create( $message, $context, $namespace, Application::SEVERITY_CRITICAL );
   }
   //
-  public function alert( string $message, $data = [], string $namespace = '' ) {
-    $this->create( $message, $data, $namespace, Application::SEVERITY_ALERT );
+  public function alert( string $message, $context = null, string $namespace = '' ) {
+    return $this->create( $message, $context, $namespace, Application::SEVERITY_ALERT );
   }
   //
-  public function emergency( string $message, $data = [], string $namespace = '' ) {
-    return $this->create( $message, $data, $namespace, Application::SEVERITY_EMERGENCY );
+  public function emergency( string $message, $context = null, string $namespace = '' ) {
+    return $this->create( $message, $context, $namespace, Application::SEVERITY_EMERGENCY );
   }
 
   /**
-   * Preprocess the data before log it
-   *
-   * This will convert classes to array of properties with reflection
-   *
-   * @param mixed $data
-   * @param int   $deep Max process recursion
-   *
-   * @return mixed
+   * Get the list of buffered log entires
    */
-  public function wrap( $data, $deep = 10 ) {
-
-    if( --$deep < 0 || !Collection::is( $data ) ) return $data;
-    else {
-
-      // handle custom classes
-      if( is_object( $data ) && !( $data instanceof \StdClass ) ) try {
-
-        $reflection = new \ReflectionClass( $data );
-        $tmp        = [ '__CLASS__' => $reflection->getName() ];
-
-        foreach( $reflection->getProperties() as $property ) {
-          if( !$property->isStatic() ) {
-            $property->setAccessible( true );
-
-            $key                                = $property->isPrivate() ? '-' : ( $property->isProtected() ? '#' : '+' );
-            $tmp[ $key . $property->getName() ] = $property->getValue( $data );
-          }
-        }
-
-        $data = $tmp;
-      } catch( \ReflectionException $e ) {
-        // can't do anything
-      }
-
-      //
-      foreach( $data as &$value ) $value = $this->wrap( $value );
-      return $data;
-    }
-  }
-
-  /**
-   * @since 0.6.0
-   *
-   * @param string|null $prefix
-   *
-   * @return FileInterface
-   */
-  public function getFile( ?string $prefix = null ): FileInterface {
-    return $this->_directory->get( ( $prefix ? ( $prefix . '-' ) : '' ) . $this->getChannel() . '.log' );
+  public function getList(): array {
+    return $this->_list;
   }
   /**
-   * @return Event\EmitterInterface
+   * @return Event\EmitterInterface|null
    */
-  public function getEmitter(): Event\EmitterInterface {
-
-    //
-    if( empty( $this->emitter ) ) {
-      $this->emitter = Extension::instance()->getEmitter();
-    }
-
+  public function getEmitter(): ?Event\EmitterInterface {
     return $this->emitter;
   }
 
@@ -333,43 +305,60 @@ class Logger implements LoggerInterface, Helper\AccessableInterface {
   public function setSeverity( int $severity ) {
     $this->_severity = $severity;
   }
-}
 
-/**
- * This logger will add entries to the void
- *
- */
-class LoggerVoid implements LoggerInterface {
-
-  //
-  public function create( string $message, $data = [], string $namespace = '', int $severity = Application::SEVERITY_DEBUG ) { }
-  //
-  public function debug( string $message, $data = [], string $namespace = '' ) { }
-  //
-  public function info( string $message, $data = [], string $namespace = '' ) { }
-  //
-  public function notice( string $message, $data = [], string $namespace = '' ) { }
-  //
-  public function warning( string $message, $data = [], string $namespace = '' ) { }
-  //
-  public function error( string $message, $data = [], string $namespace = '' ) { }
-  //
-  public function critical( string $message, $data = [], string $namespace = '' ) { }
-  //
-  public function alert( string $message, $data = [], string $namespace = '' ) { }
-  //
-  public function emergency( string $message, $data = [], string $namespace = '' ) { }
-
-  //
-  public function getChannel(): string {
-    return '';
+  /**
+   * @param array $entry
+   * @param int   $severity
+   *
+   * @return bool
+   */
+  public static function filter( array $entry, int $severity ) {
+    return $entry['severity'] > Application::SEVERITY_NONE && $entry['severity'] <= $severity;
   }
-  //
-  public function setChannel( string $value ) { }
-  //
-  public function getSeverity(): int {
-    return Application::SEVERITY_NONE;
+  /**
+   * Preprocess the data before log it
+   *
+   * This will convert classes to array of properties with reflection
+   *
+   * @param mixed $data
+   * @param int   $deep Max process recursion
+   *
+   * @return mixed
+   */
+  public static function dump( $data, int $deep = 10 ) {
+
+    if( --$deep < 0 ) return '...';
+    else if( !Collection::is( $data ) ) return $data;
+    else {
+
+      // handle custom classes
+      $_data = Collection::copy( $data, false );
+      if( is_object( $data ) && !( $data instanceof \StdClass ) ) try {
+        if( \method_exists( $data, '__debugInfo'  ) ) $_data = $data->__debugInfo();
+        else {
+
+          $reflection = new \ReflectionClass( $data );
+          $tmp        = [ '__CLASS__' => $reflection->getName() ];
+
+          foreach( $reflection->getProperties() as $property ) {
+            if( !$property->isStatic() ) {
+              $property->setAccessible( true );
+
+              $key                                = $property->isPrivate() ? '-' : ( $property->isProtected() ? '#' : '+' );
+              $tmp[ $key . $property->getName() ] = $property->getValue( $data );
+            }
+          }
+
+          $_data = $tmp;
+        }
+
+      } catch( \ReflectionException $_ ) {
+        // can't do anything
+      }
+
+      //
+      foreach( $_data as &$value ) $value = static::dump( $value, $deep );
+      return $_data;
+    }
   }
-  //
-  public function setSeverity( int $value ) { }
 }

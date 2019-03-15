@@ -132,7 +132,7 @@ class Application implements AccessableInterface {
    * @throws \LogicException There is already an Application instance
    */
   public function __construct( string $environment, string $localization, FileInterface $root, ?LoggerInterface $logger = null, ?string $id = null ) {
-    $this->_id = $id ?? Text::unique( 8, '', false );
+    $this->_id = $id ?? Text::unique( 8, false );
 
     if( self::$instance ) throw new \LogicException( 'Unable to create another instance, use ::instance() instead' );
     else if( empty( $environment ) ) throw new \InvalidArgumentException( "Missing configuration: 'environment'" );
@@ -142,7 +142,7 @@ class Application implements AccessableInterface {
       //
       $this->_environment  = $environment;
       $this->_localization = $localization;
-      $this->_logger       = $logger ?? new LoggerVoid();
+      $this->_logger       = $logger ?? new Logger( static::class, static::SEVERITY_NONE );
       $this->file          = $root;
 
       //
