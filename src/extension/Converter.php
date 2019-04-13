@@ -40,6 +40,42 @@ interface ConverterInterface {
   public function setMeta( $value );
 }
 
+//
+class Converter implements ConverterInterface, Helper\AccessableInterface {
+  use Helper\Accessable;
+
+  //
+  public function serialize( $content, ?Helper\StreamInterface $stream = null ):?string {
+
+    $result = serialize( $content );
+    if( !$stream ) return $result;
+    else {
+
+      $stream->write( $result );
+      return null;
+    }
+  }
+  //
+  public function unserialize( $content ) {
+
+    // handle stream input
+    if( $content instanceof Helper\StreamInterface ) {
+      $content = $content->read();
+    }
+
+    return unserialize( (string) $content );
+  }
+
+  //
+  public function getMeta() {
+    return null;
+  }
+  //
+  public function setMeta( $_ ) {
+    return $this;
+  }
+}
+
 /**
  * Failed (de-)serialization
  */

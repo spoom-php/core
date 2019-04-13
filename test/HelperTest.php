@@ -218,7 +218,7 @@ class HelperTest extends TestCase {
   public function providerConverter() {
     return [
       [ new Converter\Json() ],
-      [ new Converter\Native() ]
+      [ new Converter() ]
     ];
   }
   public function providerWrapper() {
