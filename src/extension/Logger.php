@@ -1,6 +1,5 @@
 <?php namespace Spoom\Core;
 
-use Spoom\Core\Event\EmitterInterface;
 use Spoom\Core\Helper;
 use Spoom\Core\Helper\Collection;
 
@@ -155,13 +154,6 @@ class Logger implements LoggerInterface, Helper\AccessableInterface {
   private $_severity;
 
   /**
-   * Event storage for triggering the LoggerInterface::EVENT_CREATE
-   *
-   * @var Event\EmitterInterface|null
-   */
-  protected $emitter;
-
-  /**
    * List of buffered log entries
    *
    * @var array[]
@@ -169,16 +161,13 @@ class Logger implements LoggerInterface, Helper\AccessableInterface {
   protected $_list = [];
 
   /**
-   * @param string                $channel
-   * @param int                   $severity
-   * @param null|EmitterInterface $emitter
+   * @param string $channel
+   * @param int    $severity
    */
-  public function __construct( string $channel, int $severity = Application::SEVERITY_DEBUG, ?EmitterInterface $emitter = null ) {
+  public function __construct( string $channel, int $severity = Application::SEVERITY_DEBUG ) {
 
     $this->_channel  = $channel;
     $this->_severity = $severity;
-
-    $this->emitter = $emitter;
   }
 
   //
@@ -222,11 +211,10 @@ class Logger implements LoggerInterface, Helper\AccessableInterface {
       try {
 
         // before we store the entry, trigger an event for it and let the event handlers change the entry or prevent the storing
-        $event = new Event( static::EVENT_CREATE, [ 'instance' => $this ] + $entry );
-        if( !$this->getEmitter() || !$this->getEmitter()->trigger( $event )->isPrevented() ) {
+        if( !($event = new LoggerEventCreate( $this, $entry ))->isPrevented() ) {
 
           // map modified entry values back from the event
-          $entry = Collection::map( $event, $entry, [ 'namespace', 'message', 'context' ] );
+          $entry = Collection::map( $event->entry, $entry, [ 'namespace', 'message', 'context' ] );
           if( is_callable( $entry['context'] ) ) $entry['context'] = $entry['context']();
           $this->_list[] = $entry;
 
@@ -281,12 +269,6 @@ class Logger implements LoggerInterface, Helper\AccessableInterface {
    */
   public function getList(): array {
     return $this->_list;
-  }
-  /**
-   * @return Event\EmitterInterface|null
-   */
-  public function getEmitter(): ?Event\EmitterInterface {
-    return $this->emitter;
   }
 
   //
@@ -360,5 +342,31 @@ class Logger implements LoggerInterface, Helper\AccessableInterface {
       foreach( $_data as &$value ) $value = static::dump( $value, $deep );
       return $_data;
     }
+  }
+}
+
+/**
+ * Event before log entry creation
+ *
+ * Prevention will discard the entry. The `namespace`, `message` and `context` properites of the $entry can be modified in the callbacks
+ */
+class LoggerEventCreate extends Event {
+
+  /**
+   * @var LoggerInterface
+   */
+  public $instance;
+  /**
+   * @var array
+   */
+  public $entry;
+
+  /**
+   * @param LoggerInterface $instance
+   * @param array           $entry
+   */
+  public function __construct( LoggerInterface $instance, array $entry ) {
+    $this->instance = $instance;
+    $this->entry = $entry;
   }
 }

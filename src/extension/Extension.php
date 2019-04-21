@@ -1,6 +1,5 @@
 <?php namespace Spoom\Core;
 
-use Spoom\Core\Event\Emitter;
 use Spoom\Core\Helper;
 use Spoom\Core\Storage\PersistentInterface;
 
@@ -42,18 +41,6 @@ interface ExtensionInterface {
   public function file( string $path = '', ?string $pattern = null );
 
   /**
-   * Triggers an event with the extension's storage
-   *
-   * ..and return the event as the result
-   *
-   * @param string $name Event (name) to trigger
-   * @param array  $data Default event data
-   *
-   * @return EventInterface
-   */
-  public function trigger( string $name, $data = [] ): EventInterface;
-
-  /**
    * @param string $path
    *
    * @return FileInterface
@@ -83,10 +70,6 @@ interface ExtensionInterface {
    * @return LoggerInterface
    */
   public function getLogger(): LoggerInterface;
-  /**
-   * @return Event\EmitterInterface
-   */
-  public function getEmitter(): Event\EmitterInterface;
 }
 
 /**
@@ -95,7 +78,6 @@ interface ExtensionInterface {
  * @property-read PersistentInterface|null $configuration
  * @property-read PersistentInterface|null $localization
  * @property-read LoggerInterface          $logger
- * @property-read Event\EmitterInterface   $emitter
  */
 class Extension implements ExtensionInterface, Helper\AccessableInterface {
   use Helper\Accessable;
@@ -140,12 +122,6 @@ class Extension implements ExtensionInterface, Helper\AccessableInterface {
    */
   protected $_localization;
   /**
-   * Handle event triggers for the extension
-   *
-   * @var Event\EmitterInterface
-   */
-  protected $_emitter;
-  /**
    * @var LoggerInterface|null
    */
   protected $_logger;
@@ -155,7 +131,6 @@ class Extension implements ExtensionInterface, Helper\AccessableInterface {
    */
   protected function __construct() {
     $this->_file    = new File( static::ROOT );
-    $this->_emitter = new Emitter( $this->getId() );
   }
 
   //
@@ -172,11 +147,6 @@ class Extension implements ExtensionInterface, Helper\AccessableInterface {
 
     $file = $this->getFile( $path );
     return empty( $pattern ) ? $file : $file->search( $pattern === '*' ? null : $pattern );
-  }
-
-  //
-  public function trigger( string $name, $data = [] ): EventInterface {
-    return $this->getEmitter()->trigger( new Event( $name, $data ) );
   }
 
   //
@@ -198,10 +168,6 @@ class Extension implements ExtensionInterface, Helper\AccessableInterface {
   //
   public function getLogger(): LoggerInterface {
     return $this->_logger;
-  }
-  //
-  public function getEmitter(): Event\EmitterInterface {
-    return $this->_emitter;
   }
 
   /**

@@ -3,9 +3,7 @@
 use Spoom\Core\EventInterface;
 use Spoom\Core\Helper;
 
-/**
- * Interface EmitterInterface
- */
+//
 interface EmitterInterface {
 
   /**
@@ -17,7 +15,7 @@ interface EmitterInterface {
   public function __invoke( EventInterface $event, EmitterInterface $emitter );
 
   /**
-   * Execute the event in this storage context
+   * Execute the event in this callback context
    *
    * @param EventInterface $event
    *
@@ -27,190 +25,112 @@ interface EmitterInterface {
   public function trigger( EventInterface $event ): EventInterface;
 
   /**
-   * Attach callback(s) for event(s)
+   * Attach callback
    *
-   * Events can be a simple string array, or an associative array in event => priority format. Empty (===null) event means the global
-   * event, that will triggered before every event.
-   *
-   * @param callable          $callback
-   * @param string|array|null $event
-   * @param int|null          $priority
+   * @param callable   $callback
+   * @param float|null $priority
    *
    * @return static
    */
-  public function attach( callable $callback, $event = null, ?int $priority = null );
+  public function attach( callable $callback, ?float $priority = null );
   /**
-   * Detach callback(s) from event(s)
+   * Detach callback
    *
-   * Callback must be the exact same instance that attached previously. Empty (===null) callback means "remove all"
+   * Callback must be the exact same instance that attached previously
    *
-   * @param string|array|null $event
-   * @param callable|null     $callback
+   * @param callable $callback
    *
    * @return static
    */
-  public function detach( $event = null, ?callable $callback = null );
+  public function detach( callable $callback );
   /**
-   * Detach every callable from the storage
+   * Detach every callback
    *
    * @return static
    */
   public function detachAll();
 
   /**
-   * Get events that has attached callback(s)
+   * Get attached callback
    *
-   * @return string[]
-   */
-  public function getEventList(): array;
-  /**
-   * Get attached callbacks for an event
-   *
-   * @param string|null $event
-   * @param array       $priority
+   * @param float[] $priority_list
    *
    * @return callable[]
    */
-  public function getCallbackList( ?string $event = null, array &$priority = [] ): array;
-
-  /**
-   * Emitter (mostly unique) name
-   *
-   * @return string
-   */
-  public function getName(): string;
+  public function getCallbackList( array &$priority_list = [] ): array;
 }
 /**
- * Class Emitter
- *
- * @property-read string     $name
  * @property-read callable[] $callback_list
- * @property-read string[]   $event_list
  */
 class Emitter implements EmitterInterface, Helper\AccessableInterface {
   use Helper\Accessable;
 
+  const PRIORITY_HIGH8 = self::PRIORITY_NORMAL * 0.2;
+  const PRIORITY_HIGH4 = self::PRIORITY_NORMAL * 0.4;
+  const PRIORITY_HIGH2 = self::PRIORITY_NORMAL * 0.8;
   /**
    * Default priority for callbacks
    */
-  const PRIORITY_DEFAULT = 100;
-  /**
-   * Global event name
-   *
-   * This event can't be triggered manually, but called before every event
-   */
-  const EVENT_GLOBAL = '.';
+  const PRIORITY_NORMAL = 1.0;
+  const PRIORITY_LOW2 = self::PRIORITY_NORMAL * 1.2;
+  const PRIORITY_LOW4 = self::PRIORITY_NORMAL * 1.4;
+  const PRIORITY_LOW8 = self::PRIORITY_NORMAL * 1.8;
 
   /**
-   * @var string
-   */
-  private $_name;
-
-  /**
-   * Stores callbacks by event
+   * Stores callbacks
    *
-   * @var array
+   * @var callable[]
    */
-  private $callback = [];
+  private $_callback_list = [];
   /**
-   * Stores priorities for callbacks by event
+   * Stores priorities for callbacks
    *
-   * @var array
+   * @var float[]
    */
-  private $priority = [];
-
-  /**
-   * @param string $name
-   */
-  public function __construct( $name ) {
-    $this->_name = $name;
-  }
+  private $_priority_list = [];
 
   //
-  public function __invoke( EventInterface $event, EmitterInterface $emitter ) {
-    if( $event->getName() != static::EVENT_GLOBAL ) {
-      $this->trigger( $event );
-    }
+  public function __invoke( EventInterface $event, EmitterInterface $_ ) {
+    $this->trigger( $event );
   }
 
   //
   public function trigger( EventInterface $event ): EventInterface {
 
-    if( $event->getName() == static::EVENT_GLOBAL ) throw new \InvalidArgumentException( 'Global event is not triggerable' );
-    else {
-
-      // call the global event handlers
-      $list = $this->getCallbackList();
-      foreach( $list as $callback ) {
-        call_user_func_array( $callback, [ $event, $this ] );
-      }
-
-      // call the specific event handlers
-      $list = $this->getCallbackList( $event->getName() );
-      foreach( $list as $callback ) {
-        call_user_func_array( $callback, [ $event, $this ] );
-      }
+    // call the specific event handlers
+    foreach( $this->_callback_list as $callback ) {
+      call_user_func_array( $callback, [ $event, $this ] );
     }
 
     return $event;
   }
 
   //
-  public function attach( callable $callback, $event = null, ?int $priority = self::PRIORITY_DEFAULT ) {
+  public function attach( callable $callback, ?float $priority = self::PRIORITY_NORMAL ) {
 
-    // narmalize the input (global event handling, and non-array events)
-    if( $event === null ) $event = [ static::EVENT_GLOBAL => $priority ];
-    else if( !is_array( $event ) ) $event = [ $event => $priority ];
+    // prevent duplicate callback
+    $this->detach( $callback );
 
-    foreach( $event as $index => $value ) {
+    // add callback with priority
+    $this->_callback_list[] = $callback;
+    $this->_priority_list[] = $priority;
 
-      // add default priority
-      if( is_numeric( $index ) ) {
-        $index = $value;
-        $value = $priority;
-      }
-
-      // prevent duplicate callback for an event (and remove from all if it's a global attach)
-      $this->detach( $index == static::EVENT_GLOBAL ? array_keys( $this->callback ) : $index, $callback );
-
-      // create empty event storage
-      if( !isset( $this->callback[ $index ] ) ) {
-        $this->callback[ $index ] = [];
-        $this->priority[ $index ] = [];
-      }
-
-      // add callback with priority
-      $this->callback[ $index ][] = $callback;
-      $this->priority[ $index ][] = $value;
-
-      // recalculate the callback list order
-      $this->sort( $index );
-    }
+    // recalculate the callback list order
+    // TODO do not rebuild the entire list to insert only one item
+    $this->sort();
 
     return $this;
   }
   //
-  public function detach( $event = null, ?callable $callback = null ) {
+  public function detach( callable $callback ) {
 
-    // handle global event callbacks and force array input
-    if( $event === null ) $event = [ static::EVENT_GLOBAL ];
-    else if( !is_array( $event ) ) $event = [ $event ];
+    // find a specific callback
+    foreach( $this->_callback_list as $index => $_callback ) {
+      if( $_callback === $callback ) {
+        array_splice( $this->_callback_list, $index, 1 );
+        array_splice( $this->_priority_list, $index, 1 );
 
-    foreach( $event as $ev ) {
-
-      // handle "remove all" callback
-      if( $callback === null ) unset( $this->callback[ $ev ], $this->priority[ $ev ] );
-      else if( !empty( $this->callback[ $ev ] ) ) {
-
-        // find a specific callback
-        foreach( $this->callback[ $ev ] as $index => $value ) {
-          if( $value === $callback ) {
-            array_splice( $this->callback[ $ev ], $index, 1 );
-            array_splice( $this->priority[ $ev ], $index, 1 );
-
-            break;
-          }
-        }
+        break;
       }
     }
 
@@ -219,55 +139,35 @@ class Emitter implements EmitterInterface, Helper\AccessableInterface {
   //
   public function detachAll() {
 
-    $this->callback = $this->priority = [];
+    $this->_callback_list = $this->_priority_list = [];
     return $this;
   }
 
   /**
-   * Sort event callbacks based on their priority
-   *
-   * @param string $event
+   * Sort callbacks based on their priority
    */
-  protected function sort( string $event ) {
-    if( !empty( $this->callback[ $event ] ) ) {
+  protected function sort() {
+    if( !empty( $this->_callback_list ) ) {
 
       // sort by the priorities, but keep the original indexes (we need it for the repopulation)
-      $priority = $this->priority[ $event ];
-      asort( $priority );
+      $priority_list = $this->_priority_list;
+      asort( $priority_list );
 
       // repopulate the callbacks based on the new priority "map"
-      $tmp                      = $this->callback[ $event ];
-      $this->callback[ $event ] = [];
-      foreach( $priority as $index => $_ ) {
-        $this->callback[ $event ][] = $tmp[ $index ];
+      $tmp                  = $this->_callback_list;
+      $this->_callback_list = [];
+      foreach( $priority_list as $index => $_ ) {
+        $this->_callback_list[] = $tmp[ $index ];
       }
 
       // reset priority indexes (to match the repopulated array)
-      $this->priority[ $event ] = array_values( $priority );
+      $this->_priority_list = array_values( $priority_list );
     }
   }
 
   //
-  public function getEventList(): array {
-    return array_values( array_filter( array_keys( $this->callback ), function ( $event ) {
-      // filter out the global event handler
-      return $event != static::EVENT_GLOBAL;
-    } ) );
-  }
-  //
-  public function getCallbackList( ?string $event = null, array &$priority = [] ): array {
-
-    // handle global event callbacks
-    if( $event === null ) {
-      $event = static::EVENT_GLOBAL;
-    }
-
-    $priority = $this->priority[ $event ] ?? [];
-    return $this->callback[ $event ] ?? [];
-  }
-
-  //
-  public function getName(): string {
-    return $this->_name;
+  public function getCallbackList( array &$priority_list = [] ): array {
+    $priority_list = $this->_priority_list;
+    return $this->_callback_list;
   }
 }

@@ -2,7 +2,6 @@
 
 use Spoom\Core\Converter;
 use Spoom\Core\ConverterInterface;
-use Spoom\Core\Event\EmitterInterface;
 use Spoom\Core\FileInterface;
 use Spoom\Core\Helper\StreamInterface;
 use Spoom\Core\Logger;
@@ -35,10 +34,9 @@ class File extends Logger {
    * @param string                  $channel
    * @param int                     $severity
    * @param null|ConverterInterface $converter
-   * @param null|EmitterInterface   $emitter
    */
-  public function __construct( FileInterface $directory, string $channel, int $severity = Application::SEVERITY_DEBUG, ?ConverterInterface $converter = null, ?EmitterInterface $emitter = null ) {
-    parent::__construct( $channel, $severity, $emitter );
+  public function __construct( FileInterface $directory, string $channel, int $severity = Application::SEVERITY_DEBUG, ?ConverterInterface $converter = null ) {
+    parent::__construct( $channel, $severity );
 
     $this->_directory = $directory;
 
