@@ -72,7 +72,17 @@ abstract class Event implements EventInterface, Helper\AccessableInterface {
    * Get the event's emitter, to manipulate callbacks for the event
    */
   public static function emitter(): EmitterInterface {
-    return self::$emitter_map[ static::class ] ?? (self::$emitter_map[ static::class ] = new Emitter());
+
+    if( !isset( self::$emitter_map[ static::class ] ) ) {
+
+      // this should find the first subclass after the `Event`. Get the parent list (it's sorted from the latest parent, so we have to reverse it), and select the one after the `Event` baseclass
+      $class = array_reverse( array_values( class_parents( static::class ) ) )[1] ?? static::class;
+
+      // Fill the subclass cache with the found class's cache (and create it if not exists). This is for performance reasons, keep parent class calculations minimal
+      self::$emitter_map[ static::class ] = self::$emitter_map[ $class ] ?? (self::$emitter_map[ $class ] = new Emitter());
+    }
+
+    return self::$emitter_map[ static::class ];
   }
 
   //

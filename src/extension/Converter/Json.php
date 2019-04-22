@@ -2,6 +2,7 @@
 
 use Spoom\Core\Helper;
 use Spoom\Core;
+use Spoom\Core\ConverterEventIO;
 
 /**
  * Class Json
@@ -17,12 +18,12 @@ class Json implements Core\ConverterInterface, Helper\AccessableInterface {
   private $_meta;
 
   /**
-   * @param JsonMeta|int $options
+   * @param int|JsonMeta $options
    * @param int          $depth
    * @param bool         $associative
    */
   public function __construct( $options = JsonMeta::DEFAULT, int $depth = 512, bool $associative = true ) {
-    $this->_meta = $options instanceof JsonMeta ? $options : new JsonMeta( $options, $depth, $associative );
+    $this->_meta = $options instanceof JsonMeta ? $options : new JsonMeta( (int) $options, $depth, $associative );
   }
   /**
    *
@@ -34,32 +35,47 @@ class Json implements Core\ConverterInterface, Helper\AccessableInterface {
   //
   public function serialize( $content, ?Helper\StreamInterface $stream = null ): ?string {
 
-    $result = json_encode( $content, $this->_meta->options );
-    if( json_last_error() != JSON_ERROR_NONE ) {
-      throw new Core\ConverterFailException( $this, $content, [ json_last_error(), json_last_error_msg() ] );
-    }
-
-    if( !$stream ) return $result;
+    if( ($event = new ConverterEventIO( __FUNCTION__, $this, $content, $stream ))->isPrevented() ) return $event->result;
     else {
 
-      $stream->write( $result );
-      return null;
+      // modify variables from the event
+      $content = $event->content;
+      $stream = $event->stream;
+
+      $result = json_encode( $content, $this->_meta->options );
+      if( json_last_error() != JSON_ERROR_NONE ) {
+        throw new Core\ConverterFailException( $this, $content, [ json_last_error(), json_last_error_msg() ] );
+      }
+
+      if( !$stream ) return $result;
+      else {
+
+        $stream->write( $result );
+        return null;
+      }
     }
   }
   //
   public function unserialize( $content ) {
 
-    // handle stream input
-    if( $content instanceof Helper\StreamInterface ) {
-      $content = $content->read();
-    }
+    if( ($event = new ConverterEventIO( __FUNCTION__, $this, $content ))->isPrevented() ) return $event->result;
+    else {
 
-    $result = $content !== null && strlen( $content ) > 0 ? json_decode( $content, $this->_meta->associative, $this->_meta->depth, $this->_meta->options ) : null;
-    if( json_last_error() != JSON_ERROR_NONE ) {
-      throw new Core\ConverterFailException( $this, $content, [ json_last_error(), json_last_error_msg() ] );
-    }
+      // modify variables from the event
+      $content = $event->content;
 
-    return $result;
+      // handle stream input
+      if( $content instanceof Helper\StreamInterface ) {
+        $content = $content->read();
+      }
+
+      $result = $content !== null && strlen( $content ) > 0 ? json_decode( $content, $this->_meta->associative, $this->_meta->depth, $this->_meta->options ) : null;
+      if( json_last_error() != JSON_ERROR_NONE ) {
+        throw new Core\ConverterFailException( $this, $content, [ json_last_error(), json_last_error_msg() ] );
+      }
+
+      return $result;
+    }
   }
 
   /**

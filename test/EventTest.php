@@ -29,6 +29,7 @@ class EventTest extends TestCase {
 
     //
     $this->assertFalse( EventTestEvent::emitter() === EventTestEvent2::emitter(), "Default emitter should be different for each event" );
+    $this->assertTrue( EventTestEvent3::emitter() === EventTestEvent2::emitter(), "Default emitter should be the same for each subclass for an event subclass");
   }
 
   /**
@@ -90,4 +91,7 @@ class EventTestEvent2 extends Event {
   public function __construct() {
     $this->trigger();
   }
+}
+class EventTestEvent3 extends EventTestEvent2 {
+
 }

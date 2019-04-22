@@ -5,9 +5,10 @@ use Spoom\Core\ConverterInterface;
 use Spoom\Core\FileInterface;
 use Spoom\Core\Helper\StreamInterface;
 use Spoom\Core\Logger;
+use Spoom\Core\LoggerInterface;
 use Spoom\Core\Helper\Text;
 use Spoom\Core\Application;
-
+use Spoom\Core\LoggerEventFlush;
 /**
  * This logger will add entries to files
  *
@@ -57,7 +58,10 @@ class File extends Logger {
     // we can't do anything with an empty list
     if( !empty( $this->_list ) ) try {
 
-        $stream = $this->getFile()->stream( StreamInterface::MODE_WA );
+      //
+      $stream = $this->getFile()->stream( StreamInterface::MODE_WA );
+      if( !(new LoggerEventFlushFile( $this, $limit, $stream ))->isPrevented() ) {
+
         for( $i = 0, $length = count( $this->_list ); ($limit < 1 || $i < $limit) && $i < $length; ++$i ) {
 
           $entry = $this->_list[$i];
@@ -72,8 +76,9 @@ class File extends Logger {
         $stream->flush();
         unset( $stream );
 
-      // we should clear the flushed entires from the list to prevent duplications
-      $this->clear( $limit );
+        // we should clear the flushed entires from the list to prevent duplications
+        $this->clear( $limit );
+      }
 
     } catch( \Throwable $_ ) {
       // there must be no exception from the logger
@@ -87,5 +92,29 @@ class File extends Logger {
    */
   public function getFile(): FileInterface {
     return $this->_directory->get( ( date( 'Ymd', time() ) . '-' ) . $this->getChannel() . '.log' );
+  }
+}
+
+/**
+ * Extends the `LoggerEventFlush` event with a stream param
+ *
+ * Prevention will cancel the default flush behavior. The `stream` can be modified in the callbacks
+ */
+class FileEventFlush extends LoggerEventFlush {
+
+  /**
+   * @var StreamInterface
+   */
+  public $stream;
+
+  /**
+   * @param LoggerInterface $instance
+   * @param int             $limit
+   * @param StreamInterface $stream
+   */
+  public function __construct( LoggerInterface $instance, int $limit, StreamInterface $stream ) {
+    $this->stream   = $stream;
+
+    parent::__construct( $instance, $limit );
   }
 }

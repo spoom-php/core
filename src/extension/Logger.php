@@ -178,9 +178,14 @@ class Logger implements LoggerInterface, Helper\AccessableInterface {
   }
 
   //
-  public function flush( int $_ = 0 ) {
+  public function flush( int $limit = 0 ) {
 
-    // there is nowhere to flush, it's a memory buffer!
+    // there is nowhere to flush, but the event should triggered anyway
+    if( !empty( $this->_list ) ) try {
+      new LoggerEventFlush( $this, $limit );
+    } catch( \Throwable $_ ) {
+      // there must be no exception from the logger
+    }
 
     return $this;
   }
@@ -368,5 +373,31 @@ class LoggerEventCreate extends Event {
   public function __construct( LoggerInterface $instance, array $entry ) {
     $this->instance = $instance;
     $this->entry = $entry;
+  }
+}
+
+/**
+ * Event before log entries flushing, implemented in the child classes
+ *
+ * Prevention will cancel the default flush behavior
+ */
+class LoggerEventFlush extends Event {
+
+  /**
+   * @var LoggerInterface
+   */
+  public $instance;
+  /**
+   * @var int
+   */
+  public $limit;
+
+  /**
+   * @param LoggerInterface $instance
+   * @param int             $limit
+   */
+  public function __construct( LoggerInterface $instance, int $limit ) {
+    $this->instance = $instance;
+    $this->limit = $limit;
   }
 }

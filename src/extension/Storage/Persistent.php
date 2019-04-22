@@ -1,9 +1,10 @@
 <?php namespace Spoom\Core\Storage;
 
-use Spoom\Core\Storage;
+use Spoom\Core;
 use Spoom\Core\StorageInterface;
 use Spoom\Core\StorageMeta;
 use Spoom\Core\StorageMetaSearch;
+use Spoom\Core\Event;
 
 //
 interface PersistentInterface extends StorageInterface {
@@ -76,7 +77,7 @@ interface PersistentInterface extends StorageInterface {
 }
 
 //
-abstract class Persistent extends Storage implements PersistentInterface {
+abstract class Persistent extends Core\Storage implements PersistentInterface {
 
   /**
    * Default options for namespaces
@@ -178,5 +179,42 @@ abstract class Persistent extends Storage implements PersistentInterface {
 
     if( $reset ) $this->setSource( [] );
     return $this;
+  }
+}
+
+/**
+ * Triggered before every Persistent storage IO operation (save, load, remove), implemented in the child classes
+ *
+ * Prevention can skip the original IO operation. The `namespace_list` can be modified by the callbacks
+ */
+class PersistentEventIO extends Event {
+
+  const FUNCTION_SAVE   = 'save';
+  const FUNCTION_LOAD   = 'load';
+  const FUNCTION_REMOVE = 'remove';
+
+  /**
+   * @var PersistentInterface
+   */
+  public $instance;
+  /**
+   * @var string
+   */
+  public $function;
+
+  /**
+   * @var string[]|null
+   */
+  public $namespace_list;
+
+  /**
+   *
+   */
+  public function __construct( string $function, PersistentInterface $instance, ?array $namespace_list = null ) {
+    $this->function       = $function;
+    $this->instance       = $instance;
+    $this->namespace_list = $namespace_list;
+
+    $this->trigger();
   }
 }
