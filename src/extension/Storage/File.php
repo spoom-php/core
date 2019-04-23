@@ -44,24 +44,25 @@ class File extends Persistent {
   //
   public function save( ?array $namespace_list = null ) {
 
-    // we have to check namespace saving pre-requirements before the actual saving loop to prevent (or at least minimalize) half written situations
-    $namespace_list = $namespace_list ?? array_keys( $this->getNamespace() );
-    foreach( $namespace_list as $namespace ) {
-      $_namespace = $this->getNamespace( $namespace );
-      if( $_namespace[ 'readonly' ] ?? false ) throw new \LogicException( "Failed to save the storage, the '{$namespace}' is readonly" );
-    }
+    if( !($event = new PersistentEventIO( __FUNCTION__, $this, $namespace_list ))->isPrevented() ) {
+      $namespace_list = $event->namespace_list ?? array_keys( $this->getNamespace() );
 
-    // actual saving loop
-    foreach( $namespace_list as $namespace ) {
+      // we have to check namespace saving pre-requirements before the actual saving loop to prevent (or at least minimalize) half written situations
+      foreach( $namespace_list as $namespace ) {
+        $_namespace = $this->getNamespace( $namespace );
+        if( $_namespace[ 'readonly' ] ?? false ) throw new \LogicException( "Failed to save the storage, the '{$namespace}' is readonly" );
+      }
 
-      $meta = $this->getNamespace( $namespace );
-      $file = $this->file( $namespace );
+      // actual saving loop
+      foreach( $namespace_list as $namespace ) {
 
-      /** @var ConverterInterface $converter */
-      $converter = $meta[ 'converter' ];
-      $content   = $converter->serialize( $this[ $namespace . static::SEPARATOR_NAMESPACE ] );
+        $meta = $this->getNamespace( $namespace );
+        $file = $this->file( $namespace );
 
-      $file->stream( StreamInterface::MODE_WT )->write( $content );
+        /** @var ConverterInterface $converter */
+        $converter = $meta[ 'converter' ];
+        $converter->serialize( $this[ $namespace . static::SEPARATOR_NAMESPACE ], $file->stream( StreamInterface::MODE_WT ) );
+      }
     }
 
     return $this;
@@ -69,35 +70,45 @@ class File extends Persistent {
   //
   public function load( ?array $namespace_list = null ) {
 
-    $namespace_list = $namespace_list ?? array_keys( $this->getNamespace() );
-    foreach( $namespace_list as $namespace ) {
-      $meta = $this->getNamespace( $namespace );
+    if( !($event = new PersistentEventIO( __FUNCTION__, $this, $namespace_list ))->isPrevented() ) {
+      $namespace_list = $event->namespace_list ?? array_keys( $this->getNamespace() );
 
-      $file = $this->file( $namespace );
-      if( $file->exist() ) {
+      foreach( $namespace_list as $namespace ) {
+        $meta = $this->getNamespace( $namespace );
 
-        /** @var ConverterInterface $converter */
-        $converter = $meta[ 'converter' ];
-        $content   = $converter->unserialize( $file->stream()->read() );
+        $file = $this->file( $namespace );
+        if( $file->exist() ) {
 
-        $this->setSource( $content, $namespace );
+          /** @var ConverterInterface $converter */
+          $converter = $meta[ 'converter' ];
+          $content   = $converter->unserialize( $file->stream()->read() );
+
+          $this->setSource( $content, $namespace );
+        }
       }
     }
-
     return $this;
   }
   //
   public function remove( ?array $namespace_list = null ) {
 
-    $namespace_list = $namespace_list ?? array_keys( $this->getNamespace() );
-    foreach( $namespace_list as $namespace ) {
+    if( !($event = new PersistentEventIO( __FUNCTION__, $this, $namespace_list ))->isPrevented() ) {
+      $namespace_list = $event->namespace_list ?? array_keys( $this->getNamespace() );
 
-      $file = $this->file( $namespace );
-      if( $file ) $file->remove();
+      // we have to check namespace remove pre-requirements before the actual remove loop to prevent (or at least minimalize) half written situations
+      foreach( $namespace_list as $namespace ) {
+        $_namespace = $this->getNamespace( $namespace );
+        if( $_namespace[ 'readonly' ] ?? false ) throw new \LogicException( "Failed to remove namespaces from the storage, the '{$namespace}' is readonly" );
+      }
 
-      $this->setSource( null, $namespace );
+      foreach( $namespace_list as $namespace ) {
+
+        $file = $this->file( $namespace );
+        if( $file ) $file->remove();
+
+        $this->setSource( null, $namespace );
+      }
     }
-
     return $this;
   }
 

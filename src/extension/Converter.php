@@ -47,23 +47,38 @@ class Converter implements ConverterInterface, Helper\AccessableInterface {
   //
   public function serialize( $content, ?Helper\StreamInterface $stream = null ):?string {
 
-    $result = serialize( $content );
-    if( !$stream ) return $result;
+    if( ($event = new ConverterEventIO( __FUNCTION__, $this, $content, $stream ))->isPrevented() ) return $event->result;
     else {
 
-      $stream->write( $result );
-      return null;
+      // modify variables from the event
+      $content = $event->content;
+      $stream = $event->stream;
+
+      $result = serialize( $content );
+      if( !$stream ) return $result;
+      else {
+
+        $stream->write( $result );
+        return null;
+      }
     }
   }
   //
   public function unserialize( $content ) {
 
-    // handle stream input
-    if( $content instanceof Helper\StreamInterface ) {
-      $content = $content->read();
-    }
+    if( ($event = new ConverterEventIO( __FUNCTION__, $this, $content ))->isPrevented() ) return $event->result;
+    else {
 
-    return unserialize( (string) $content );
+      // modify variables from the event
+      $content = $event->content;
+
+      // handle stream input
+      if( $content instanceof Helper\StreamInterface ) {
+        $content = $content->read();
+      }
+
+      return unserialize( (string) $content );
+    }
   }
 
   //
@@ -73,6 +88,51 @@ class Converter implements ConverterInterface, Helper\AccessableInterface {
   //
   public function setMeta( $_ ) {
     return $this;
+  }
+}
+
+/**
+ * Triggered before every Converter IO operation (serialize, unserialize), implemented in the child classes
+ *
+ * Prevention can skip the original IO operation. The `content` and `stream` can be modified by the callbacks
+ */
+class ConverterEventIO extends Event {
+
+  const FUNCTION_SERIALIZE = 'serialize';
+  const FUNCTION_UNSERIALIZE = 'unserialize';
+
+  /**
+   * @var ConverterInterface
+   */
+  public $instance;
+  /**
+   * @var string
+   */
+  public $function;
+  /**
+   * @var mixed
+   */
+  public $content;
+  /**
+   * @var ?Helper\StreamInterface
+   */
+  public $stream;
+
+  /**
+   * @var mixed
+   */
+  public $result;
+
+  /**
+   *
+   */
+  public function __construct( string $function, ConverterInterface $instance, $content, ?Helper\StreamInterface $stream = null ) {
+    $this->function = $function;
+    $this->instance = $instance;
+    $this->content = $content;
+    $this->stream = $stream;
+
+    $this->trigger();
   }
 }
 

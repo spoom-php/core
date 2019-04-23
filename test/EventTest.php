@@ -4,45 +4,53 @@ use PHPUnit\Framework\TestCase;
 
 class EventTest extends TestCase {
 
-  public function testBasic() {
+  public function testEmitter() {
 
-    $storage   = new Event\Emitter( 'test' );
+    $storage   = new Event\Emitter();
     $callback1 = $this->_callback( 1 );
     $callback2 = $this->_callback( 2 );
     $callback3 = $this->_callback( 3 );
 
-    $storage->attach( $callback1, [ 'test1', 'test2' => 1 ] );
-    $storage->attach( $callback2, 'test1', Event\Emitter::PRIORITY_DEFAULT / 2 );
-    $storage->attach( $callback3, [ 'test1' => 0, 'test2' => 0 ] );
+    $storage->attach( $callback1, Event\Emitter::PRIORITY_NORMAL );
+    $storage->attach( $callback2, Event\Emitter::PRIORITY_LOW2 );
+    $storage->attach( $callback3, Event\Emitter::PRIORITY_HIGH2 );
 
     // test callback attach with priority
-    $priority = [];
-    $this->assertSame( [ $callback3, $callback2, $callback1 ], $storage->getCallbackList( 'test1', $priority ) );
-    $this->assertSame( [ 0, Event\Emitter::PRIORITY_DEFAULT / 2, Event\Emitter::PRIORITY_DEFAULT ], $priority );
-    $this->assertSame( [ $callback3, $callback1 ], $storage->getCallbackList( 'test2', $priority ) );
-    $this->assertSame( [ 0, 1 ], $priority );
-    $this->assertEquals( [ 'test1', 'test2' ], $storage->getEventList() );
-
-    // test event triggering
-    $event1 = $storage->trigger( new Event( 'test1', [ 'prevent' => 1 ] ) );
-
-    $this->assertTrue( $event1->isPrevented() );
-    $this->assertEquals( 1, $event1->get( 'prevented' ) );
-    $this->assertEquals( 1, $event1->get( 'callback' ) );
-
-    $event2 = $storage->trigger( new Event( 'test2', [ 'prevent' => 0 ] ) );
-
-    $this->assertFalse( $event2->isPrevented() );
-    $this->assertEquals( null, $event2->get( 'prevented' ) );
-    $this->assertEquals( 1, $event2->get( 'callback' ) );
+    $priority_list = [];
+    $this->assertSame( [ $callback3, $callback1, $callback2 ], $storage->getCallbackList( $priority_list ) );
+    $this->assertSame( [ Event\Emitter::PRIORITY_HIGH2, Event\Emitter::PRIORITY_NORMAL, Event\Emitter::PRIORITY_LOW2 ], $priority_list );
 
     // test callback detach
-    $storage->detach( 'test1', $callback2 );
-    $this->assertSame( [ $callback3, $callback1 ], $storage->getCallbackList( 'test1' ) );
+    $storage->detach( $callback2 );
+    $this->assertSame( [ $callback3, $callback1 ], $storage->getCallbackList() );
 
-    $storage->detach( 'test2' );
-    $this->assertSame( [], $storage->getCallbackList( 'test2' ) );
-    $this->assertSame( [ 'test1' ], $storage->getEventList() );
+    $storage->detachAll();
+    $this->assertSame( [], $storage->getCallbackList() );
+
+    //
+    $this->assertFalse( EventTestEvent::emitter() === EventTestEvent2::emitter(), "Default emitter should be different for each event" );
+    $this->assertTrue( EventTestEvent3::emitter() === EventTestEvent2::emitter(), "Default emitter should be the same for each subclass for an event subclass");
+  }
+
+  /**
+   * @depends testEmitter
+   */
+  public function testTrigger() {
+
+    EventTestEvent::emitter()->attach( $this->_callback( 1 ), Event\Emitter::PRIORITY_LOW2 );
+    EventTestEvent::emitter()->attach( $this->_callback( 2 ), Event\Emitter::PRIORITY_NORMAL );
+    EventTestEvent::emitter()->attach( $this->_callback( 3 ), Event\Emitter::PRIORITY_HIGH2 );
+
+    // test event triggering
+    $event1 = new EventTestEvent( 1 );
+    $this->assertTrue( $event1->isPrevented() );
+    $this->assertEquals( 1, $event1->prevented );
+    $this->assertEquals( 1, $event1->callback );
+
+    $event2 = new EventTestEvent( 0 );
+    $this->assertFalse( $event2->isPrevented() );
+    $this->assertEquals( null, $event2->prevented );
+    $this->assertEquals( 1, $event2->callback );
   }
 
   /**
@@ -53,13 +61,37 @@ class EventTest extends TestCase {
    * @return callable
    */
   private function _callback( $number ) {
-    return function ( EventInterface $event ) use ( $number ) {
-      $event[ 'callback' ] = $number;
+    return function ( EventTestEvent $event ) use ( $number ) {
+      if( !$event->isStopped() ) {
+        $event->callback = $number;
 
-      if( $event->get( 'prevent' ) == $number ) {
-        $event->setPrevented();
-        $event[ 'prevented' ] = $number;
+        if( $event->prevent == $number ) {
+          $event->setPrevented();
+          $event->prevented = $number;
+        }
       }
     };
   }
+}
+
+class EventTestEvent extends Event {
+
+  public $callback;
+  public $prevent;
+  public $prevented;
+
+  public function __construct( int $prevent ) {
+    $this->prevent = $prevent;
+
+    $this->trigger();
+  }
+}
+class EventTestEvent2 extends Event {
+
+  public function __construct() {
+    $this->trigger();
+  }
+}
+class EventTestEvent3 extends EventTestEvent2 {
+
 }
