@@ -7,7 +7,6 @@ use Spoom\Core\Helper\StreamInterface;
 use Spoom\Core\Logger;
 use Spoom\Core\LoggerInterface;
 use Spoom\Core\Helper\Text;
-use Spoom\Core\Application;
 use Spoom\Core\LoggerEventFlush;
 /**
  * This logger will add entries to files
@@ -33,15 +32,13 @@ class File extends Logger {
   /**
    * @param FileInterface           $directory
    * @param string                  $channel
-   * @param int                     $severity
+   * @param int|null                $severity
    * @param null|ConverterInterface $converter
    */
-  public function __construct( FileInterface $directory, string $channel, int $severity = Application::SEVERITY_DEBUG, ?ConverterInterface $converter = null ) {
+  public function __construct( FileInterface $directory, string $channel, ?int $severity = null, ?ConverterInterface $converter = null ) {
     parent::__construct( $channel, $severity );
 
     $this->_directory = $directory;
-
-    //
     $this->converter = $converter ?? new Converter();
   }
 
@@ -60,7 +57,7 @@ class File extends Logger {
 
       //
       $stream = $this->getFile()->stream( StreamInterface::MODE_WA );
-      if( !(new LoggerEventFlushFile( $this, $limit, $stream ))->isPrevented() ) {
+      if( !(new FileEventFlush( $this, $limit, $stream ))->isPrevented() ) {
 
         for( $i = 0, $length = count( $this->_list ); ($limit < 1 || $i < $limit) && $i < $length; ++$i ) {
 

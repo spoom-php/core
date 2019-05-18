@@ -2,7 +2,7 @@
 
 use Spoom\Core\Helper\Stream;
 use Spoom\Core\Helper\StreamInterface;
-use Spoom\Core;
+use Spoom\Core\Severity;
 use Spoom\Core\Helper\Text;
 
 /**
@@ -741,7 +741,7 @@ class FileRootInvalidException extends Exception\Runtime implements FileExceptio
       static::ID,
       $data,
       null,
-      Core\Application::SEVERITY_WARNING
+      Severity::WARNING
     );
   }
 }
@@ -758,7 +758,7 @@ class FilePathInvalidException extends Exception\Runtime implements FileExceptio
    */
   public function __construct( string $path ) {
     $data = [ 'path' => $path ];
-    parent::__construct( Text::apply( 'Path is outside the root: \'{path}\'', $data ), static::ID, $data, null, Core\Application::SEVERITY_WARNING );
+    parent::__construct( Text::apply( 'Path is outside the root: \'{path}\'', $data ), static::ID, $data, null, Severity::WARNING );
   }
 }
 /**
@@ -781,7 +781,7 @@ class FileTypeInvalidException extends Exception\Logic implements FileExceptionI
       static::ID,
       $data,
       null,
-      Core\Application::SEVERITY_NOTICE
+      Severity::NOTICE
     );
   }
 }
@@ -805,7 +805,7 @@ class FilePermissionException extends Exception\Runtime implements FileException
       static::ID,
       $data,
       null,
-      Core\Application::SEVERITY_CRITICAL
+      Severity::CRITICAL
     );
   }
 }

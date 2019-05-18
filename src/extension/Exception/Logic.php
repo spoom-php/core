@@ -1,6 +1,6 @@
 <?php namespace Spoom\Core\Exception;
 
-use Spoom\Core\Application;
+use Spoom\Core\Severity;
 use Spoom\Core\Helper;
 use Spoom\Core\Helper\Collection;
 
@@ -25,7 +25,7 @@ class Logic extends \LogicException implements Helper\ThrowableInterface, Helper
    * @param \Throwable|null $previous
    * @param int             $severity
    */
-  public function __construct( string $message, $id, $context = [], \Throwable $previous = null, int $severity = Application::SEVERITY_ERROR ) {
+  public function __construct( string $message, $id, $context = [], \Throwable $previous = null, int $severity = Severity::ERROR ) {
     parent::__construct( $message, (int) $id, $previous );
 
     $this->_id       = $id;

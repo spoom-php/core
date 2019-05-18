@@ -24,7 +24,7 @@ class Exception extends \Exception implements Helper\ThrowableInterface, Helper\
    * @param \Throwable|null $previous
    * @param int             $severity
    */
-  public function __construct( string $message, $id, $context = [], \Throwable $previous = null, int $severity = Application::SEVERITY_ERROR ) {
+  public function __construct( string $message, $id, $context = [], \Throwable $previous = null, int $severity = Severity::ERROR ) {
     parent::__construct( $message, (int) $id, $previous );
 
     $this->_id       = $id;
@@ -48,7 +48,7 @@ class Exception extends \Exception implements Helper\ThrowableInterface, Helper\
     $context[ 'exception' ] = $throwable;
     $context[ 'backtrace' ] = false;
 
-    $severity  = $throwable instanceof Helper\ThrowableInterface ? $throwable->getSeverity() : Application::SEVERITY_CRITICAL;
+    $severity  = $throwable instanceof Helper\ThrowableInterface ? $throwable->getSeverity() : Severity::CRITICAL;
     $namespace = get_class( $throwable ) . ':' . ( $throwable instanceof Helper\ThrowableInterface ? $throwable->getId() : $throwable->getCode() );
     $instance->create( $throwable->getMessage(), $context, $namespace, $severity );
 
