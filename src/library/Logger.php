@@ -9,11 +9,6 @@ use Spoom\Core\Helper\Collection;
 interface LoggerInterface {
 
   /**
-   * This event MUST be called before every new log entry. This can prevent the log
-   */
-  const EVENT_CREATE = 'logger.create';
-
-  /**
    * The logger must be cloneable to use the instance as a "factory" for the new individual instances
    */
   public function __clone();
@@ -36,74 +31,74 @@ interface LoggerInterface {
   public function clear( int $limit = 0 );
 
   /**
-   * @param string                $message   The log message pattern
-   * @param array|object|callable|null $context   The pattern insertion or additional data, or a callable that will run only if the entry will be added for the buffer list
-   * @param string                $namespace The namespace for the log entry. This is useful for searching or filtering
-   * @param int                   $severity  The log level
+   * @param string $message   The log message pattern
+   * @param mixed  $context   The pattern insertion or additional data, or a callable that will run only if the entry will be added for the buffer list
+   * @param string $namespace The namespace for the log entry. This is useful for searching or filtering
+   * @param int    $severity  The log level
    *
    * @return static
    */
-  public function create( string $message, $context = null, string $namespace = '', int $severity = Application::SEVERITY_DEBUG );
+  public function create( string $message, $context = null, string $namespace = '', int $severity = Severity::DEBUG );
   /**
-   * @param string                $message   The log message pattern
-   * @param array|object|callable|null $context   The pattern insertion or additional data, or a callable that will run only if the entry will be added for the buffer list
-   * @param string                $namespace The namespace for the log entry. This is useful for searching or filtering
+   * @param string $message   The log message pattern
+   * @param mixed  $context   The pattern insertion or additional data, or a callable that will run only if the entry will be added for the buffer list
+   * @param string $namespace The namespace for the log entry. This is useful for searching or filtering
    *
    * @return static
    */
   public function debug( string $message, $context = null, string $namespace = '' );
   /**
-   * @param string                $message   The log message pattern
-   * @param array|object|callable|null $context   The pattern insertion or additional data, or a callable that will run only if the entry will be added for the buffer list
-   * @param string                $namespace The namespace for the log entry. This is useful for searching or filtering
+   * @param string $message   The log message pattern
+   * @param mixed  $context   The pattern insertion or additional data, or a callable that will run only if the entry will be added for the buffer list
+   * @param string $namespace The namespace for the log entry. This is useful for searching or filtering
    *
    * @return static
    */
   public function info( string $message, $context = null, string $namespace = '' );
   /**
-   * @param string                $message   The log message pattern
-   * @param array|object|callable|null $context   The pattern insertion or additional data, or a callable that will run only if the entry will be added for the buffer list
-   * @param string                $namespace The namespace for the log entry. This is useful for searching or filtering
+   * @param string $message   The log message pattern
+   * @param mixed  $context   The pattern insertion or additional data, or a callable that will run only if the entry will be added for the buffer list
+   * @param string $namespace The namespace for the log entry. This is useful for searching or filtering
    *
    * @return static
    */
   public function notice( string $message, $context = null, string $namespace = '' );
   /**
-   * @param string                $message   The log message pattern
-   * @param array|object|callable|null $context   The pattern insertion or additional data, or a callable that will run only if the entry will be added for the buffer list
-   * @param string                $namespace The namespace for the log entry. This is useful for searching or filtering
+   * @param string $message   The log message pattern
+   * @param mixed  $context   The pattern insertion or additional data, or a callable that will run only if the entry will be added for the buffer list
+   * @param string $namespace The namespace for the log entry. This is useful for searching or filtering
    *
    * @return static
    */
   public function warning( string $message, $context = null, string $namespace = '' );
   /**
-   * @param string                $message   The log message pattern
-   * @param array|object|callable|null $context   The pattern insertion or additional data, or a callable that will run only if the entry will be added for the buffer list
-   * @param string                $namespace The namespace for the log entry. This is useful for searching or filtering
+   * @param string $message   The log message pattern
+   * @param mixed  $context   The pattern insertion or additional data, or a callable that will run only if the entry will be added for the buffer list
+   * @param string $namespace The namespace for the log entry. This is useful for searching or filtering
    *
    * @return static
    */
   public function error( string $message, $context = null, string $namespace = '' );
   /**
-   * @param string                $message   The log message pattern
-   * @param array|object|callable|null $context   The pattern insertion or additional data, or a callable that will run only if the entry will be added for the buffer list
-   * @param string                $namespace The namespace for the log entry. This is useful for searching or filtering
+   * @param string $message   The log message pattern
+   * @param mixed  $context   The pattern insertion or additional data, or a callable that will run only if the entry will be added for the buffer list
+   * @param string $namespace The namespace for the log entry. This is useful for searching or filtering
    *
    * @return static
    */
   public function critical( string $message, $context = null, string $namespace = '' );
   /**
-   * @param string                $message   The log message pattern
-   * @param array|object|callable|null $context   The pattern insertion or additional data, or a callable that will run only if the entry will be added for the buffer list
-   * @param string                $namespace The namespace for the log entry. This is useful for searching or filtering
+   * @param string $message   The log message pattern
+   * @param mixed  $context   The pattern insertion or additional data, or a callable that will run only if the entry will be added for the buffer list
+   * @param string $namespace The namespace for the log entry. This is useful for searching or filtering
    *
    * @return static
    */
   public function alert( string $message, $context = null, string $namespace = '' );
   /**
-   * @param string                $message   The log message pattern
-   * @param array|object|callable|null $context   The pattern insertion or additional data, or a callable that will run only if the entry will be added for the buffer list
-   * @param string                $namespace The namespace for the log entry. This is useful for searching or filtering
+   * @param string $message   The log message pattern
+   * @param mixed  $context   The pattern insertion or additional data, or a callable that will run only if the entry will be added for the buffer list
+   * @param string $namespace The namespace for the log entry. This is useful for searching or filtering
    *
    * @return static
    */
@@ -161,13 +156,13 @@ class Logger implements LoggerInterface, Helper\AccessableInterface {
   protected $_list = [];
 
   /**
-   * @param string $channel
-   * @param int    $severity
+   * @param string   $channel
+   * @param int|null $severity
    */
-  public function __construct( string $channel, int $severity = Application::SEVERITY_DEBUG ) {
+  public function __construct( string $channel, ?int $severity = null ) {
 
     $this->_channel  = $channel;
-    $this->_severity = $severity;
+    $this->_severity = $severity ?? Severity::get();
   }
 
   //
@@ -197,7 +192,7 @@ class Logger implements LoggerInterface, Helper\AccessableInterface {
   }
 
   //
-  public function create( string $message, $context = null, string $namespace = '', int $severity = Application::SEVERITY_DEBUG ) {
+  public function create( string $message, $context = null, string $namespace = '', int $severity = Severity::DEBUG ) {
 
     // build storable entry from the input to easily manipulate and pass as argument later
     $entry = [
@@ -238,35 +233,35 @@ class Logger implements LoggerInterface, Helper\AccessableInterface {
 
   //
   public function debug( string $message, $context = null, string $namespace = '' ) {
-    return $this->create( $message, $context, $namespace, Application::SEVERITY_DEBUG );
+    return $this->create( $message, $context, $namespace, Severity::DEBUG );
   }
   //
   public function info( string $message, $context = null, string $namespace = '' ) {
-    return $this->create( $message, $context, $namespace, Application::SEVERITY_INFO );
+    return $this->create( $message, $context, $namespace, Severity::INFO );
   }
   //
   public function notice( string $message, $context = null, string $namespace = '' ) {
-    return $this->create( $message, $context, $namespace, Application::SEVERITY_NOTICE );
+    return $this->create( $message, $context, $namespace, Severity::NOTICE );
   }
   //
   public function warning( string $message, $context = null, string $namespace = '' ) {
-    return $this->create( $message, $context, $namespace, Application::SEVERITY_WARNING );
+    return $this->create( $message, $context, $namespace, Severity::WARNING );
   }
   //
   public function error( string $message, $context = null, string $namespace = '' ) {
-    return $this->create( $message, $context, $namespace, Application::SEVERITY_ERROR );
+    return $this->create( $message, $context, $namespace, Severity::ERROR );
   }
   //
   public function critical( string $message, $context = null, string $namespace = '' ) {
-    return $this->create( $message, $context, $namespace, Application::SEVERITY_CRITICAL );
+    return $this->create( $message, $context, $namespace, Severity::CRITICAL );
   }
   //
   public function alert( string $message, $context = null, string $namespace = '' ) {
-    return $this->create( $message, $context, $namespace, Application::SEVERITY_ALERT );
+    return $this->create( $message, $context, $namespace, Severity::ALERT );
   }
   //
   public function emergency( string $message, $context = null, string $namespace = '' ) {
-    return $this->create( $message, $context, $namespace, Application::SEVERITY_EMERGENCY );
+    return $this->create( $message, $context, $namespace, Severity::EMERGENCY );
   }
 
   /**
@@ -300,7 +295,7 @@ class Logger implements LoggerInterface, Helper\AccessableInterface {
    * @return bool
    */
   public static function filter( array $entry, int $severity ) {
-    return $entry['severity'] > Application::SEVERITY_NONE && $entry['severity'] <= $severity;
+    return $entry['severity'] > Severity::NONE && $entry['severity'] <= $severity;
   }
   /**
    * Preprocess the data before log it

@@ -1,6 +1,6 @@
 <?php namespace Spoom\Core\Helper;
 
-use Spoom\Core\Application;
+use Spoom\Core\Severity;
 use Spoom\Core\Exception;
 
 /**
@@ -111,6 +111,6 @@ class AccessibleMissingException extends Exception\Logic {
   public function __construct( $instance, string $property ) {
 
     $data = [ 'class' => get_class( $instance ), 'property' => $property ];
-    parent::__construct( Text::apply( 'There is no \'{property}\' in {class}', $data ), static::ID, $data, null, Application::SEVERITY_NOTICE );
+    parent::__construct( Text::apply( 'There is no \'{property}\' in {class}', $data ), static::ID, $data, null, Severity::NOTICE );
   }
 }

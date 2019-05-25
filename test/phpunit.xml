@@ -15,14 +15,14 @@
       <file>StorageTest.php</file>
       <file>StoragePersistentTest.php</file>
       <file>EventTest.php</file>
-      <file>ExtensionTest.php</file>
+      <file>PackageTest.php</file>
       <file>LoggerTest.php</file>
     </testsuite>
   </testsuites>
 
   <filter>
     <whitelist>
-      <directory>../src/extension</directory>
+      <directory>../src/library</directory>
     </whitelist>
   </filter>
 </phpunit>

@@ -1,6 +1,6 @@
 <?php namespace Spoom\Core\Helper;
 
-use Spoom\Core\Application;
+use Spoom\Core\Severity;
 
 /**
  * Interface ThrowableInterface
@@ -35,7 +35,7 @@ trait Throwable {
   //
   private $_id;
   //
-  private $_severity = Application::SEVERITY_ERROR;
+  private $_severity = Severity::ERROR;
   //
   private $_context = [];
 
