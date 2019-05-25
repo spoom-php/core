@@ -137,7 +137,7 @@ class Environment implements AccessableInterface {
    */
   public static function logger( ?string $name = null, ?LoggerInterface $instance = null ): LoggerInterface {
     if( $instance !== null ) return self::$log[ $name ?? static::class ]  = $instance;
-    else return self::$log[ $name ?? static::class ] ?? self::$log[ static::class ] ?? (self::$log[ static::class ] = new Logger( static::class, Severity::get() ));
+    else return self::$log[ $name ?? static::class ] ?? self::$log[ static::class ] ?? (self::$log[ static::class ] = new Logger( static::class ));
   }
 
   /**
@@ -146,7 +146,7 @@ class Environment implements AccessableInterface {
    */
   public static function instance() {
     if( empty( self::$instance ) ) throw new \LogicException( 'There is no Environment instance right now' );
-    else if( !( self::$instance instanceof static ) ) throw new \LogicException( 'Wrong type of Environment instance, should be ' . self::class );
+    else if( !( self::$instance instanceof static ) ) throw new \LogicException( 'Wrong type of Environment instance, should be ' . get_class( self::$instance ) );
     else return self::$instance;
   }
 }

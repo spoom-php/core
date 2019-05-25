@@ -9,11 +9,6 @@ use Spoom\Core\Helper\Collection;
 interface LoggerInterface {
 
   /**
-   * This event MUST be called before every new log entry. This can prevent the log
-   */
-  const EVENT_CREATE = 'logger.create';
-
-  /**
    * The logger must be cloneable to use the instance as a "factory" for the new individual instances
    */
   public function __clone();

@@ -10,23 +10,23 @@ class LoggerTest extends TestCase {
   public function testSeverity() {
     $logger = new Logger( 'test' );
 
-    $logger->setSeverity( Application::SEVERITY_NONE );
-    $logger->create( "noop", null, 'basic', Application::SEVERITY_EMERGENCY );
-    $this->assertEmpty( $logger->getList(), "There shouldn't be any buffered entry, due to `Application::SEVERITY_NONE` severity" );
+    $logger->setSeverity( Severity::NONE );
+    $logger->create( "noop", null, 'basic', Severity::EMERGENCY );
+    $this->assertEmpty( $logger->getList(), "There shouldn't be any buffered entry, due to `Severity::NONE` severity" );
 
-    $logger->setSeverity( Application::SEVERITY_CRITICAL );
-    $logger->create( "noop", null, 'basic', Application::SEVERITY_ERROR );
-    $this->assertEmpty( $logger->getList(), "There shouldn't be any buffered entry, due to `Application::SEVERITY_CRITICAL` severity which is higher than `Application::SEVERITY_ERROR`" );
+    $logger->setSeverity( Severity::CRITICAL );
+    $logger->create( "noop", null, 'basic', Severity::ERROR );
+    $this->assertEmpty( $logger->getList(), "There shouldn't be any buffered entry, due to `Severity::CRITICAL` severity which is higher than `Severity::ERROR`" );
 
-    $logger->create( "foo", null, 'basic', Application::SEVERITY_ALERT );
-    $this->assertNotEmpty( $logger->getList(), "There should be an entry because `Application::SEVERITY_ALERT` higher than `Application::SEVERITY_CRITICAL`" );
+    $logger->create( "foo", null, 'basic', Severity::ALERT );
+    $this->assertNotEmpty( $logger->getList(), "There should be an entry because `Severity::ALERT` higher than `Severity::CRITICAL`" );
   }
 
   /**
    * Test buffering mechanism and file flushing with the File logger
    */
   public function testFile() {
-    $logger = new Logger\File( new File( __DIR__ . '/LoggerTest/' ), 'file' );
+    $logger = new Logger\File( new File( __DIR__ . '/LoggerTest/' ), 'file', Severity::DEBUG );
 
     // remove any remain file log
     $logger->getFile()->remove();

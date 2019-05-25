@@ -4,10 +4,10 @@ use Spoom\Core\Helper;
 use Spoom\Core\Storage\PersistentInterface;
 
 //
-interface ExtensionInterface {
+interface PackageInterface {
 
   /**
-   * Get language string from the extension language object
+   * Get language string from the package language object
    *
    * It's a proxy for Localization::getPattern() method
    *
@@ -19,7 +19,7 @@ interface ExtensionInterface {
    */
   public function text( string $index, $insertion = null, string $default = '' ): string;
   /**
-   * Get configuration variable from extension configuration object
+   * Get configuration variable from package configuration object
    *
    * It's a proxy for Configuration::get() method
    *
@@ -29,57 +29,33 @@ interface ExtensionInterface {
    * @return mixed
    */
   public function option( string $index, $default = null );
-
-  /**
-   * Get or search file(s) in the extension's directory
-   *
-   * @param string      $path    Sub-path, relative from the extension directory
-   * @param string|null $pattern Pattern for file listing. Accept '*' wildcard
-   *
-   * @return FileInterface|FileInterface[]
-   */
-  public function file( string $path = '', ?string $pattern = null );
-
   /**
    * @param string $path
    *
    * @return FileInterface
    */
-  public function getFile( string $path = '' ): FileInterface;
+  public function file( string $path = '' ): FileInterface;
+
   /**
-   * @since 0.6.0
-   *
    * @return string
    */
   public function getId(): string;
   /**
-   * @since 0.6.0
-   *
    * @return PersistentInterface|null
    */
   public function getConfiguration(): ?PersistentInterface;
   /**
-   * @since 0.6.0
-   *
    * @return PersistentInterface|null
    */
   public function getLocalization(): ?PersistentInterface;
-  /**
-   * @since 0.6.0
-   *
-   * @return LoggerInterface
-   */
-  public function getLogger(): LoggerInterface;
 }
 
 /**
- * @property-read FileInterface            $file          Root directory of the extension
  * @property-read string                   $id            Unique name
  * @property-read PersistentInterface|null $configuration
  * @property-read PersistentInterface|null $localization
- * @property-read LoggerInterface          $logger
  */
-class Extension implements ExtensionInterface, Helper\AccessableInterface {
+class Package implements PackageInterface, Helper\AccessableInterface {
   use Helper\Accessable;
 
   const ID   = 'spoom-core';
@@ -91,40 +67,34 @@ class Extension implements ExtensionInterface, Helper\AccessableInterface {
   const DIRECTORY_LOCALIZATION = 'localization/';
   /**
    * Default directory for configuration files
-   *
-   * warning: DO NOT TOUCH THIS! This directory is hardcoded in the autoloader
    */
   const DIRECTORY_CONFIGURATION = 'configuration/';
 
   /**
-   * Extension instance cache
+   * Package instance cache
    *
-   * @var array[string]Extension
+   * @var array[string]Package
    */
   private static $instance = [];
 
   /**
-   * Extension directory
+   * Package directory
    *
    * @var FileInterface
    */
   protected $_file;
   /**
-   * Handle configuration files for the extension
+   * Handle configuration files for the package
    *
    * @var PersistentInterface|null
    */
   protected $_configuration;
   /**
-   * Handle localization files for the extension
+   * Handle localization files for the package
    *
    * @var PersistentInterface|null
    */
   protected $_localization;
-  /**
-   * @var LoggerInterface|null
-   */
-  protected $_logger;
 
   /**
    *
@@ -143,14 +113,7 @@ class Extension implements ExtensionInterface, Helper\AccessableInterface {
   }
 
   //
-  public function file( string $path = '', ?string $pattern = null ) {
-
-    $file = $this->getFile( $path );
-    return empty( $pattern ) ? $file : $file->search( $pattern === '*' ? null : $pattern );
-  }
-
-  //
-  public function getFile( string $path = '' ): FileInterface {
+  public function file( string $path = '' ): FileInterface {
     return $this->_file->get( $path );
   }
   //
@@ -165,13 +128,9 @@ class Extension implements ExtensionInterface, Helper\AccessableInterface {
   public function getLocalization(): ?PersistentInterface {
     return $this->_localization;
   }
-  //
-  public function getLogger(): LoggerInterface {
-    return $this->_logger;
-  }
 
   /**
-   * Get an extension instance from the shared instance cache
+   * Get a package instance from the shared instance cache
    *
    * @return static
    */
