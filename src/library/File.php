@@ -5,9 +5,7 @@ use Spoom\Core\Helper\StreamInterface;
 use Spoom\Core\Severity;
 use Spoom\Core\Helper\Text;
 
-/**
- * Interface FileInterface
- */
+//
 interface FileInterface {
 
   const DIRECTORY_SEPARATOR = '/';
@@ -153,14 +151,23 @@ interface FileInterface {
    */
   public function setPath( string $value );
   /**
-   * Get a (or all) meta for a specific path
+   * Get meta list for the path
    *
-   * @param string[]|string|null $names
+   * @param string[]|null $name_list
    *
-   * @return array|mixed
+   * @return array
    * @throws FileException Unsuccessful operation, due to the underlying system
    */
-  public function getMeta( $names = null );
+  public function getMetaList( ?array $name_list = null ): array;
+  /**
+   * Get a meta for the path
+   *
+   * @param string $name
+   *
+   * @return mixed
+   * @throws FileException Unsuccessful operation, due to the underlying system
+   */
+  public function getMeta( string $name );
   /**
    * Set a path metadata, if not read only
    *
@@ -189,8 +196,6 @@ interface FileInterface {
   public function isWriteable(): bool;
 }
 /**
- * Class File
- *
  * @property      string $path
  * @property      array  $meta
  * @property-read string $root
@@ -275,7 +280,7 @@ class File implements FileInterface {
   //
   public function stream( int $mode = StreamInterface::MODE_READ, array $meta = [] ): StreamInterface {
 
-    $_meta = $this->getMeta();
+    $_meta = $this->getMetaList();
     if( $_meta[ static::META_TYPE ] != static::TYPE_FILE ) throw new FileTypeInvalidException( $this, [ static::TYPE_FILE ] );
     else if( $mode & StreamInterface::MODE_WRITE && !$_meta[ static::META_PERMISSION_WRITE ] ) {
       throw new FilePermissionException( $this, static::META_PERMISSION_WRITE );
@@ -312,7 +317,7 @@ class File implements FileInterface {
   //
   public function search( ?string $pattern = null, bool $recursive = false, bool $directory = true ): array {
 
-    $meta = $this->getMeta();
+    $meta = $this->getMetaList();
     if( $meta[ static::META_TYPE ] != static::TYPE_DIRECTORY ) throw new FileTypeInvalidException( $this, [ static::TYPE_DIRECTORY ] );
     else if( !$meta[ static::META_PERMISSION_READ ] ) throw new FilePermissionException( $this, static::META_PERMISSION_READ );
     else if( !$this->exist() ) return [];
@@ -349,7 +354,7 @@ class File implements FileInterface {
     if( !$this->exist() ) {
 
       // check for permissions
-      $_meta = $this->getMeta();
+      $_meta = $this->getMetaList();
       if( !$_meta[ static::META_PERMISSION_WRITE ] ) throw new FilePermissionException( $this, static::META_PERMISSION_WRITE );
       else {
 
@@ -380,7 +385,7 @@ class File implements FileInterface {
     if( $this->exist() ) {
 
       // check for permissions
-      $_meta = $this->getMeta();
+      $_meta = $this->getMetaList();
       if( !$_meta[ static::META_PERMISSION_WRITE ] ) throw new FilePermissionException( $this, static::META_PERMISSION_WRITE );
       else {
 
@@ -412,8 +417,8 @@ class File implements FileInterface {
     if( $this->exist() ) {
 
       // check for permissions
-      $_meta             = $this->getMeta();
-      $_meta_destination = $destination->getMeta();
+      $_meta             = $this->getMetaList();
+      $_meta_destination = $destination->getMetaList();
       if( !$_meta[ static::META_PERMISSION_READ ] ) throw new FilePermissionException( $this, static::META_PERMISSION_READ );
       else if( !$_meta_destination[ static::META_PERMISSION_WRITE ] ) throw new FilePermissionException( $destination, static::META_PERMISSION_WRITE );
       else if( $_meta_destination[ static::META_TYPE ] != $_meta[ static::META_TYPE ] ) {
@@ -496,10 +501,10 @@ class File implements FileInterface {
     return $this;
   }
   //
-  public function getMeta( $names = null ) {
+  public function getMetaList( array $name_list = null ): array {
 
     // provide default values for meta types
-    if( empty( $names ) ) $names = [
+    if( empty( $name_list ) ) $name_list = [
       static::META_TYPE,
       static::META_TIME,
       static::META_PERMISSION,
@@ -507,13 +512,9 @@ class File implements FileInterface {
       static::META_PERMISSION_WRITE
     ];
 
-    // save return meta, and force array names
-    $result_name = !is_array( $names ) ? $names : null;
-    $names       = is_array( $names ) ? $names : [ $names ];
-
     $result = [];
     $_path  = $file = $exist = null;
-    foreach( $names as $name ) {
+    foreach( $name_list as $name ) {
 
       // check for cached meta
       if( !isset( static::$cache_meta[ $this->_root ][ $this->_path ][ $name ] ) ) {
@@ -606,7 +607,11 @@ class File implements FileInterface {
       $result[ $name ] = static::$cache_meta[ $this->_root ][ $this->_path ][ $name ];
     }
 
-    return $result_name ? ( $result[ $result_name ] ?? null ) : $result;
+    return $result;
+  }
+  //
+  public function getMeta( string $name ) {
+    return $this->getMetaList( [ $name ] )[ $name ] ?? null;
   }
   //
   public function setMeta( $value, ?string $name = null ) {
@@ -699,7 +704,6 @@ class File implements FileInterface {
 
 /**
  * Interface for all File related exceptions
- *
  */
 interface FileExceptionInterface extends Helper\ThrowableInterface {
 }

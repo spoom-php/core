@@ -7,7 +7,6 @@ use Spoom\Core\Helper\Collection;
 /**
  * Exception for developers and indicates problems that can be fixed with coding
  *
- *
  * @property-read string $id
  * @property-read int    $severity
  * @property-read array  $context

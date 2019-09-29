@@ -2,9 +2,7 @@
 
 use Spoom\Core\Exception;
 
-/**
- * Interface StreamInterface
- */
+//
 interface StreamInterface {
 
   /**
@@ -155,8 +153,6 @@ interface StreamInterface {
   public function isEnd(): bool;
 }
 /**
- * Class Stream
- *
  * @property-read resource $resource
  * @property-read int      $offset
  * @property-read int|null $size

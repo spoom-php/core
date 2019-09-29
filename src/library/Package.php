@@ -73,7 +73,7 @@ class Package implements PackageInterface, Helper\AccessableInterface {
   /**
    * Package instance cache
    *
-   * @var array[string]Package
+   * @var array<string,Package>
    */
   private static $instance = [];
 

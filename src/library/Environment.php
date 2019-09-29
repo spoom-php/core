@@ -7,6 +7,7 @@ use Spoom\Core\Helper\Text;
 use Spoom\Core\Logger;
 use Spoom\Core\LoggerInterface;
 
+//
 class Environment implements AccessableInterface {
   use Helper\Accessable;
 

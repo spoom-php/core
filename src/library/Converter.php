@@ -2,9 +2,7 @@
 
 use Spoom\Core\Helper;
 
-/**
- * Interface ConverterInterface
- */
+//
 interface ConverterInterface {
 
   /**

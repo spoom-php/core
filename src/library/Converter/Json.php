@@ -5,8 +5,6 @@ use Spoom\Core;
 use Spoom\Core\ConverterEventIO;
 
 /**
- * Class Json
- *
  * @property JsonMeta $meta
  */
 class Json implements Core\ConverterInterface, Helper\AccessableInterface {
@@ -97,9 +95,7 @@ class Json implements Core\ConverterInterface, Helper\AccessableInterface {
     return $this;
   }
 }
-/**
- * Class JsonMeta
- */
+//
 class JsonMeta {
 
   /**
@@ -109,8 +105,6 @@ class JsonMeta {
 
   /**
    * Decode json's objects into associative array
-   *
-   * TODO maybe this should add JSON_FORCE_OBJECT option for encode
    *
    * @var bool
    */

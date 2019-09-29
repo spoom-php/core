@@ -8,6 +8,7 @@ use Spoom\Core\Logger;
 use Spoom\Core\LoggerInterface;
 use Spoom\Core\Helper\Text;
 use Spoom\Core\LoggerEventFlush;
+
 /**
  * This logger will add entries to files
  *

@@ -1,5 +1,6 @@
 <?php namespace Spoom\Core;
 
+//
 class Severity {
 
   /**

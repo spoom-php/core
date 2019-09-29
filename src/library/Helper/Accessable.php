@@ -3,9 +3,7 @@
 use Spoom\Core\Severity;
 use Spoom\Core\Exception;
 
-/**
- * Interface AccessableInterface
- */
+//
 interface AccessableInterface {
 
   /**
@@ -37,9 +35,7 @@ interface AccessableInterface {
   public function __isset( $property );
 }
 
-/**
- * Class Accessable
- */
+//
 trait Accessable {
 
   /**

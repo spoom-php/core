@@ -1,8 +1,6 @@
 <?php namespace Spoom\Core\Helper;
 
-/**
- * Class Number
- */
+//
 abstract class Number {
 
   /**

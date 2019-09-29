@@ -322,7 +322,7 @@ class Storage implements StorageInterface, Helper\AccessableInterface {
 
     //
     if( $meta && !( $meta instanceof StorageMeta ) ) {
-      $meta = $this->getMeta( $meta );
+      $meta = $this->getMeta( (string) $meta );
     }
 
     // clear the cache
@@ -520,7 +520,7 @@ class Storage implements StorageInterface, Helper\AccessableInterface {
 class StorageMeta {
 
   /**
-   * @var static[]
+   * @var array<StorageMeta>
    */
   protected static $cache = [];
 

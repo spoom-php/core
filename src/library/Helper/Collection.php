@@ -2,10 +2,7 @@
 
 use Spoom\Core\StorageInterface;
 
-/**
- * Class Collection
- *
- */
+//
 abstract class Collection {
 
   /**

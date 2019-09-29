@@ -2,9 +2,7 @@
 
 use Spoom\Core\Severity;
 
-/**
- * Interface ThrowableInterface
- */
+//
 interface ThrowableInterface extends \Throwable {
 
   /**

@@ -3,9 +3,7 @@
 use Spoom\Core\Storage;
 use Spoom\Core\StorageInterface;
 
-/**
- * Class Text
- */
+//
 abstract class Text {
 
   /**
@@ -65,10 +63,10 @@ abstract class Text {
    */
   public static function unique( int $length = 64, bool $secure = true, bool $hex = false ): string {
 
-    if( $hex ) $result = bin2hex( static::random( ceil( $length / 2 + 1 ), $secure ) );
+    if( $hex ) $result = bin2hex( static::random( (int) ceil( $length / 2 + 1 ), $secure ) );
     else {
 
-      $result = base64_encode( static::random( ceil( $length * 3 / 4 + 1 ), $secure ) );
+      $result = base64_encode( static::random( (int) ceil( $length * 3 / 4 + 1 ), $secure ) );
       $result = str_replace( [ '/', '+', '=' ], [ '.', '-', '_' ], $result );
     }
 
@@ -112,7 +110,8 @@ abstract class Text {
     if( !empty( $tmp ) ) return $tmp;
     else throw new \InvalidArgumentException( Text::apply( 'Invalid hash algorithm: {algorithm}; avaliable {list}', [
       'algorithm' => $algorithm,
-      'list'      => implode( ',', hash_algos() )
+      'list'      => implode( ',', hash_algos() ),
+      'error'     => error_get_last()
     ] ) );
   }
 
@@ -138,15 +137,15 @@ abstract class Text {
     for( $i = 0, $length = strlen( $text ); $i < $length; ++$i ) {
 
       // detect skipped blocks (start and end)
-      if( $delimiter == $text{$i} ) $delimiter = null;
-      else if( !$delimiter && strpos( $skip, $text{$i} ) !== false ) $delimiter = $text{$i};
+      if( $delimiter == $text[$i] ) $delimiter = null;
+      else if( !$delimiter && strpos( $skip, $text[$i] ) !== false ) $delimiter = $text[$i];
 
       // try to process the insertion
-      if( !$delimiter && $text{$i} == '{' ) {
+      if( !$delimiter && $text[$i] == '{' ) {
 
         $buffer = '';
-        for( $j = $i + 1; $j < $length && $text{$j} != '}'; ++$j ) {
-          $buffer .= $text{$j};
+        for( $j = $i + 1; $j < $length && $text[$j] != '}'; ++$j ) {
+          $buffer .= $text[$j];
         }
         $i = $j;
 
@@ -154,7 +153,7 @@ abstract class Text {
         continue;
       }
 
-      $output .= $text{$i};
+      $output .= $text[$i];
     }
 
     return $output;
@@ -186,15 +185,15 @@ abstract class Text {
     $separator = is_array( $separator ) ? $separator : [ $separator ];
     foreach( $separator as &$tmp ) {
 
-      $tmp  = $tmp{0};
+      $tmp  = $tmp[0];
       $name = preg_replace( '/\\' . preg_quote( $tmp, '/' ) . '+/i', $tmp, trim( $name, $tmp ) );
     }
 
     // create the new name
     $return = '';
     for( $i = 0, $length = mb_strlen( $name ); $i < $length; ++$i ) {
-      if( in_array( $name{$i}, $separator ) ) $return .= mb_strtoupper( $name{++$i} );
-      else $return .= $name{$i};
+      if( in_array( $name[$i], $separator ) ) $return .= mb_strtoupper( $name[++$i] );
+      else $return .= $name[$i];
     }
 
     return $return;

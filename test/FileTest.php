@@ -3,8 +3,6 @@
 use PHPUnit\Framework\TestCase;
 
 /**
- * Class FileTest
- *
  * TODO cleanup leftover files
  */
 class FileTest extends TestCase {
@@ -42,13 +40,13 @@ class FileTest extends TestCase {
     $this->assertEquals( $this->root, $system->getPath( true ) );
 
     // test basic meta getters
-    $meta = $system->getMeta( '' );
+    $meta = $system->getMetaList();
     $this->assertNotEmpty( $meta );
     $this->assertEquals( FileInterface::TYPE_DIRECTORY, $meta[ FileInterface::META_TYPE ] );
     $this->assertEquals( FileInterface::TYPE_DIRECTORY, $system->getMeta( FileInterface::META_TYPE ) );
     $this->assertEquals( [
       FileInterface::META_TYPE => FileInterface::TYPE_DIRECTORY
-    ], $system->getMeta( [ FileInterface::META_TYPE ] ) );
+    ], $system->getMetaList( [ FileInterface::META_TYPE ] ) );
 
     // test non-exist path meta
     $this->assertEquals( FileInterface::TYPE_DIRECTORY, $system->get( '_a/' )->getMeta( FileInterface::META_TYPE ) );
