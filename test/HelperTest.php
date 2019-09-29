@@ -7,14 +7,14 @@ class HelperTest extends TestCase {
 
   private static $directory;
 
-  public static function setUpBeforeClass() {
+  public static function setUpBeforeClass(): void {
 
     // reset stream test files
     static::$directory = __DIR__ . '/HelperTest/';
     @file_put_contents( static::$directory . 'stream-a.txt', '01234' );
     @file_put_contents( static::$directory . 'stream-r.txt', '01234' );
   }
-  public static function tearDownAfterClass() {
+  public static function tearDownAfterClass(): void {
 
     // clear stream test files
     @unlink( static::$directory . 'stream-rw.txt' );

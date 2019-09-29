@@ -22,8 +22,8 @@ class StorageTest extends TestCase {
     }, $storage->getCallable( 'test1.test7' ) );
     $this->assertEquals( 9, $storage->getInteger( 'test1.test20' ) );
     $this->assertEquals( 9, $storage->get( 'test1.test20!int' ) );
-    $this->assertEquals( 9.9, $storage->getFloat( 'test1.test20' ), '', 0.1 );
-    $this->assertEquals( 9.9, $storage->get( 'test1.test20!float' ), '', 0.1 );
+    $this->assertEqualsWithDelta( 9.9, $storage->getFloat( 'test1.test20' ), 0.1 );
+    $this->assertEqualsWithDelta( 9.9, $storage->get( 'test1.test20!float' ), 0.1 );
 
     // test invalid values
     $this->assertEquals( 0, $storage->getNumber( 'test1.test9' ) );
@@ -89,7 +89,7 @@ class StorageTest extends TestCase {
 
     $allow = [ 'test0', 'test1' ];
     $i     = 0;
-    foreach( $storage as $key => $value ) {
+    foreach( $storage as $key => $_ ) {
       $this->assertEquals( $allow[ $i++ ], $key );
     };
   }
